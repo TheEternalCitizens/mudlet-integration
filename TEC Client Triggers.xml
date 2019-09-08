@@ -1,0 +1,944 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MudletPackage>
+<MudletPackage version="1.001">
+	<TriggerPackage>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>GUI Triggers &amp; SKOOTs</name>
+			<script></script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
+			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>TEC Map SKOOT 6 &amp; SKOOT9</name>
+				<script>--SKOOT 6 lines I am nearly certain are for drawing the 2d map
+--SKOOT 6 -10,-10,20,#ff0000,32.784,-10,-30,20,#ffffff,17.808,-50,-30,40,#ffffff,27.168,10,-10,20,#ffffff,18.0231,-10,50,20,#ffffff,15,10,-30,20,#ffffff,15,-50,-50,20,#ffffff,20.616,-30,10,20,#ffffff,20.616,-70,-10,20,#ffffff,20.616,30,-30,40,#ffffff,63.7128,10,-50,20,#ffffff,15,-30,-50,20,#ffffff,24.36,-70,-50,20,#ffffff,24.36,-10,10,20,#ffffff,24.36,-50,10,20,#ffffff,24.36,-70,-30,20,#ffffff,24.36,-70,10,20,#ffffff,24.36,30,10,40,#ffffff,47.5377,30,-70,40,#ffffff,40.9857,30,50,40,#ffffff,44.7297,10,10,20,#ffffff,26.4471,10,30,20,#ffffff,23.104,10,50,10,#ffffff,16.872
+--SKOOT 6 -10,-10,20,#ff0000,17.574,-10,10,20,#ffffff,31.302,-10,-30,20,#ffffff,15,10,-10,20,#ffffff,15,-50,-10,40,#ffffff,26.154,10,10,20,#ffffff,16.6971,10,-30,20,#ffffff,15,-50,-30,20,#ffffff,20.148,-30,30,20,#ffffff,20.148,-70,10,20,#ffffff,20.148,30,-10,40,#ffffff,61.0608,-30,-30,20,#ffffff,23.58,-70,-30,20,#ffffff,23.58,-10,30,20,#ffffff,23.58,-50,30,20,#ffffff,23.58,-70,-10,20,#ffffff,23.58,-70,30,20,#ffffff,23.58,30,30,40,#ffffff,44.8077,30,-50,40,#ffffff,38.8017,10,30,20,#ffffff,24.4191,30,-90,40,#ffffff,38.8017,10,50,20,#ffffff,22.012
+
+--I am undertain why but deleting SKOOT 6 causes SKOOT 9 lines to appear breifly than 
+--disappear.
+--Though SKOOT 9 lines come before SKOOT 6
+--So SKOOT 9 lines isn't in SKOOT 6 lines, but with a new line to give it a new line.
+
+deleteLine()
+
+--Orchil map code
+
+--[[//-----Map Functions
+		function createMapDiv(id, parentId, className) {
+			var div = document.createElement("div");
+			div.id = id;
+			div.className = className;
+			document.getElementById(parentId).appendChild(div);
+			return div;
+		}
+		function createMapImg(parentObj, className, src) {
+			var img = document.createElement("img");
+			img.className = className;
+			parentObj.appendChild(img);
+			img.src = src;
+			img.alt = '';
+			return img;
+		}
+		function findOrCreateRoom(id) {
+			var room = document.getElementById('maproom' + id);
+			if (!room) {
+				room = createMapDiv('maproom' + id, 'map_area', 'maproom');
+			}
+			return room;
+		}
+		function findOrCreateLink(dir, id) {
+			var link = document.getElementById(id);
+			if (!link) {
+				if (dir == 'hor' || dir == 'ver') {
+					link = createMapDiv(id, 'map_area', 'map_link_' + dir);
+				} else if (dir == 'ne') {
+					link = createMapDiv(id, 'map_area', 'map_link_dia');
+					createMapImg(link, 'map_link_dia_tr', 'sw4.gif');
+					createMapImg(link, 'map_link_dia_bl', 'ne4.gif');
+				} else if (dir == 'nw') {
+					link = createMapDiv(id, 'map_area', 'map_link_dia');
+					createMapImg(link, 'map_link_dia_tl', 'se4.gif');
+					createMapImg(link, 'map_link_dia_br', 'nw4.gif');
+				} else if (dir == 'none') {
+					link = createMapDiv(id, 'map_area', 'map_link_dia');
+					createMapImg(link, 'map_link_dia_tr', 'nosw.gif');
+					createMapImg(link, 'map_link_dia_bl', 'none.gif');
+				} else if (dir == 'nonw') {
+					link = createMapDiv(id, 'map_area', 'map_link_dia');
+					createMapImg(link, 'map_link_dia_tl', 'nose.gif');
+					createMapImg(link, 'map_link_dia_br', 'nonw.gif');
+				}
+			}
+			return link;
+		}
+
+		function showMap(str) {
+			var arr = (str.split(","));
+			var i = 0;
+			var x, y, wid, bg, col, lig, colarr;
+			var locwid = 120 * 0.5;
+			var id;
+			clearMap();
+			clearMapLinks();
+			for (i; i &lt; arr.length; i = i + 5) {
+				wid = arr[i + 2]*1;
+				col = arr[i + 3];
+				lig = Math.min(Math.max(arr[i + 4], 0), 30);
+				lig = lig - 25;
+				colarr = col.hex2rgb();
+				colarr[0] = Math.min(Math.max(Math.round(colarr[0]*1 + (lig * 8)), 0), 255);
+				colarr[1] = Math.min(Math.max(Math.round(colarr[1]*1 + (lig * 8)), 0), 255);
+				colarr[2] = Math.min(Math.max(Math.round(colarr[2]*1 + (lig * 8)), 0), 255);
+				col = colarr.join(",").rgb2hex();
+				x = arr[i]*1 + locwid;
+				y = arr[i + 1]*1 + locwid;
+				id = ((i+5)/5);
+				var room = findOrCreateRoom(id);
+				room.style.left       = x + "px";
+				room.style.top        = y + "px";
+				room.style.width      = (wid - 2)  + "px";
+				room.style.height     = (wid - 2)  + "px";
+				room.style.background = col+'';
+			}
+		}
+
+		function showHVMapLinks(str) {
+			var arr = (str.split(","));
+			var i, x, y, dir, acc, link;
+			var id, ver=0, hor=0, nw=0, ne=0, nonw=0, none=0, num;
+		//	var locwid = document.getElementById("map_area").style.width.replace("px", "")*0.5;
+			var locwid = 120 * 0.5;
+			
+
+			for (i = 0; i &lt; arr.length; i = i + 4) {
+				x = arr[i]*1 + locwid;
+				y = arr[i + 1]*1 + locwid;
+				dir = arr[i + 2];
+				acc = arr[i + 3]*1;
+
+				//x,y,ver,1
+				if (dir != 'ver' &amp;&amp; dir != 'hor' &amp;&amp; !acc) {
+					dir = 'no'+dir;
+				}
+
+				if (dir == 'ver') {
+					ver++;
+					x = x - 2 - x/40;
+					y = y - 3 - y/40;
+					id = "maplink" + dir +''+ ver;
+				} else if (dir == 'hor') {
+					hor++;
+					x = x - 3 - x/40;
+					y = y - 2 - y/40;
+					id = "maplink" + dir +''+ hor;
+				} else {
+					if (dir == 'nw') {
+						nw++;num = nw;
+					} else if (dir == 'ne') {
+						ne++;num = ne;
+					} else if (dir == 'nonw') {
+						nonw++;num = nonw;
+					} else if (dir == 'none') {
+						none++;num = none;
+					}
+					x = x - 5;
+					y = y - 5;
+					id = "maplink" + dir +''+ num;
+				}
+				link = findOrCreateLink(dir, id);
+				if (dir == 'ver' || dir == 'hor') {
+					if (acc) {
+						link.style.background = '#ffffff';
+					} else {
+						link.style.background = '#000000';
+					}
+				}
+				link.style.left = x + "px";
+				link.style.top = y + "px";
+			}
+		}
+
+		function clearMap() {
+			for (var i=1;;i++) {
+				var room = document.getElementById('maproom' + i);
+				if (!room) {
+					return;
+				}
+				if (room.width == 0) {
+					return;
+				}
+				room.style.left   = -30 + "px";
+				room.style.top    = -30 + "px";
+				room.style.width  = 0;
+				room.style.height = 0;
+				room.style.background = 'transparent';
+			}
+		}
+
+		function clearMapLinks() {
+			var linknames = ['maplinkver', 'maplinkhor', 'maplinkne', 'maplinknw', 'maplinknone', 'maplinknonw'];
+			var numnames = linknames.length;
+			for (var i=1;;i++) {
+				var link, found;
+				found = 0;
+				for (var j=0;j&lt;numnames;j++) {
+					link = document.getElementById(linknames[j] + i);
+					if (link) {
+						link.style.left  = -30 + "px";
+						link.style.top   = -30 + "px";
+						found = 1;
+					}
+				}
+				if (!found) {
+					return;
+				}
+			}
+		}
+		]]--</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>SKOOT 6</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</TriggerGroup>
+			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Mudlet Map &amp; SKOOT 10</name>
+				<script>--I THINK SKOOT 10 is a room position.
+--While that is NOT a room id. It will be distink to every room.
+
+--SKOOT 10 0,10,ver,1,0,-11,ver,1,10,0,hor,1,-11,20,hor,1,10,20,hor,1,10,-20,hor,1,20,-11,ver,1,-40,-11,ver,1,-20,30,ver,1,-51,20,hor,1,30,20,hor,1,-30,-20,hor,1,-51,-20,hor,1,-10,40,hor,1,-31,40,hor,1,-60,9,ver,1,-60,30,ver,1,50,30,ver,1,50,-11,ver,1,70,0,hor,1,50,70,ver,1,29,40,hor,1,70,40,hor,1,50,-51,ver,1,29,-45,hor,0,20,50,ver,1,50,-91,ver,1,15,70,ver,1
+--SKOOT 10 0,-11,ver,1,-11,0,hor,1,10,0,hor,1,0,-31,ver,1,10,-20,hor,1,-40,-31,ver,1,-20,10,ver,1,-51,0,hor,1,30,0,hor,1,10,-40,hor,1,20,-31,ver,1,-30,-40,hor,1,-51,-40,hor,1,-10,20,hor,1,-31,20,hor,1,-60,-11,ver,1,-60,10,ver,1,50,10,ver,1,50,-31,ver,1,70,-20,hor,1,50,50,ver,1,29,20,hor,1,70,20,hor,1,50,-71,ver,1,29,-65,hor,0,50,90,ver,1,70,60,hor,1,20,30,ver,1,15,50,ver,1,20,55,hor,0,15,60,ver,0,9,55,hor,0
+
+--delete the line after mapping.
+deleteLine()</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>SKOOT 10</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</TriggerGroup>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Compass</name>
+				<script>--Because I only need to do this 11 times. I am doing it without
+--a loop. Using a find command 11 times would require more processing.
+--This could have also been done with string.match
+--was fairly certain this required fewer cycles.
+
+--print("\nNorth is: ") --Test the count numbers
+--print(string.sub(line, 11, 14)) --Test the count numbers
+--north
+if  string.sub(line, 11, 14) == "show" then
+	compass.lit("n")
+else
+	compass.unlit("n")
+end
+
+--print("\nNorth East is: ") --Test the count numbers
+--print(string.sub(line, 19, 22)) --Test the count numbers
+--ne
+if  string.sub(line, 19, 22) == "show" then
+	compass.lit("ne")
+else
+	compass.unlit("ne")
+end
+
+--print("\nEast is: ") --Test the count numbers
+--print(string.sub(line, 26, 29)) --Test the count numbers
+--e
+if  string.sub(line, 26, 29) == "show" then
+	compass.lit("e")
+else
+	compass.unlit("e") 
+end
+
+--print("\nSouth East is: ") --Test the count numbers
+--print(string.sub(line, 34, 37)) --Test the count numbers
+--se
+if  string.sub(line, 34, 37) == "show" then
+	compass.lit("se")
+else
+	compass.unlit("se")
+end
+
+--print("\nSouth  is: ") --Test the count numbers
+--print(string.sub(line, 41, 44)) --Test the count numbers
+--s
+if  string.sub(line, 41, 44) == "show" then
+	compass.lit("s")
+else
+	compass.unlit("s")
+end
+
+--print("\nSouth West  is: ") --Test the count numbers
+--print(string.sub(line, 49, 52)) --Test the count numbers
+--sw
+if  string.sub(line, 49, 52) == "show" then
+	compass.lit("sw")
+else
+	compass.unlit("sw")
+end
+
+--print("\nWest  is: ") --Test the count numbers
+--print(string.sub(line, 56, 59)) --Test the count numbers
+--w
+if  string.sub(line, 56, 59) == "show" then
+	compass.lit("w")
+else
+	compass.unlit("w")
+end
+
+--print("\nNorth West  is: ") --Test the count numbers
+--print(string.sub(line, 64, 67)) --Test the count numbers
+--nw
+if  string.sub(line, 64, 67) == "show" then
+	compass.lit("nw")
+else
+	compass.unlit("nw")
+end
+
+--print("\nUp  is: ") --Test the count numbers
+--print(string.sub(line, 71, 74)) --Test the count numbers
+--up not supported YET
+--if  string.sub(line, 71, 74) == "show" then
+--	compass.lit("u")
+--else
+--	compass.unlit("u")
+--end
+
+--print("\nDown  is: ") --Test the count numbers
+--print(string.sub(line, 78, 81)) --Test the count numbers
+--down not supported YET
+--if  string.sub(line, 78, 81) == "show" then
+--	compass.lit("d")
+--else
+--	compass.unlit("d")
+--end
+
+deleteLine() --No longer needed
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>SKOOT 7</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Status Bar</name>
+				<script>--SKOOT 8 handles status bars.
+
+--Examples are:
+--SKOOT 8 Health,100
+--SKOOT 8 Fatigue,100
+--SKOOT 8 Encumbrance,87
+--SKOOT 8 Satiation,50</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList />
+				<regexCodePropertyList />
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Health bar</name>
+					<script>--Pushes SKOOT 8 Health,#
+--into the health bar.
+
+	--pull only the numbers at the end into a local variable
+	local health = string.gsub(line,"SKOOT 8 Health,","")
+	--this COULD be converted to string.sub
+	--http://lua-users.org/wiki/StringLibraryTutorial
+	--https://wiki.mudlet.org/w/Manual:String_Functions#string.sub.2C_utf8.sub
+	--local health =  string.sub(line, 16, string.len(line))
+	
+	hpbar:setValue(tonumber(health),100) --set bar on screen
+	deleteLine() --delete the current line so crap doesn't show on screen
+	
+	--echo("\nYour current health is: ")
+	--echo(health)</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>SKOOT 8 Health,</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>2</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Fatigue bar</name>
+					<script>--Pushes SKOOT 8 Fatigue,#
+--into the fatigue bar.
+
+	--pull only the numbers at the end into a local variable
+	local fatigue = string.gsub(line,"SKOOT 8 Fatigue,","")
+
+	fatiguebar:setValue(tonumber(fatigue),100) --set bar on screen
+	deleteLine() --delete the current line so crap doesn't show on screen
+
+	--echo("\nYour current fatigue is: ")
+	--echo(fatigue)</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>SKOOT 8 Fatigue,</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>2</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Encumbrance Bar</name>
+					<script>--Pushes SKOOT 8 Fatigue,#
+--into the fatigue bar.
+
+	--pull only the numbers at the end into a local variable
+	local encumbrance = string.gsub(line,"SKOOT 8 Encumbrance,","")
+
+	encumbrancebar:setValue(tonumber(encumbrance),100) --set bar on screen
+	deleteLine() --delete the current line so crap doesn't show on screen
+	
+	--echo("\nYour current encumbrance rate is: ")
+	--echo(encumbrance)</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>SKOOT 8 Encumbrance,</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>2</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Hunger bar</name>
+					<script>--Pushes SKOOT 8 Fatigue,#
+--into the fatigue bar.
+
+	--pull only the numbers at the end into a local variable
+	local hunger = string.gsub(line,"SKOOT 8 Satiation,","")
+
+	hungerbar:setValue(tonumber(hunger),100) --set bar on screen
+	deleteLine() --delete the current line so crap doesn't show on screen
+	
+	--echo("\nYour current hunger rate is: ")
+	--echo(hunger)</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>SKOOT 8 Satiation,</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>2</integer>
+					</regexCodePropertyList>
+				</Trigger>
+			</TriggerGroup>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>URL Opener SKOOT 5</name>
+				<script>--Had thought SKOOT 5 was for the vote isPrompt
+--It is for all URL calls.
+--example: SKOOT 5 http://tec.skotos.net:1180/bin/help?$help_commands_command
+
+--opens the voting window at login
+if(line == "SKOOT 5 http://www.topmudsites.com/vote-scarlatc.html") then
+	echo("To help the world know this game exists you could:\n")
+	
+	cechoLink("&lt;:blue&gt;Vote for TEC on topmudsites.com", 
+	[[openUrl("http://www.topmudsites.com/vote-scarlatc.html")]], 
+	"Vote for TEC!", true)
+	echo("\n")
+	
+	cechoLink("&lt;:blue&gt;Like us on facebook", 
+	[[openUrl("https://www.facebook.com/SkotosTheEternalCity/")]], 
+	"Vote for TEC!", true)
+	echo("\n")
+	
+end
+deleteLine()</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>SKOOT 5</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>SKOOT 9</name>
+				<script>--unfortunately I have no idea what SKOOT 9 lines are for.
+--My GUESS is they are poorly maintaned room numbers?
+deleteLine()</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>SKOOT 9</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+		</TriggerGroup>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>Text Filters</name>
+			<script>--!!!!!!!!!!!!!!!!!!READ BEFORE CHANGING FILTER CODE!!!!!!!!!!!!!!!!!!!!!
+--Needed because TEC does not support GMCP or MSDP
+--so TEC outputs health bar, compass and other gui elements
+--over text with telnet...
+
+--ORDER OF THESE ITEMS ARE IMPORTANT!!!
+--These are intended to be in an order that will allow for
+--optimal performance.
+--I have placed items that delete the main line first
+--This removes the number of color filter triggers that occurs.
+--No we are never going to clean code enough to free up for the use of a mapping system.
+--Let's try any way!
+
+--so they don't get filtered wasting processor time</script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>delete lines</name>
+				<script>--Lines that are not needed. Because we do not use html tags as of yet.
+--&lt;pre&gt; would never have a function for us reguardless.
+deleteLine()</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>&lt;hr&gt;</string>
+					<string>&lt;/pre&gt;</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>3</integer>
+					<integer>3</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Text Filters</name>
+				<script>--trigger mean all lines have this trigger occur.
+--prel regex allows for triggers with special mudlet functions for text searching
+--^means start of line. Nothing after it means line with anything in it
+
+--Code provided by s/Mud/Game on mudletdiscord. THANK YOU s/Mud/Game!!!!
+
+--Starting with most likely items moving to less likely.
+--Fewer processor cycles...
+--Removes what is in brackets
+filteredLine = string.gsub(
+  line,
+  '&lt;font color="#(%x+)"&gt;(.-)&lt;\/font&gt;',
+  '#%1%2#r'
+)
+filteredLine = string.gsub(filteredLine, [[&lt;/font&gt;]], "")
+
+--string.gsub referece: https://wiki.mudlet.org/w/Manual:String_Functions
+--string.gsub('The whole string to modify', 'what to replace in the string', 'what to replace it with')
+--%1 is whatever is inside of the ()
+--if you get &lt;font color="#000000 %1 is 000000
+--so it's replacing &lt;font color="#000000&gt; with &lt;#000000&gt;
+--filteredLine = string.gsub(filteredLine, '&lt;font color="#(%x+)"&gt;', '#%1')
+--So now all &lt;font color="#hexcolorcode have turned into &lt;#hexcolorcode&gt; in replacement this is a standard format lua can work with.
+
+--if background is dark turn #000000 into #c0c0c0
+local redBG, greenBG, blueBG = getBgColor() --get main console background color
+if redBG &lt; 75 and greenBG &lt; 75 and blueBG &lt; 75 then --if the background is very dark, use light text
+	tecSettings.tecTextColor = "#c0c0c0" --setting to very light text. This should probably be a default variable
+	filteredLine = string.gsub(filteredLine, "#000000", tecSettings.tecTextColor) --turn all black text declarations into tecTextColor
+end
+--It could also be possible just to invert the color numbers.
+--That would be a VERY high contrast line. Would likely create 
+--eye strain
+
+--Replaces what is in brackets with what is in quotes
+filteredLine = string.gsub(filteredLine, [[&amp;lt;]], "&lt;")
+filteredLine = string.gsub(filteredLine, [[&amp;gt;]], "&gt;")
+filteredLine = string.gsub(filteredLine, [[&amp;quot;]], "\"")
+filteredLine = string.gsub(filteredLine, [[&amp;amp;]], "&amp;")
+
+
+--text below will entirely remove the code in the brackets
+--For these items we may want to create formating rules.
+--Though more likely much easier would be to replace the
+--commands that uses these with alias. Read in the lines 
+--than format with ftext
+filteredLine = string.gsub(filteredLine, [[&lt;hr&gt;]], "")
+filteredLine = string.gsub(filteredLine, [[&lt;/pre&gt;]], "")
+filteredLine = string.gsub(filteredLine, [[&lt;pre&gt;]], "")
+filteredLine = string.gsub(filteredLine, [[&lt;b&gt;]], "")
+filteredLine = string.gsub(filteredLine, [[&lt;/b&gt;]], "")
+
+--Removing &lt;font size=+1&gt;
+--The double operators appear to cause issues.
+--%p is puncuation. No + after because we know there is only one punctuation to wild after =
+--So now instead of double operators we have an operator and
+--a single wild declaration that must be a puncuation. So + in this case.
+filteredLine = string.gsub(filteredLine, [[&lt;font size=%p1&gt;]], "")
+
+--There should be code here to see if the line now has no viewable text.
+--Not nil or wild, because it may be nothing but spaces. Spaces are something.
+--it should include encapsulate the add default color code if below
+
+--if the line does not have a color code in it.
+--insert the default color code at the start 
+--# is what all the color codes start with
+--%x means hexadecimal number 
+--+ means multiple, in this case hexadecimal numbers
+if "#%x+" ~= string.match(filteredLine, "#%x+") then
+	filteredLine = tecSettings.tecTextColor..filteredLine --Add current text color to the start of the line
+end
+
+--center filter
+--center lines with &lt;center&gt;
+
+selectCurrentLine() --Selects main. 
+--For some reason main does not print when it has been selected.
+
+--hreplace is in scripts under mudlet communicty functions.
+--Though in short it uses hinserttext to push text with colors to main window...
+hreplace(filteredLine)
+
+--displays unfiltered line to screen.
+--display with setTECDebugMode(true)
+--or command line: debug on
+debugToDisplay("Unfiltered line: "..line)
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+		</TriggerGroup>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>communications</name>
+			<script>--&lt;/font&gt;&lt;font color="#0020ff"&gt;&amp;lt;Avidia thinks aloud: Client, if you will, come to Ylsa's?&amp;gt;&lt;/font&gt;
+--&lt;/font&gt;&lt;font color="#0020ff"&gt;&amp;lt;Arteus thinks aloud: Yep.&amp;gt;&lt;/font&gt;
+--&lt;/font&gt;&lt;font color="#0020ff"&gt;&amp;lt;Aoden thinks aloud: We have found all the secrets. No cliffs.&amp;gt;&lt;/font&gt;
+--Piqolo wakes up.&lt;/font&gt;</script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Thoughts</name>
+				<script>--trigger is for how think declarations appear in the main line.
+--Not for how it appears in filteredLine
+--The third item that appears nearly identical to the first is needed for patricians.
+--Their first and last names appear in thoughts and speech.
+
+--This trigger puts thoughts to the  communicationsAll window 
+--and to thoughts window.
+
+
+--https://wiki.mudlet.org/w/Manual:UI_Functions#hecho
+--Echo to Communication window, coloring hex colors
+hecho("Communication", filteredLine.."\n")
+
+--Echo to Thoughts Window, coloring hex showColors
+hecho("Thoughts", filteredLine.."\n")
+
+--[[ Don't use the technique below
+it will cause filters to fail for a short time when too many
+triggers occuring in succession.
+
+selectCurrentLine() --Selects ENTIRE line including line breaks.
+copy() --Copies CURRENT selection to clipboard
+appendBuffer("Communication") --paste copied text to miniConsole
+selectCurrentLine() --Selects ENTIRE line including line breaks.
+copy() --Copies CURRENT selection to clipboard
+appendBuffer("Thoughts") --paste copied text to miniConsole
+]]--</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^&lt;/font&gt;&lt;font color="#(\w+)"&gt;&amp;lt;(\w+) thinks aloud:</string>
+					<string>&amp;lt;You think aloud: </string>
+					<string>^&lt;/font&gt;&lt;font color="#(\w+)"&gt;&amp;lt;(\w+) (\w+) thinks aloud:</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>2</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>speech</name>
+				<script>--This trigger puts speech to the communicationsAll window 
+--and to speech window.
+
+--If over triggering becomes a concern
+--trigger start of line [[You say, &amp;quot;]]
+--prel regex [[^(\w+) says, &amp;quot;]]
+
+--https://wiki.mudlet.org/w/Manual:UI_Functions#hecho
+--Echo to Communication window, coloring hex colors
+hecho("Communication", filteredLine.."\n")
+
+--https://wiki.mudlet.org/w/Manual:UI_Functions#hecho
+--Echo to Communication window, coloring hex colors
+hecho("Speech", filteredLine.."\n")
+
+--This method sometimes kills filtering don't use it
+--selectCurrentLine() --Selects ENTIRE line including line breaks.
+--copy() --Copies CURRENT selection to clipboard
+--appendBuffer("Communication")
+--Keeping it as a  reminder that sometimes, my code sucks!
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>, &amp;quot;</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>0</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Rumors</name>
+				<script>--set bool to yes
+--input line to CommunicationsAll &amp; rumor bar</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>&lt;/font&gt;&lt;font color="#e119e1"&gt;A rumor is circulating around:&lt;/font&gt;</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>3</integer>
+				</regexCodePropertyList>
+			</Trigger>
+		</TriggerGroup>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>Login</name>
+			<script></script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
+			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Login</name>
+				<script>--This trigger handles the handshake for the user.
+--This WILL fail if the developers stop having a blank space
+--after the login it is not [[login]] it is [[login ]]
+send("SKOTOS Zealous 0.7.12.2") --sending the zealous handshake
+
+--The login control continues in TEC CLient Triggers - login - Secret Triger</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>Login: </string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>3</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>SECRET Triger</name>
+				<script>--The system has passed us SECRET NONE after we have provided the handshake.
+--This only works because this is the only time the system passes us SECRET NONE.
+--Now we need to get the USER ID from the user.
+--We could put anything in the command line. Like User: 
+--"USER " just happens to be easy for now...
+
+echo("\nLeaving the word USER in the command line, enter your username.\n")
+--https://wiki.mudlet.org/w/Manual:Lua_Functions#printCmdLine
+printCmdLine("USER ") --Erase what is in the command prompt, and put in this string.
+
+--Login control continues in Aliases - TECCommandLineReplacement - USERLogin</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>SECRET NONE</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>3</integer>
+				</regexCodePropertyList>
+			</Trigger>
+		</TriggerGroup>
+	</TriggerPackage>
+	<TimerPackage />
+	<AliasPackage />
+	<ActionPackage />
+	<ScriptPackage />
+	<KeyPackage />
+	<HelpPackage>
+		<helpURL></helpURL>
+	</HelpPackage>
+</MudletPackage>

@@ -1,0 +1,2544 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MudletPackage>
+<MudletPackage version="1.001">
+	<TriggerPackage />
+	<TimerPackage />
+	<AliasPackage />
+	<ActionPackage />
+	<ScriptPackage>
+		<ScriptGroup isActive="yes" isFolder="yes">
+			<name>Variables Data Themese</name>
+			<packageName></packageName>
+			<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external scripts --
+-------------------------------------------------
+</script>
+			<eventHandlerList />
+			<Script isActive="yes" isFolder="no">
+				<name>Variables</name>
+				<packageName></packageName>
+				<script>--All variables should have corrisponding functions(s) to work with them.
+--Most should have a save to file function.
+
+--Creating a table that will be used to easily save these
+--Variables to file. So NOT putting tec.Settings. before
+--a variable will mean that it does not get saved to file.
+tecSettings = {}
+
+--set primary text color in game
+--needs to be a hex number WITH # before it.
+--If the back ground is dark this will AUTOMATICALLY be changed
+--in the text filter trigger.
+tecSettings.tecTextColor = "#c0c0c0"
+
+--default font size. Do not save it to file.
+tecDefaultFontSize = 14
+
+--adjustable font size
+tecSettings.tecFontSize = 14
+
+--enable or disable debug mode.
+--Currently display red background main line to screen.
+--The code for this is at the bottom of
+--tec client triggers - text filters - text filters
+tecSettings.tecDebugMode = false
+
+--For video debug, having all this put to screen when not needed muxs things up.
+tecSettings.tecDisplayDebugMode = false
+
+--This line is used to buffer the main line.
+--Than we filter this line in triggers - filter text 
+--It is important that this variable be global.
+--DO NOT SAVE THIS TO FILE
+filteredLine = "Reset filteredLine."
+
+--Techniquely we didn't need to do the bulk of everything above.
+--Because I am going to load it from file.
+--However we want an easy method of creating new variables and a
+--location where we will not forget where they are.
+
+--True echos to the user if it was successfull
+tecFileLoadSettings(true)
+setFontSize(tecSettings.tecFontSize)</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>Themes</name>
+				<packageName></packageName>
+				<script>--People expressed interest in having themes.
+
+--Important reference for themes
+--https://doc.qt.io/qt-5.12/stylesheet-reference.html
+--QT style sheets don't always act they was
+--standard css does. Just buggy...
+
+--Upgrade options.
+--add these variables to tecSettings so they can be saved and loaded.
+
+--Font size for tab labels
+tabsFontSize = 18
+
+--Default tab height
+tabsHeight = 30
+
+--QLabels are QTs label system
+--Used here for easy hover affects
+tabsStyle = [[
+	QLabel{
+		background-color: gray;
+    border-width: 1px;
+    border-style: outset;
+    border-color: lightgray;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    margin-right: 1px;
+    margin-left: 1px;
+		font-size: 50px;
+    qproperty-alignment: 'AlignCenter | AlignCenter';
+  }
+	QLabel::hover{
+		background-color: black;
+    border-width: 1px;
+    border-style: outset;
+    border-color: gray;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    margin-right: 1px;
+    margin-left: 1px;
+		font-size: 50px;
+    qproperty-alignment: 'AlignCenter | AlignCenter';
+  }
+]]
+
+--This is now tabs text looks
+tabsFontStyle = '&lt;center&gt;&lt;p style="font-size:18px; color:white"&gt;'
+
+--Default label style.
+labelsStyle = [[background-color: gray;
+								border-width: 1px;
+								border-style: outset;
+								border-color: lightgray;]]
+								
+buttonsStyle = [[QPushButton{
+                		background-color: gray;
+                    border-width: 1px;
+                    border-style: outset;
+                    border-color: lightgray;
+                    border-top-left-radius: 15px;
+                    border-top-right-radius: 15px;
+										border-bottom-left-radius: 15px;
+                    border-bottom-right-radius: 15px;
+                    margin-right: 1px;
+                    margin-left: 1px;
+                		font-size: 50px;
+                    qproperty-alignment: 'AlignCenter | AlignCenter';}
+								 QPushButton::on{}
+								 QPushButton::hover{}
+]]					
+
+--This is now tabs text looks
+buttonsFontStyle = '&lt;center&gt;&lt;p style="font-size:18px; color:white"&gt;'
+</script>
+				<eventHandlerList />
+			</Script>
+		</ScriptGroup>
+		<ScriptGroup isActive="yes" isFolder="yes">
+			<name>mudlet Communidy Functions</name>
+			<packageName></packageName>
+			<script>--[[
+Space for mudlet functions the community makes that we need.
+]]--</script>
+			<eventHandlerList />
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>TextFormatter</name>
+				<packageName></packageName>
+				<script></script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>standaloneFormatter</name>
+					<packageName></packageName>
+					<script>demonnic = demonnic or {}
+demonnic.text = {}
+
+function demonnic:wordWrap(str, limit, indent, indent1)
+  -- pulled from http://lua-users.org/wiki/StringRecipes
+  indent = indent or ""
+  indent1 = indent1 or indent
+  limit = limit or 72
+  local here = 1-#indent1
+  local function check(sp, st, word, fi)
+    if fi - here &gt; limit then
+      here = st - #indent
+      return "\n"..indent..word
+    end
+  end
+  return indent1..str:gsub("(%s+)()(%S+)()", check)
+end
+
+function demonnic:fText(str, opts)
+  local options = demonnic:fixFormatOptions(str, opts)  
+  if options.wrap and (options.strLen &gt; options.effWidth) then
+    local wrapped = demonnic:wordWrap(str, options.effWidth)
+    local lines = wrapped:split("\n")
+    local formatted = {}
+		options.fixed = false
+    for _,line in ipairs(lines) do
+      table.insert(formatted, demonnic:fLine(line, options))
+    end
+    return table.concat(formatted, "\n")
+  else
+    return demonnic:fLine(str, options)
+  end
+end
+
+function demonnic:fixFormatOptions(str, opts)
+  if opts.fixed then return table.deepcopy(opts) end
+  --Set up all the things we might call the different echo types
+  local dec = {"d", "decimal", "dec"}
+  local hex = {"h", "hexidecimal", "hex"}
+  local col = {"c", "color", "colour", "col", "name"}
+  if opts == nil then opts = {} end -- don't overwrite options if they passed them
+  --but if they passed something other than a table as the options than oopsie!
+  if type(opts) ~= "table" then 
+    error("Improper argument: options expected to be passed as table") 
+  end
+  --now we make a copy of the table, so we don't edit the original during all this
+  local options = table.deepcopy(opts)
+  if options.wrap == nil then options.wrap = true end --wrap by default.
+  options.formatType = options.formatType or "" --by default, no color formatting.
+  options.width = options.width or 80 --default 80 width
+  options.cap = options.cap or "" --no cap by default
+  options.spacer = options.spacer or " " --default spacer is the space character
+  options.alignment = options.alignment or "center" --default alignment is centered
+  if options.nogap == nil then options.nogap = false end
+  if options.inside == nil then options.inside = false end --by default, we don't put the spacer inside
+  if not options.mirror == false then options.mirror = options.mirror or true end--by default, we do want to use mirroring for the caps
+  --setup default options for colors based on the color formatting type
+  if table.contains(dec, options.formatType) then
+    options.capColor = options.capColor or "&lt;255,255,255&gt;"
+    options.spacerColor = options.spacerColor or "&lt;255,255,255&gt;"
+    options.textColor = options.textColor or "&lt;255,255,255&gt;"
+    options.colorReset = "&lt;r&gt;"
+    options.colorPattern = "&lt;%d+,%d+,%d+:?%d*,?%d*,?%d*&gt;"
+  elseif table.contains(hex, options.formatType) then
+    options.capColor = options.capColor or "#FFFFFF"
+    options.spacerColor = options.spacerColor or "#FFFFFF"
+    options.textColor = options.textColor or "#FFFFFF"
+    options.colorReset = "#r"
+    options.colorPattern = 'c|%d%d%d%d%d%d'
+  elseif table.contains(col, options.formatType) then
+    options.capColor = options.capColor or "&lt;white&gt;"
+    options.spacerColor = options.spacerColor or "&lt;white&gt;"
+    options.textColor = options.textColor or "&lt;white&gt;"
+    options.colorReset = "&lt;reset&gt;"
+    options.colorPattern = "&lt;%w*_?%w*:?%w*_?%w*&gt;"
+  else
+    options.capColor = ""
+    options.spacerColor = ""
+    options.textColor = ""
+    options.colorReset = ""
+    options.colorPattern = ""
+  end
+  options.originalString = str
+  options.strippedString = string.gsub(tostring(str), options.colorPattern, "")
+  options.strLen = string.len(options.strippedString)
+  options.leftCap = options.cap
+	options.rightCap = options.cap
+  options.leftPadLen = math.floor((options.width - options.strLen)/2,1) - 1
+  options.rightPadLen = options.leftPadLen + ((options.width - options.strLen)%2)
+  options.maxPad = 0
+  options.capLen = string.len(options.cap)
+  local gapSpaces = 0
+  if not options.nogap then
+    if options.alignment == "center" then 
+      gapSpaces = 2 
+    else 
+      gapSpaces = 1 
+    end
+  end
+  options.effWidth = options.width - ((options.capLen * 2) + gapSpaces)
+  if options.capLen &gt; options.leftPadLen then
+    options.cap = options.cap:sub(1, leftPadLen)
+    options.capLen = string.len(options.cap)
+  end
+  options.fixed = true
+  return options
+end
+
+function demonnic:fLine(str,opts)
+  local options = demonnic:fixFormatOptions(str,opts)
+  local strippedString = options.strippedString
+  local strLen = options.strLen
+  local leftCap = options.leftCap
+  local rightCap = options.rightCap
+  local leftPadLen = options.leftPadLen
+  local rightPadLen = options.rightPadLen
+  local maxPad = options.maxPad
+  local capLen = options.capLen
+
+  if options.alignment == "center" then --we're going to center something
+    if options.mirror then --if we're reversing the left cap and the right cap (IE {{[[ turns into ]]}} )
+      rightCap = string.gsub(rightCap, "&lt;", "&gt;")
+      rightCap = string.gsub(rightCap, "%[", "%]")
+      rightCap = string.gsub(rightCap, "{", "}")
+      rightCap = string.gsub(rightCap, "%(", "%)")
+      rightCap = string.reverse(rightCap)
+    end --otherwise, they'll be the same, so don't do anything
+    if not options.nogap then str = string.format(" %s ", str) end
+    
+  elseif options.alignment == "right" then --we'll right-align the text
+    leftPadLen = leftPadLen + rightPadLen
+    rightPadLen = 0
+    rightCap = ""
+    if not options.nogap then str = string.format(" %s", str) end
+    
+  else --Ok, so if it's not center or right, we assume it's left. We don't do justified. Sorry.
+    rightPadLen = rightPadLen + leftPadLen
+    leftPadLen = 0
+    leftCap = ""
+    if not options.nogap then str = string.format("%s ", str) end
+  end--that's it, took care of both left, right, and center formattings, now to output the durn thing. 
+  local fullLeftCap = string.format("%s%s%s", options.capColor, leftCap, options.colorReset)
+  local fullLeftSpacer = string.format("%s%s%s", options.spacerColor, string.rep(options.spacer, (leftPadLen - capLen)), options.colorReset)
+  local fullText = string.format("%s%s%s", options.textColor, str, options.colorReset)
+  local fullRightSpacer = string.format("%s%s%s", options.spacerColor, string.rep(options.spacer, (rightPadLen - capLen)), options.colorReset)
+  local fullRightCap = string.format("%s%s%s", options.capColor, rightCap, options.colorReset)
+
+  if options.inside then 
+  -- "endcap===== some text =====endcap"
+  -- "endcap===== some text =====pacdne" 
+  -- "endcap================= some text" 
+  -- "some text =================endcap"
+    local finalString = string.format("%s%s%s%s%s", fullLeftCap, fullLeftSpacer, fullText, fullRightSpacer, fullRightCap)
+    return finalString
+  else 
+  --"=====endcap some text endcap=====" 
+  --"=====endcap some text pacdne====="
+  --"=================endcap some text" 
+  --"some text endcap================="
+
+    local finalString = string.format("%s%s%s%s%s", fullLeftSpacer, fullLeftCap, fullText, fullRightCap, fullRightSpacer)
+    return finalString
+  end
+end
+
+function demonnic:align(str, opts)
+  local options = {}
+  if opts == nil then
+    opts = {}
+  end
+  if type(opts) == "table" then
+    options = table.deepcopy(opts)
+    options.formatType = ""
+		options.wrap = false
+  else
+    error("Improper argument: options expected to be passed as table") 
+  end
+  options = demonnic:fixFormatOptions(str, options)
+  return demonnic:fLine(str, options)
+end
+
+function demonnic:dalign(str, opts)
+  local options = {}
+  if opts == nil then
+    opts = {}
+  end
+  if type(opts) == "table" then
+    options = table.deepcopy(opts)
+    options.formatType = "d"
+    options.wrap = false
+  else
+    error("Improper argument: options expected to be passed as table") 
+  end
+  options = demonnic:fixFormatOptions(str, options)
+  return demonnic:fLine(str, options)
+end
+
+function demonnic:calign(str, opts)
+  local options = {}
+  if opts == nil then
+    opts = {}
+  end
+  if type(opts) == "table" then
+    options = table.deepcopy(opts)
+    options.formatType = "c"
+    options.wrap = false
+  else
+    error("Improper argument: options expected to be passed as table") 
+  end
+  options = demonnic:fixFormatOptions(str, options)
+  return demonnic:fLine(str, options)
+end
+
+function demonnic:halign(str, opts)
+  local options = {}
+  if opts == nil then
+    opts = {}
+  end
+  if type(opts) == "table" then
+    options = table.deepcopy(opts)
+    options.formatType = "h"
+    options.wrap = false
+  else
+    error("Improper argument: options expected to be passed as table") 
+  end
+  options = demonnic:fixFormatOptions(str, options)
+  return demonnic:fLine(str, options)
+end
+
+function demonnic:cfText(str, opts)
+  local options = {}
+  if opts == nil then opts = {} end
+  if type(opts) == "table" then
+    options = table.deepcopy(opts)
+    options.formatType = "c"
+  else
+    error("Improper argument: options expected to be passed as table") 
+  end
+  options = demonnic:fixFormatOptions(str, options)
+  return demonnic:fText(str, options)
+end
+
+function demonnic:dfText(str, opts)
+  local options = {}
+  if opts == nil then opts = {} end
+  if type(opts) == "table" then
+    options = table.deepcopy(opts)
+    options.formatType = "d"
+  else
+    error("Improper argument: options expected to be passed as table") 
+  end
+  options = demonnic:fixFormatOptions(str, options)
+  return demonnic:fText(str, options)
+end
+
+function demonnic:hfText(str, opts)
+  local options = {}
+  if opts == nil then opts = {} end
+  if type(opts) == "table" then
+    options = table.deepcopy(opts)
+    options.formatType = "h"
+  else
+    error("Improper argument: options expected to be passed as table") 
+  end
+  options = demonnic:fixFormatOptions(str, options)
+  return demonnic:fText(str, options)
+end
+
+function demonnic:test_ftext()
+  local testString = "This is a test of the emergency broadcast system. This is only a test. If this had been a real emergency, we would have given you more sensible information after this. But this was only a test."
+  
+  local nTable = {width = 40, cap = "(CAP)", inside = true, alignment = 'center'}
+  local cTable = table.deepcopy(nTable)
+    cTable.formatType="c"
+    cTable.capColor = "&lt;red:black&gt;"
+    cTable.spacerColor = "&lt;purple:green&gt;"
+    cTable.textColor = "&lt;purple:green&gt;"
+  
+  local dTable = table.deepcopy(nTable)
+    dTable.formatType="d"
+    dTable.capColor = "&lt;0,0,182&gt;"
+    dTable.spacerColor = "&lt;0,182,0&gt;"
+    dTable.textColor = "&lt;182,0,0&gt;"
+  
+  local hTable = table.deepcopy(nTable)
+    hTable.formatType="h"
+    hTable.capColor = "#FF0000"
+    hTable.spacerColor = "#00FF00"
+    hTable.textColor = "#0000FF"
+  echo(string.rep("\n", 5))
+  echo("With word wrap:\n")
+  echo(demonnic:fText(testString, nTable) .. "\n")
+  cecho(demonnic:fText(testString, cTable) .. "\n")
+  decho(demonnic:fText(testString, dTable) .. "\n")
+  hecho(demonnic:fText(testString, hTable) .. "\n")
+
+  echo("\n\nWithout word wrap:\n")
+  echo(demonnic:align(testString, nTable) .. "\n")
+  decho(demonnic:dalign(testString, dTable) .. "\n")
+  cecho(demonnic:calign(testString, cTable) .. "\n")
+  hecho(demonnic:halign(testString, hTable) .. "\n")
+end</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>reusableFormatter</name>
+					<packageName></packageName>
+					<script>demonnic.TextFormatter = {}
+demonnic.TextFormatter.validFormatTypes = { 'd', 'dec', 'decimal', 'h', 'hex', 'hexidecimal', 'c', 'color', 'colour', 'col', 'name'}
+
+
+function demonnic.TextFormatter:setType(typeToSet)
+  local isNotValid = not table.contains(self.validFormatTypes, typeToSet)
+  if isNotValid then
+    error("demonnic.TextFormatter:setType: Invalid argument, valid types are:" .. table.concat(self.validFormatTypes, ", "))
+  end
+  self.options.formatType = typeToSet
+end
+
+function demonnic.TextFormatter:toBoolean(thing)
+  if type(thing) ~= "boolean" then
+    if thing == "true" then
+      thing = true
+    elseif thing == "false" then
+      thing = false
+    else
+      return nil
+    end
+  end
+  return thing
+end
+
+function demonnic.TextFormatter:checkString(str)
+  if type(str) ~= "string" then
+    if tostring(str) then
+      str = tostring(str)
+    else
+      return nil
+    end
+  end
+  return str
+end
+
+function demonnic.TextFormatter:setWrap(shouldWrap)
+  local argumentType = type(shouldWrap)
+  shouldWrap = self:toBoolean(shouldWrap)
+  if shouldWrap == nil then
+    error("demonnic.TextFormatter:setWrap(shouldWrap) Argument error, boolean expected, got " .. argumentType .. ", if you want to set the number of characters wide to format for, use setWidth()")
+  end
+  self.options.wrap = shouldWrap
+end
+
+function demonnic.TextFormatter:setWidth(width)
+  if type(width) ~= "number" then
+    if tonumber(width) then
+      width = tonumber(width)
+    else
+      error("demonnic.TextFormatter:setWidth(width): Argument error, number expected, got " .. type(width))
+    end
+  end
+  self.options.width = width
+end
+
+function demonnic.TextFormatter:setCap(cap)
+  local argumentType = type(cap)
+  local cap = self:checkString(cap)
+  if cap == nil then error("demonnic.TextFormatter:setCap(cap): Argument error, string expect, got " .. argumentType) end
+  self.options.cap = cap
+end
+
+function demonnic.TextFormatter:setCapColor(capColor)
+  local argumentType = type(capColor)
+  local capColor = self:checkString(capColor)
+  if capColor == nil then error("demonnic.TextFormatter:setCapColor(capColor): Argument error, string expected, got " .. argumentType) end
+  self.options.capColor = capColor
+end
+
+function demonnic.TextFormatter:setSpacerColor(spacerColor)
+  local argumentType = type(spacerColor)
+  local spacerColor = self:checkString(spacerColor)
+  if spacerColor == nil then error("demonnic.TextFormatter:setSpacerColor(spacerColor): Argument error, string expected, got " .. argumentType) end
+  self.options.spacerColor = spacerColor
+end
+
+function demonnic.TextFormatter:setTextColor(textColor)
+  local argumentType = type(textColor)
+  local textColor = self:checkString(textColor)
+  if textColor == nil then error("demonnic.TextFormatter:setTextColor(textColor): Argument error, string expected, got " .. argumentType) end
+  self.options.textColor = textColor
+end
+
+function demonnic.TextFormatter:setSpacer(spacer)
+  local argumentType = type(spacer)
+  local spacer = self:checkString(spacer)
+  if spacer == nil then error("demonnic.TextFormatter:setSpacer(spacer): Argument error, string expect, got " .. argumentType) end
+  self.options.spacer = spacer
+end
+
+function demonnic.TextFormatter:setAlignment(alignment)
+  local validAlignments = {
+    "left",
+    "right",
+    "center"
+  }
+  if not table.contains(validAlignments, alignment) then
+    error("demonnic.TextFormatter:setAlignment(alignment): Argument error: Only valid arguments for setAlignment are 'left', 'right', or 'center'. You sent" .. alignment)
+  end
+  self.options.alignment = alignment
+end
+
+function demonnic.TextFormatter:setInside(spacerInside)
+  local argumentType = type(spacerInside)
+  spacerInside = self:toBoolean(spacerInside)
+  if spacerInside == nil then
+    error("demonnic.TextFormatter:setInside(spacerInside) Argument error, boolean expected, got " .. argumentType)
+  end
+  self.options.inside = spacerInside
+end
+
+function demonnic.TextFormatter:setMirror(shouldMirror)
+  local argumentType = type(shouldMirror)
+  shouldMirror = self:toBoolean(shouldMirror)
+  if shouldMirror == nil then
+    error("demonnic.TextFormatter:setMirror(shouldMirror): Argument error, boolean expected, got " .. argumentType)
+  end
+  self.options.mirror = shouldMirror
+end
+
+function demonnic.TextFormatter:format(str)
+  return demonnic:fText(str, self.options)
+end
+
+function demonnic.TextFormatter:new(options)
+  if options == nil then options = {} end
+  if options and type(options) ~= "table" then
+    error("demonnic.TextFormatter:new(options): Argument error, table expected, got " .. type(options))
+  end
+  local me = {}
+  me.options = {
+    formatType = "c",
+    wrap = true,
+    width = 80,
+    cap = "",
+    spacer = " ",
+    alignment = "center",
+    inside = true,
+    mirror = false,
+  }
+  for option, value in pairs(options) do
+    me.options[option] = value
+  end
+  setmetatable(me, self)
+  self.__index = self
+  return me
+end</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tableFormatter</name>
+					<packageName></packageName>
+					<script>demonnic = demonnic or {}
+demonnic.TableMaker = {
+  headCharacter = "*",
+  footCharacter = "*",
+  edgeCharacter = "*",
+  rowSeparator = "-",
+  separator = "|",
+
+  colorReset = "&lt;reset&gt;",
+  formatType = "c",
+  printHeaders = true,
+}
+
+function demonnic.TableMaker:checkPosition(position, func)
+  if position == nil then position = 0 end
+  if type(position) ~= "number" then
+    if tonumber(position) then
+      position = tonumber(position)
+    else
+      error(func .. ": Argument error: position expected as number, got " .. type(position))
+    end
+  end
+  return position
+end
+
+function demonnic.TableMaker:insert(tbl, pos, item)
+  if pos ~= 0 then
+    table.insert(tbl, pos, item)
+  else
+    table.insert(tbl, item)
+  end
+end
+
+function demonnic.TableMaker:addColumn(options, position)
+  if options == nil then options = {} end
+  if not type(options) == "table" then error("demonnic.TableMaker:addColumn(options, position): Argument error: options expected as table, got " .. type(options)) end
+  local options = table.deepcopy(options)
+  position = self:checkPosition(position, "demonnic.TableMaker:addColumn(options, position)")
+  options.width = options.width or 20
+  options.name = options.name or ""
+  local formatter = demonnic.TextFormatter:new(options)
+  self:insert(self.columns, position, formatter)
+end
+
+function demonnic.TableMaker:deleteColumn(position)
+  if position == nil then error("demonnic.TableMaker:deleteColumn(position): Argument Error: position as number expected, got nil") end
+  position = self:checkPosition(position)
+  local maxColumn = #self.columns
+  if position &gt; maxColumn then error("demonnic.TableMaker:deleteColumn(position): Argument Error: position provided was larger than number of columns in the table. Number of columns: " .. #self.columns) end
+  table.remove(self.columns, position)
+end
+
+function demonnic.TableMaker:replaceColumn(options, position)
+  if position == nil then
+    error("demonnic.TableMaker:replaceColumn(options, position): Argument error: position as number expected, got nil")
+  end
+  position = self:checkPosition(position)
+  if type(options) ~= "table" then error("demonnic.TableMaker:replaceColumn(options, position): Argument error: options as table expected, got " .. type(options)) end
+  if #self.columns &lt; position then error("demonnic.TableMaker:replaceColumn(options, position): you cannot specify a position higher than the number of columns currently in the TableMaker. You sent:" .. position .. " and there are: " .. #self.columns .. "columns in the TableMaker") end
+  options.width = options.width or 20
+  options.name = options.name or ""
+  local formatter = demonnic.TextFormatter:new(options)
+  self.columns[position] = formatter
+end
+
+function demonnic.TableMaker:addRow(columnEntries, position)
+  local columnEntriesType = type(columnEntries)
+  if columnEntriesType ~= "table" then
+    error("demonnic.TableMaker:addRow(columnEntries, position): Argument error, columnEntries expected as table, got " .. columnEntriesType)
+  end
+  for _,entry in ipairs(columnEntries) do
+    local entryCheck = self:checkEntry(entry)
+    if entryCheck == 0 then
+      if type(entry) == "function" then
+        error("demonnic.TableMaker:addRow(columnEntries, position): Argument Error, you provided a function for a columnEntry but it does not return a string. We need a string. It was entry number " .. _ .. "in columnEntries")
+      else
+        error("demonnic.TableMaker:addRow(columnEntries, position): Argument error, columnEntries items expected as string, got:" .. type(entry)) 
+      end
+    end
+  end
+  position = self:checkPosition(position, "demonnic.TableMaker:addRow(columnEntries, position)")
+  self:insert(self.rows, position, columnEntries)
+end
+
+function demonnic.TableMaker:deleteRow(position)
+  if position == nil then error("demonnic.TableMaker:deleteRow(position): Argument Error: position as number expected, got nil") end
+  position = self:checkPosition(position, "demonnic.TableMaker:deleteRow(position)")
+  local maxRow = #self.rows
+  if position &gt; maxRow then error("demonnic.TableMaker:deleteRow(position): Argument Error: position given was &gt; the number of rows we have # of rows is:" .. maxRow) end
+  table.remove(self.rows, position)
+end
+
+function demonnic.TableMaker:replaceRow(columnEntries, position)
+  if position == nil then
+    error("demonnic.TableMaker:replaceRow(columnEntries, position): ArgumentError: position expected as number, received nil")
+  end
+  position = self:checkPosition(position, "demonnic.TableMaker:replaceRow(columnEntries, position)")
+  if #self.rows &lt; position then
+    error("demonnic.TableMaker:replaceRow(columnEntries, position): position cannot be greater than the number of rows already in the tablemaker. You provided: " .. position .. " and there are " .. #self.rows .. "rows in the TableMaker")
+  end
+  for _,entry in ipairs(columnEntries) do
+    local entryCheck = self:checkEntry(entry)
+    if entryCheck == 0 then
+      if type(entry) == "function" then
+        error("demonnic.TableMaker:replaceRow(columnEntries, position): Argument Error: you provided a function for a columnEntry but it does not return a string. We need a string. It was entry number " .. _ .. "in columnEntries")
+      else
+        error("demonnic.TableMaker:replaceRow(columnEntries, position): Argument error: columnEntries items expected as string, got:" .. type(entry))
+      end
+    end
+  end
+  self.rows[position] = columnEntries
+end
+
+function demonnic.TableMaker:checkEntry(entry)
+  if type(entry) ~= "string" then
+    if type(entry) == "function" then
+      local entryReturn = entry()
+      if type(entryReturn) ~= string and not tostring(entryReturn) then entry = 0 end
+    elseif not tostring(entry) then
+      entry = 0
+    end
+  end
+  return entry
+end
+
+function demonnic.TableMaker:checkNumber(num)
+  if num == nil then num = 0 end
+  if not tonumber(num) then num = 0 end
+  return tonumber(num)
+end
+
+function demonnic.TableMaker:setCell(row, column, entry)
+  local maxRow = #self.rows
+  local maxColumn = #self.columns
+  local ae = "demonnic.TableMaker:setCell(row, column, entry): Argument Error:"
+  row = self:checkNumber(row)
+  if row == 0 then error(ae .. " row must be a number, you provided " .. type(row)) end
+  column = self:checkNumber(column)
+  if column == 0 then error(ae .. " column must be a number, you provided " .. type(column)) end
+  if row &gt; maxRow then error(ae .. " row is higher than the number of rows in the table. Highest row:" .. maxRow) end
+  if column &gt; maxColumn then error(ae .. " column is higher than the number of columns in the table. Highest column:" .. maxColumn) end
+  local entryType = type(entry)
+  entry = self:checkEntry(entry)
+  if entry == 0 then
+    if type(entry) == "function" then 
+      error(ae .. " entry was provided as a function, but does not return a string. We need a string in the end")
+    else 
+      error("demonnic.TableMaker:setCell(row, column, entry): Argument Error: entry must be a string, or a function which returns a string. You provided a " .. entryType)
+    end
+  end
+  self.rows[row][column] = entry
+end
+
+function demonnic.TableMaker:totalWidth()
+  local width = 0
+  local numberOfColumns = #self.columns
+  local separatorWidth = string.len(self.separator)
+  local edgeWidth = string.len(self.edgeCharacter) * 2
+  for _,column in ipairs(self.columns) do
+    width = width + column.options.width
+  end
+  separatorWidth = separatorWidth * (numberOfColumns - 1)
+  width = width + edgeWidth + separatorWidth
+  return width
+end
+
+function demonnic.TableMaker:scanRow(rowToScan)
+  local row = table.deepcopy(rowToScan)
+  local rowEntries = #row
+  local numberOfColumns = #self.columns
+  local columns = {}
+  local linesInRow = 0
+  local rowText = ""
+  local ec = self.frameColor .. self.edgeCharacter .. self.colorReset
+  local sep = self.separatorColor .. self.separator .. self.colorReset
+
+  if rowEntries &lt; numberOfColumns then
+    entriesNeeded = numberOfColumns - rowEntries
+    for i = 1,entriesNeeded do
+      table.insert(row, "")
+    end
+  end
+  for index,formatter in ipairs(self.columns) do
+    local str = row[index]
+    local column = ""
+    if type(str) == "function" then str = str() end
+    column = formatter:format(str)
+    table.insert(columns, column:split("\n"))
+  end
+  for _,rowLines in ipairs(columns) do
+    if linesInRow &lt; #rowLines then linesInRow = #rowLines end
+  end
+  for index,rowLines in ipairs(columns) do
+    if #rowLines &lt; linesInRow then
+      local neededLines = linesInRow - #rowLines
+      for i=1,neededLines do
+        table.insert(rowLines, self.columns[index]:format(""))
+      end
+    end
+  end
+  for i= 1,linesInRow do
+    local thisLine = ec
+    for index,column in ipairs(columns) do
+      if index == 1 then
+        thisLine = string.format("%s%s", thisLine, column[i])
+      else
+        thisLine = string.format("%s%s%s", thisLine, sep, column[i])
+      end
+    end
+    thisLine = string.format("%s%s", thisLine, ec)
+    if rowText == "" then
+      rowText = thisLine
+    else
+      rowText = string.format("%s\n%s", rowText, thisLine)
+    end
+  end
+  return rowText
+end
+
+function demonnic.TableMaker:makeHeader()
+  local totalWidth = self:totalWidth()
+  local ec = self.frameColor .. self.edgeCharacter .. self.colorReset
+  local sep = self.separatorColor .. self.separator .. self.colorReset
+  local header = self.frameColor .. string.rep(self.headCharacter, totalWidth) .. self.colorReset
+  local columnHeaders = ""
+  if self.printHeaders then
+    local columnEntries = {}
+    for _,v in ipairs(self.columns) do
+      table.insert(columnEntries, v:format(v.options.name))
+    end
+    local divWithNewlines = string.format("\n%s", self:createRowDivider())
+    columnHeaders = string.format("\n%s%s%s%s", ec, table.concat(columnEntries, sep), ec, divWithNewlines)
+  end
+  header = string.format("%s%s", header, columnHeaders)
+  return header
+end
+
+function demonnic.TableMaker:createRowDivider()
+  local columnPieces = {}
+  for _,v in ipairs(self.columns) do
+    local piece = string.format("%s%s%s", self.separatorColor, string.rep(self.rowSeparator, v.options.width), self.colorReset)
+    table.insert(columnPieces, piece)
+  end
+  local ec = self.frameColor .. self.edgeCharacter .. self.colorReset
+  local sep = self.separatorColor .. self.separator .. self.colorReset
+  return string.format("%s%s%s", ec, table.concat(columnPieces, sep), ec)
+end
+
+function demonnic.TableMaker:assemble()
+  local sheet = ""
+  local rows = {}
+  for _,row in ipairs(self.rows) do
+    table.insert(rows, self:scanRow(row))
+  end
+  local divWithNewlines = string.format("\n%s\n", self:createRowDivider())
+  local footer = string.format("%s%s%s", self.frameColor, string.rep(self.footCharacter, self:totalWidth()), self.colorReset)
+  sheet = string.format("%s\n%s\n%s", self:makeHeader(), table.concat(rows, divWithNewlines), footer)
+  return sheet
+end
+
+
+function demonnic.TableMaker:new(options)
+  local me = {}
+  setmetatable(me, self)
+  self.__index = self
+  if options == nil then options = {} end
+  if type(options) ~= "table" then
+    error("demonnic.TableMaker:new(options): ArgumentError: options expected as table, got " .. type(options))
+  end
+  local options = table.deepcopy(options)
+  local columns = false
+  if options.columns then
+    if type(options.columns) ~= "table" then error("demonnic.TableMaker:new(options): option error: You provided an options.columns entry of type " .. type(options.columns) .. " and columns must a table with entries suitable for demonnic.TableFormatter:addColumn().") end
+    columns = table.deepcopy(options.columns)
+    options.columns = nil
+  end
+  local rows = false
+  if options.rows then
+    if type(options.rows) ~= "table" then error("demonnic.tableMaker:new(options): option error: You provided an options.rows entry of type " .. type(options.rows) .. " and rows must be a table with entrys suitable for demonnic.TableFormatter:addRow()") end
+    rows = table.deepcopy(options.rows)
+    options.rows = nil
+  end
+  for option, value in pairs(options) do
+    me[option] = value
+  end
+  local dec = {"d", "decimal", "dec"}
+  local hex = {"h", "hexidecimal", "hex"}
+  local col = {"c", "color", "colour", "col", "name"}
+  if table.contains(dec, me.formatType) then
+    me.frameColor = me.frameColor or "&lt;255,255,255&gt;"
+    me.separatorColor = me.separatorColor or me.frameColor
+    me.colorReset = "&lt;r&gt;"
+  elseif table.contains(hex, me.formatType) then
+    me.frameColor = me.frameColor or "#ffffff"
+    me.separatorColor = me.separatorColor or me.frameColor
+    me.colorReset = "#r"
+  elseif table.contains(col, me.formatType) then
+    me.frameColor = me.frameColor or "&lt;white&gt;"
+    me.separatorColor = me.separatorColor or me.frameColor
+    me.colorReset = "&lt;reset&gt;"
+  else
+    me.frameColor = ""
+    me.separatorColor = ""
+    me.colorReset = ""
+  end
+  me.columns = {}
+  me.rows = {}
+  if columns then
+    for _,column in ipairs(columns) do
+      me:addColumn(column)
+    end
+  end
+  if rows then
+    for _,row in ipairs(rows) do
+      me:addRow(row)
+    end
+  end
+  return me
+end</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>
+			<Script isActive="yes" isFolder="no">
+				<name>hreplace</name>
+				<packageName></packageName>
+				<script>function hreplace(window, text)
+    if not text then text, window = window, nil end
+    window = window or "main"
+    local str, start, stop = getSelection(window)
+    if window ~= "main" then
+        replace(window, "")
+    else
+        replace("")
+    end
+    moveCursor(window, start, getLineNumber(window))
+    hinsertText(window, text)
+end</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>xReplace</name>
+				<packageName></packageName>
+				<script>function xreplace(type, window, text)
+    if not text then text, window = window, nil end
+    window = window or "main"
+    local str, start, stop = getSelection(window)
+    if window ~= "main" then
+        replace(window, "")
+    else
+        replace("")
+    end
+    moveCursor(window, start, getLineNumber(window))
+    xEcho(type, "insertText", window, text)
+end</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>guiFramework</name>
+				<packageName></packageName>
+				<script>-- Jor'Mox's GUIframe Script
+-- 3/07/2019
+-- v1.4.2
+
+-- To resize frames or move tabs, right click and drag either the resize label or the tab
+-- until the desired result is achieved.
+
+-- To add a window to a frame for the script to manage, use the
+-- GUIframe.addWindow(window, name, container, hideText) function, where the window
+-- variable contains the Geyser object you want to add, the name variable contains
+-- the name you want it to be referred to as, which also is used as the text printed
+-- on the associated tab that is created, the container variable is a string containing
+-- one of the following: bottom, top, topleft, topright, bottomleft, bottomright,
+-- and the hideText variable is an optional boolean which, if true, prevents text being
+-- written on the tab for this window.
+
+-- To remove a window from GUIframe, use the GUIframe.removeWindow(name, container)
+-- function, where the name variable is the same name you gave the window when adding it,
+-- and the optional container variable is a string specifying which container to remove
+-- the window from. If no container is specified, the window is removed regardless of
+-- which container it is in.
+
+-- Resizing of frames can be enabled or disabled using the GUIframe.enable(side) and
+-- GUIframe.disable(side, hide) functions respectively. If the second argument to
+-- GUIframe.disable is false, then the entire set of frames on that side is hidden, and
+-- the border is adjusted as if that side had be resized to zero.
+
+-- To save and load settings, use the GUIframe.saveSettings() and
+-- GUIframe.loadSettings(redraw) functions. If the redraw argument is true, the border
+-- background color is changed to black to force the area of the borders to be redrawn.
+-- Additionally, the GUIframe.reinitialize() function can be used to force the script to
+-- initialize itself again, going back to default settings.
+
+-- To activate a tab without it being clicked, use the GUIframe.activate(name) function.
+-- And to apply a stylesheet to a tab that is different from the default stylesheet, use
+-- the GUIframe.styleTab(name, style) function, where the style variable contains a string
+-- with the CSS to be applied. Since tabs are styled only when created or when this
+-- function is used, there should be no concern with this styling being overwritten.
+
+GUIframe = GUIframe or {}
+
+local mainW, mainH = getMainWindowSize()
+local halfW, halfH = math.floor(mainW/2), math.floor(mainH/2)
+local quarterW, quarterH = math.floor(halfW/2), math.floor(halfH/2)
+local eighthW, eighthH = math.floor(quarterW/2), math.floor(quarterH/2)
+
+GUIframe.configs = GUIframe.configs or {}
+
+--Default settings for display.
+--These will load on a reset, and will be
+--what loads when the application is run before
+--saving display settings.
+GUIframe.defaults = {
+    tabHeight = tabsHeight,
+    tabStyle = tabsStyle,
+    tabEchoStyle = tabsFontStyle,
+    leftStartWidth = eighthW,
+    leftStartHeight = halfH,
+    rightStartWidth = eighthW,
+    rightStartHeight = halfH,
+    topStartHeight = eighthH,
+    bottomStartHeight = 50,
+    resizeHeight = 30,
+    resizeWidth = 30,
+    resizeHoverImage = "/imgs/blue_arrows.png",
+    resizeRestImage = "/imgs/blue_arrows_30t.png",
+    borderOffset = 5,
+}
+
+GUIframe.windows = GUIframe.windows or {}
+GUIframe.tabs = GUIframe.tabs or {}
+GUIframe.tabCoords = GUIframe.tabCoords or {}
+GUIframe.sides = GUIframe.sides or {left = 'enabled', right = 'enabled', top = 'enabled', bottom = 'enabled'}
+
+local resize_style = "border-image: url(%s%s);"
+
+local configs = table.update(GUIframe.defaults, GUIframe.configs)
+local tabsInfo, containerInfo, resizeInfo
+
+local container_names = {'topLeftContainer', 'bottomLeftContainer', 'topRightContainer',
+    'bottomRightContainer', 'bottomContainer', 'topContainer'}
+local tab_names = {'topLeftTabs', 'topRightTabs', 'bottomLeftTabs', 'bottomRightTabs'}
+local resizeLabels = {'resizeLeft', 'resizeRight', 'resizeTop', 'resizeBottom'}
+local sides = {"top","bottom","left","right"}
+local side_containers = {
+    left = {"topLeftContainer","bottomLeftContainer","topLeftTabs","bottomLeftTabs"},
+    right = {"topRightContainer","bottomRightContainer","topRightTabs","bottomRightTabs"},
+    top = {"topContainer"},
+    bottom = {"bottomContainer"}
+}
+
+local function get_window_coords(win, update) -- gets coords for window, stores data in tabCoords table as needed
+    local x, y = win:get_x(), win:get_y()
+    local w, h = win:get_width(), win:get_height()
+    if update then
+        GUIframe.tabCoords[win.name]  = {x = x, y = y, w = w, h = h}
+    end
+    return x, y, w, h
+end
+
+local function check_overlap(tab, x, y) -- checks to see if given coords overlap tab or tab container
+    if type(tab) == "string" then tab = GUIframe[tab] or GUIframe.tabs[tab] end
+    if tab.hidden or tab.auto_hidden then return false end
+    local info = GUIframe.tabCoords[tab.name]
+    local x1, y1 = info.x, info.y
+    local x2, y2 = x1 + info.w, y1 + info.h
+    return (x &gt;= x1 and x &lt;= x2 and y &gt;= y1 and y &lt;= y2)
+end
+
+local function update_tab(tab, x, y, w, h) -- resizes and moves tab and updates tab coords table
+    tab:move(x, y)
+    tab:resize(w,h)
+    local info = GUIframe.tabCoords[tab.name] or {}
+    info.x, info.y = tab:get_x(), tab:get_y()
+    info.w, info.h = tab:get_width(), tab:get_height()
+    if table.contains(tab_names, tab.name) then
+        info.container = true
+    end
+    GUIframe.tabCoords[tab.name] = info
+end
+
+local function get_containers(pos)
+    if type(pos) == "table" then pos = pos.name end
+    for _,w in ipairs({'right','left','container','tabs'}) do
+        pos = pos:gsub(w,w:title())
+    end
+    local con, tab
+    if string.find(pos,"Container") then
+        con = GUIframe[pos]
+        if not con then return end
+        tabs = con.tabs
+    elseif string.find(pos,"Tabs") then
+        tabs = GUIframe[pos]
+        if not tab then return end
+        con = tabs.con
+    else
+        con = GUIframe[pos.."Container"]
+        tabs = GUIframe[pos.."Tabs"]
+    end
+    return con, tabs
+end
+
+local function config()
+    configs = table.update(GUIframe.defaults, GUIframe.configs)
+    GUIframe.windows = {}
+    GUIframe.tabCoords = {}
+
+    tabsInfo = {
+        topLeftTabs = {name = 'topLeftTabs', x = 0, y = 0, width = configs.leftStartWidth,
+            height = configs.tabHeight},
+        bottomLeftTabs = {name = 'bottomLeftTabs', x = 0, y = configs.leftStartHeight,
+            width = configs.leftStartWidth, height = configs.tabHeight},
+        topRightTabs = {name = 'topRightTabs', x = mainW - configs.rightStartWidth, y = 0,
+            width = configs.rightStartWidth, height = configs.tabHeight},
+        bottomRightTabs = {name = 'bottomRightTabs', x = mainW - configs.rightStartWidth,
+            y = configs.rightStartHeight, width = configs.rightStartWidth, height = configs.tabHeight},
+    }
+    containerInfo = {
+        topLeftContainer = {name = 'topLeftContainer', x = 0, y = configs.tabHeight,
+            width = configs.leftStartWidth, height = configs.leftStartHeight - configs.tabHeight},
+        bottomLeftContainer = {name = 'bottomLeftContainer', x = 0, y = configs.leftStartHeight + configs.tabHeight,
+            width = configs.leftStartWidth, height = configs.leftStartHeight - configs.tabHeight},
+        topRightContainer = {name = 'topRightContainer', x = mainW - configs.rightStartWidth,
+            y = configs.tabHeight, width = configs.rightStartWidth,
+            height = configs.rightStartHeight - configs.tabHeight},
+        bottomRightContainer = {name = 'bottomRightContainer', x = mainW - configs.rightStartWidth,
+            y = configs.rightStartHeight + configs.tabHeight, width = configs.rightStartWidth,
+            height = configs.rightStartHeight - configs.tabHeight},
+        bottomContainer = {name = 'bottomContainer', x = configs.leftStartWidth,
+            y = mainH - configs.bottomStartHeight, height = configs.bottomStartHeight,
+            width = mainW - configs.leftStartWidth - configs.rightStartWidth},
+        topContainer = {name = 'topContainer', x = configs.leftStartWidth, y = 0, height = configs.topStartHeight,
+            width = mainW - configs.leftStartWidth - configs.rightStartWidth}
+    }
+    resizeInfo = {
+        resizeLeft = {name = 'resizeLeft', x = configs.leftStartWidth,
+            y = configs.leftStartHeight - configs.resizeHeight / 2, height = configs.resizeHeight,
+            width = configs.resizeWidth},
+        resizeRight = {name = 'resizeRight', x = configs.rightStartWidth - configs.resizeWidth,
+            y = configs.rightStartHeight - configs.resizeHeight / 2, height = configs.resizeHeight,
+            width = configs.resizeWidth},
+        resizeTop = {name = 'resizeTop', x = halfW - configs.resizeWidth / 2,
+            y = configs.topStartHeight, height = configs.resizeHeight, width = configs.resizeWidth},
+        resizeBottom = {name = 'resizeBottom', x = halfW - configs.resizeWidth / 2,
+            y = mainH - configs.bottomStartHeight - configs.resizeHeight, height = configs.resizeHeight,
+            width = configs.resizeWidth}
+    }
+
+    for name, cons in pairs(containerInfo) do
+        GUIframe[name] = Geyser.Container:new(cons)
+    end
+    for name, cons in pairs(tabsInfo) do
+        GUIframe[name] = Geyser.Container:new(cons)
+        local cname = name:gsub("Tabs","Container")
+        GUIframe[cname].tabs = GUIframe[name]
+        GUIframe[name].con = GUIframe[cname]
+    end
+    local style = resize_style
+    local path = getMudletHomeDir()
+    path = path:gsub("[\\/]","/")
+    configs.resizeRestImage = configs.resizeRestImage:gsub("[\\/]","/")
+    configs.resizeHoverImage = configs.resizeHoverImage:gsub("[\\/]","/")
+    local no_image
+    if not (io.exists(path .. configs.resizeHoverImage) and io.exists(path .. configs.resizeRestImage)) then
+        debugc("GUIframe: config: resize image(s) not found")
+        path = "255,20,147,"
+        style = "background-color: rgba(%s%s);"
+        no_image = true
+    end
+
+    for name, cons in pairs(resizeInfo) do
+        GUIframe[name] = Geyser.Label:new(cons)
+        GUIframe[name]:setColor(0,0,0,0)
+        GUIframe[name]:setStyleSheet(string.format(style, path, (no_image and "100") or configs.resizeRestImage))
+        GUIframe[name]:setOnEnter("GUIframe."..name..".setStyleSheet", GUIframe[name],
+            string.format(style, path, (no_image and "255") or configs.resizeHoverImage))
+        GUIframe[name]:setOnLeave("GUIframe."..name..".setStyleSheet", GUIframe[name],
+            string.format(style, path, (no_image and "100") or configs.resizeRestImage))
+        GUIframe[name]:setClickCallback("GUIframe.buttonClick", name)
+        GUIframe[name]:setReleaseCallback("GUIframe.buttonRelease", name)
+        GUIframe[name]:setMoveCallback("GUIframe.buttonMove", name)
+    end
+    setBorderLeft(configs.leftStartWidth + configs.borderOffset)
+    setBorderRight(configs.rightStartWidth + configs.borderOffset)
+    setBorderTop(configs.topStartHeight + configs.borderOffset)
+    setBorderBottom(configs.bottomStartHeight + configs.borderOffset)
+    GUIframe.initialized = true
+end
+
+local function deselectContainer(container, tabs)
+    -- hide all windows in container
+    for _, win in pairs(container.windowList) do
+        win:hide()
+        win.active = false
+    end
+    -- unhighlight all tabs in tabs container
+    if tabs then
+        for _, tab in pairs(tabs.windowList) do
+            local name = tab.name:gsub("Tab","")
+            local show = GUIframe.windows[name].showText
+            if show then
+                tab:echo(configs.tabEchoStyle..name)
+            end
+	    end
+	end
+end
+
+local function adjustTabs(tabs)
+    if not GUIframe.initialized then error("GUIframe not initialized",2) end
+    -- remove duplicated window names
+    local found = {}
+    for k,v in ipairs(tabs.windows) do
+        if not table.contains(found,v) and tabs.windowList[v] and not tabs.windowList[v].isClicked then
+            table.insert(found,v)
+        end
+    end
+    -- calculate tab width and set height
+    local w, h = math.floor(100 / #tabs.windows), configs.tabHeight
+    local function wrap(num) return tostring(num) .. "%" end
+    -- resize and reposition all tabs
+    local shown, first
+    for k,v in ipairs(found) do
+        local tab = tabs.windowList[v]
+        if not first then first = v:gsub("Tab","") end
+        if not shown and tab.active then
+            shown = v
+        elseif tab.active then
+            tab.active = false
+        end
+        update_tab(tab, wrap(w * (k-1)), 0, wrap(w), h)
+    end
+    if first and not shown and GUIframe.windows[first] then GUIframe.windows[first]:show() end
+    tabs.space_pos = nil
+end
+
+local function reorderTabs(tabs, name, pos)
+    local windows = tabs.windows
+    while table.contains(windows, name) do
+        table.remove(windows, table.index_of(windows, name))
+    end
+    table.insert(windows, pos, name)
+end
+
+local function makeSpace(tabs, tab, pos)
+    if not GUIframe.initialized then error("GUIframe not initialized",2) end
+    local windows = table.deepcopy(tabs.windows)
+    local space_pos = tabs.space_pos
+    local tab_pos = table.index_of(windows, tab.name)
+    -- calculate tab width and set height
+    local num_tabs = #windows + 1
+    if tab_pos then
+        num_tabs = num_tabs - 1
+        if pos &gt; tab_pos then pos = pos - 1 end
+        if pos == space_pos then pos = pos + 1 end
+    elseif space_pos and pos &gt;= space_pos then
+        pos = pos + 1
+    end
+    local w, h = math.floor(100 / num_tabs), configs.tabHeight
+    local function wrap(num) return tostring(num) .. "%" end
+    -- resize and reposition all tabs
+    if tab_pos then table.remove(windows,tab_pos) end
+    for k,v in ipairs(windows) do
+        if k &gt;= pos then
+            update_tab(tabs.windowList[v], wrap(w * k), 0, wrap(w), h)
+        else
+            update_tab(tabs.windowList[v], wrap(w * (k-1)), 0, wrap(w), h)
+        end
+    end
+    tabs.space_pos = pos
+end
+
+local function round(num,roundTo)
+	local b, r = math.modf(num/roundTo)
+	if r &gt;= 0.5 then
+		b = b + 1
+	end
+	return b * roundTo
+end
+
+local function setBorder(side, val)
+    local funcs = {left = setBorderLeft, right = setBorderRight, top = setBorderTop, bottom = setBorderBottom}
+    val = math.max(val,0)
+	funcs[side](val)
+end
+
+local function resizeContainers(side, w, h)
+    if table.contains({"left", "right"}, side) then
+        local info = {
+            left = {resize = "resizeLeft", cons = {"topLeftContainer","bottomLeftContainer"},
+                tabs = {"topLeftTabs","bottomLeftTabs"}, x = 0, w = w},
+            right = {resize = "resizeRight", cons = {"topRightContainer","bottomRightContainer"},
+                tabs = {"topRightTabs","bottomRightTabs"}, x = w, w = mainW - w}
+        }
+        info = info[side]
+        -- move and resize top, bottom and tab containers
+        update_tab(GUIframe[info.tabs[1]], info.x, 0, info.w, configs.tabHeight)
+        update_tab(GUIframe[info.tabs[2]], info.x, h, info.w, configs.tabHeight)
+        GUIframe[info.cons[1]]:resize(info.w, h - configs.tabHeight)
+        GUIframe[info.cons[1]]:move(info.x, configs.tabHeight)
+        GUIframe[info.cons[2]]:resize(info.w, mainH - h - configs.tabHeight)
+        GUIframe[info.cons[2]]:move(info.x, h + configs.tabHeight)
+        -- adjust border size
+        setBorder(side, info.w + configs.borderOffset)
+
+        -- adjust width of top and bottom containers
+        local x, y
+        x = (GUIframe.sides.left ~= "hidden" and GUIframe.topLeftContainer:get_width()) or 0
+        w = ((GUIframe.sides.right ~= "hidden" and GUIframe.topRightContainer:get_x()) or mainW) - x
+        for _, con in ipairs({GUIframe.topContainer, GUIframe.bottomContainer}) do
+            y, h = con:get_y(), con:get_height()
+            con:resize(w, h)
+            con:move(x, y)
+        end
+    elseif table.contains({"top", "bottom"}, side) then
+        local x = 0
+        w = mainW
+        if GUIframe.sides.left ~= "hidden" then
+            w = w - GUIframe.topLeftContainer:get_width()
+            x = GUIframe.topLeftContainer:get_width()
+        end
+        if GUIframe.sides.right ~= "hidden" then w = w - GUIframe.topRightContainer:get_width() end
+        local info = {top = {con = "topContainer", y = 0, h = h}, bottom = {con = "bottomContainer", y = h, h = mainH - h}}
+        local con = GUIframe[info[side].con]
+        con:resize(w, info[side].h)
+        con:move(x, info[side].y)
+        setBorder(side, info[side].h + configs.borderOffset)
+    end
+end
+
+local function refresh()
+    if not GUIframe.initialized then error("GUIframe not initialized",2) end
+    mainW, mainH = getMainWindowSize()
+    local rH, rW = configs.resizeHeight, configs.resizeWidth
+    local x, y, w
+    -- adjust bottom left and right container heights
+    for _, C in ipairs({GUIframe.bottomLeftContainer, GUIframe.bottomRightContainer}) do
+        C:resize(C:get_width(), mainH - C:get_y())
+    end
+    -- reposition right containers
+    w = GUIframe.topRightContainer:get_width()
+    for _, C in ipairs({GUIframe.topRightContainer, GUIframe.topRightTabs,
+        GUIframe.bottomRightContainer, GUIframe.bottomRightTabs}) do
+        C:move(mainW - w,C:get_y())
+    end
+    -- resize and reposition bottom and top containers
+    w, x = mainW, 0
+    if GUIframe.sides.left ~= "hidden" then
+        w = w - GUIframe.topLeftContainer:get_width()
+        x = GUIframe.topLeftContainer:get_width()
+    end
+    if GUIframe.sides.right ~= "hidden" then w = w - GUIframe.topRightContainer:get_width() end
+    for _, C in ipairs({GUIframe.topContainer, GUIframe.bottomContainer}) do
+        C:resize(w, C:get_height())
+        C:move(x, C.name == "topContainer" and 0 or mainH - C:get_height())
+    end
+    -- reposition resize labels
+    x, y = GUIframe.topLeftContainer:get_width(), GUIframe.bottomLeftTabs:get_y()
+    GUIframe.resizeLeft:move(x, y - rH / 2)
+    x, y = GUIframe.topRightContainer:get_x(), GUIframe.bottomRightTabs:get_y()
+    GUIframe.resizeRight:move(x - rW, y - rH / 2)
+    x = (GUIframe.topContainer:get_width() - rW) / 2
+    if GUIframe.sides.left ~= "hidden" then x = x + GUIframe.topLeftContainer:get_width() end
+    y = GUIframe.topContainer:get_height()
+    GUIframe.resizeTop:move(x, y)
+    y = GUIframe.bottomContainer:get_y()
+    GUIframe.resizeBottom:move(x, y - rH)
+end
+
+-- enables the resize label for the given side and shows all associated containers if hidden
+function GUIframe.enable(side)
+    if not GUIframe.initialized then error("GUIframe not initialized",2) end
+    if not table.contains(sides,side) then error("GUIframe.enable: invalid side",2) end
+    local cons = side_containers[side]
+    for _, con in ipairs(cons) do
+        GUIframe[con]:show()
+        for _,win in pairs(GUIframe[con].windowList) do -- loop can be removed after Geyser fix comes in
+            if win.active then win:show() end
+        end
+    end
+    if table.contains({"left","right"}, side) then
+        setBorder(side, GUIframe[cons[1]]:get_width() + configs.borderOffset)
+    else
+        setBorder(side, GUIframe[cons[1]]:get_height() + configs.borderOffset)
+    end
+    GUIframe["resize"..side:title()]:show()
+    GUIframe.sides[side] = "enabled"
+    refresh()
+end
+
+-- disables and hides the resize label for the given side, and hides all associated containers if indicated
+function GUIframe.disable(side, hide)
+    if not GUIframe.initialized then error("GUIframe not initialized",2) end
+    if not table.contains(sides,side) then error("GUIframe.disable: invalid side",2) end
+    local cons = side_containers[side]
+    GUIframe.sides[side] = "disabled"
+    if hide then
+        for _, con in ipairs(cons) do
+            GUIframe[con]:hide()
+            for _, win in pairs(GUIframe[con].windowList) do -- loop can be removed after Geyser fix comes in
+                if win.type == "mapper" then win:hide() end
+            end
+        end
+        local border = _G["setBorder"..side:title()]
+        border(0)
+        GUIframe.sides[side] = "hidden"
+    end
+    GUIframe["resize"..side:title()]:hide()
+    refresh()
+end
+
+-- adds a Geyser window or container to the given container, with a tab showing the given name if applicable
+function GUIframe.addWindow(window, name, container, hideText)
+    if not GUIframe.initialized then config() end
+    if type(container) == "table" then container = container.name end
+    local con, tabs = get_containers(container)
+    if not con then error("GUIframe.addWindow: invalid container name",2) end
+    if not name then error("GUIframe.addWindow: name argument required",2) end
+    -- remove window from any containers
+    for _, tcon in ipairs(container_names) do
+        if table.contains(GUIframe[tcon].windows, window.name) then
+            GUIframe.removeWindow(name, tcon)
+        end
+    end
+    deselectContainer(con,tabs)
+    -- add tab for window, if applicable
+    if tabs then
+        local showText = not hideText
+        window.showText = showText
+        local lbl = Geyser.Label:new({name = name.."Tab", x = 0, y = 0, width = 10, height = 10},tabs)
+        lbl:setStyleSheet(configs.tabStyle)
+        if showText then
+            lbl:echo(configs.tabEchoStyle.."&lt;b&gt;"..name)
+        end
+        lbl:setClickCallback("GUIframe.buttonClick", name)
+        lbl:setReleaseCallback("GUIframe.buttonRelease", name)
+        lbl:setMoveCallback("GUIframe.buttonMove", name)
+        GUIframe.tabs[name] = lbl
+        adjustTabs(tabs)
+    end
+    -- add window to container and set size and position
+    con:add(window)
+    window:resize("100%","100%")
+    window:move(0,0)
+    window:show()
+    GUIframe.windows[name] = window
+	raiseEvent("sysWindowResizeEvent")
+end
+
+-- removes a named Geyser window or container from the named container (using name given in GUIframe.addWindow)
+function GUIframe.removeWindow(name, container)
+    if not GUIframe.initialized then error("GUIframe not initialized",2) end
+    if not container then container = GUIframe.windows[name].container end
+    local con, tabs = get_containers(container)
+
+    if not con or not table.contains(container_names, con.name) then
+        error("GUIframe.removeWindow: invalid container name",2)
+    end
+    if not name then error("GUIframe.removeWindow: name argument required",2) end
+    if tabs then
+        local lbl = tabs.windowList[name.."Tab"]
+        if lbl then
+            tabs:remove(lbl)
+            adjustTabs(tabs)
+            lbl:hide()
+        end
+    end
+    local window = GUIframe.windows[name]
+    con:remove(window)
+    window:hide()
+end
+
+-- saves the current GUI setup, including the size of the different containers and what windows go in which container
+function GUIframe.saveSettings()
+    if not GUIframe.initialized then error("GUIframe not initialized",2) end
+    local saveTbl = {}
+    local w, h = GUIframe.topLeftContainer:get_width(), GUIframe.bottomLeftTabs:get_y()
+    saveTbl.left = {w = w, h = h}
+    w, h = GUIframe.topRightContainer:get_width(), GUIframe.bottomRightTabs:get_y()
+    saveTbl.right = {w = w, h = h}
+    w, h = GUIframe.topContainer:get_width(), GUIframe.topContainer:get_height()
+    saveTbl.top = {w = w, h = h}
+    w, h = GUIframe.bottomContainer:get_width(), GUIframe.bottomContainer:get_height()
+    saveTbl.bottom = {w = w, h = h}
+
+    -- get added windows and containers they are assigned to
+    local windows = {}
+    local text = {}
+    for k,v in pairs(GUIframe.windows) do
+        local con = v.container.name
+        windows[con] = windows[con] or {}
+        table.insert(windows[con], k)
+        text[con] = text[con] or {}
+        text[con][k] = v.showText
+    end
+    -- reorder windows to match tab order for tabbed containers
+    for con, wins in pairs(windows) do
+        if con:find("Left") or con:find("Right") then
+            local tabs = GUIframe[con].tabs.windows
+            local new = {}
+            for k,v in ipairs(tabs) do
+                local wname = v:gsub("Tab","")
+                table.insert(new, {wname, text[con][wname]})
+            end
+            windows[con] = new
+        end
+    end
+    saveTbl.windows = windows
+    saveTbl.sides = GUIframe.sides
+    table.save(getMudletHomeDir() .. "/GUIframeSave.lua", saveTbl)
+end
+
+-- loads GUI setup from a previous save
+function GUIframe.loadSettings(redraw)
+    if not GUIframe.initialized then error("GUIframe not initialized",2) end
+    local saveTbl = {}
+    local path = getMudletHomeDir() .. "/GUIframeSave.lua"
+    path = path:gsub("\\","/")
+    mainW, mainH = getMainWindowSize()
+    if not io.exists(path) then debugc("GUIframe.loadSettings: save file doesn't exist.") return end
+    table.load(path, saveTbl)
+    resizeContainers("left", saveTbl.left.w, saveTbl.left.h)
+    resizeContainers("right", mainW - saveTbl.right.w, saveTbl.right.h)
+    resizeContainers("top", saveTbl.top.w, saveTbl.top.h)
+    resizeContainers("bottom", saveTbl.bottom.w, mainH - saveTbl.bottom.h)
+    for con, wins in pairs(saveTbl.windows) do
+        for _,name in ipairs(wins) do
+            if type(name) == "string" then
+                GUIframe.addWindow(GUIframe.windows[name], name, con)
+            else
+                local n, s = name[1], not name[2]
+                GUIframe.addWindow(GUIframe.windows[n], n, con, s)
+            end
+        end
+    end
+
+    for side, state in pairs(saveTbl.sides) do
+        if state == "enabled" then
+            GUIframe.enable(side)
+        elseif state == "disabled" then
+            GUiframe.disable(side,false)
+        elseif state == "hidden" then
+            GUIframe.disable(side,true)
+        end
+    end
+    -- force redraw of screen
+    if redraw then
+        setBackgroundColor(1,1,1)
+        setBackgroundColor(0,0,0)
+    end
+end
+
+-- can be called to force the script to run its config function again
+function GUIframe.reinitialize()
+    config()
+end
+
+-- can be called to activate a given tab without clicking on it
+function GUIframe.activate(name)
+    if not GUIframe.initialized then error("GUIframe not initialized",1) end
+	local window = GUIframe.windows[name]
+	if window then
+        local con, tabs = get_containers(window.container.name)
+        -- hide and unhighlight other windows and tabs
+        deselectContainer(con, tabs)
+        -- show selected window
+        window:show()
+        window.active = true
+        -- highlight selected tab
+        if window.showText then
+            GUIframe.tabs[name]:echo(configs.tabEchoStyle.."&lt;b&gt;"..name)
+        end
+    end
+end
+
+-- can be called to apply a style to a given tab
+function GUIframe.styleTab(name, style)
+    if not GUIframe.initialized then error("GUIframe not initialized",1) end
+	local tab = GUIframe.tabs[name]
+	if tab then
+	    tab:setStyleSheet(style)
+    end
+end
+
+-- internally used function to handle button click callbacks
+function GUIframe.buttonClick(name, event)
+    if not GUIframe.initialized then error("GUIframe not initialized",2) end
+	if table.contains(resizeLabels,name) then
+	    if event.button == "RightButton" then
+	        local lbl = GUIframe[name]
+	        lbl.difX, lbl.difY = event.x, event.y
+	        lbl.savedX, lbl.savedY = getMousePosition()
+            GUIframe[name].isClicked = true
+        end
+	elseif event.button == "LeftButton" then
+        local window = GUIframe.windows[name]
+        local con, tabs = get_containers(window.container.name)
+        -- hide and unhighlight other windows and tabs
+        deselectContainer(con, tabs)
+        -- show selected window
+        window:show()
+        window.active = true
+        -- highlight selected tab
+        if window.showText then
+            GUIframe.tabs[name]:echo(configs.tabEchoStyle.."&lt;b&gt;"..name)
+        end
+    elseif event.button == "RightButton" then
+        local window, tab = GUIframe.windows[name], GUIframe.tabs[name]
+        tab.savedX, tab.savedY = getMousePosition()
+        tab.difX, tab.difY, tab.isClicked = event.x, event.y, true
+        -- force update of coords for all tabs and tab containers
+        GUIframe.tabCoords = {}
+        for _, name in ipairs(tab_names) do
+            get_window_coords(GUIframe[name], true)
+            for tname, tab in pairs(GUIframe[name].windowList) do
+                get_window_coords(tab, true)
+            end
+        end
+    end
+    raiseEvent("GUIframe.buttonClick",name,event)
+end
+
+-- internally used function to handle button release callbacks
+function GUIframe.buttonRelease(name, event)
+    if not GUIframe.initialized then error("GUIframe not initialized",2) end
+	if table.contains(resizeLabels,name) then
+	    if event.button == "RightButton"  then
+            local lbl = GUIframe[name]
+            lbl.savedX, lbl.savedY, lbl.difX, lbl.difY, lbl.isClicked = nil, nil, nil, nil, false
+        end
+	elseif event.button == "RightButton" then
+	    local window, tab = GUIframe.windows[name], GUIframe.tabs[name]
+	    local con, tabs = get_containers(window.container.name)
+	    tab.difX, tab.difY, tab.savedX, tab.savedY, tab.isClicked = nil, nil, nil, nil, false
+	    hideWindow("show_container")
+	    for _, tname in ipairs(tab_names) do
+	        local info = GUIframe[tname]
+	        if info.mouse_over then
+	            local pos = info.space_pos
+	            info.mouse_over = nil
+	            GUIframe.addWindow(window, name, tname:gsub("Tabs",""), not window.showText)
+	            if pos then
+    	            reorderTabs(info, tab.name, pos)
+    	            adjustTabs(info)
+    	        end
+	        end
+	    end
+	    adjustTabs(tabs)
+	end
+	raiseEvent("GUIframe.buttonRelease",name,event)
+end
+
+-- internally used function to handle button move callbacks
+function GUIframe.buttonMove(name, event)
+    if not GUIframe.initialized then error("GUIframe not initialized",2) end
+	if table.contains(resizeLabels,name) then
+	    lbl = GUIframe[name]
+	    if lbl.isClicked then
+	        local w, h = getMousePosition()
+	        w, h = round(w - lbl.difX, 10), round(h - lbl.difY, 10)
+            mainW, mainH = getMainWindowSize()
+            local side, cW, cH, rX, rY
+            local minX = GUIframe.sides.left ~= "hidden" and GUIframe.topLeftContainer:get_width() or 0
+            local maxX = GUIframe.sides.right ~= "hidden" and GUIframe.topRightContainer:get_x() or mainW
+            local minY = GUIframe.sides.top ~= "hidden" and GUIframe.topContainer:get_height() or 0
+            local maxY = GUIframe.sides.left ~= "hidden" and GUIframe.bottomContainer:get_y() or mainH
+            local mid, min, max = GUIframe.topContainer:get_width(), math.min, math.max
+            local tabH, rH, rW = configs.tabHeight, configs.resizeHeight, configs.resizeWidth
+	        w, h = max(w, 0), max(h, 0)
+            local info = { -- specify position of resize labels and size of containers
+                resizeLeft = {side = "left", x = min(w, maxX - rW),
+                    y = min(max(h + rH / 2,tabH), mainH - tabH) - rH / 2,
+                    w = min(w, maxX - rW), h = min(max(h + rH / 2,tabH), mainH-tabH) },
+                resizeRight = {side = "right", x = min(max(w, minX), mainW),
+                    y = min(max(h + rH / 2, tabH), mainH - tabH) - rH / 2,
+                    w = min(max(w, minX), mainW - rW) + rW, h = min(max(h + rH / 2, tabH), mainH - tabH) },
+                resizeTop = {side = "top", x = minX + (mid - rW) / 2,
+                    y = min(h, maxY - rH), w = maxX - minX, h = min(h, maxY - rH) },
+                resizeBottom = {side = "bottom", x = minX + (mid - rW) / 2,
+                    y = min(max(h, minY) - rH, mainH), w = maxX - minX, h = min(max(h, minY) + rH, mainH)} }
+            info = info[name]
+            lbl:move(info.x, info.y)
+            resizeContainers(info.side, info.w, info.h)
+        end
+    else
+        local window, tab = GUIframe.windows[name], GUIframe.tabs[name]
+        local con, tabs = get_containers(window.container.name)
+        local x, y = getMousePosition()
+        local over_con, over_tab
+        if tab and tab.isClicked then
+            moveWindow(tab.name, x - tab.difX, y - tab.difY)
+            -- check to see if mouse is over any tab containers
+            for _, tcon in ipairs(tab_names) do
+                if check_overlap(tcon, x, y) then
+                    over_con = tcon
+                    GUIframe[tcon].mouse_over = true
+                    local info = GUIframe.tabCoords[tcon]
+                    local tx, ty, tw, th = info.x, info.y, info.w, info.h
+                    createLabel("show_container", 0, 0, 0, 0, 1)
+                    moveWindow("show_container", tx, ty)
+                    resizeWindow("show_container", tw, th)
+                    setLabelStyleSheet("show_container",[[
+                        background-color: black;
+                        border: 2px solid white;]])
+                    showWindow("show_container")
+                    lowerWindow("show_container")
+                    -- check to see if mouse is over any tabs
+                    for tname, info in pairs(GUIframe.tabs) do
+                        if tname ~= name and check_overlap(info, x, y) then
+                            over_tab = info.name
+                            local windows = GUIframe[tcon].windows
+                            local index = table.index_of(windows,over_tab)
+                            makeSpace(GUIframe[tcon],tab,index)
+                            break
+                        end
+                    end
+                    break
+                end
+            end
+            -- remove any unnecessary spaces in tab containers
+            for _, name in ipairs(tab_names) do
+                if name ~= over_con then
+                    adjustTabs(GUIframe[name])
+                    GUIframe[name].mouse_over = nil
+                end
+            end
+        end
+	end
+	raiseEvent("GUIframe.buttonMove",name,event)
+end
+
+-- internally used function to handle sysWindowResizeEvent
+function GUIframe.eventHandler(event,...)
+    if event == "sysWindowResizeEvent" and GUIframe.initialized then
+        refresh()
+    end
+end
+
+--register the event above
+registerAnonymousEventHandler("sysWindowResizeEvent","GUIframe.eventHandler")</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="no" isFolder="no">
+				<name>May want in the future</name>
+				<packageName></packageName>
+				<script></script>
+				<eventHandlerList />
+			</Script>
+		</ScriptGroup>
+		<ScriptGroup isActive="yes" isFolder="yes">
+			<name>TECFunctions</name>
+			<packageName></packageName>
+			<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external scripts --
+-------------------------------------------------
+</script>
+			<eventHandlerList />
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>debug</name>
+				<packageName></packageName>
+				<script>--[[
+Debug like functions:
+
+
+]]--</script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>setTECDebugMode()</name>
+					<packageName></packageName>
+					<script>function setTECDebugMode(enableDebug)
+	tecSettings.tecDebugMode = enableDebug or false
+end</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>getTECDebugMode</name>
+					<packageName></packageName>
+					<script>--Get state of debug mode.
+function getTECDebugMode() 
+	return tecSettings.tecDebugMode
+end --end function getTECdebugMode</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>debugToDisplay()</name>
+					<packageName></packageName>
+					<script>--this takes a string from function input, and displays it to screen.
+
+--error("") Test this one.
+--debugc("") fairly certain this exports to mudlets debug screen.
+
+--Idealy we would want this function to check if a TECClient debug child window 
+--Is open, and create one if it is not. Than send debug code to it rather than 
+--main, where users can easily see it or mudlets debug, which is meant for true
+--blue errors.
+
+function debugToDisplay(textMessage)
+	if getTECDebugMode() then --Is debug mode on?
+		local redBG, greenBG, blueBG = getBgColor() --keep track of current screen color
+		setBgColor( 255,50,50) --change text background to red
+		echo("\nDebug mode on disable it with command: debug off\n"..textMessage.."\n\n") -- print message to screen
+		setBgColor(redBG,greenBG,blueBG) --change text background back to what it was
+	end --if debug mode if check
+end --end displayToDebug function
+
+--Completed version of this should send debug to file.
+--Not to screen. If screen is thought needed we could make
+--a debug tab for the top GUIframe container. That hides when
+--debug is off.
+--Once debug off is run, the file gets pushed with the new
+--httppush option coming out next release.
+
+--For now we want debug to screen for ourselves.</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>geyserDebug() &amp; resize event</name>
+					<packageName></packageName>
+					<script>--poll GUIFrame for 
+--Geyser API Reference https://www.mudlet.org/geyser/files/geyser/GeyserContainer.html
+
+function Geyser.Container:getDebug ()
+	 
+	 if getTECDisplayDebugMode() then
+	 
+  	 local string guiLog = ""
+  	 
+     guiLog ="Name: "..tostring(self.name)..
+		 " | Type: "..tostring(self.type)..
+		 " | Parent: "..tostring(self.parent)..
+		 " | X position: "..tostring(self:get_x())..
+		 " | Y Position: "..tostring(self:get_y())..
+		 " | Width: "..tostring(self:get_width())..
+		 " | Height: "..tostring(self:get_height())..
+		 "\n"
+  	 
+		 --just in case we are going to make a infinite loop killer.
+		 guiloop = guiloop + 1
+		 if guiloop &lt; 100 then
+		 
+       --Loop through all children of this container
+       for k,v in pairs(self.windowList) do
+    	 		
+          if k ~= self then
+    				guiLog = guiLog..v:getDebug()
+    					
+          end --end if k not = self check
+       end --end for loop pair(self windowlist)
+		 end --if guiloop is less than 100
+		 
+		 --Returns debug data for all of the windows we have looped through
+		 return guiLog
+		 
+	end --if getTECDisplayDebugMode()
+end --end Geyser.Container:debugMode
+
+
+function geyserDebug() --geyserWindow needs to be a string with the name of the window.	
+
+	if getTECDisplayDebugMode() then --Is debug mode on?
+		local debugOut = ""
+		--Send all of the windows information to the debug display.
+		guiloop = 0
+		debugToDisplay(GUIframe.topLeftContainer:getDebug())
+		guiloop = 0
+		debugToDisplay(GUIframe.bottomLeftContainer:getDebug())
+		guiloop = 0
+		debugToDisplay(GUIframe.bottomContainer:getDebug())
+		guiloop = 0
+		debugToDisplay(GUIframe.bottomRightContainer:getDebug())
+		guiloop = 0
+		debugOut =GUIframe.topRightContainer:getDebug()
+		debugOut = debugOut:sub(1, -2)
+		debugOut = debugOut:sub(2)
+		debugToDisplay(debugOut)
+		guiloop = 0
+		debugOut = GUIframe.topContainer:getDebug()
+		debugOut = debugOut:sub(1, -2)
+		debugToDisplay(debugOut)
+	end --if tecDebugMode is true
+
+end --end geyserDebug() function</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>sendDebug("location")</name>
+					<packageName></packageName>
+					<script>--This function will enable debug mode.
+--automatically run things to trigger debug events.
+--Like changing font to get a resizeEvent or send
+--a dummy command to get a line back.
+--Once done it will send the collecting information
+--to something via http push.</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>setTECDisplayDebugMode</name>
+					<packageName></packageName>
+					<script>function setTECDisplayDebugMode(displayDebugMode)
+	tecSettings.tecDisplayDebugMode = displayDebugMode or false
+end --end setTECVideoDebugMode</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>getTECDisplayDebugMode</name>
+					<packageName></packageName>
+					<script>--Get state of debug mode.
+function getTECDisplayDebugMode() 
+	return tecSettings.tecDisplayDebugMode
+end --end function getTECdebugMode</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>font</name>
+				<packageName></packageName>
+				<script>--[[
+for functions directly affecting fonts both console and geyser label.
+
+font like functions
+setMainWindowAutoWrap() sets main windows autowrap character count, is in scripts - GUI
+
+]]--</script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>setTECFont</name>
+					<packageName></packageName>
+					<script>--sets the font for all console displays.
+--A different function should be made for geyser labels.
+
+function setTECFont(numbertemp)--set font settings with this function
+	
+	--if somethings is attempting to set the font below 8, tell them no.
+	--It sets the font size for main and the editor window. very frustrating
+	--when font is 1...
+	if numbertemp &lt; 8 then
+		numbertemp = 8
+		echo("\nFonts below 8 are not supported, setting font to 8.\n")
+	end --end if numbertemp is below 8
+	
+	tecSettings.tecFontSize = numbertemp or tecDefaultFontSize --set it to size passed OR default on fail
+	setFontSize(tecSettings.tecFontSize) --Set main window font size &amp; creates a resize event
+	setFontSize("Communication", tecSettings.tecFontSize) --resize font in communication window &amp; creates a resize event
+	setFontSize("Thoughts", tecSettings.tecFontSize) --resize font in Thoughts window &amp; creates a resize event
+	setFontSize("Speech", tecSettings.tecFontSize) --resize font in Speech window &amp; creates a resize event
+	--Each font adjustment WILL trigger a screen resize event.
+	
+	if getTECDebugMode() then --if debug mode is enabled
+  	debugToDisplay("setTECFont was sent: "..tostring(numbertemp)..
+  		". tecSettings.tecFontSize is currently: "..tostring(tecSettings.tecFontSize)..
+  		". Communication console font size: "..tostring(getFontSize(Communication)))		
+	end --end if debug mode is on
+end --end setTECFontSize</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>getTECFont</name>
+					<packageName></packageName>
+					<script>--Currently returns the font size.
+--later hope to return font type also.
+function getTECFont()
+	return tecSettings.tecFontSize
+end</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>GUI</name>
+				<packageName></packageName>
+				<script>--[[
+for funtions that directly affect the clients GUI.
+
+GUI like functions
+]]--</script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>setMainWindowAutoWrap() &amp; Reize event</name>
+					<packageName></packageName>
+					<script>--set main window word wrap size.
+--Function is called via an alias and in compass.resize
+--It is currently in the guiChange event function to be called when gui changes occur
+function setMainWindowAutoWrap()
+
+  --get how many characters should appear on a line before word wrapping.
+	local wrapAt = getColumnCount()
+
+  --Set updated word wrap for main.
+  setWindowWrap("main", wrapAt)
+	
+	if getTECDebugMode() then --if debug mode is enabled
+	
+  	--how many pixels thick is our font?
+    local mainWidth, mainHeight = getMainWindowSize()
+    
+    --Get the width of left and right gui bars.
+    local leftSideWidth =   GUIframe.topLeftContainer:get_width()
+    local rightSideWidth = GUIframe.topRightContainer:get_width()
+	
+  	--displays actual sizes to screen.
+  	--display with setTECDebugMode(true)
+  	--or command line debug on
+  	debugToDisplay("setMainWindowAutoWrap: Font Width: "..tostring(fontWidth).." Left side width: "..tostring(leftSideWidth)
+  	.." Right side width: "..tostring(leftSideWidth).." Main screen width: "..tostring(mainWidth)
+  	.." Line wrap: "..tostring(wrapAt).." Mains font sie: "..tostring(getFontSize())..".")
+	
+	end --end if debug is enabled
+end --end function setMainWindowAutowrap</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>calcMenuFonts</name>
+					<packageName></packageName>
+					<script>--Calculate tab and other gui fonts base on main screen size.
+--Could set variables directly
+--Could return a single font while passing a string to determine
+--what is being mesured calcMenuFont("tabs") calcMenuFont("menus")
+--could also just calculate them all and just return them all always.</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>setMenuFonts</name>
+					<packageName></packageName>
+					<script>--Sets the font sizes for menus and tabs.
+--Need to echo into all the tabs and labels
+--will need to be in guiChange event
+--will need to call calcMenuFonts to get sizes.
+--Will need to be called in variables to set 
+--tabsFontStyle
+--Probably just set it to trigger at known screen widths.
+--Keep in mind that getMainConsoleWidth is buggy as of v4.03</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>Events</name>
+				<packageName></packageName>
+				<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external scripts --
+-------------------------------------------------
+</script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>guiChange()</name>
+					<packageName></packageName>
+					<script>--calls events that are needed when a window change occurs.
+--Do NOT put any function that changes the GUI here!!!
+
+--I am suspicious that calling multiple functions in one event is a no no
+--I did this though because greating multiple AnonymousEvents caused issues.
+--If I Recall the last event would not occur.
+
+function guiChange()
+	setMainWindowAutoWrap()
+	geyserDebug()
+end --end function guiChange
+
+--whenever event sysWindowReizeEvent occurs run setMainWindowAutowrap.
+--In otherwords when any window geyser or main is CHANGED, run setMainWindowAutoWrap.
+--That is NOT just resizing.
+registerAnonymousEventHandler("sysWindowResizeEvent", "guiChange()")</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>Data</name>
+				<packageName></packageName>
+				<script>--Functions that work directly with many variables that have nothing logically in common.
+--For example they aren't all variables for display settings, all for font or debuging.</script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>tecFileSaveSettings()</name>
+					<packageName></packageName>
+					<script>--Save client settings to file
+function tecFileSaveSettings()
+
+--Idealy implimenting some kind of error checking would be great.
+--Maybe making tecFileLoadSettings into a function that returns a table
+--rather than loads the data into a global settings table
+
+  --Save the table to file.
+  table.save(getMudletHomeDir() .. "/TECClientData.lua", tecSettings)
+end</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecFileLoadSettings()</name>
+					<packageName></packageName>
+					<script>--Loads variable and theme settings from file.
+--Notify is boolean, to let the user know the event occured.
+--In this case it is also a to screen notification that it was 
+--successfull
+function tecFileLoadSettings(notify)
+
+	--Set the location and name of file.	
+	local path = getMudletHomeDir() .. "/TECClientData.lua"
+	path = path:gsub("\\","/")
+	--If the file does not exist let the user know.
+  if not io.exists(path) then 
+		debugToDisplay("tecFileLoadSettings: save file doesn't exist.")
+		debugc("tecFileLoadSettings: save file doesn't exist.") 
+		echo("settings did not load from file")
+	return end --kill the function before real errors occur
+  table.load(path, tecSettings) --Load the settings in from file
+	if notify then echo("\nSettings successfully loaded from file\n") end
+end</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>
+		</ScriptGroup>
+		<ScriptGroup isActive="yes" isFolder="yes">
+			<name>GUI</name>
+			<packageName></packageName>
+			<script></script>
+			<eventHandlerList />
+			<Script isActive="yes" isFolder="no">
+				<name>status bar</name>
+				<packageName></packageName>
+				<script>status_bar = Geyser.Container:new({
+  name = "status_bar",    -- give it a unique name here
+  x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
+  width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
+})
+
+--Add the status bar to the screen. On the bottom
+GUIframe.addWindow(status_bar,"status_bar","bottom")</script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>Health Bar</name>
+					<packageName></packageName>
+					<script>hpbar = Geyser.Gauge:new({
+  name="hpbar",
+  x=0, y=0,
+  width="50%", height="50%",
+},status_bar)
+hpbar.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f04141, stop: 0.1 #ef2929, stop: 0.49 #cc0000, stop: 0.5 #a40000, stop: 1 #cc0000);
+    border-top: 1px black solid;
+    border-left: 1px black solid;
+    border-bottom: 1px black solid;
+    border-radius: 7;
+    padding: 3px;]])
+hpbar.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #bd3333, stop: 0.1 #bd2020, stop: 0.49 #990000, stop: 0.5 #700000, stop: 1 #990000);
+    border-width: 1px;
+    border-color: black;
+    border-style: solid;
+    border-radius: 7;
+    padding: 3px;]])
+
+hpbar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Health&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>Fatigue Bar</name>
+					<packageName></packageName>
+					<script>fatiguebar = Geyser.Gauge:new({
+  name="fatiguebar",
+  x=0, y="50%",
+  width="50%", height="50%",
+},status_bar)
+fatiguebar.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f0f00a, stop: 0.1 #f0e00a, stop: 0.49 #f0d00a, stop: 0.5 #f0c00a, stop: 1 #f09999);
+    border-top: 1px black solid;
+    border-left: 1px black solid;
+    border-bottom: 1px black solid;
+    border-radius: 7;
+    padding: 3px;]])
+fatiguebar.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f09999, stop: 0.1 #f09000, stop: 0.49 #f08000, stop: 0.5 #f07000, stop: 1 #f06000);
+    border-width: 1px;
+    border-color: black;
+    border-style: solid;
+    border-radius: 7;
+    padding: 3px;]])
+
+fatiguebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Endurance&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
+</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>Hunger Bar</name>
+					<packageName></packageName>
+					<script>hungerbar = Geyser.Gauge:new({
+  name="hungerbar",
+  x="50%", y=0,
+  width="50%", height="50%",
+},status_bar)
+hungerbar.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #98f041, stop: 0.1 #8cf029, stop: 0.49 #66cc00, stop: 0.5 #52a300, stop: 1 #66cc00);
+    border-top: 1px black solid;
+    border-left: 1px black solid;
+    border-bottom: 1px black solid;
+    border-radius: 7;
+    padding: 3px;]])
+hungerbar.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #78bd33, stop: 0.1 #6ebd20, stop: 0.49 #4c9900, stop: 0.5 #387000, stop: 1 #4c9900);
+    border-width: 1px;
+    border-color: black;
+    border-style: solid;
+    border-radius: 7;
+    padding: 3px;]])
+
+hungerbar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Hunger&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>Encumbrance Bar</name>
+					<packageName></packageName>
+					<script>encumbrancebar = Geyser.Gauge:new({
+  name="encumbrancebar",
+  x="50%", y="50%",
+  width="50%", height="50%",
+},status_bar)
+encumbrancebar.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #98f041, stop: 0.1 #8cf029, stop: 0.49 #66cc00, stop: 0.5 #52a300, stop: 1 #66cc00);
+    border-top: 1px black solid;
+    border-left: 1px black solid;
+    border-bottom: 1px black solid;
+    border-radius: 7;
+    padding: 3px;]])
+encumbrancebar.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #78bd33, stop: 0.1 #6ebd20, stop: 0.49 #4c9900, stop: 0.5 #387000, stop: 1 #4c9900);
+    border-width: 1px;
+    border-color: black;
+    border-style: solid;
+    border-radius: 7;
+    padding: 3px;]])
+
+encumbrancebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Encumbrance&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])</script>
+					<eventHandlerList />
+				</Script>
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>compasbar</name>
+				<packageName></packageName>
+				<script>compass_bar = Geyser.Container:new({
+  name = "Compass",    -- give it a unique name here
+  x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
+  width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
+})
+
+--Add the status bar to the screen. On the bottom
+GUIframe.addWindow(compass_bar,"Compass","topright")</script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>Compass</name>
+					<packageName></packageName>
+					<script>--Reference https://wiki.mudlet.org/w/Manual:Geyser#Create_a_Clickable_Compass
+
+--max width max height
+local mw, mh = getMainWindowSize()
+
+--create compass object
+--dirs directory
+--ratio is ratio of parent object.
+--ratio is for resizing.
+compass = compass or {
+  dirs = {"nw","n","ne","w","center","e","sw","s","se"},
+  ratio = mw / mh
+} --end compass object declaration
+
+--Creating the parent label for the compass
+compass.back = Geyser.Label:new({
+  name = "compass.back",
+  x = "0%", --%horizontally position in parent
+  y = "0%", --%vertical position in parent
+  width = "100%", --% of parent
+  height = "100%", --% of parent
+},compass_bar) --The parent of this label. Main is main window.
+
+compass.box = Geyser.HBox:new({
+    name = "compass.box",
+    x = 0, --horizonal position in parent
+    y = 0, --vertical position in parent
+    width = "100%", --How wide box is, % of parent
+    height = "100%", --How tall box is, % of parent
+  },compass.back) --parent of this Hbox
+
+--create 3 vertical rows
+--in parent object compas.box
+compass.row1 = Geyser.VBox:new({name = "compass.row1",},compass.box)
+compass.row2 = Geyser.VBox:new({name = "compass.row2",},compass.box)
+compass.row3 = Geyser.VBox:new({name = "compass.row3",},compass.box)
+
+--create labels to hold compas images
+--Each parent is the row that were 
+--created with VBox above.
+--row1 left row2 center row3 right
+compass.nw = Geyser.Label:new({
+  name = "compass.nw",
+},compass.row1)
+
+compass.w = Geyser.Label:new({
+  name = "compass.w",
+},compass.row1)
+
+compass.sw = Geyser.Label:new({
+  name = "compass.sw",
+},compass.row1)
+
+compass.n = Geyser.Label:new({
+  name = "compass.n",
+},compass.row2)
+        
+compass.center = Geyser.Label:new({
+  name = "compass.center",
+},compass.row2)
+
+compass.s = Geyser.Label:new({
+  name = "compass.s",
+},compass.row2)
+
+compass.ne = Geyser.Label:new({
+  name = "compass.ne",
+},compass.row3)
+    
+compass.e = Geyser.Label:new({
+  name = "compass.e",
+},compass.row3)
+  
+compass.se = Geyser.Label:new({
+  name = "compass.se",
+},compass.row3)
+--end of compas labels
+
+--when a label is clicked we want to
+--go in that direction
+function compass.click(name)
+  send(name)
+end
+
+--Function that will put images to direction labels. name will be n nw so on in compass under triggers
+function compass.lit(name)
+  compass[name]:setStyleSheet([[
+    border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"..[[/]].."compass"..[[/]]..name..[[hover.png");
+    margin: 5px;
+  ]])
+end
+--when the space should be unlit change it back to white.
+function compass.unlit(name)
+  compass[name]:setStyleSheet([[
+    border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"..[[/]].."compass"..[[/]]..name..[[.png");
+    margin: 5px;
+  ]])
+end
+
+--Each of the 9 labels need an image of an arrow.
+--Rather than setting each individually, we'll
+--iterate over the compass.dirs table we made 
+--awhile back and add the respective image to each.
+--The names of images are a reflection of the compass.dirs 
+--table. This keeps it consistent and easy to refer to.
+--During the iteration, the callback, setLabelOnEnter and
+--setLabelOnLeave are also set for each label.
+
+for k,v in pairs(compass.dirs) do
+  compass[v]:setStyleSheet([[
+    border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"..[[/]].."compass"..[[/]]..v..[[.png");
+    margin: 5px;
+  ]])
+  compass[v]:setClickCallback("compass.click",v)
+end
+
+function compass.resize()
+  compass.back:resize(compass.back.width, compass.back:get_width())
+end
+
+compass.resize()</script>
+					<eventHandlerList>
+						<string>sysWindowResizeEvent</string>
+					</eventHandlerList>
+				</Script>
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>Settings bar</name>
+				<packageName></packageName>
+				<script>settings_bar = Geyser.Container:new({
+  name = "Settings",    -- give it a unique name here
+  x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
+  width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
+})
+
+--Add the status bar to the screen. On the bottom
+GUIframe.addWindow(settings_bar,"Settings","bottomleft")</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>2d map</name>
+				<packageName></packageName>
+				<script>twod_map = Geyser.Container:new({
+  name = "2d Map",    -- give it a unique name here
+  x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
+  width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
+})
+
+--Add the status bar to the screen. On the bottom
+GUIframe.addWindow(twod_map,"2d Map","bottomright")</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>3d map</name>
+				<packageName></packageName>
+				<script>threed_map = Geyser.Container:new({
+  name = "3d Map",    -- give it a unique name here
+  x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
+  width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
+})
+
+--Add the status bar to the screen. On the bottom
+GUIframe.addWindow(threed_map,"3d Map","bottomright")</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>topleft</name>
+				<packageName></packageName>
+				<script>--I am wondering if we could use this space to list npcs and pcs in the room.
+
+dontknowyet = Geyser.Container:new({
+  name = "don't know yet",    -- give it a unique name here
+  x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
+  width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
+})
+
+--Add the status bar to the screen. On the bottom
+GUIframe.addWindow(dontknowyet,"don't know yet","topleft")</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>Communications Menu</name>
+				<packageName></packageName>
+				<script>--issues with sizing
+--likely can fix with a resize getMapEvents
+--https://wiki.mudlet.org/w/Manual:Geyser#Create_a_Window_with_a_resize_label
+--I do not recommend resolving in GUIframe, it causes issues.
+
+--https://www.mudlet.org/geyser/files/geyser/GeyserReposition.html
+
+--Getting frustrated with difficulty of adjusting settings with GUIframe.
+-- Want to look into creating user user windows 
+--https://wiki.mudlet.org/w/Manual:UI_Functions#openUserWindow
+--Follow up, they are a nice idea, but are unfinushed. miniconsole only.
+
+--Origional menu from the tabs tutorial.
+--Only kept it because using a lone table caused issues.
+--Feelfree to take the tabs table out of the menu table.
+--For me it is a logic not I just didn't feel like unting.
+--menu has to be global.
+menu = menu or {tabs = {"Communication","Thoughts","Speech"},}
+menu.current = menu.current or menu.tabs[1]
+
+--A container for everything to be in.
+--No size or position because that is handled
+--In GUIframe
+menu.container = Geyser.Container:new({
+  name = "menu.container",
+})
+
+--Add the status bar to the screen. On the bottom
+GUIframe.addWindow(menu.container,"menu.container","top")
+
+--box that will hold the tabs
+menu.header = Geyser.HBox:new({
+  name = "menu.header",
+  x = 0, --horizontal
+	y = 0, --vertical position 
+  width = "100%",
+  height = "20%", --for now using % rather than pixel math
+},menu.container)
+
+--box that will store the miniconsoles
+menu.footer = Geyser.Label:new({
+  name = "menu.footer",
+  x = 0, --horizontal position
+	y = "20%", --adjusted for tabs
+  width = "100%",
+  height = "80%", --leave space for tabs
+},menu.container)
+menu.footer:setStyleSheet(labelsStyle) --set to default label style
+
+--Create the tabs
+for k,v in pairs(menu.tabs) do
+  menu[v.."tab"] = Geyser.Label:new({
+    name = "menu."..v.."tab",
+		x = 0, --horizontal position 
+		y = 0, --vertical position
+		width = "100%",
+		height = 30,
+  },menu.header)
+	
+  menu[v.."tab"]:setStyleSheet(tabsStyle) --set style in themes
+	
+	menu[v.."tab"]:echo(tabsFontStyle..v) --lable the tabs, set style in themes
+
+	menu[v.."tab"]:setClickCallback("menu.click",v) --for charing tabs
+
+	--These are the miniconsoles that will hold the text
+  menu[v] = Geyser.MiniConsole:new({ --menu v will be a tab name.
+    name = v, --Issues experienced if I attempt to name them v.."Console"
+  	x = 5, --%horizontally position in parent
+  	y = 0, --%vertical position in parent
+  	width = "99.5%", --% of parent
+  	height = "99%", --% of parent
+		autoWrap = true, --allows text to wrap if too long
+		fontSize = tecSettings.tecFontSize, --in variables
+		font = getFont(), --get font type from main
+		scrollBar = true,
+  },menu.footer) --attach to footer show they show below tabs
+	menu[v]:setColor(getBgColor()) --set miniconsoles to main consol BG color 
+  menu[v]:hide() --Hide the tab so they don't layer
+end --end loop create tabs and consoles
+
+function menu.click(tab) --Choose what happens when a tab is clicked.
+  menu[menu.current]:hide() --Hide the current tab
+  menu.current = tab --Make the clicked tab the current one.
+  menu[menu.current]:show() --Show the current tab.
+end
+
+--A menu has to be selected otherwise on startup it will just show.
+--The label behind the menu, becuase they are hidden directly after creation.
+menu[menu.current]:show()</script>
+				<eventHandlerList />
+			</Script>
+		</ScriptGroup>
+	</ScriptPackage>
+	<KeyPackage />
+	<HelpPackage>
+		<helpURL></helpURL>
+	</HelpPackage>
+</MudletPackage>

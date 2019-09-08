@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MudletPackage>
+<MudletPackage version="1.001">
+	<TriggerPackage />
+	<TimerPackage />
+	<AliasPackage>
+		<Alias isActive="yes" isFolder="no">
+			<name>help</name>
+			<script>echo("\nYour vision blurs as a sudden wealth of information becomes available with a touch you can gain access to:\n")
+cechoLink("&lt;:blue&gt;Newbie guide", 
+[[openUrl("http://eternal-city.wikidot.com/newbie-guides")]], 
+"Guide explaining this games basic interworkings", true)
+echo("        ") --There is a bug with cechoLink tabs cause issues
+
+cechoLink("&lt;:blue&gt;Character creation guide", 
+[[openUrl("http://eternal-city.wikidot.com/character-generator")]], 
+"Character creation tutorial", true)
+echo("\n\n")
+
+cechoLink("&lt;:blue&gt;World maps", 
+[[openUrl("http://eternal-city.wikidot.com/maps")]], 
+"Maps of all major areas in this game", true)
+echo("          ") --There is a bug with cechoLink tabs cause issues
+
+cechoLink("&lt;:blue&gt;Hunting grounds", 
+[[openUrl("http://eternal-city.wikidot.com/hunting-grounds")]], 
+"Maps and explanation of hunting areas", true)
+echo("\n\n")
+
+cechoLink("&lt;:blue&gt;Commands", 
+[[openUrl("http://eternal-city.wikidot.com/commands")]], 
+"Full list of game commands", true)
+echo("            ")
+
+cechoLink("&lt;:blue&gt;Commune with mortals", 
+[[openUrl("https://discord.gg/fevBA8j")]], 
+"TEC Discord", true)
+echo("\n\n")
+
+cechoLink("&lt;:blue&gt;Full respitory of this worlds interworkings", 
+[[openUrl("http://eternal-city.wikidot.com/")]], 
+"wiki site home", true)
+echo("\nWith some effort you are able focus your mind and clear your vision back to reality.\n\n")</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^help$</regex>
+			<Alias isActive="yes" isFolder="no">
+				<name>Help (.w+)</name>
+				<script>--The user tried to get help for something we have not created
+--a help for. So we will search the wiki site for them.
+echo("\nTry as you may you can not remember. Would you like to search the great beyond for\n")
+
+--Turns just the background of the word(s) blue "&lt;color:color&gt;"
+--For font than background colors
+--command is the global for what is in command line.
+--string.sub pulls text from a string. In this case what starts AT
+--Line 6 than after.
+cechoLink("&lt;:blue&gt;"..string.sub(command, 6), 
+
+--if clicked, opens a link to
+[[openUrl("http://eternal-city.wikidot.com/search:site/q/"..string.sub(command, 6))]], 
+
+--Tool tip that appears when moused over.
+--True if I recall is needed for a bug fix.
+"Search the wiki for: "..string.sub(command, 6), true)
+echo("\n\n")</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^help (.*)</regex>
+			</Alias>
+		</Alias>
+		<AliasGroup isActive="yes" isFolder="yes">
+			<name>Display</name>
+			<script>--The $ at the end of the pattern is end of line check 
+
+echo([[
+Display allows you to interact with the display at command line.
+It commands are:
+display save, save settings to file. These settings will automatically load on startup.
+display load, load display settings you have on file from your last save.
+display reset, WILL DISCONNECT YOU FROM THE GAME
+	resets the display from default settings.
+	This is useful if something unexpect occurs.
+	A restart is required for these changes to take affect
+	so it will disconnect you for the game.
+display update autowrap, updates the font autowrap on screen.
+	
+	]])</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^display$</regex>
+			<Alias isActive="yes" isFolder="no">
+				<name>display save</name>
+				<script>--saves the gui loadWindowLayout
+GUIframe.saveSettings()
+echo("\nDisplay settings saved.\n")</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display save</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display load</name>
+				<script>--loads the display from file.
+GUIframe.loadSettings(redraw)
+echo("\nDisplay settings loaded from last save.\n")</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display load</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display reset</name>
+				<script>--Sets guiframe back to default settings
+--these settings can be found in scripts - tec client scripts - community scripts - guiframe
+GUIframe.reinitialize()
+send("exit")
+send("exit")
+disconnect()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display reset</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>Dispay update autowrap</name>
+				<script>--set main window word wrap size.
+--Function is is scripts - GUI - GUI Functions
+setMainWindowAutoWrap()
+
+echo("\nScreen wrap adjusted\n")</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display update autowrap</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>Display Open Communication</name>
+				<script>--opens an external comm hideWindow
+
+openUserWindow("UndockCommWindow")
+
+--for this to be functional the communications filters need a
+--method of checking if this window exists.</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^Display Open Communication$</regex>
+			</Alias>
+		</AliasGroup>
+		<AliasGroup isActive="yes" isFolder="yes">
+			<name>font</name>
+			<script></script>
+			<command></command>
+			<packageName></packageName>
+			<regex></regex>
+			<Alias isActive="yes" isFolder="no">
+				<name>font Size</name>
+				<script>echo("\nSetting font to: "..matches[2].."\n")
+setTECFont(tonumber(matches[2])) 
+--matches[2] is the second word in input.
+</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^font (.*)</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>font</name>
+				<script>echo([[
+The font command is used to change font settings.
+Currently you can change the size of the font.
+Uses are:
+font size, changes the size of the font to the size entered.
+IE: font 12, sets the font size to 12.
+Current font size: ]]..getTECFont())</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^font$</regex>
+			</Alias>
+		</AliasGroup>
+		<AliasGroup isActive="yes" isFolder="yes">
+			<name>tecclient</name>
+			<script>--[[
+Uses of the client command are:
+tecclient save, to save settings to file.
+tecclient load, load settings from file.
+    Currently loading will not directly apply those settings.
+]]--</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^tecclient$</regex>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient load</name>
+				<script>--Load settings from file.
+
+--True echos to the user if it was successfull
+tecFileLoadSettings(true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient load$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient save</name>
+				<script>--Save client data to file.
+tecFileSaveSettings()
+echo("\nClient data saved to file.\n")
+
+--saves the gui loadWindowLayout
+GUIframe.saveSettings()
+echo("\nDisplay settings saved to file.\n")</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient save$</regex>
+			</Alias>
+		</AliasGroup>
+		<Alias isActive="no" isFolder="no">
+			<name>USER login</name>
+			<script>--This alias gets 'triggered' from triggers - login - secret trigger 
+--Once the user presses enter and the line as USER at the begining
+--follwed by a word than ends emmediately after.
+
+
+--https://wiki.mudlet.org/w/Manual:Lua_Functions#sendAll
+--Sending the USER username to command and SECRET NONE than false is do not echo to screen.
+sendAll(command, "SECRET NONE", false) 
+
+--echo("\nPlease enter your hash code.\n")
+
+--https://wiki.mudlet.org/w/Manual:Lua_Functions#printCmdLine
+printCmdLine("HASH ") --Replace text in command line with</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^USER (\w+)$</regex>
+		</Alias>
+		<AliasGroup isActive="yes" isFolder="yes">
+			<name>Debug</name>
+			<script>echo([[
+Please do not use debug unless a developer has ask you to.
+
+Commands are 
+debug on, Enables debug mode 
+debug off, Disables debug mode
+debug video on, Enables video debugging
+debug video off, to disabled video debugging, this will NOT disable debug mode.
+]])</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^debug$</regex>
+			<Alias isActive="yes" isFolder="no">
+				<name>debug on</name>
+				<script>--function in scripts - variables.
+setTECDebugMode(true)
+echo("\nDebug mode on.\n")</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^debug on</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>debug off</name>
+				<script>--function in scripts - variables.
+setTECDebugMode(false)
+
+--Turn off debug display also
+setTECDisplayDebugMode(false)
+
+echo("\nAll debug modes off.\n")</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^debug off</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>debug video on</name>
+				<script>--Enable debug mode.
+setTECDebugMode(true)
+
+--Enable debug output for display
+setTECDisplayDebugMode(true)
+
+echo("\nDebug and display debug modes on.\n")</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^debug display on</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>debug video off</name>
+				<script>--Disable output of video debug display
+setTECDisplayDebugMode(false)
+
+echo("\nDisplay Debug Off. Debug mode unchanged.\n")</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^debug display off</regex>
+			</Alias>
+		</AliasGroup>
+	</AliasPackage>
+	<ActionPackage />
+	<ScriptPackage />
+	<KeyPackage />
+	<HelpPackage>
+		<helpURL></helpURL>
+	</HelpPackage>
+</MudletPackage>
