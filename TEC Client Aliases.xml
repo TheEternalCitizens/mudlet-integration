@@ -175,15 +175,10 @@ Current font size: ]]..getTECFont())</script>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>tecclient</name>
-			<script>--[[
-Uses of the client command are:
-tecclient save, to save settings to file.
-tecclient load, load settings from file.
-    Currently loading will not directly apply those settings.
-]]--</script>
+			<script></script>
 			<command></command>
 			<packageName></packageName>
-			<regex>^tecclient$</regex>
+			<regex></regex>
 			<Alias isActive="yes" isFolder="no">
 				<name>tecclient load</name>
 				<script>--Load settings from file.
@@ -207,8 +202,29 @@ echo("\nDisplay settings saved to file.\n")</script>
 				<packageName></packageName>
 				<regex>^tecclient save$</regex>
 			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient</name>
+				<script>--[[
+Uses of the client command are:
+tecclient save, to save settings to file.
+tecclient load, load settings from file.
+    Currently loading will not directly apply those settings.
+tecclient test colors, test text color test to screen.
+]]--</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient test colors</name>
+				<script>--Run a color test, function in scripts, techfunctions, debug
+tecColorTest()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient test colors$</regex>
+			</Alias>
 		</AliasGroup>
-		<Alias isActive="no" isFolder="no">
+		<Alias isActive="yes" isFolder="no">
 			<name>USER login</name>
 			<script>--This alias gets 'triggered' from triggers - login - secret trigger 
 --Once the user presses enter and the line as USER at the begining

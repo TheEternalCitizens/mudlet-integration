@@ -635,19 +635,14 @@ deleteLine()</script>
 --Starting with most likely items moving to less likely.
 --Fewer processor cycles...
 --Removes what is in brackets
-filteredLine = string.gsub(
-  line,
-  '&lt;font color="#(%x+)"&gt;(.-)&lt;\/font&gt;',
-  '#%1%2#r'
-)
-filteredLine = string.gsub(filteredLine, [[&lt;/font&gt;]], "")
+filteredLine = string.gsub(line, [[&lt;/font&gt;]], "")
 
 --string.gsub referece: https://wiki.mudlet.org/w/Manual:String_Functions
 --string.gsub('The whole string to modify', 'what to replace in the string', 'what to replace it with')
 --%1 is whatever is inside of the ()
 --if you get &lt;font color="#000000 %1 is 000000
 --so it's replacing &lt;font color="#000000&gt; with &lt;#000000&gt;
---filteredLine = string.gsub(filteredLine, '&lt;font color="#(%x+)"&gt;', '#%1')
+filteredLine = string.gsub(filteredLine, '&lt;font color="#(%x+)"&gt;', '#%1')
 --So now all &lt;font color="#hexcolorcode have turned into &lt;#hexcolorcode&gt; in replacement this is a standard format lua can work with.
 
 --if background is dark turn #000000 into #c0c0c0
@@ -876,7 +871,7 @@ hecho("Speech", filteredLine.."\n")
 			<colorTriggerBgColor>#000000</colorTriggerBgColor>
 			<regexCodeList />
 			<regexCodePropertyList />
-			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Login</name>
 				<script>--This trigger handles the handshake for the user.
 --This WILL fail if the developers stop having a blank space
@@ -901,7 +896,7 @@ send("SKOTOS Zealous 0.7.12.2") --sending the zealous handshake
 					<integer>3</integer>
 				</regexCodePropertyList>
 			</Trigger>
-			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>SECRET Triger</name>
 				<script>--The system has passed us SECRET NONE after we have provided the handshake.
 --This only works because this is the only time the system passes us SECRET NONE.

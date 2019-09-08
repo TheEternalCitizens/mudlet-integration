@@ -1931,6 +1931,19 @@ function getTECDisplayDebugMode()
 end --end function getTECdebugMode</script>
 					<eventHandlerList />
 				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecColorTest()</name>
+					<packageName></packageName>
+					<script>function tecColorTest()
+
+  echo("\ndefault text\n")
+  cecho("\ncecho: &lt;:blue&gt;blue background, &lt;red:white&gt;Red text white background.\n")
+  decho("\ndecho: &lt;:255,0,0&gt;Red background, &lt;0,0,255:0,255,0&gt;Blue text green background.\n")
+  hecho("\nhecho: #ff0000Red text, #3c00ffBlue text.\n")
+
+end --end tecColorTest function</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>font</name>
