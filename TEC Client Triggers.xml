@@ -18,17 +18,25 @@
 			<regexCodeList />
 			<regexCodePropertyList />
 			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>TEC Map SKOOT 6 &amp; SKOOT9</name>
+				<name>2d map rooms</name>
 				<script>--SKOOT 6 lines I am nearly certain are for drawing the 2d map
---SKOOT 6 -10,-10,20,#ff0000,32.784,-10,-30,20,#ffffff,17.808,-50,-30,40,#ffffff,27.168,10,-10,20,#ffffff,18.0231,-10,50,20,#ffffff,15,10,-30,20,#ffffff,15,-50,-50,20,#ffffff,20.616,-30,10,20,#ffffff,20.616,-70,-10,20,#ffffff,20.616,30,-30,40,#ffffff,63.7128,10,-50,20,#ffffff,15,-30,-50,20,#ffffff,24.36,-70,-50,20,#ffffff,24.36,-10,10,20,#ffffff,24.36,-50,10,20,#ffffff,24.36,-70,-30,20,#ffffff,24.36,-70,10,20,#ffffff,24.36,30,10,40,#ffffff,47.5377,30,-70,40,#ffffff,40.9857,30,50,40,#ffffff,44.7297,10,10,20,#ffffff,26.4471,10,30,20,#ffffff,23.104,10,50,10,#ffffff,16.872
---SKOOT 6 -10,-10,20,#ff0000,17.574,-10,10,20,#ffffff,31.302,-10,-30,20,#ffffff,15,10,-10,20,#ffffff,15,-50,-10,40,#ffffff,26.154,10,10,20,#ffffff,16.6971,10,-30,20,#ffffff,15,-50,-30,20,#ffffff,20.148,-30,30,20,#ffffff,20.148,-70,10,20,#ffffff,20.148,30,-10,40,#ffffff,61.0608,-30,-30,20,#ffffff,23.58,-70,-30,20,#ffffff,23.58,-10,30,20,#ffffff,23.58,-50,30,20,#ffffff,23.58,-70,-10,20,#ffffff,23.58,-70,30,20,#ffffff,23.58,30,30,40,#ffffff,44.8077,30,-50,40,#ffffff,38.8017,10,30,20,#ffffff,24.4191,30,-90,40,#ffffff,38.8017,10,50,20,#ffffff,22.012
 
---I am undertain why but deleting SKOOT 6 causes SKOOT 9 lines to appear breifly than 
---disappear.
---Though SKOOT 9 lines come before SKOOT 6
---So SKOOT 9 lines isn't in SKOOT 6 lines, but with a new line to give it a new line.
+--SKOOT 6 -10,-10,20,#ff0000,17.1111,-10,10,20,#ffffff,25.5555
+--This skoot is from a map that I am certain there are two rooms.
+--Both the same size. One higher up is red one directly below is white
+--They are the same size.
+--There are door open and closed lines on them. Those are handled with skoot 10 messages
+--SKOOT 6 x, y, size, color, ?
+--x horizonal position of top left corner
+--y is vertical position of top left corner
+--size is the size of the room 
+--color is the color of the room 
+--No fucking idea what the fucking number at the end is!
 
 deleteLine()
+
+--complete filter making pseudo code.
+--Create a table to hold room sizes pulled from the line, and color for that room.
 
 --Orchil map code
 
@@ -222,12 +230,27 @@ deleteLine()
 				</regexCodePropertyList>
 			</TriggerGroup>
 			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>Mudlet Map &amp; SKOOT 10</name>
-				<script>--I THINK SKOOT 10 is a room position.
---While that is NOT a room id. It will be distink to every room.
+				<name>2d map doors</name>
+				<script>--SKOOT 10 is door position on the map
+--[[
+Here is an example from the same two room map that was referenced in TEC Map SKOOT 6
+SKOOT 10 0,10,ver,1,-11,-5,hor,1,10,20,hor,0,-11,25,hor,0
+There are four door ways.
+Three are small horizonal lines, one is a small vertical line.
+Doors are colored black if they are closed. They are closed if there is no room to be 
+drawn on minimap by that side of the room
 
---SKOOT 10 0,10,ver,1,0,-11,ver,1,10,0,hor,1,-11,20,hor,1,10,20,hor,1,10,-20,hor,1,20,-11,ver,1,-40,-11,ver,1,-20,30,ver,1,-51,20,hor,1,30,20,hor,1,-30,-20,hor,1,-51,-20,hor,1,-10,40,hor,1,-31,40,hor,1,-60,9,ver,1,-60,30,ver,1,50,30,ver,1,50,-11,ver,1,70,0,hor,1,50,70,ver,1,29,40,hor,1,70,40,hor,1,50,-51,ver,1,29,-45,hor,0,20,50,ver,1,50,-91,ver,1,15,70,ver,1
---SKOOT 10 0,-11,ver,1,-11,0,hor,1,10,0,hor,1,0,-31,ver,1,10,-20,hor,1,-40,-31,ver,1,-20,10,ver,1,-51,0,hor,1,30,0,hor,1,10,-40,hor,1,20,-31,ver,1,-30,-40,hor,1,-51,-40,hor,1,-10,20,hor,1,-31,20,hor,1,-60,-11,ver,1,-60,10,ver,1,50,10,ver,1,50,-31,ver,1,70,-20,hor,1,50,50,ver,1,29,20,hor,1,70,20,hor,1,50,-71,ver,1,29,-65,hor,0,50,90,ver,1,70,60,hor,1,20,30,ver,1,15,50,ver,1,20,55,hor,0,15,60,ver,0,9,55,hor,0
+SKOOT 10 x y, dir, open?
+x is horizontal position, from center of line
+y is vertical position, from center of line.
+dir is the direction the door is facing, normally is is a line so
+hor is horizontal, v is vertical
+ne is a 45 degree angle going from left to right, so north east on a map...
+nw is a 45 degree andle going from right to left. sp north west on a map...
+open if the door is open. 1 is open 0 is closed.
+]]--
+
+
 
 --delete the line after mapping.
 deleteLine()</script>
@@ -630,11 +653,14 @@ deleteLine()</script>
 --prel regex allows for triggers with special mudlet functions for text searching
 --^means start of line. Nothing after it means line with anything in it
 
---Code provided by s/Mud/Game on mudletdiscord. THANK YOU s/Mud/Game!!!!
+--hreplace Code provided by s/Mud/Game on mudletdiscord. THANK YOU s/Mud/Game!!!!
 
 --Starting with most likely items moving to less likely.
 --Fewer processor cycles...
 --Removes what is in brackets
+--Make filtered line a copy of the main line, removing all &lt;/font&gt; declarations
+--string.gsub referece: https://wiki.mudlet.org/w/Manual:String_Functions
+--string.gsub('The whole string to modify', 'what to replace in the string', 'what to replace it with')
 filteredLine = string.gsub(line, [[&lt;/font&gt;]], "")
 
 --string.gsub referece: https://wiki.mudlet.org/w/Manual:String_Functions

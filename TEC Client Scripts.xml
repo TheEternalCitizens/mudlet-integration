@@ -57,11 +57,7 @@ filteredLine = "Reset filteredLine."
 --Techniquely we didn't need to do the bulk of everything above.
 --Because I am going to load it from file.
 --However we want an easy method of creating new variables and a
---location where we will not forget where they are.
-
---True echos to the user if it was successfull
-tecFileLoadSettings(true)
-setFontSize(tecSettings.tecFontSize)</script>
+--location where we will not forget where they are.</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
@@ -143,6 +139,57 @@ buttonsFontStyle = '&lt;center&gt;&lt;p style="font-size:18px; color:white"&gt;'
 </script>
 				<eventHandlerList />
 			</Script>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>Data Functions</name>
+				<packageName></packageName>
+				<script>--Functions that work directly with many variables that have nothing logically in common.
+--For example they aren't all variables for display settings, all for font or debuging.</script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>tecFileSaveSettings()</name>
+					<packageName></packageName>
+					<script>--Save client settings to file
+function tecFileSaveSettings()
+
+--Idealy implimenting some kind of error checking would be great.
+--Maybe making tecFileLoadSettings into a function that returns a table
+--rather than loads the data into a global settings table
+
+  --Save the table to file.
+  table.save(getMudletHomeDir() .. "/TECClientData.lua", tecSettings)
+end</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecFileLoadSettings()</name>
+					<packageName></packageName>
+					<script>--Loads variable and theme settings from file.
+--Notify is boolean, to let the user know the event occured.
+--In this case it is also a to screen notification that it was 
+--successfull
+function tecFileLoadSettings(notify)
+
+	--Set the location and name of file.	
+	local path = getMudletHomeDir() .. "/TECClientData.lua"
+	path = path:gsub("\\","/")
+	--If the file does not exist let the user know.
+  if not io.exists(path) then 
+		debugToDisplay("tecFileLoadSettings: save file doesn't exist.")
+		debugc("tecFileLoadSettings: save file doesn't exist.") 
+		echo("settings did not load from file")
+	return end --kill the function before real errors occur
+  table.load(path, tecSettings) --Load the settings in from file
+	if notify then echo("\nSettings successfully loaded from file\n") end
+end
+
+--Call the function so data loads when mudlet starts.
+tecFileLoadSettings(true)
+
+--Now change some settings since data has been loaded
+setFontSize(tecSettings.tecFontSize) --font size</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
 			<name>mudlet Communidy Functions</name>
@@ -2094,51 +2141,6 @@ end --end function guiChange
 --In otherwords when any window geyser or main is CHANGED, run setMainWindowAutoWrap.
 --That is NOT just resizing.
 registerAnonymousEventHandler("sysWindowResizeEvent", "guiChange()")</script>
-					<eventHandlerList />
-				</Script>
-			</ScriptGroup>
-			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>Data</name>
-				<packageName></packageName>
-				<script>--Functions that work directly with many variables that have nothing logically in common.
---For example they aren't all variables for display settings, all for font or debuging.</script>
-				<eventHandlerList />
-				<Script isActive="yes" isFolder="no">
-					<name>tecFileSaveSettings()</name>
-					<packageName></packageName>
-					<script>--Save client settings to file
-function tecFileSaveSettings()
-
---Idealy implimenting some kind of error checking would be great.
---Maybe making tecFileLoadSettings into a function that returns a table
---rather than loads the data into a global settings table
-
-  --Save the table to file.
-  table.save(getMudletHomeDir() .. "/TECClientData.lua", tecSettings)
-end</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>tecFileLoadSettings()</name>
-					<packageName></packageName>
-					<script>--Loads variable and theme settings from file.
---Notify is boolean, to let the user know the event occured.
---In this case it is also a to screen notification that it was 
---successfull
-function tecFileLoadSettings(notify)
-
-	--Set the location and name of file.	
-	local path = getMudletHomeDir() .. "/TECClientData.lua"
-	path = path:gsub("\\","/")
-	--If the file does not exist let the user know.
-  if not io.exists(path) then 
-		debugToDisplay("tecFileLoadSettings: save file doesn't exist.")
-		debugc("tecFileLoadSettings: save file doesn't exist.") 
-		echo("settings did not load from file")
-	return end --kill the function before real errors occur
-  table.load(path, tecSettings) --Load the settings in from file
-	if notify then echo("\nSettings successfully loaded from file\n") end
-end</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
