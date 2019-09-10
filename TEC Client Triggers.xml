@@ -661,7 +661,12 @@ deleteLine()</script>
 --Make filtered line a copy of the main line, removing all &lt;/font&gt; declarations
 --string.gsub referece: https://wiki.mudlet.org/w/Manual:String_Functions
 --string.gsub('The whole string to modify', 'what to replace in the string', 'what to replace it with')
-filteredLine = string.gsub(line, [[&lt;/font&gt;]], "")
+filteredLine = string.gsub(
+  line,
+  '&lt;font color="#(%x+)"&gt;(.-)&lt;\/font&gt;',
+  '#%1%2#r'
+)
+filteredLine = string.gsub(filteredLine, [[&lt;/font&gt;]], "")
 
 --string.gsub referece: https://wiki.mudlet.org/w/Manual:String_Functions
 --string.gsub('The whole string to modify', 'what to replace in the string', 'what to replace it with')
