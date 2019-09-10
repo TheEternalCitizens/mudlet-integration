@@ -657,24 +657,22 @@ deleteLine()</script>
 
 --Starting with most likely items moving to less likely.
 --Fewer processor cycles...
---Removes what is in brackets
+
 --Make filtered line a copy of the main line, removing all &lt;/font&gt; declarations
 --string.gsub referece: https://wiki.mudlet.org/w/Manual:String_Functions
 --string.gsub('The whole string to modify', 'what to replace in the string', 'what to replace it with')
+--%1 and %2 are whatever is inside of the ()
+--if you get &lt;font color="#000000&gt;hello&lt;/font&gt; %1 is 000000 and %2 is hello
+--so it's replacing &lt;font color="#000000&gt;hello&lt;/font&gt; with #000000hello#r
+--#r is mudlet's way to reset the color back to default. If we don't do this, the color will bleed
+--until the end of the line.
 filteredLine = string.gsub(
   line,
   '&lt;font color="#(%x+)"&gt;(.-)&lt;\/font&gt;',
   '#%1%2#r'
 )
+--Ok, we're done with the useful &lt;/font&gt; tags, so let's remove the rest
 filteredLine = string.gsub(filteredLine, [[&lt;/font&gt;]], "")
-
---string.gsub referece: https://wiki.mudlet.org/w/Manual:String_Functions
---string.gsub('The whole string to modify', 'what to replace in the string', 'what to replace it with')
---%1 is whatever is inside of the ()
---if you get &lt;font color="#000000 %1 is 000000
---so it's replacing &lt;font color="#000000&gt; with &lt;#000000&gt;
-filteredLine = string.gsub(filteredLine, '&lt;font color="#(%x+)"&gt;', '#%1')
---So now all &lt;font color="#hexcolorcode have turned into &lt;#hexcolorcode&gt; in replacement this is a standard format lua can work with.
 
 --if background is dark turn #000000 into #c0c0c0
 local redBG, greenBG, blueBG = getBgColor() --get main console background color
