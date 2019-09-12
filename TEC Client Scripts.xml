@@ -1837,6 +1837,7 @@ Debug like functions:
 					<packageName></packageName>
 					<script>function setTECDebugMode(enableDebug)
 	tecSettings.tecDebugMode = enableDebug or false
+	openUserWindow("DebugWindow")
 end</script>
 					<eventHandlerList />
 				</Script>
@@ -1866,7 +1867,7 @@ function debugToDisplay(textMessage)
 	if getTECDebugMode() then --Is debug mode on?
 		local redBG, greenBG, blueBG = getBgColor() --keep track of current screen color
 		setBgColor( 255,50,50) --change text background to red
-		echo("\nDebug mode on disable it with command: debug off\n"..textMessage.."\n\n") -- print message to screen
+		echo("DebugWindow","\n"..textMessage) -- print message to screen
 		setBgColor(redBG,greenBG,blueBG) --change text background back to what it was
 	end --if debug mode if check
 end --end displayToDebug function
@@ -1895,7 +1896,7 @@ function Geyser.Container:getDebug ()
   	 
      guiLog ="Name: "..tostring(self.name)..
 		 " | Type: "..tostring(self.type)..
-		 " | Parent: "..tostring(self.parent)..
+		 " | Parent: "..tostring(self.parent.name)..
 		 " | X position: "..tostring(self:get_x())..
 		 " | Y Position: "..tostring(self:get_y())..
 		 " | Width: "..tostring(self:get_width())..
@@ -2417,14 +2418,34 @@ GUIframe.addWindow(settings_bar,"Settings","bottomleft")</script>
 			<Script isActive="yes" isFolder="no">
 				<name>2d map</name>
 				<packageName></packageName>
-				<script>twod_map = Geyser.Container:new({
+				<script>tecMap = Geyser.Container:new({
   name = "2d Map",    -- give it a unique name here
   x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
   width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
 })
 
 --Add the status bar to the screen. On the bottom
-GUIframe.addWindow(twod_map,"2d Map","bottomright")</script>
+GUIframe.addWindow(tecMap,"2d Map","bottomright")
+
+--Creating the background for the 2d tec map.
+tecMap.back = Geyser.Label:new({
+  name = "tecMap.back",
+  x = "0%", --%horizontally position in parent
+  y = "0%", --%vertical position in parent
+  width = 240, --% of parent
+  height = 240, --% of parent
+},tecMap) --The parent of this label.
+tecMap.back:setColor(0,0,255)
+
+mapRoom = {}
+
+--Creating empty rooms for our map system.
+for i = 1, 100 do
+  mapRoom[i] = Geyser.Label:new({
+  name = "mapRoom"..tostring(i),
+},tecMap.back) 
+  mapRoom[i]:hide() --Hide the tab so they don't layer
+end --end loop create tabs and consoles</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
@@ -2543,7 +2564,7 @@ function menu.click(tab) --Choose what happens when a tab is clicked.
   menu[menu.current]:hide() --Hide the current tab
   menu.current = tab --Make the clicked tab the current one.
   menu[menu.current]:show() --Show the current tab.
-end
+end --end menu.click(tab) function
 
 --A menu has to be selected otherwise on startup it will just show.
 --The label behind the menu, becuase they are hidden directly after creation.

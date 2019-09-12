@@ -1,2 +1,8 @@
-Intended to be suggestions on creating code. Mostly order of triggers. How to use themes.
-Using it to get a file to github for a review.
+From fastest trigger type to slowest
+exact match > begin of line > substring > regex
+
+In otherwords don't use a a substring where a begin of line or exact match would work. ONLY use regex when you have to.
+____________________
+When looking for patterns in string use lua patterns before regex.
+So string.match and rex.match only when needed.
+____________________

@@ -105,7 +105,7 @@ GUIframe.loadSettings(redraw)
 echo("\nDisplay settings loaded from last save.\n")</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^display load</regex>
+				<regex>^display load$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>display reset</name>
