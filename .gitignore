@@ -3,3 +3,4 @@
 *.db-wal
 .owncloudsync.log
 Desktop.ini
+*.db-shm

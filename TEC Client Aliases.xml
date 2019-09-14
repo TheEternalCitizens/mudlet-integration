@@ -248,25 +248,6 @@ tecColorTest()</script>
 				<regex>^tecclient test colors$</regex>
 			</Alias>
 		</AliasGroup>
-		<Alias isActive="yes" isFolder="no">
-			<name>USER login</name>
-			<script>--This alias gets 'triggered' from triggers - login - secret trigger 
---Once the user presses enter and the line as USER at the begining
---follwed by a word than ends emmediately after.
-
-
---https://wiki.mudlet.org/w/Manual:Lua_Functions#sendAll
---Sending the USER username to command and SECRET NONE than false is do not echo to screen.
-sendAll(command, "SECRET NONE", false) 
-
---echo("\nPlease enter your hash code.\n")
-
---https://wiki.mudlet.org/w/Manual:Lua_Functions#printCmdLine
-printCmdLine("HASH ") --Replace text in command line with</script>
-			<command></command>
-			<packageName></packageName>
-			<regex>^USER (\w+)$</regex>
-		</Alias>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Debug</name>
 			<script>echo([[
