@@ -495,8 +495,10 @@ deleteLine()</script>
 --It is for all URL calls.
 --example: SKOOT 5 http://tec.skotos.net:1180/bin/help?$help_commands_command
 
+--debug does not trigger.
+
 --opens the voting window at login
-if(line == "SKOOT 5 http://www.topmudsites.com/vote-scarlatc.html") then
+if(line == "SKOOT 5 http://www.topmudsites.com/vote-scarlatc.html ") then
 	echo("To help the world know this game exists you could:\n")
 	
 	cechoLink("&lt;:blue&gt;Vote for TEC on topmudsites.com", 
@@ -664,12 +666,12 @@ end
 
 --center filter
 --center lines with &lt;center&gt;
+--center with ftext
 
 selectCurrentLine() --Selects main. 
 --hreplace is in scripts under mudlet communicty functions.
 --Though in short it uses hinserttext to push text with colors to a window...
 hreplace(filteredLine)		
-deselect()
 deselect()
 
 --displays unfiltered line to screen.

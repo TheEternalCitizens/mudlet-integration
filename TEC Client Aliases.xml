@@ -43,7 +43,7 @@ cechoLink("&lt;:blue&gt;Full respitory of this worlds interworkings",
 echo("\n\n")
 
 cechoLink("&lt;:blue&gt;help client", 
-[[openUrl("http://eternal-city.wikidot.com/")]], 
+[[tecHelpClient()]], 
 "wiki site home", true)
 
 echo("\nWith some effort you are able focus your mind and clear your vision back to reality.\n\n")</script>

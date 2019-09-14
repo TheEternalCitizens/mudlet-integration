@@ -1869,7 +1869,6 @@ end --end function getTECdebugMode</script>
 --Is open, and create one if it is not. Than send debug code to it rather than 
 --main, where users can easily see it or mudlets debug, which is meant for true
 --blue errors.
-
 function debugToDisplay(textMessage)
 	if getTECDebugMode() then --Is debug mode on?
 		local redBG, greenBG, blueBG = getBgColor() --keep track of current screen color
@@ -2099,7 +2098,12 @@ end --end function setMainWindowAutowrap</script>
 				<Script isActive="yes" isFolder="no">
 					<name>calcMenuFonts</name>
 					<packageName></packageName>
-					<script>--Calculate tab and other gui fonts base on main screen size.
+					<script>--This is needed because low resolutions screens even remotely large text will bleed
+--off the edges.
+--Where high resolution screens small text or even large text like 14 may not be legable.
+--Not needed until after 1.0. We can use font size 14 for now
+
+--Calculate tab and other gui fonts base on main screen size.
 --Could set variables directly
 --Could return a single font while passing a string to determine
 --what is being mesured calcMenuFont("tabs") calcMenuFont("menus")
@@ -2109,14 +2113,20 @@ end --end function setMainWindowAutowrap</script>
 				<Script isActive="yes" isFolder="no">
 					<name>setMenuFonts</name>
 					<packageName></packageName>
-					<script>--Sets the font sizes for menus and tabs.
+					<script>--This is needed because low resolutions screens even remotely large text will bleed
+--off the edges.
+--Where high resolution screens small text or even large text like 14 may not be legable.
+--Not needed until after 1.0. We can use font size 14 for now
+
+--Sets the font sizes for menus and tabs.
 --Need to echo into all the tabs and labels
 --will need to be in guiChange event
---will need to call calcMenuFonts to get sizes.
+--will need to call calcMenuFonts to get sizes. (Scripts-TEC Scripts-GUI)
 --Will need to be called in variables to set 
 --tabsFontStyle
 --Probably just set it to trigger at known screen widths.
---Keep in mind that getMainConsoleWidth is buggy as of v4.03</script>
+--Keep in mind that getMainConsoleWidth is buggy as of v4.03
+--4.1.1 theres a new function to get windows of miniconsole in text coloums.</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
@@ -2159,12 +2169,12 @@ end --end function tecClearDisplay</script>
 --Do NOT put any function that changes the GUI here!!!
 
 --I am suspicious that calling multiple functions in one event is a no no
---I did this though because greating multiple AnonymousEvents caused issues.
+--I did this though because creating multiple AnonymousEvents caused issues.
 --If I Recall the last event would not occur.
 
 function guiChange()
-	setMainWindowAutoWrap()
-	if getTECDisplayDebugMode() then geyserDebug() end
+	setMainWindowAutoWrap() --adjusts word wrap for user.
+	if getTECDisplayDebugMode() then geyserDebug() end --if displaydebug is on
 end --end function guiChange
 
 --whenever event sysWindowReizeEvent occurs run setMainWindowAutowrap.
@@ -2188,15 +2198,12 @@ registerAnonymousEventHandler("sysWindowResizeEvent", "guiChange()")</script>
 					<name>Help Client</name>
 					<packageName></packageName>
 					<script>function tecHelpClient()
-echo([[
-There are a number of commands with adjustig the game client. They are:
-
-]])
+echo("There are a number of commands with adjustig the game client. They are:\n")
 
 cechoLink("&lt;:blue&gt;display", 
 [[tecDisplayHelp()]], 
 "Change display settings.", true)
-echo(" save or load display positions. ")
+echo(" save or load display positions. Reset display to defaults. Adjust autowrap. and clear text off the display.")
 echo("\n\n")
 end --end function tecHelpClient</script>
 					<eventHandlerList />
@@ -2483,7 +2490,7 @@ GUIframe.addWindow(settings_bar,"Settings","bottomleft")</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
-				<name>2d map</name>
+				<name>tec map</name>
 				<packageName></packageName>
 				<script>tecMap = Geyser.Container:new({
   name = "2d Map",    -- give it a unique name here
@@ -2504,14 +2511,22 @@ tecMap.back = Geyser.Label:new({
 },tecMap) --The parent of this label.
 tecMap.back:setColor(0,0,255)
 
-mapRoom = {}
-
+mapRoom = {} --Table to hold labels we will draw the rooms with
 --Creating empty rooms for our map system.
 for i = 1, 100 do
   mapRoom[i] = Geyser.Label:new({
   name = "mapRoom"..tostring(i),
 },tecMap.back) 
   mapRoom[i]:hide() --Hide the tab so they don't layer
+end --end loop create tabs and consoles
+
+mapDoor = {} --Table to hold labels we will draw the doors with.
+--Creating empty door labels for our map system.
+for i = 1, 100 do
+  mapDoor[i] = Geyser.Label:new({
+  name = "mapDoor"..tostring(i),
+},tecMap.back) 
+  mapDoor[i]:hide() --Hide the tab so they don't layer
 end --end loop create tabs and consoles</script>
 				<eventHandlerList />
 			</Script>
