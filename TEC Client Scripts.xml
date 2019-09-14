@@ -54,10 +54,8 @@ tecSettings.tecDisplayDebugMode = false
 --DO NOT SAVE THIS TO FILE
 filteredLine = "Reset filteredLine."
 
---Techniquely we didn't need to do the bulk of everything above.
---Because I am going to load it from file.
---However we want an easy method of creating new variables and a
---location where we will not forget where they are.</script>
+--Zoom level of the map. 
+mapZoom = 1</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
@@ -1837,8 +1835,17 @@ Debug like functions:
 					<packageName></packageName>
 					<script>function setTECDebugMode(enableDebug)
 	tecSettings.tecDebugMode = enableDebug or false
-	openUserWindow("DebugWindow")
-end</script>
+	
+	if enableDebug then
+		openUserWindow("DebugWindow")
+		--DebugWindow:addScrollbars(parent, "Vertical")
+	end --end if debug is enabled.
+	
+	if not enableDebug then
+	
+	end--if turning off debug mode. Close the window.
+	
+end --end function setTecDebugMode</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
@@ -2112,6 +2119,28 @@ end --end function setMainWindowAutowrap</script>
 --Keep in mind that getMainConsoleWidth is buggy as of v4.03</script>
 					<eventHandlerList />
 				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecClearDisplay()</name>
+					<packageName></packageName>
+					<script>--There is either a bug or clear working as intended.
+--If we clear main. geyser objects that adopt it's background color via getBgColor
+--it will error out.
+
+function tecClearDisplay()
+
+  --backup background color
+	local br,bg,bb = getBgColor()
+	
+  --clear main
+  clearWindow()
+
+  --set mains background to eat it was.
+	setBgColor(br,bg,bb)
+	echo(" \n") --We need a line of text on the screen for getBgColor to copy from.
+	
+end --end function tecClearDisplay</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>Events</name>
@@ -2135,7 +2164,7 @@ end --end function setMainWindowAutowrap</script>
 
 function guiChange()
 	setMainWindowAutoWrap()
-	geyserDebug()
+	if getTECDisplayDebugMode() then geyserDebug() end
 end --end function guiChange
 
 --whenever event sysWindowReizeEvent occurs run setMainWindowAutowrap.
@@ -2145,6 +2174,44 @@ registerAnonymousEventHandler("sysWindowResizeEvent", "guiChange()")</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>help</name>
+				<packageName></packageName>
+				<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external scripts --
+-------------------------------------------------
+</script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>Help Client</name>
+					<packageName></packageName>
+					<script>function tecHelpClient()
+echo([[
+There are a number of commands with adjustig the game client. They are:
+
+]])
+
+cechoLink("&lt;:blue&gt;display", 
+[[tecDisplayHelp()]], 
+"Change display settings.", true)
+echo(" save or load display positions. ")
+echo("\n\n")
+end --end function tecHelpClient</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>
+			<Script isActive="yes" isFolder="no">
+				<name>Data Functions</name>
+				<packageName></packageName>
+				<script>--[[
+Due to code order requirements.
+Data Functions are in Variables Data themes
+]]-- 
+</script>
+				<eventHandlerList />
+			</Script>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
 			<name>GUI</name>
@@ -2208,7 +2275,7 @@ fatiguebar.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0,
     border-radius: 7;
     padding: 3px;]])
 
-fatiguebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Endurance&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
+fatiguebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Fatigue&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
 </script>
 					<eventHandlerList />
 				</Script>
@@ -2432,8 +2499,8 @@ tecMap.back = Geyser.Label:new({
   name = "tecMap.back",
   x = "0%", --%horizontally position in parent
   y = "0%", --%vertical position in parent
-  width = 240, --% of parent
-  height = 240, --% of parent
+  width = "100%", --% of parent
+  height = "100%", --% of parent
 },tecMap) --The parent of this label.
 tecMap.back:setColor(0,0,255)
 
@@ -2448,7 +2515,7 @@ for i = 1, 100 do
 end --end loop create tabs and consoles</script>
 				<eventHandlerList />
 			</Script>
-			<Script isActive="yes" isFolder="no">
+			<Script isActive="no" isFolder="no">
 				<name>3d map</name>
 				<packageName></packageName>
 				<script>threed_map = Geyser.Container:new({
@@ -2552,7 +2619,7 @@ for k,v in pairs(menu.tabs) do
   	width = "99.5%", --% of parent
   	height = "99%", --% of parent
 		autoWrap = true, --allows text to wrap if too long
-		fontSize = tecSettings.tecFontSize, --in variables
+		fontSize = getTECFont(), --in variables
 		font = getFont(), --get font type from main
 		scrollBar = true,
   },menu.footer) --attach to footer show they show below tabs
@@ -2569,6 +2636,28 @@ end --end menu.click(tab) function
 --A menu has to be selected otherwise on startup it will just show.
 --The label behind the menu, becuase they are hidden directly after creation.
 menu[menu.current]:show()</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>Macro Bar</name>
+				<packageName></packageName>
+				<script>--[[
+Tec uses a macro system that players can set within the game.
+The command they use is @macro.
+To avoid additional time for now we can piggy back of their system.
+They support 15 gui buttons that can be macroed in the game.
+All we need to do, is when the button is clicked it sends command fe#
+so button 1 send("fe1")
+After that TECs macro system will take over.
+For formating you could set the grid style setup for labels in compasbar
+I recommend having this at GUIframe location bottom left.
+In 5 rows of 3 columns.
+Normally does 5 columns of 3 rows. Tec has a combat rotation that requires three unique moves 
+in a row or if you are attacking a person you receive a major debuff.
+The 5 is while training. You need to do 5 unique moves to get the most skill points.
+I like the 3 columns because it gives us big chunky buttons that will work well with touch
+screens.
+]]--</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>

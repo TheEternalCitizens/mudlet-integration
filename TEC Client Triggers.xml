@@ -111,23 +111,32 @@ local lc = 1 --Just a loop counter so we can go through rooms easily.
 --pattern searches to fail.
 for xpos, ypos, size, color in string.gmatch( line, "(-?%d+),(-?%d+),(%d+),(#%x+),%d+.%d+,?" ) do
 
-	debugToDisplay("Map Room "..tostring(lc).." xpos: "..tostring(tonumber(xpos)+120))
-  debugToDisplay("Map Room "..tostring(lc).." ypos: "..tostring(tonumber(ypos)+120))
-  debugToDisplay("Map Room "..tostring(lc).." size: "..tostring(size))
-  debugToDisplay("Map Room "..tostring(lc).." color: "..tostring(color))
-
-  mapRoom[lc]:move((tonumber(xpos)+120), (tonumber(ypos)+120)) --Move the room into position.
-  mapRoom[lc]:resize(tostring((size-2)), tostring((size-2))) --Change the rooms size.
+  --TEC uses grid logic for their map. xposition is up to 120 +-.
+  --240 is the total size of their draw space. What percent is our position in that space.
+  -- +.5 just gives us a border.
+  xposScaler = ((((tonumber(xpos) + 120) / 240) * 100) + .125) * mapZoom
+  yposScaler = ((((tonumber(ypos) + 120) / 240) * 100) + .125) * mapZoom
+  
+  --80 / 240 = .33333. Multiply that by 100, 33.333
+  sizeScaler = (((tonumber(size) / 240) * 100) - .5) * mapZoom
+  
+	if getTECDisplayDebugMode() then --if Display Debug Mod is on.
+  	debugToDisplay("Map Room "..tostring(lc).." xpos: "..tostring(tonumber(xpos)+120).." xposScaler: "..tostring(xposScaler))
+    debugToDisplay("Map Room "..tostring(lc).." ypos: "..tostring(tonumber(ypos)+120).." yposScaler: "..tostring(yposScaler))
+    debugToDisplay("Map Room "..tostring(lc).." size: "..tostring(size).." sizeScaler: "..tostring(sizeScaler))
+    debugToDisplay("Map Room "..tostring(lc).." color: "..tostring(color))
+  	cecho(mapRoom[lc].name,tostring(lc),blue,"c") --put room # on label
+	end --end if DisplayDebugMode is true
+  	
+  mapRoom[lc]:move(tostring(xposScaler).."%", tostring(yposScaler).."%") --Move the room into position.
+  mapRoom[lc]:resize(tostring(sizeScaler).."%", tostring(sizeScaler).."%") --Change the rooms size.
   mapRoom[lc]:setColor(color) --Set the rooms color.
-	if getTECDebugMode() then mapRoom[lc]:echo(tostring(lc,blue)) end --give room # if debug on
   mapRoom[lc]:show() --Now show the room.
   lc = lc +1 --Iterate so we can do this again.
-end
+end --end gmatch room data search loop
 
---displays unfiltered line to debug.
---display with setTECDebugMode(true)
---or command line: debug on
---debugToDisplay("Map Room Draw Data: "..line)
+--We want the map zoon level, but not 100 times...
+if getTECDisplayDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
 
 --Delete main's line
 --selectCurrentLine() --proper code for when hinsert is fixed.
@@ -151,8 +160,8 @@ deleteLine()</script>
 					<integer>2</integer>
 				</regexCodePropertyList>
 			</Trigger>
-			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>2d map doors</name>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>TEC map doors</name>
 				<script>--SKOOT 10 is door position on the map
 --[[
 Here is an example from the same two room map that was referenced in TEC Map SKOOT 6
@@ -193,7 +202,7 @@ deleteLine()</script>
 				<regexCodePropertyList>
 					<integer>2</integer>
 				</regexCodePropertyList>
-			</TriggerGroup>
+			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Compass</name>
 				<script>--Because I only need to do this 11 times. I am doing it without
@@ -339,9 +348,14 @@ deleteLine()</script>
 					<script>--Pushes SKOOT 8 Health,#
 --into the health bar.
 
+--This can be done with a regex trigger () and matches[2].
+--We are doing it this way to avoid a regex when it is not needed.
+--We want as few regex triggers as is possible. All these triggers 
+--are checked on every line the server sends.
+
 	--pull only the numbers at the end into a local variable
 	local health = string.gsub(line,"SKOOT 8 Health,","")
-	--this COULD be converted to string.sub
+	--this probably be converted to string.sub
 	--http://lua-users.org/wiki/StringLibraryTutorial
 	--https://wiki.mudlet.org/w/Manual:String_Functions#string.sub.2C_utf8.sub
 	--local health =  string.sub(line, 16, string.len(line))

@@ -40,6 +40,12 @@ echo("\n\n")
 cechoLink("&lt;:blue&gt;Full respitory of this worlds interworkings", 
 [[openUrl("http://eternal-city.wikidot.com/")]], 
 "wiki site home", true)
+echo("\n\n")
+
+cechoLink("&lt;:blue&gt;help client", 
+[[openUrl("http://eternal-city.wikidot.com/")]], 
+"wiki site home", true)
+
 echo("\nWith some effort you are able focus your mind and clear your vision back to reality.\n\n")</script>
 			<command></command>
 			<packageName></packageName>
@@ -68,6 +74,14 @@ echo("\n\n")</script>
 				<packageName></packageName>
 				<regex>^help (.*)</regex>
 			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>help client</name>
+				<script>--run the client help command. It is a function so it can be clicked.
+tecHelpClient()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^help client$</regex>
+			</Alias>
 		</Alias>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Display</name>
@@ -75,7 +89,11 @@ echo("\n\n")</script>
 
 echo([[
 Display allows you to interact with the display at command line.
-It commands are:
+It commands are:]].."\n")
+cechoLink("&lt;:blue&gt;display clear", 
+[[tecClearDisplay()]], 
+"Remove text from main screen", true)
+echo([[, clears all text off the main screen.
 display save, save settings to file. These settings will automatically load on startup.
 display load, load display settings you have on file from your last save.
 display reset, WILL DISCONNECT YOU FROM THE GAME
@@ -124,7 +142,6 @@ disconnect()</script>
 				<script>--set main window word wrap size.
 --Function is is scripts - GUI - GUI Functions
 setMainWindowAutoWrap()
-
 echo("\nScreen wrap adjusted\n")</script>
 				<command></command>
 				<packageName></packageName>
@@ -133,7 +150,6 @@ echo("\nScreen wrap adjusted\n")</script>
 			<Alias isActive="yes" isFolder="no">
 				<name>Display Open Communication</name>
 				<script>--opens an external comm hideWindow
-
 openUserWindow("UndockCommWindow")
 
 --for this to be functional the communications filters need a
@@ -141,6 +157,14 @@ openUserWindow("UndockCommWindow")
 				<command></command>
 				<packageName></packageName>
 				<regex>^Display Open Communication$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display clear</name>
+				<script>--clears the main screen.
+tecClearDisplay()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display clear$</regex>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
