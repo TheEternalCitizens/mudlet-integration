@@ -248,6 +248,22 @@ tecColorTest()</script>
 				<regex>^tecclient test colors$</regex>
 			</Alias>
 		</AliasGroup>
+		<Alias isActive="yes" isFolder="no">
+			<name>Login</name>
+			<script>-- This alias gets 'triggered' from triggers - login - secret trigger 
+
+username = matches[2]
+password = matches[3]
+hash = md5.sumhexa(username .. password .. "NONE")
+
+
+-- https://wiki.mudlet.org/w/Manual:Lua_Functions#sendAll
+sendAll("USER " .. username .. "\n", "SECRET NONE", "HASH " .. hash .. "\n", false)
+</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^LOGIN (.+) (.+)$</regex>
+		</Alias>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Debug</name>
 			<script>echo([[
