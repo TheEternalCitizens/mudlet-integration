@@ -930,9 +930,8 @@ send("SKOTOS Zealous 0.7.12.2") --sending the zealous handshake
 --We could put anything in the command line. Like User: 
 --"USER " just happens to be easy for now...
 
-echo("\nLeaving the word USER in the command line, enter your username.\n")
---https://wiki.mudlet.org/w/Manual:Lua_Functions#printCmdLine
-printCmdLine("USER ") --Erase what is in the command prompt, and put in this string.
+echo("\nLeaving the word LOGIN in the command line, enter your username and password separated by a whitespace.\n")
+printCmdLine("LOGIN ")
 
 --Login control continues in Aliases - TECCommandLineReplacement - USERLogin</script>
 				<triggerType>0</triggerType>
