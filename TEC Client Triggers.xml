@@ -17,9 +17,46 @@
 			<colorTriggerBgColor>#000000</colorTriggerBgColor>
 			<regexCodeList />
 			<regexCodePropertyList />
-			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>2d map rooms</name>
-				<script>--SKOOT 6 lines I am nearly certain are for drawing the 2d map
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>SKOOT 9</name>
+				<script>--unfortunately I have no idea what SKOOT 9 lines are for.
+--My GUESS is they are poorly maintaned room numbers?
+--SKOOT 9 I hate you! Damn ninja number!
+
+--if debug mode is on display unfiltered line to it.
+if getTECDebugMode() then
+	debugToDisplay("Unfiltered line: "..line)
+end --if Debug Mode is on
+
+
+--lpeg.P("TestString")
+
+--Delete main's line
+--selectCurrentLine() --proper code for when hinsert is fixed.
+--replace("")
+--deselect()
+deleteLine()</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>SKOOT 9</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>TEC Map Rooms</name>
+				<script>--[[
+SKOOT 6 lines I am nearly certain are for drawing the 2d map
 
 --SKOOT 6 -10,-10,20,#ff0000,17.1111,-10,10,20,#ffffff,25.5555
 --This skoot is from a map that I am certain there are two rooms.
@@ -33,185 +70,126 @@
 --color is the color of the room 
 --No fucking idea what the fucking number at the end is!
 
+--This is going to be the games largest in drawn pixels and most common skoot message
+--SKOOT 6 -40,-40,80,#ff0000,117.624,40,-40,80,#00ff00,117.624,-120,-40,80,#00ff00,117.624,
+---40,-120,80,#ffffff,117.624,-40,40,80,#ffffff,117.624,-120,40,80,#ffffff,117.624,
+--40,40,80,#ffffff,117.624,40,-120,80,#ffffff,117.624,-120,-120,80,#ffffff,108.576
+--Now we need to get room data in %.
+--We know that 80 is the max room size for a single room. By observing skoots.
+--We know, only because of playing. That these rooms are normally in a 3x3 grid.
+--So we know now our draw win is 240x240
+--TEC numbers map to a graph, not a window. So their 0 is x120 y120 in our window.
+--To get our correct position we have to do xpos + 120. 
+--x and y are both -40 / 120. It would be -.33333.
+--multiply that by 100 to get the number is a full percent. -33.333
+--Now since tec sees x120,y120 as position 0 and the rest of the world sees x0,y0 as zero
+--We need to add our number to 50, because 120 is 50% of our total draw size of 240 pixels.
+--50 + -33.333 = 16.667. so 16.667% are our x and y positions.
+--size is 80 that will be our width and height.
+--We need to get what percent 80 is of our overall draw size 240
+-- 80 / 240 = .33333. Multiply that by 100, 33.333
+--The room is 33.33% of the entire draw window.
+--Subtract 1% of that so we have a border between rooms.
+--ff0000 is red so the room will be red.
+--17.1111 can go fuck itself because I can't figure out what is is.
+]]--
+
+--We are about to draw a new map, so hide all the rooms.
+--We are not going to bother with setting room sizes and moving moves to off screen
+--that are not being used unless we find a need for it.
+--Likely hiding rooms will be error free and is obviously nearly
+--processor free.
+for i = 1, 100 do --We know the room count because we set it in script 2dMap.
+  mapRoom[i]:hide() --Hide rooms
+	mapExit[i]:hide() --Hide exits
+end --end of hide rooms loop
+
+local lc = 1 --Just a loop counter so we can go through rooms easily.
+
+--Loop through the sckoot message. Looking for a pattern of room data.
+--The patterns in () get returned on gmatch. We capture those into variables.
+--Those varibles will be used to draw the room.
+--Explaining: "(-?%d+),(-?%d+),(%d+),(#%x+),%d+.%d+,?"
+--"-?" means there MAY be a -
+--"%d+" is a decimal number that CAN be more than one digit long.
+--"%x+: is a hexidecimal number that CAN be more than one digit long.
+-- ",?" At the very end. There MAY be a , at the end of our pattern or there
+--[.%d*]? means there may be a . followed by 0 or more numbers. Like .4555
+--may not be. The last number in the skoot message does not have a ,.
+--Not looking for that comma in earlier messages might cause future
+--pattern searches to fail.
+for xpos, ypos, size, color in string.gmatch( line, "(-?%d+),(-?%d+),(%d+),(#%x+),%d+[.%d*]?,?" ) do
+
+  --TEC uses grid logic for their map. xposition is up to 120 +-.
+  --240 is the total size of their draw space. What percent is our position in that space.
+  -- +.5 just gives us a border.
+  xposScaler = ((((tonumber(xpos) + 120) / 240) * 100)) * mapZoom
+  yposScaler = ((((tonumber(ypos) + 120) / 240) * 100)) * mapZoom
+
+  --80 / 240 = .33333. Multiply that by 100, 33.333
+  sizeScaler = (((tonumber(size) / 240) * 100) - .5) * mapZoom
+
+	if getTECMapDebugMode() then --if Display Debug Mod is on.
+  	debugToDisplay("Map Room "..tostring(lc).." xpos: "..tostring(tonumber(xpos)+120)
+		.." xposScaler: "..tostring(xposScaler)
+    .." ypos: "..tostring(tonumber(ypos)+120).." yposScaler: "..tostring(yposScaler)
+    .." size: "..tostring(size).." sizeScaler: "..tostring(sizeScaler)
+    .." color: "..tostring(color))
+  	cecho(mapRoom[lc].name,tostring(lc),blue,"c") --put room # on label
+	end --end if DisplayDebugMode is true
+  	
+  mapRoom[lc]:move(tostring(xposScaler).."%", tostring(yposScaler).."%") --Move the room into position.
+  mapRoom[lc]:resize(tostring(sizeScaler).."%", tostring(sizeScaler).."%") --Change the rooms size.
+  mapRoom[lc]:setColor(color) --Set the rooms color.
+  mapRoom[lc]:show() --Now show the room.
+  lc = lc +1 --Iterate so we can do this again.
+end --end gmatch room data search loop
+
+--We want the map zoon level, but not 100 times...
+if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
+
+--if debug mode is on display unfiltered line to it.
+if getTECDebugMode() then
+	debugToDisplay("Unfiltered line: "..line)
+end --if Debug Mode is on
+
+--Delete main's line
+--selectCurrentLine() --proper code for when hinsert is fixed.
+--replace("")
+--deselect()
 deleteLine()
 
---complete filter making pseudo code.
---Create a table to hold room sizes pulled from the line, and color for that room.
+--[[
+in the for loop the string pattern: "(-?%d+),(-?%d+),(%d+),(#%x+),%d+[.%d*]?,?"
+Mentioning this because lpeg would be a method for avoiding the use of regex in triggers.
+could be replaced with:
 
---Orchil map code
+local pattern; do
+    local comma = lpeg.P(',')
+    local digit = lpeg.R('09')
+    local hex_char = lpeg.R('09', 'af', 'AF')
+    local number = lpeg.P('-') ^ -1 * ((digit ^ 1 * '.' * digit ^ 1) + (digit ^ 1))
+    local hex_color = '#' * hex_char * hex_char * hex_char * hex_char * hex_char * hex_char
 
---[[//-----Map Functions
-		function createMapDiv(id, parentId, className) {
-			var div = document.createElement("div");
-			div.id = id;
-			div.className = className;
-			document.getElementById(parentId).appendChild(div);
-			return div;
-		}
-		function createMapImg(parentObj, className, src) {
-			var img = document.createElement("img");
-			img.className = className;
-			parentObj.appendChild(img);
-			img.src = src;
-			img.alt = '';
-			return img;
-		}
-		function findOrCreateRoom(id) {
-			var room = document.getElementById('maproom' + id);
-			if (!room) {
-				room = createMapDiv('maproom' + id, 'map_area', 'maproom');
-			}
-			return room;
-		}
-		function findOrCreateLink(dir, id) {
-			var link = document.getElementById(id);
-			if (!link) {
-				if (dir == 'hor' || dir == 'ver') {
-					link = createMapDiv(id, 'map_area', 'map_link_' + dir);
-				} else if (dir == 'ne') {
-					link = createMapDiv(id, 'map_area', 'map_link_dia');
-					createMapImg(link, 'map_link_dia_tr', 'sw4.gif');
-					createMapImg(link, 'map_link_dia_bl', 'ne4.gif');
-				} else if (dir == 'nw') {
-					link = createMapDiv(id, 'map_area', 'map_link_dia');
-					createMapImg(link, 'map_link_dia_tl', 'se4.gif');
-					createMapImg(link, 'map_link_dia_br', 'nw4.gif');
-				} else if (dir == 'none') {
-					link = createMapDiv(id, 'map_area', 'map_link_dia');
-					createMapImg(link, 'map_link_dia_tr', 'nosw.gif');
-					createMapImg(link, 'map_link_dia_bl', 'none.gif');
-				} else if (dir == 'nonw') {
-					link = createMapDiv(id, 'map_area', 'map_link_dia');
-					createMapImg(link, 'map_link_dia_tl', 'nose.gif');
-					createMapImg(link, 'map_link_dia_br', 'nonw.gif');
-				}
-			}
-			return link;
-		}
+    pattern = lpeg.C(number) * comma * lpeg.C(number) * comma * lpeg.C(number) * comma * lpeg.C(hex_color) * comma * number * (comma ^ -1 + -1)
+end
 
-		function showMap(str) {
-			var arr = (str.split(","));
-			var i = 0;
-			var x, y, wid, bg, col, lig, colarr;
-			var locwid = 120 * 0.5;
-			var id;
-			clearMap();
-			clearMapLinks();
-			for (i; i &lt; arr.length; i = i + 5) {
-				wid = arr[i + 2]*1;
-				col = arr[i + 3];
-				lig = Math.min(Math.max(arr[i + 4], 0), 30);
-				lig = lig - 25;
-				colarr = col.hex2rgb();
-				colarr[0] = Math.min(Math.max(Math.round(colarr[0]*1 + (lig * 8)), 0), 255);
-				colarr[1] = Math.min(Math.max(Math.round(colarr[1]*1 + (lig * 8)), 0), 255);
-				colarr[2] = Math.min(Math.max(Math.round(colarr[2]*1 + (lig * 8)), 0), 255);
-				col = colarr.join(",").rgb2hex();
-				x = arr[i]*1 + locwid;
-				y = arr[i + 1]*1 + locwid;
-				id = ((i+5)/5);
-				var room = findOrCreateRoom(id);
-				room.style.left       = x + "px";
-				room.style.top        = y + "px";
-				room.style.width      = (wid - 2)  + "px";
-				room.style.height     = (wid - 2)  + "px";
-				room.style.background = col+'';
-			}
-		}
+local function lpeg_gmatch(str, patt)
+    patt = lpeg.Ct(patt) * lpeg.Cp()
+    local ret, pos = nil, 1
 
-		function showHVMapLinks(str) {
-			var arr = (str.split(","));
-			var i, x, y, dir, acc, link;
-			var id, ver=0, hor=0, nw=0, ne=0, nonw=0, none=0, num;
-		//	var locwid = document.getElementById("map_area").style.width.replace("px", "")*0.5;
-			var locwid = 120 * 0.5;
-			
+    return function()
+        ret, pos = lpeg.match(patt, str, pos)
 
-			for (i = 0; i &lt; arr.length; i = i + 4) {
-				x = arr[i]*1 + locwid;
-				y = arr[i + 1]*1 + locwid;
-				dir = arr[i + 2];
-				acc = arr[i + 3]*1;
+        if not ret then return nil end
+        return unpack(ret)
+    end
+end
 
-				//x,y,ver,1
-				if (dir != 'ver' &amp;&amp; dir != 'hor' &amp;&amp; !acc) {
-					dir = 'no'+dir;
-				}
-
-				if (dir == 'ver') {
-					ver++;
-					x = x - 2 - x/40;
-					y = y - 3 - y/40;
-					id = "maplink" + dir +''+ ver;
-				} else if (dir == 'hor') {
-					hor++;
-					x = x - 3 - x/40;
-					y = y - 2 - y/40;
-					id = "maplink" + dir +''+ hor;
-				} else {
-					if (dir == 'nw') {
-						nw++;num = nw;
-					} else if (dir == 'ne') {
-						ne++;num = ne;
-					} else if (dir == 'nonw') {
-						nonw++;num = nonw;
-					} else if (dir == 'none') {
-						none++;num = none;
-					}
-					x = x - 5;
-					y = y - 5;
-					id = "maplink" + dir +''+ num;
-				}
-				link = findOrCreateLink(dir, id);
-				if (dir == 'ver' || dir == 'hor') {
-					if (acc) {
-						link.style.background = '#ffffff';
-					} else {
-						link.style.background = '#000000';
-					}
-				}
-				link.style.left = x + "px";
-				link.style.top = y + "px";
-			}
-		}
-
-		function clearMap() {
-			for (var i=1;;i++) {
-				var room = document.getElementById('maproom' + i);
-				if (!room) {
-					return;
-				}
-				if (room.width == 0) {
-					return;
-				}
-				room.style.left   = -30 + "px";
-				room.style.top    = -30 + "px";
-				room.style.width  = 0;
-				room.style.height = 0;
-				room.style.background = 'transparent';
-			}
-		}
-
-		function clearMapLinks() {
-			var linknames = ['maplinkver', 'maplinkhor', 'maplinkne', 'maplinknw', 'maplinknone', 'maplinknonw'];
-			var numnames = linknames.length;
-			for (var i=1;;i++) {
-				var link, found;
-				found = 0;
-				for (var j=0;j&lt;numnames;j++) {
-					link = document.getElementById(linknames[j] + i);
-					if (link) {
-						link.style.left  = -30 + "px";
-						link.style.top   = -30 + "px";
-						found = 1;
-					}
-				}
-				if (!found) {
-					return;
-				}
-			}
-		}
-		]]--</script>
+for xpos, ypos, size, color in lpeg_gmatch( line, pattern ) do
+    
+end
+]]--</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -228,31 +206,114 @@ deleteLine()
 				<regexCodePropertyList>
 					<integer>2</integer>
 				</regexCodePropertyList>
-			</TriggerGroup>
-			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>2d map doors</name>
-				<script>--SKOOT 10 is door position on the map
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>TEC map exits</name>
+				<script>--SKOOT 10 is Exit position on the map
 --[[
 Here is an example from the same two room map that was referenced in TEC Map SKOOT 6
 SKOOT 10 0,10,ver,1,-11,-5,hor,1,10,20,hor,0,-11,25,hor,0
-There are four door ways.
+There are four Exit ways.
 Three are small horizonal lines, one is a small vertical line.
-Doors are colored black if they are closed. They are closed if there is no room to be 
+Exits are colored black if they are closed. They are closed if there is no room to be 
 drawn on minimap by that side of the room
 
 SKOOT 10 x y, dir, open?
 x is horizontal position, from center of line
 y is vertical position, from center of line.
-dir is the direction the door is facing, normally is is a line so
+dir is the direction the Exit is facing, normally is is a line so
 hor is horizontal, v is vertical
 ne is a 45 degree angle going from left to right, so north east on a map...
 nw is a 45 degree andle going from right to left. sp north west on a map...
-open if the door is open. 1 is open 0 is closed.
+open if the Exit is open. 1 is open 0 is closed.
 ]]--
 
+--Size of the icons used for Exits.
+--probably a better logical way to store in a table.
+--bother with that at another time.
+local horWidth = 8
+local horHeight = 4
+local verWidth = 4
+local verHeight = 8
+local nenwWidth = 12
+local nenwHeight = 12
+--a later release could maybe change these to global and get the width and height from 
+--the icons them selves.
 
+--data types that will be used in later loop
+local xposScaler = 0
+local yposScaler = 0
+local halfWidth = 0
+local halfHeight = 0
 
---delete the line after mapping.
+local lc = 1 --Just a loop counter so we can go through rooms easily.
+
+--look through line for the data pattern to get exit data. Input them into variables.
+for xpos, ypos, exitDirection, exitOpen in string.gmatch( line, "(-?%d+),(-?%d+),(%w+),(%d+),?" ) do
+
+	--Check the direction type of the icon
+	if exitDirection == "hor" then
+  	mapExit[lc]:resize(horWidth, horHeight) --Resize label to match icon
+  	halfWidth = horWidth / 2 --needed so we can center exit icon
+  	halfHeight = horHeight / 2 --needed so we can center exit icon
+	elseif exitDirection == "ver" then
+  	mapExit[lc]:resize(verWidth, verHeight) --Resize label to match icon
+  	halfWidth = verWidth / 2 --needed so we can center exit icon
+  	halfHeight = verHeight / 2 --needed so we can center exit icon
+	else 
+  	mapExit[lc]:resize(nenwWidth, nenwHeight) --Resize label to match icon
+  	halfWidth = nenwWidth / 2 --needed so we can center exit icon
+  	halfHeight = nenwHeight / 2 --needed so we can center exit icon
+	end --end ifelse exitDirection
+
+	--labels start at x0y0 in mudlnet, but TEC is providing a center point for our exit icons
+	--convert half the size of the icons for exits into % of the total map window.
+	halfWidth = (((halfWidth) / 240) * 100)
+  --TEC uses grid logic for their map. xposition is 120 +-.
+  --240 is the total size of their draw space. What percent is our position in that space.
+	--This could be a function so we can easily adjust it in the future.
+	--halfWidth is used to center 
+  xposScaler = ((((tonumber(xpos) + 120 - halfWidth) / 240) * 100)) * mapZoom
+	--same logic as aboive
+	halfHeight = (((halfHeight) / 240) * 100)
+  yposScaler = ((((tonumber(ypos) + 120 - halfHeight) / 240) * 100)) * mapZoom
+	
+	if tonumber(exitOpen) == 1 then --if the exit is open
+		--put the correct icon to the exit
+		mapExit[lc]:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"
+		..[[/]].."exits"..[[/]]..exitDirection..[[_open.png");]])
+	else --otherwise the door is closed
+		mapExit[lc]:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"
+		..[[/]].."exits"..[[/]]..exitDirection..[[_closed.png");]])
+	end --if Exit is open.
+	
+	--Move the Exit into position.
+  mapExit[lc]:move(tostring(xposScaler).."%", tostring(yposScaler).."%") 
+	mapExit[lc]:show() --Now show the room.
+	
+	if getTECMapDebugMode() then --if Display Debug Mode is on.
+  	debugToDisplay("Map Exit "..tostring(lc).." xpos: "
+		..tostring(tonumber(xpos)+120).." xposScaler: "..tostring(xposScaler)
+    .." ypos: "..tostring(tonumber(ypos)+120).." yposScaler: "..tostring(yposScaler)
+    .." Direction: "..exitDirection
+    .." open: "..tostring(exitOpen))
+	end --end if DisplayDebugMode is true
+
+  lc = lc +1 --Iterate so we can do this again on a new exit.
+end --end gmatch room data search loop
+
+--We want the map zoon level, but not 100 times...
+if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
+
+--if debug mode is on display unfiltered line to it.
+if getTECDebugMode() then
+	debugToDisplay("Unfiltered line: "..line)
+end --if Debug Mode is on
+
+--Delete main's line
+--selectCurrentLine() --proper code for when hinsert is fixed.
+--replace("")
+--deselect()
 deleteLine()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -270,7 +331,7 @@ deleteLine()</script>
 				<regexCodePropertyList>
 					<integer>2</integer>
 				</regexCodePropertyList>
-			</TriggerGroup>
+			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Compass</name>
 				<script>--Because I only need to do this 11 times. I am doing it without
@@ -368,8 +429,16 @@ end
 --	compass.unlit("d")
 --end
 
-deleteLine() --No longer needed
-</script>
+--if debug mode is on display unfiltered line to it.
+if getTECDebugMode() then
+	debugToDisplay("Unfiltered line: "..line)
+end --if Debug Mode is on
+
+--Delete main's line
+--selectCurrentLine() --proper code for when hinsert is fixed.
+--replace("")
+--deselect()
+deleteLine()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -413,18 +482,32 @@ deleteLine() --No longer needed
 					<script>--Pushes SKOOT 8 Health,#
 --into the health bar.
 
+--This can be done with a regex trigger () and matches[2].
+--We are doing it this way to avoid a regex when it is not needed.
+--We want as few regex triggers as is possible. All these triggers 
+--are checked on every line the server sends.
+
 	--pull only the numbers at the end into a local variable
 	local health = string.gsub(line,"SKOOT 8 Health,","")
-	--this COULD be converted to string.sub
+	--this probably be converted to string.sub
 	--http://lua-users.org/wiki/StringLibraryTutorial
 	--https://wiki.mudlet.org/w/Manual:String_Functions#string.sub.2C_utf8.sub
 	--local health =  string.sub(line, 16, string.len(line))
 	
 	hpbar:setValue(tonumber(health),100) --set bar on screen
-	deleteLine() --delete the current line so crap doesn't show on screen
-	
 	--echo("\nYour current health is: ")
-	--echo(health)</script>
+	--echo(health)
+
+--if debug mode is on display unfiltered line to it.
+if getTECDebugMode() then
+	debugToDisplay("Unfiltered line: "..line)
+end --if Debug Mode is on
+
+--Delete main's line
+--selectCurrentLine() --proper code for when hinsert is fixed.
+--replace("")
+--deselect()
+deleteLine()</script>
 					<triggerType>0</triggerType>
 					<conditonLineDelta>0</conditonLineDelta>
 					<mStayOpen>0</mStayOpen>
@@ -451,10 +534,19 @@ deleteLine() --No longer needed
 	local fatigue = string.gsub(line,"SKOOT 8 Fatigue,","")
 
 	fatiguebar:setValue(tonumber(fatigue),100) --set bar on screen
-	deleteLine() --delete the current line so crap doesn't show on screen
-
 	--echo("\nYour current fatigue is: ")
-	--echo(fatigue)</script>
+	--echo(fatigue)
+	
+--if debug mode is on display unfiltered line to it.
+if getTECDebugMode() then
+	debugToDisplay("Unfiltered line: "..line)
+end --if Debug Mode is on
+	
+--Delete main's line
+--selectCurrentLine() --proper code for when hinsert is fixed.
+--replace("")
+--deselect()
+deleteLine()</script>
 					<triggerType>0</triggerType>
 					<conditonLineDelta>0</conditonLineDelta>
 					<mStayOpen>0</mStayOpen>
@@ -481,10 +573,19 @@ deleteLine() --No longer needed
 	local encumbrance = string.gsub(line,"SKOOT 8 Encumbrance,","")
 
 	encumbrancebar:setValue(tonumber(encumbrance),100) --set bar on screen
-	deleteLine() --delete the current line so crap doesn't show on screen
-	
 	--echo("\nYour current encumbrance rate is: ")
-	--echo(encumbrance)</script>
+	--echo(encumbrance)
+	
+--if debug mode is on display unfiltered line to it.
+if getTECDebugMode() then
+	debugToDisplay("Unfiltered line: "..line)
+end --if Debug Mode is on
+	
+--Delete main's line
+--selectCurrentLine() --proper code for when hinsert is fixed.
+--replace("")
+--deselect()
+deleteLine()</script>
 					<triggerType>0</triggerType>
 					<conditonLineDelta>0</conditonLineDelta>
 					<mStayOpen>0</mStayOpen>
@@ -511,10 +612,19 @@ deleteLine() --No longer needed
 	local hunger = string.gsub(line,"SKOOT 8 Satiation,","")
 
 	hungerbar:setValue(tonumber(hunger),100) --set bar on screen
-	deleteLine() --delete the current line so crap doesn't show on screen
-	
 	--echo("\nYour current hunger rate is: ")
-	--echo(hunger)</script>
+	--echo(hunger)
+	
+--if debug mode is on display unfiltered line to it.
+if getTECDebugMode() then
+	debugToDisplay("Unfiltered line: "..line)
+end --if Debug Mode is on
+	
+--Delete main's line
+--selectCurrentLine() --proper code for when hinsert is fixed.
+--replace("")
+--deselect()
+deleteLine()</script>
 					<triggerType>0</triggerType>
 					<conditonLineDelta>0</conditonLineDelta>
 					<mStayOpen>0</mStayOpen>
@@ -539,8 +649,10 @@ deleteLine() --No longer needed
 --It is for all URL calls.
 --example: SKOOT 5 http://tec.skotos.net:1180/bin/help?$help_commands_command
 
+--debug does not trigger.
+
 --opens the voting window at login
-if(line == "SKOOT 5 http://www.topmudsites.com/vote-scarlatc.html") then
+if(line == "SKOOT 5 http://www.topmudsites.com/vote-scarlatc.html ") then
 	echo("To help the world know this game exists you could:\n")
 	
 	cechoLink("&lt;:blue&gt;Vote for TEC on topmudsites.com", 
@@ -552,8 +664,17 @@ if(line == "SKOOT 5 http://www.topmudsites.com/vote-scarlatc.html") then
 	[[openUrl("https://www.facebook.com/SkotosTheEternalCity/")]], 
 	"Vote for TEC!", true)
 	echo("\n")
-	
-end
+end --if vote skoot appears. 
+
+--if debug mode is on display unfiltered line to it.
+if getTECDebugMode() then
+	debugToDisplay("Unfiltered line: "..line)
+end --if Debug Mode is on
+
+--Delete main's line
+--selectCurrentLine() --proper code for when hinsert is fixed.
+--replace("")
+--deselect()
 deleteLine()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -567,28 +688,6 @@ deleteLine()</script>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
 					<string>SKOOT 5</string>
-				</regexCodeList>
-				<regexCodePropertyList>
-					<integer>2</integer>
-				</regexCodePropertyList>
-			</Trigger>
-			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>SKOOT 9</name>
-				<script>--unfortunately I have no idea what SKOOT 9 lines are for.
---My GUESS is they are poorly maintaned room numbers?
-deleteLine()</script>
-				<triggerType>0</triggerType>
-				<conditonLineDelta>0</conditonLineDelta>
-				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
-				<mFgColor>#ff0000</mFgColor>
-				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
-				<colorTriggerFgColor>#000000</colorTriggerFgColor>
-				<colorTriggerBgColor>#000000</colorTriggerBgColor>
-				<regexCodeList>
-					<string>SKOOT 9</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>2</integer>
@@ -627,7 +726,11 @@ deleteLine()</script>
 				<name>delete lines</name>
 				<script>--Lines that are not needed. Because we do not use html tags as of yet.
 --&lt;pre&gt; would never have a function for us reguardless.
-deleteLine()</script>
+--Delete main's line
+--selectCurrentLine() --proper code for when hinsert is fixed.
+--replace("")
+--deselect()
+deletedLine()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -721,13 +824,13 @@ end
 
 --center filter
 --center lines with &lt;center&gt;
+--center with ftext
 
 selectCurrentLine() --Selects main. 
---For some reason main does not print when it has been selected.
-
 --hreplace is in scripts under mudlet communicty functions.
---Though in short it uses hinserttext to push text with colors to main window...
-hreplace(filteredLine)
+--Though in short it uses hinserttext to push text with colors to a window...
+hreplace(filteredLine)		
+deselect()
 
 --displays unfiltered line to screen.
 --display with setTECDebugMode(true)

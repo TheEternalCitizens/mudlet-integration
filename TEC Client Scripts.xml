@@ -45,8 +45,11 @@ tecSettings.tecFontSize = 14
 --tec client triggers - text filters - text filters
 tecSettings.tecDebugMode = false
 
---For video debug, having all this put to screen when not needed muxs things up.
+--For gui messages debug, having all this put to screen when not needed muxs things up.
 tecSettings.tecDisplayDebugMode = false
+
+--for map debug messages.
+tecSettings.tecMapDebugMode = false
 
 --This line is used to buffer the main line.
 --Than we filter this line in triggers - filter text 
@@ -54,10 +57,8 @@ tecSettings.tecDisplayDebugMode = false
 --DO NOT SAVE THIS TO FILE
 filteredLine = "Reset filteredLine."
 
---Techniquely we didn't need to do the bulk of everything above.
---Because I am going to load it from file.
---However we want an easy method of creating new variables and a
---location where we will not forget where they are.</script>
+--Zoom level of the map. 
+mapZoom = 1</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
@@ -2229,8 +2230,21 @@ Debug like functions:
 					<name>setTECDebugMode()</name>
 					<packageName></packageName>
 					<script>function setTECDebugMode(enableDebug)
+	
+	--Set debug mode
 	tecSettings.tecDebugMode = enableDebug or false
-end</script>
+	
+	if enableDebug then
+		openUserWindow("DebugWindow")
+		--DebugWindow:addScrollbars(parent, "Vertical")
+		echo("Debug mode enabled.\n")
+	end --end if debug is enabled.
+	
+	if not enableDebug then
+		echo("Debug mode disabled.\n")
+	end--if turning off debug mode. Close the window.
+	
+end --end function setTecDebugMode</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
@@ -2254,12 +2268,11 @@ end --end function getTECdebugMode</script>
 --Is open, and create one if it is not. Than send debug code to it rather than 
 --main, where users can easily see it or mudlets debug, which is meant for true
 --blue errors.
-
 function debugToDisplay(textMessage)
 	if getTECDebugMode() then --Is debug mode on?
 		local redBG, greenBG, blueBG = getBgColor() --keep track of current screen color
 		setBgColor( 255,50,50) --change text background to red
-		echo("\nDebug mode on disable it with command: debug off\n"..textMessage.."\n\n") -- print message to screen
+		echo("DebugWindow","\n"..textMessage) -- print message to screen
 		setBgColor(redBG,greenBG,blueBG) --change text background back to what it was
 	end --if debug mode if check
 end --end displayToDebug function
@@ -2288,7 +2301,7 @@ function Geyser.Container:getDebug ()
   	 
      guiLog ="Name: "..tostring(self.name)..
 		 " | Type: "..tostring(self.type)..
-		 " | Parent: "..tostring(self.parent)..
+		 " | Parent: "..tostring(self.parent.name)..
 		 " | X position: "..tostring(self:get_x())..
 		 " | Y Position: "..tostring(self:get_y())..
 		 " | Width: "..tostring(self:get_width())..
@@ -2357,8 +2370,13 @@ end --end geyserDebug() function</script>
 				<Script isActive="yes" isFolder="no">
 					<name>setTECDisplayDebugMode</name>
 					<packageName></packageName>
-					<script>function setTECDisplayDebugMode(displayDebugMode)
-	tecSettings.tecDisplayDebugMode = displayDebugMode or false
+					<script>function setTECDisplayDebugMode(tmpDebugMode)
+	if tmpDebugMode then setTECDebugMode(true) end --Enable debug mode, if enabling map debug
+	
+	tecSettings.tecDisplayDebugMode = tmpDebugMode or false
+	
+	if tmpDebugMode then echo("\nDebug and display debug modes on.\n")
+	else echo("\nDisplay Debug Off. Debug mode unchanged.\n") end
 end --end setTECVideoDebugMode</script>
 					<eventHandlerList />
 				</Script>
@@ -2382,6 +2400,30 @@ end --end function getTECdebugMode</script>
   hecho("\nhecho: #ff0000Red text, #3c00ffBlue text.\n")
 
 end --end tecColorTest function</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>setTECMapDebugMode</name>
+					<packageName></packageName>
+					<script>function setTECMapDebugMode(tmpDebugMode)
+
+	if tmpDebugMode then setTECDebugMode(true) end --Enable debug mode, if enabling map debug
+	
+	tecSettings.tecMapDebugMode = tmpDebugMode or false --enable map debug mode
+	
+	if tmpDebugMode then echo("\nDebug and map debug modes on.\n")
+	else echo("\nMap Debug Off. Debug mode unchanged.\n") end
+	
+end --end setTECVideoDebugMode</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>getTECMapDebugMode()</name>
+					<packageName></packageName>
+					<script>--Get state of debug mode.
+function getTECMapDebugMode()
+	return tecSettings.tecMapDebugMode
+end --end function getTECdebugMode</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -2484,7 +2526,12 @@ end --end function setMainWindowAutowrap</script>
 				<Script isActive="yes" isFolder="no">
 					<name>calcMenuFonts</name>
 					<packageName></packageName>
-					<script>--Calculate tab and other gui fonts base on main screen size.
+					<script>--This is needed because low resolutions screens even remotely large text will bleed
+--off the edges.
+--Where high resolution screens small text or even large text like 14 may not be legable.
+--Not needed until after 1.0. We can use font size 14 for now
+
+--Calculate tab and other gui fonts base on main screen size.
 --Could set variables directly
 --Could return a single font while passing a string to determine
 --what is being mesured calcMenuFont("tabs") calcMenuFont("menus")
@@ -2494,14 +2541,42 @@ end --end function setMainWindowAutowrap</script>
 				<Script isActive="yes" isFolder="no">
 					<name>setMenuFonts</name>
 					<packageName></packageName>
-					<script>--Sets the font sizes for menus and tabs.
+					<script>--This is needed because low resolutions screens even remotely large text will bleed
+--off the edges.
+--Where high resolution screens small text or even large text like 14 may not be legable.
+--Not needed until after 1.0. We can use font size 14 for now
+
+--Sets the font sizes for menus and tabs.
 --Need to echo into all the tabs and labels
 --will need to be in guiChange event
---will need to call calcMenuFonts to get sizes.
+--will need to call calcMenuFonts to get sizes. (Scripts-TEC Scripts-GUI)
 --Will need to be called in variables to set 
 --tabsFontStyle
 --Probably just set it to trigger at known screen widths.
---Keep in mind that getMainConsoleWidth is buggy as of v4.03</script>
+--Keep in mind that getMainConsoleWidth is buggy as of v4.03
+--4.1.1 theres a new function to get windows of miniconsole in text coloums.</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecClearDisplay()</name>
+					<packageName></packageName>
+					<script>--There is either a bug or clear working as intended.
+--If we clear main. geyser objects that adopt it's background color via getBgColor
+--it will error out.
+
+function tecClearDisplay()
+
+  --backup background color
+	local br,bg,bb = getBgColor()
+	
+  --clear main
+  clearWindow()
+
+  --set mains background to eat it was.
+	setBgColor(br,bg,bb)
+	echo(" \n") --We need a line of text on the screen for getBgColor to copy from.
+	
+end --end function tecClearDisplay</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -2522,12 +2597,12 @@ end --end function setMainWindowAutowrap</script>
 --Do NOT put any function that changes the GUI here!!!
 
 --I am suspicious that calling multiple functions in one event is a no no
---I did this though because greating multiple AnonymousEvents caused issues.
+--I did this though because creating multiple AnonymousEvents caused issues.
 --If I Recall the last event would not occur.
 
 function guiChange()
-	setMainWindowAutoWrap()
-	geyserDebug()
+	setMainWindowAutoWrap() --adjusts word wrap for user.
+	if getTECDisplayDebugMode() then geyserDebug() end --if displaydebug is on
 end --end function guiChange
 
 --whenever event sysWindowReizeEvent occurs run setMainWindowAutowrap.
@@ -2537,6 +2612,93 @@ registerAnonymousEventHandler("sysWindowResizeEvent", "guiChange()")</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>help</name>
+				<packageName></packageName>
+				<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external scripts --
+-------------------------------------------------
+</script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>Help Client</name>
+					<packageName></packageName>
+					<script>function tecHelpClient()
+echo("There are a number of commands with adjustig the game client. They are:\n")
+
+cechoLink("&lt;:blue&gt;display", 
+[[tecDisplayHelp()]], 
+"Change display settings.", true)
+echo(" save or load display positions. Reset display to defaults. Adjust autowrap. and clear text off the display.\n")
+
+cechoLink("&lt;:blue&gt;debug", 
+[[tecDebugHelp()]], 
+"Debug messages to get help.", true)
+echo(" Used to get assistance with client issues.\n")
+
+
+
+
+echo("\n")
+end --end function tecHelpClient</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>debug</name>
+					<packageName></packageName>
+					<script>function tecDebugHelp()
+echo([[
+Please do not use debug unless a developer has ask you to.
+
+Commands are
+]])
+
+cechoLink("&lt;:blue&gt;debug on", 
+[[setTECDebugMode(true)]],
+"Send debug text to debug window", true)
+echo(", Opens a debug window if one is not opened. Sends basic debug text to debug window.\n")
+
+cechoLink("&lt;:blue&gt;debug off", 
+[[setTECDisplayDebugMode(false) setTECMapDebugMode(false) setTECDebugMode(false)]],
+"Stop all debug messages", true)
+echo(", Stops sending all debug messages.\n")
+
+cechoLink("&lt;:blue&gt;debug display on", 
+[[setTECDisplayDebugMode(true)]],
+"Show display draw messages to debug window", true)
+echo(", Sends display draw messages to debug window, leaves debug mode unchanged.\n")
+
+cechoLink("&lt;:blue&gt;debug display off", 
+[[setTECDisplayDebugMode(false)]],
+"Stop showing display draw messages to debug window", true)
+echo(", Stop sending display draw messages to debug window, leaves debug mode unchanged.\n")
+
+cechoLink("&lt;:blue&gt;debug map on", 
+[[setTECMapDebugMode(true)]],
+"Show map messages to debug window", true)
+echo(", Displays map information to debug window.\n")
+
+cechoLink("&lt;:blue&gt;debug map off", 
+[[setTECMapDebugMode(false)]],
+"Stop showing map messages to debug window", true)
+echo(", Disables map debug messages, leaves debug mode unchanged.\n")
+
+end --end function tecDebugHelp</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>
+			<Script isActive="yes" isFolder="no">
+				<name>Data Functions</name>
+				<packageName></packageName>
+				<script>--[[
+Due to code order requirements.
+Data Functions are in Variables Data themes
+]]-- 
+</script>
+				<eventHandlerList />
+			</Script>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
 			<name>GUI</name>
@@ -2600,7 +2762,7 @@ fatiguebar.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0,
     border-radius: 7;
     padding: 3px;]])
 
-fatiguebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Endurance&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
+fatiguebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Fatigue&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
 </script>
 					<eventHandlerList />
 				</Script>
@@ -2808,29 +2970,53 @@ GUIframe.addWindow(settings_bar,"Settings","bottomleft")</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
-				<name>2d map</name>
+				<name>tec map</name>
 				<packageName></packageName>
-				<script>twod_map = Geyser.Container:new({
+				<script>tecMap = Geyser.Container:new({
   name = "2d Map",    -- give it a unique name here
   x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
   width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
 })
 
 --Add the status bar to the screen. On the bottom
-GUIframe.addWindow(twod_map,"2d Map","bottomright")</script>
+GUIframe.addWindow(tecMap,"2d Map","bottomright")
+
+--Creating the background for the 2d tec map.
+tecMap.back = Geyser.Label:new({
+  name = "tecMap.back",
+  x = "0%", --%horizontally position in parent
+  y = "0%", --%vertical position in parent
+  width = "100%", --% of parent
+  height = "100%", --% of parent
+},tecMap) --The parent of this label.
+tecMap.back:setColor(0,0,255)
+
+mapRoom = {} --Table to hold labels we will draw the rooms with
+mapExit = {} --Table to hold labels we will draw the exits with.
+--Creating empty rooms for our map system.
+for i = 1, 100 do
+	--Create empty room and exit labels. Hide them so no junk is on screen.
+  mapRoom[i] = Geyser.Label:new({name = "mapRoom"..tostring(i),},tecMap.back) 
+  mapExit[i] = Geyser.Label:new({name = "mapExit"..tostring(i),},tecMap.back) 
+  mapRoom[i]:hide() --Hide the tab so they don't layer
+	mapExit[i]:hide() --Hide the tab so they don't layer
+end --end loop create tabs and consoles
+</script>
 				<eventHandlerList />
 			</Script>
-			<Script isActive="yes" isFolder="no">
+			<Script isActive="no" isFolder="no">
 				<name>3d map</name>
 				<packageName></packageName>
-				<script>threed_map = Geyser.Container:new({
+				<script>--[[
+threed_map = Geyser.Container:new({
   name = "3d Map",    -- give it a unique name here
   x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
   width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
 })
 
 --Add the status bar to the screen. On the bottom
-GUIframe.addWindow(threed_map,"3d Map","bottomright")</script>
+GUIframe.addWindow(threed_map,"3d Map","bottomright")
+]]--</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
@@ -2924,7 +3110,7 @@ for k,v in pairs(menu.tabs) do
   	width = "99.5%", --% of parent
   	height = "99%", --% of parent
 		autoWrap = true, --allows text to wrap if too long
-		fontSize = tecSettings.tecFontSize, --in variables
+		fontSize = getTECFont(), --in variables
 		font = getFont(), --get font type from main
 		scrollBar = true,
   },menu.footer) --attach to footer show they show below tabs
@@ -2936,11 +3122,33 @@ function menu.click(tab) --Choose what happens when a tab is clicked.
   menu[menu.current]:hide() --Hide the current tab
   menu.current = tab --Make the clicked tab the current one.
   menu[menu.current]:show() --Show the current tab.
-end
+end --end menu.click(tab) function
 
 --A menu has to be selected otherwise on startup it will just show.
 --The label behind the menu, becuase they are hidden directly after creation.
 menu[menu.current]:show()</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>Macro Bar</name>
+				<packageName></packageName>
+				<script>--[[
+Tec uses a macro system that players can set within the game.
+The command they use is @macro.
+To avoid additional time for now we can piggy back of their system.
+They support 15 gui buttons that can be macroed in the game.
+All we need to do, is when the button is clicked it sends command fe#
+so button 1 send("fe1")
+After that TECs macro system will take over.
+For formating you could set the grid style setup for labels in compasbar
+I recommend having this at GUIframe location bottom left.
+In 5 rows of 3 columns.
+Normally does 5 columns of 3 rows. Tec has a combat rotation that requires three unique moves 
+in a row or if you are attacking a person you receive a major debuff.
+The 5 is while training. You need to do 5 unique moves to get the most skill points.
+I like the 3 columns because it gives us big chunky buttons that will work well with touch
+screens.
+]]--</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
