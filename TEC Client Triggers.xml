@@ -23,6 +23,14 @@
 --My GUESS is they are poorly maintaned room numbers?
 --SKOOT 9 I hate you! Damn ninja number!
 
+--if debug mode is on display unfiltered line to it.
+if getTECDebugMode() then
+	debugToDisplay("Unfiltered line: "..line)
+end --if Debug Mode is on
+
+
+--lpeg.P("TestString")
+
 --Delete main's line
 --selectCurrentLine() --proper code for when hinsert is fixed.
 --replace("")
@@ -91,9 +99,9 @@ SKOOT 6 lines I am nearly certain are for drawing the 2d map
 --that are not being used unless we find a need for it.
 --Likely hiding rooms will be error free and is obviously nearly
 --processor free.
-
 for i = 1, 100 do --We know the room count because we set it in script 2dMap.
   mapRoom[i]:hide() --Hide rooms
+	mapExit[i]:hide() --Hide exits
 end --end of hide rooms loop
 
 local lc = 1 --Just a loop counter so we can go through rooms easily.
@@ -102,29 +110,31 @@ local lc = 1 --Just a loop counter so we can go through rooms easily.
 --The patterns in () get returned on gmatch. We capture those into variables.
 --Those varibles will be used to draw the room.
 --Explaining: "(-?%d+),(-?%d+),(%d+),(#%x+),%d+.%d+,?"
---"-?" means there MAY be a -.
+--"-?" means there MAY be a -
 --"%d+" is a decimal number that CAN be more than one digit long.
 --"%x+: is a hexidecimal number that CAN be more than one digit long.
 -- ",?" At the very end. There MAY be a , at the end of our pattern or there
+--[.%d*]? means there may be a . followed by 0 or more numbers. Like .4555
 --may not be. The last number in the skoot message does not have a ,.
 --Not looking for that comma in earlier messages might cause future
 --pattern searches to fail.
-for xpos, ypos, size, color in string.gmatch( line, "(-?%d+),(-?%d+),(%d+),(#%x+),%d+.%d+,?" ) do
+for xpos, ypos, size, color in string.gmatch( line, "(-?%d+),(-?%d+),(%d+),(#%x+),%d+[.%d*]?,?" ) do
 
   --TEC uses grid logic for their map. xposition is up to 120 +-.
   --240 is the total size of their draw space. What percent is our position in that space.
   -- +.5 just gives us a border.
-  xposScaler = ((((tonumber(xpos) + 120) / 240) * 100) + .125) * mapZoom
-  yposScaler = ((((tonumber(ypos) + 120) / 240) * 100) + .125) * mapZoom
-  
+  xposScaler = ((((tonumber(xpos) + 120) / 240) * 100)) * mapZoom
+  yposScaler = ((((tonumber(ypos) + 120) / 240) * 100)) * mapZoom
+
   --80 / 240 = .33333. Multiply that by 100, 33.333
   sizeScaler = (((tonumber(size) / 240) * 100) - .5) * mapZoom
-  
-	if getTECDisplayDebugMode() then --if Display Debug Mod is on.
-  	debugToDisplay("Map Room "..tostring(lc).." xpos: "..tostring(tonumber(xpos)+120).." xposScaler: "..tostring(xposScaler))
-    debugToDisplay("Map Room "..tostring(lc).." ypos: "..tostring(tonumber(ypos)+120).." yposScaler: "..tostring(yposScaler))
-    debugToDisplay("Map Room "..tostring(lc).." size: "..tostring(size).." sizeScaler: "..tostring(sizeScaler))
-    debugToDisplay("Map Room "..tostring(lc).." color: "..tostring(color))
+
+	if getTECMapDebugMode() then --if Display Debug Mod is on.
+  	debugToDisplay("Map Room "..tostring(lc).." xpos: "..tostring(tonumber(xpos)+120)
+		.." xposScaler: "..tostring(xposScaler)
+    .." ypos: "..tostring(tonumber(ypos)+120).." yposScaler: "..tostring(yposScaler)
+    .." size: "..tostring(size).." sizeScaler: "..tostring(sizeScaler)
+    .." color: "..tostring(color))
   	cecho(mapRoom[lc].name,tostring(lc),blue,"c") --put room # on label
 	end --end if DisplayDebugMode is true
   	
@@ -136,13 +146,50 @@ for xpos, ypos, size, color in string.gmatch( line, "(-?%d+),(-?%d+),(%d+),(#%x+
 end --end gmatch room data search loop
 
 --We want the map zoon level, but not 100 times...
-if getTECDisplayDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
+if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
+
+--if debug mode is on display unfiltered line to it.
+if getTECDebugMode() then
+	debugToDisplay("Unfiltered line: "..line)
+end --if Debug Mode is on
 
 --Delete main's line
 --selectCurrentLine() --proper code for when hinsert is fixed.
 --replace("")
 --deselect()
-deleteLine()</script>
+deleteLine()
+
+--[[
+in the for loop the string pattern: "(-?%d+),(-?%d+),(%d+),(#%x+),%d+[.%d*]?,?"
+Mentioning this because lpeg would be a method for avoiding the use of regex in triggers.
+could be replaced with:
+
+local pattern; do
+    local comma = lpeg.P(',')
+    local digit = lpeg.R('09')
+    local hex_char = lpeg.R('09', 'af', 'AF')
+    local number = lpeg.P('-') ^ -1 * ((digit ^ 1 * '.' * digit ^ 1) + (digit ^ 1))
+    local hex_color = '#' * hex_char * hex_char * hex_char * hex_char * hex_char * hex_char
+
+    pattern = lpeg.C(number) * comma * lpeg.C(number) * comma * lpeg.C(number) * comma * lpeg.C(hex_color) * comma * number * (comma ^ -1 + -1)
+end
+
+local function lpeg_gmatch(str, patt)
+    patt = lpeg.Ct(patt) * lpeg.Cp()
+    local ret, pos = nil, 1
+
+    return function()
+        ret, pos = lpeg.match(patt, str, pos)
+
+        if not ret then return nil end
+        return unpack(ret)
+    end
+end
+
+for xpos, ypos, size, color in lpeg_gmatch( line, pattern ) do
+    
+end
+]]--</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -161,25 +208,107 @@ deleteLine()</script>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>TEC map doors</name>
-				<script>--SKOOT 10 is door position on the map
+				<name>TEC map exits</name>
+				<script>--SKOOT 10 is Exit position on the map
 --[[
 Here is an example from the same two room map that was referenced in TEC Map SKOOT 6
 SKOOT 10 0,10,ver,1,-11,-5,hor,1,10,20,hor,0,-11,25,hor,0
-There are four door ways.
+There are four Exit ways.
 Three are small horizonal lines, one is a small vertical line.
-Doors are colored black if they are closed. They are closed if there is no room to be 
+Exits are colored black if they are closed. They are closed if there is no room to be 
 drawn on minimap by that side of the room
 
 SKOOT 10 x y, dir, open?
 x is horizontal position, from center of line
 y is vertical position, from center of line.
-dir is the direction the door is facing, normally is is a line so
+dir is the direction the Exit is facing, normally is is a line so
 hor is horizontal, v is vertical
 ne is a 45 degree angle going from left to right, so north east on a map...
 nw is a 45 degree andle going from right to left. sp north west on a map...
-open if the door is open. 1 is open 0 is closed.
+open if the Exit is open. 1 is open 0 is closed.
 ]]--
+
+--Size of the icons used for Exits.
+--probably a better logical way to store in a table.
+--bother with that at another time.
+local horWidth = 8
+local horHeight = 4
+local verWidth = 4
+local verHeight = 8
+local nenwWidth = 12
+local nenwHeight = 12
+--a later release could maybe change these to global and get the width and height from 
+--the icons them selves.
+
+--data types that will be used in later loop
+local xposScaler = 0
+local yposScaler = 0
+local halfWidth = 0
+local halfHeight = 0
+
+local lc = 1 --Just a loop counter so we can go through rooms easily.
+
+--look through line for the data pattern to get exit data. Input them into variables.
+for xpos, ypos, exitDirection, exitOpen in string.gmatch( line, "(-?%d+),(-?%d+),(%w+),(%d+),?" ) do
+
+	--Check the direction type of the icon
+	if exitDirection == "hor" then
+  	mapExit[lc]:resize(horWidth, horHeight) --Resize label to match icon
+  	halfWidth = horWidth / 2 --needed so we can center exit icon
+  	halfHeight = horHeight / 2 --needed so we can center exit icon
+	elseif exitDirection == "ver" then
+  	mapExit[lc]:resize(verWidth, verHeight) --Resize label to match icon
+  	halfWidth = verWidth / 2 --needed so we can center exit icon
+  	halfHeight = verHeight / 2 --needed so we can center exit icon
+	else 
+  	mapExit[lc]:resize(nenwWidth, nenwHeight) --Resize label to match icon
+  	halfWidth = nenwWidth / 2 --needed so we can center exit icon
+  	halfHeight = nenwHeight / 2 --needed so we can center exit icon
+	end --end ifelse exitDirection
+
+	--labels start at x0y0 in mudlnet, but TEC is providing a center point for our exit icons
+	--convert half the size of the icons for exits into % of the total map window.
+	halfWidth = (((halfWidth) / 240) * 100)
+  --TEC uses grid logic for their map. xposition is 120 +-.
+  --240 is the total size of their draw space. What percent is our position in that space.
+	--This could be a function so we can easily adjust it in the future.
+	--halfWidth is used to center 
+  xposScaler = ((((tonumber(xpos) + 120 - halfWidth) / 240) * 100)) * mapZoom
+	--same logic as aboive
+	halfHeight = (((halfHeight) / 240) * 100)
+  yposScaler = ((((tonumber(ypos) + 120 - halfHeight) / 240) * 100)) * mapZoom
+	
+	if tonumber(exitOpen) == 1 then --if the exit is open
+		--put the correct icon to the exit
+		mapExit[lc]:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"
+		..[[/]].."exits"..[[/]]..exitDirection..[[_open.png");]])
+	else --otherwise the door is closed
+		mapExit[lc]:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"
+		..[[/]].."exits"..[[/]]..exitDirection..[[_closed.png");]])
+	end --if Exit is open.
+	
+	--Move the Exit into position.
+  mapExit[lc]:move(tostring(xposScaler).."%", tostring(yposScaler).."%") 
+	mapExit[lc]:show() --Now show the room.
+	
+	if getTECMapDebugMode() then --if Display Debug Mode is on.
+  	debugToDisplay("Map Exit "..tostring(lc).." xpos: "
+		..tostring(tonumber(xpos)+120).." xposScaler: "..tostring(xposScaler)
+    .." ypos: "..tostring(tonumber(ypos)+120).." yposScaler: "..tostring(yposScaler)
+    .." Direction: "..exitDirection
+    .." open: "..tostring(exitOpen))
+	end --end if DisplayDebugMode is true
+
+  lc = lc +1 --Iterate so we can do this again on a new exit.
+end --end gmatch room data search loop
+
+--We want the map zoon level, but not 100 times...
+if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
+
+--if debug mode is on display unfiltered line to it.
+if getTECDebugMode() then
+	debugToDisplay("Unfiltered line: "..line)
+end --if Debug Mode is on
 
 --Delete main's line
 --selectCurrentLine() --proper code for when hinsert is fixed.
@@ -300,6 +429,11 @@ end
 --	compass.unlit("d")
 --end
 
+--if debug mode is on display unfiltered line to it.
+if getTECDebugMode() then
+	debugToDisplay("Unfiltered line: "..line)
+end --if Debug Mode is on
+
 --Delete main's line
 --selectCurrentLine() --proper code for when hinsert is fixed.
 --replace("")
@@ -363,7 +497,12 @@ deleteLine()</script>
 	hpbar:setValue(tonumber(health),100) --set bar on screen
 	--echo("\nYour current health is: ")
 	--echo(health)
-	
+
+--if debug mode is on display unfiltered line to it.
+if getTECDebugMode() then
+	debugToDisplay("Unfiltered line: "..line)
+end --if Debug Mode is on
+
 --Delete main's line
 --selectCurrentLine() --proper code for when hinsert is fixed.
 --replace("")
@@ -397,6 +536,11 @@ deleteLine()</script>
 	fatiguebar:setValue(tonumber(fatigue),100) --set bar on screen
 	--echo("\nYour current fatigue is: ")
 	--echo(fatigue)
+	
+--if debug mode is on display unfiltered line to it.
+if getTECDebugMode() then
+	debugToDisplay("Unfiltered line: "..line)
+end --if Debug Mode is on
 	
 --Delete main's line
 --selectCurrentLine() --proper code for when hinsert is fixed.
@@ -432,6 +576,11 @@ deleteLine()</script>
 	--echo("\nYour current encumbrance rate is: ")
 	--echo(encumbrance)
 	
+--if debug mode is on display unfiltered line to it.
+if getTECDebugMode() then
+	debugToDisplay("Unfiltered line: "..line)
+end --if Debug Mode is on
+	
 --Delete main's line
 --selectCurrentLine() --proper code for when hinsert is fixed.
 --replace("")
@@ -465,6 +614,11 @@ deleteLine()</script>
 	hungerbar:setValue(tonumber(hunger),100) --set bar on screen
 	--echo("\nYour current hunger rate is: ")
 	--echo(hunger)
+	
+--if debug mode is on display unfiltered line to it.
+if getTECDebugMode() then
+	debugToDisplay("Unfiltered line: "..line)
+end --if Debug Mode is on
 	
 --Delete main's line
 --selectCurrentLine() --proper code for when hinsert is fixed.
@@ -510,8 +664,12 @@ if(line == "SKOOT 5 http://www.topmudsites.com/vote-scarlatc.html ") then
 	[[openUrl("https://www.facebook.com/SkotosTheEternalCity/")]], 
 	"Vote for TEC!", true)
 	echo("\n")
-	
-end
+end --if vote skoot appears. 
+
+--if debug mode is on display unfiltered line to it.
+if getTECDebugMode() then
+	debugToDisplay("Unfiltered line: "..line)
+end --if Debug Mode is on
 
 --Delete main's line
 --selectCurrentLine() --proper code for when hinsert is fixed.
@@ -755,9 +913,9 @@ appendBuffer("Thoughts") --paste copied text to miniConsole
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>^&lt;/font&gt;&lt;font color="#\w+"&gt;&amp;lt;\w+ thinks aloud:</string>
+					<string>^&lt;/font&gt;&lt;font color="#(\w+)"&gt;&amp;lt;(\w+) thinks aloud:</string>
 					<string>&amp;lt;You think aloud: </string>
-					<string>^&lt;/font&gt;&lt;font color="#\w+"&gt;&amp;lt;\w+ \w+ thinks aloud:</string>
+					<string>^&lt;/font&gt;&lt;font color="#(\w+)"&gt;&amp;lt;(\w+) (\w+) thinks aloud:</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>1</integer>

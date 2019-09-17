@@ -250,15 +250,7 @@ tecColorTest()</script>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Debug</name>
-			<script>echo([[
-Please do not use debug unless a developer has ask you to.
-
-Commands are 
-debug on, Enables debug mode 
-debug off, Disables debug mode
-debug video on, Enables video debugging
-debug video off, to disabled video debugging, this will NOT disable debug mode.
-]])</script>
+			<script>tecDebugHelp() --display help window.</script>
 			<command></command>
 			<packageName></packageName>
 			<regex>^debug$</regex>
@@ -279,6 +271,9 @@ setTECDebugMode(false)
 --Turn off debug display also
 setTECDisplayDebugMode(false)
 
+--turn off map debug mode
+setTECMapDebugMode(false)
+
 echo("\nAll debug modes off.\n")</script>
 				<command></command>
 				<packageName></packageName>
@@ -286,13 +281,8 @@ echo("\nAll debug modes off.\n")</script>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>debug video on</name>
-				<script>--Enable debug mode.
-setTECDebugMode(true)
-
---Enable debug output for display
-setTECDisplayDebugMode(true)
-
-echo("\nDebug and display debug modes on.\n")</script>
+				<script>--Enable debug output for display
+setTECDisplayDebugMode(true)</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^debug display on</regex>
@@ -300,12 +290,28 @@ echo("\nDebug and display debug modes on.\n")</script>
 			<Alias isActive="yes" isFolder="no">
 				<name>debug video off</name>
 				<script>--Disable output of video debug display
-setTECDisplayDebugMode(false)
-
-echo("\nDisplay Debug Off. Debug mode unchanged.\n")</script>
+setTECDisplayDebugMode(false)</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^debug display off</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>debug map on</name>
+				<script>--Enable debug output for tec map
+setTECMapDebugMode(true)
+
+</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^debug map on</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>debug map off</name>
+				<script>--Disable output of video debug display
+setTECMapDebugMode(false)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^debug map off</regex>
 			</Alias>
 		</AliasGroup>
 	</AliasPackage>

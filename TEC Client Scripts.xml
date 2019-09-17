@@ -45,8 +45,11 @@ tecSettings.tecFontSize = 14
 --tec client triggers - text filters - text filters
 tecSettings.tecDebugMode = false
 
---For video debug, having all this put to screen when not needed muxs things up.
+--For gui messages debug, having all this put to screen when not needed muxs things up.
 tecSettings.tecDisplayDebugMode = false
+
+--for map debug messages.
+tecSettings.tecMapDebugMode = false
 
 --This line is used to buffer the main line.
 --Than we filter this line in triggers - filter text 
@@ -1834,15 +1837,18 @@ Debug like functions:
 					<name>setTECDebugMode()</name>
 					<packageName></packageName>
 					<script>function setTECDebugMode(enableDebug)
+	
+	--Set debug mode
 	tecSettings.tecDebugMode = enableDebug or false
 	
 	if enableDebug then
 		openUserWindow("DebugWindow")
 		--DebugWindow:addScrollbars(parent, "Vertical")
+		echo("Debug mode enabled.\n")
 	end --end if debug is enabled.
 	
 	if not enableDebug then
-	
+		echo("Debug mode disabled.\n")
 	end--if turning off debug mode. Close the window.
 	
 end --end function setTecDebugMode</script>
@@ -1971,8 +1977,13 @@ end --end geyserDebug() function</script>
 				<Script isActive="yes" isFolder="no">
 					<name>setTECDisplayDebugMode</name>
 					<packageName></packageName>
-					<script>function setTECDisplayDebugMode(displayDebugMode)
-	tecSettings.tecDisplayDebugMode = displayDebugMode or false
+					<script>function setTECDisplayDebugMode(tmpDebugMode)
+	if tmpDebugMode then setTECDebugMode(true) end --Enable debug mode, if enabling map debug
+	
+	tecSettings.tecDisplayDebugMode = tmpDebugMode or false
+	
+	if tmpDebugMode then echo("\nDebug and display debug modes on.\n")
+	else echo("\nDisplay Debug Off. Debug mode unchanged.\n") end
 end --end setTECVideoDebugMode</script>
 					<eventHandlerList />
 				</Script>
@@ -1996,6 +2007,30 @@ end --end function getTECdebugMode</script>
   hecho("\nhecho: #ff0000Red text, #3c00ffBlue text.\n")
 
 end --end tecColorTest function</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>setTECMapDebugMode</name>
+					<packageName></packageName>
+					<script>function setTECMapDebugMode(tmpDebugMode)
+
+	if tmpDebugMode then setTECDebugMode(true) end --Enable debug mode, if enabling map debug
+	
+	tecSettings.tecMapDebugMode = tmpDebugMode or false --enable map debug mode
+	
+	if tmpDebugMode then echo("\nDebug and map debug modes on.\n")
+	else echo("\nMap Debug Off. Debug mode unchanged.\n") end
+	
+end --end setTECVideoDebugMode</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>getTECMapDebugMode()</name>
+					<packageName></packageName>
+					<script>--Get state of debug mode.
+function getTECMapDebugMode()
+	return tecSettings.tecMapDebugMode
+end --end function getTECdebugMode</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -2203,9 +2238,61 @@ echo("There are a number of commands with adjustig the game client. They are:\n"
 cechoLink("&lt;:blue&gt;display", 
 [[tecDisplayHelp()]], 
 "Change display settings.", true)
-echo(" save or load display positions. Reset display to defaults. Adjust autowrap. and clear text off the display.")
-echo("\n\n")
+echo(" save or load display positions. Reset display to defaults. Adjust autowrap. and clear text off the display.\n")
+
+cechoLink("&lt;:blue&gt;debug", 
+[[tecDebugHelp()]], 
+"Debug messages to get help.", true)
+echo(" Used to get assistance with client issues.\n")
+
+
+
+
+echo("\n")
 end --end function tecHelpClient</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>debug</name>
+					<packageName></packageName>
+					<script>function tecDebugHelp()
+echo([[
+Please do not use debug unless a developer has ask you to.
+
+Commands are
+]])
+
+cechoLink("&lt;:blue&gt;debug on", 
+[[setTECDebugMode(true)]],
+"Send debug text to debug window", true)
+echo(", Opens a debug window if one is not opened. Sends basic debug text to debug window.\n")
+
+cechoLink("&lt;:blue&gt;debug off", 
+[[setTECDisplayDebugMode(false) setTECMapDebugMode(false) setTECDebugMode(false)]],
+"Stop all debug messages", true)
+echo(", Stops sending all debug messages.\n")
+
+cechoLink("&lt;:blue&gt;debug display on", 
+[[setTECDisplayDebugMode(true)]],
+"Show display draw messages to debug window", true)
+echo(", Sends display draw messages to debug window, leaves debug mode unchanged.\n")
+
+cechoLink("&lt;:blue&gt;debug display off", 
+[[setTECDisplayDebugMode(false)]],
+"Stop showing display draw messages to debug window", true)
+echo(", Stop sending display draw messages to debug window, leaves debug mode unchanged.\n")
+
+cechoLink("&lt;:blue&gt;debug map on", 
+[[setTECMapDebugMode(true)]],
+"Show map messages to debug window", true)
+echo(", Displays map information to debug window.\n")
+
+cechoLink("&lt;:blue&gt;debug map off", 
+[[setTECMapDebugMode(false)]],
+"Stop showing map messages to debug window", true)
+echo(", Disables map debug messages, leaves debug mode unchanged.\n")
+
+end --end function tecDebugHelp</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -2512,35 +2599,31 @@ tecMap.back = Geyser.Label:new({
 tecMap.back:setColor(0,0,255)
 
 mapRoom = {} --Table to hold labels we will draw the rooms with
+mapExit = {} --Table to hold labels we will draw the exits with.
 --Creating empty rooms for our map system.
 for i = 1, 100 do
-  mapRoom[i] = Geyser.Label:new({
-  name = "mapRoom"..tostring(i),
-},tecMap.back) 
+	--Create empty room and exit labels. Hide them so no junk is on screen.
+  mapRoom[i] = Geyser.Label:new({name = "mapRoom"..tostring(i),},tecMap.back) 
+  mapExit[i] = Geyser.Label:new({name = "mapExit"..tostring(i),},tecMap.back) 
   mapRoom[i]:hide() --Hide the tab so they don't layer
+	mapExit[i]:hide() --Hide the tab so they don't layer
 end --end loop create tabs and consoles
-
-mapDoor = {} --Table to hold labels we will draw the doors with.
---Creating empty door labels for our map system.
-for i = 1, 100 do
-  mapDoor[i] = Geyser.Label:new({
-  name = "mapDoor"..tostring(i),
-},tecMap.back) 
-  mapDoor[i]:hide() --Hide the tab so they don't layer
-end --end loop create tabs and consoles</script>
+</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="no" isFolder="no">
 				<name>3d map</name>
 				<packageName></packageName>
-				<script>threed_map = Geyser.Container:new({
+				<script>--[[
+threed_map = Geyser.Container:new({
   name = "3d Map",    -- give it a unique name here
   x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
   width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
 })
 
 --Add the status bar to the screen. On the bottom
-GUIframe.addWindow(threed_map,"3d Map","bottomright")</script>
+GUIframe.addWindow(threed_map,"3d Map","bottomright")
+]]--</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
