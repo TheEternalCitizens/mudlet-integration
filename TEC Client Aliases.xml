@@ -252,7 +252,7 @@ tecColorTest()</script>
 			<name>Login</name>
 			<script>-- This alias gets 'triggered' from triggers - login - secret trigger 
 
-username = matches[2]
+username = matches[2] --the first item
 password = matches[3]
 hash = md5.sumhexa(username .. password .. "NONE")
 

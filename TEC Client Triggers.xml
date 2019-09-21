@@ -94,14 +94,19 @@ SKOOT 6 lines I am nearly certain are for drawing the 2d map
 --17.1111 can go fuck itself because I can't figure out what is is.
 ]]--
 
+--selectCurrentLine("tecMap.back") --proper code for when hinsert is fixed.
+--replace("")
+--deselect()
+echo("tecMap.back","")
+
 --We are about to draw a new map, so hide all the rooms.
 --We are not going to bother with setting room sizes and moving moves to off screen
 --that are not being used unless we find a need for it.
 --Likely hiding rooms will be error free and is obviously nearly
 --processor free.
 for i = 1, 100 do --We know the room count because we set it in script 2dMap.
-  mapRoom[i]:hide() --Hide rooms
-	mapExit[i]:hide() --Hide exits
+ 	mapExit[i]:hide() --Hide exits
+	mapRoom[i]:hide() --Hide rooms
 end --end of hide rooms loop
 
 local lc = 1 --Just a loop counter so we can go through rooms easily.
@@ -118,7 +123,7 @@ local lc = 1 --Just a loop counter so we can go through rooms easily.
 --may not be. The last number in the skoot message does not have a ,.
 --Not looking for that comma in earlier messages might cause future
 --pattern searches to fail.
-for xpos, ypos, size, color in string.gmatch( line, "(-?%d+),(-?%d+),(%d+),(#%x+),%d+[.%d*]?,?" ) do
+for xpos, ypos, size, tecMapRoomcolor in string.gmatch( line, "(-?%d+),(-?%d+),(%d+),(#%x+),%d+[.%d*]?,?" ) do
 
   --TEC uses grid logic for their map. xposition is up to 120 +-.
   --240 is the total size of their draw space. What percent is our position in that space.
@@ -126,21 +131,26 @@ for xpos, ypos, size, color in string.gmatch( line, "(-?%d+),(-?%d+),(%d+),(#%x+
   xposScaler = ((((tonumber(xpos) + 120) / 240) * 100)) * mapZoom
   yposScaler = ((((tonumber(ypos) + 120) / 240) * 100)) * mapZoom
 
-  --80 / 240 = .33333. Multiply that by 100, 33.333
-  sizeScaler = (((tonumber(size) / 240) * 100) - .5) * mapZoom
+	--Convert the size of the room to draw into % of its size on the map.
+  --size / 240 = decimalNumber like .3333. Multiply decimalNumber by 100, that is your % 
+  sizeScaler = tecMapPixelToPercent(size)
 
 	if getTECMapDebugMode() then --if Display Debug Mod is on.
   	debugToDisplay("Map Room "..tostring(lc).." xpos: "..tostring(tonumber(xpos)+120)
 		.." xposScaler: "..tostring(xposScaler)
     .." ypos: "..tostring(tonumber(ypos)+120).." yposScaler: "..tostring(yposScaler)
     .." size: "..tostring(size).." sizeScaler: "..tostring(sizeScaler)
-    .." color: "..tostring(color))
+    .." color: "..tostring(tecMapRoomcolor))
   	cecho(mapRoom[lc].name,tostring(lc),blue,"c") --put room # on label
 	end --end if DisplayDebugMode is true
   	
   mapRoom[lc]:move(tostring(xposScaler).."%", tostring(yposScaler).."%") --Move the room into position.
   mapRoom[lc]:resize(tostring(sizeScaler).."%", tostring(sizeScaler).."%") --Change the rooms size.
-  mapRoom[lc]:setColor(color) --Set the rooms color.
+	--using style sheets set the shape and color of the room
+	if tecMapRoomcolor == "#ff0000" then mapRoom[lc]:setStyleSheet(mapRoomStyleRed)
+	elseif tecMapRoomcolor == "#00ff00" then mapRoom[lc]:setStyleSheet(mapRoomStyleGreen)
+	else mapRoom[lc]:setStyleSheet(mapRoomStyleWhite) end
+	
   mapRoom[lc]:show() --Now show the room.
   lc = lc +1 --Iterate so we can do this again.
 end --end gmatch room data search loop
@@ -211,96 +221,67 @@ end
 				<name>TEC map exits</name>
 				<script>--SKOOT 10 is Exit position on the map
 --[[
-Here is an example from the same two room map that was referenced in TEC Map SKOOT 6
-SKOOT 10 0,10,ver,1,-11,-5,hor,1,10,20,hor,0,-11,25,hor,0
-There are four Exit ways.
-Three are small horizonal lines, one is a small vertical line.
-Exits are colored black if they are closed. They are closed if there is no room to be 
-drawn on minimap by that side of the room
-
 SKOOT 10 x y, dir, open?
 x is horizontal position, from center of line
 y is vertical position, from center of line.
-dir is the direction the Exit is facing, normally is is a line so
-hor is horizontal, v is vertical
-ne is a 45 degree angle going from left to right, so north east on a map...
-nw is a 45 degree andle going from right to left. sp north west on a map...
+dir is the direction the Exit is facing, normally it is a line so
+	"hor" is horizontal, v is vertical
+	"ne" is a 45 degree angle going from left to right, so north east on a map...
+	"nw" is a 45 degree andle going from right to left. sp north west on a map...
 open if the Exit is open. 1 is open 0 is closed.
 ]]--
 
---Size of the icons used for Exits.
---probably a better logical way to store in a table.
---bother with that at another time.
-local horWidth = 8
-local horHeight = 4
-local verWidth = 4
-local verHeight = 8
-local nenwWidth = 12
-local nenwHeight = 12
---a later release could maybe change these to global and get the width and height from 
---the icons them selves.
-
 --data types that will be used in later loop
-local xposScaler = 0
+local xposScaler = 0 --used to hold postion on map in % rather than pixels
 local yposScaler = 0
-local halfWidth = 0
-local halfHeight = 0
+local iconWidthAdjustment = 0
+local iconHeightAdjustment = 0
 
 local lc = 1 --Just a loop counter so we can go through rooms easily.
 
 --look through line for the data pattern to get exit data. Input them into variables.
 for xpos, ypos, exitDirection, exitOpen in string.gmatch( line, "(-?%d+),(-?%d+),(%w+),(%d+),?" ) do
 
-	--Check the direction type of the icon
-	if exitDirection == "hor" then
-  	mapExit[lc]:resize(horWidth, horHeight) --Resize label to match icon
-  	halfWidth = horWidth / 2 --needed so we can center exit icon
-  	halfHeight = horHeight / 2 --needed so we can center exit icon
-	elseif exitDirection == "ver" then
-  	mapExit[lc]:resize(verWidth, verHeight) --Resize label to match icon
-  	halfWidth = verWidth / 2 --needed so we can center exit icon
-  	halfHeight = verHeight / 2 --needed so we can center exit icon
-	else 
-  	mapExit[lc]:resize(nenwWidth, nenwHeight) --Resize label to match icon
-  	halfWidth = nenwWidth / 2 --needed so we can center exit icon
-  	halfHeight = nenwHeight / 2 --needed so we can center exit icon
-	end --end ifelse exitDirection
-
-	--labels start at x0y0 in mudlnet, but TEC is providing a center point for our exit icons
-	--convert half the size of the icons for exits into % of the total map window.
-	halfWidth = (((halfWidth) / 240) * 100)
-  --TEC uses grid logic for their map. xposition is 120 +-.
-  --240 is the total size of their draw space. What percent is our position in that space.
-	--This could be a function so we can easily adjust it in the future.
-	--halfWidth is used to center 
-  xposScaler = ((((tonumber(xpos) + 120 - halfWidth) / 240) * 100)) * mapZoom
-	--same logic as aboive
-	halfHeight = (((halfHeight) / 240) * 100)
-  yposScaler = ((((tonumber(ypos) + 120 - halfHeight) / 240) * 100)) * mapZoom
-	
-	if tonumber(exitOpen) == 1 then --if the exit is open
-		--put the correct icon to the exit
-		mapExit[lc]:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"
-		..[[/]].."exits"..[[/]]..exitDirection..[[_open.png");]])
-	else --otherwise the door is closed
-		mapExit[lc]:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"
-		..[[/]].."exits"..[[/]]..exitDirection..[[_closed.png");]])
-	end --if Exit is open.
-	
-	--Move the Exit into position.
-  mapExit[lc]:move(tostring(xposScaler).."%", tostring(yposScaler).."%") 
-	mapExit[lc]:show() --Now show the room.
-	
 	if getTECMapDebugMode() then --if Display Debug Mode is on.
   	debugToDisplay("Map Exit "..tostring(lc).." xpos: "
 		..tostring(tonumber(xpos)+120).." xposScaler: "..tostring(xposScaler)
     .." ypos: "..tostring(tonumber(ypos)+120).." yposScaler: "..tostring(yposScaler)
     .." Direction: "..exitDirection
-    .." open: "..tostring(exitOpen))
+    .." open: "..tostring(exitOpen)
+		.."\nExit Icon: Width: "..tecExit[exitDirection].width
+		.." Height: "..tecExit[exitDirection].height
+    .." Style sheet: "..tecExit[exitDirection][exitOpen].tecExitStyleSheet)
 	end --end if DisplayDebugMode is true
+
+	--pulling sizes from the tecExit table resize the label for the icon	
+  mapExit[lc]:resize(tecExit[exitDirection].width, tecExit[exitDirection].height)
+	--Now set the style sheet for the  
+	mapExit[lc]:setStyleSheet(tecExit[exitDirection][exitOpen].tecExitStyleSheet)
+
+	--labels start at x0y0 in mudlet, but TEC is providing a center point for our exit icons
+	--convert half the size of the icons for exits into % of the total map window.
+	--Than take the overall size of the map window / that by our standard 240 window size.
+	--The resulting number is used to adjust the icon position as the map is scaled.
+	iconWidthAdjustment = tecMapIconAdjustment(tecExit[exitDirection].width, tecMap.back:get_width())
+	
+  --TEC uses grid logic for their map. xposition is 120 +-.
+  --240 is the total size of their draw space. What percent is our position in that space.
+	--halfWidth is used to center
+	xposScaler = ((((tonumber(xpos) + 120) / 240) * 100) - iconWidthAdjustment) * mapZoom
+	
+	--same logic as aboive
+	iconHeightAdjustment = tecMapIconAdjustment(tecExit[exitDirection].height, tecMap.back:get_height())
+	yposScaler = ((((tonumber(ypos) + 120) / 240) * 100) - iconHeightAdjustment) * mapZoom	
+	
+	--Move the Exit into position.
+  mapExit[lc]:move(tostring(xposScaler).."%", tostring(yposScaler).."%") 
+	mapExit[lc]:lower() --Position rooms ontop of exits.
+	mapExit[lc]:show() --Now show the exit path.
 
   lc = lc +1 --Iterate so we can do this again on a new exit.
 end --end gmatch room data search loop
+
+tecMap.back:lower() --lower the background behind the exits.
 
 --We want the map zoon level, but not 100 times...
 if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end

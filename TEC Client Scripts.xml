@@ -137,7 +137,98 @@ buttonsStyle = [[QPushButton{
 
 --This is now tabs text looks
 buttonsFontStyle = '&lt;center&gt;&lt;p style="font-size:18px; color:white"&gt;'
-</script>
+
+--Used to shape rooms on map. Intentionally left without a } at the end.
+mapRoomStyle = [[
+	QLabel{
+	border-bottom-right-radius: 3;
+	border-bottom-left-radius: 3;
+	border-top-right-radius: 3;
+	border-top-left-radius: 3;
+	margin: 2px;
+  qproperty-alignment: 'AlignCenter | AlignCenter';
+]]
+
+--Create a red style for creating map rooms
+--Done by completing the intentially unfinished mapRoomStyle
+mapRoomStyleRed = mapRoomStyle..[[
+	background-color: red;
+  }
+]]
+
+--Create a Green style for creating map rooms
+--Done by completing the intentially unfinished mapRoomStyle
+mapRoomStyleGreen = mapRoomStyle..[[
+	background-color: green;
+  }
+]]
+
+--Create a white style for creating map rooms
+--Done by completing the intentially unfinished mapRoomStyle
+mapRoomStyleWhite = mapRoomStyle..[[
+	background-color: white;
+  }
+]]
+
+mapStraitOpenExitStyle = [[
+	QLabel{
+	background-color: white;
+	}
+]]
+
+mapStraitClosedExitStyle = [[
+	QLabel{
+	background-color: black;
+	}
+]]
+
+--create table used for exits
+tecExit = { "hor", "ver", "ne", "nw" }
+
+--set the horizontal exit table
+tecExit["hor"] = {"0", "1", width, height}
+tecExit["hor"]["0"] = { tecExitStyleSheet = [[
+	QLabel{
+	background-color: black;
+	}
+]]
+} --end tecExit["hor"][0] table declaration
+tecExit["hor"]["1"] = { tecExitStyleSheet = [[QLabel{background-color: white;}]]} 
+tecExit["hor"].width = 10
+tecExit["hor"].height = 3
+
+--now set verticle table
+tecExit["ver"] = {"0", "1", width, height}
+tecExit["ver"]["0"] = { tecExitStyleSheet = [[
+	QLabel{
+	background-color: black;
+	}
+]]
+} --end tecExit["ver"][0] table declaration
+tecExit["ver"]["1"] = { tecExitStyleSheet = [[QLabel{background-color: white;}]]} 
+tecExit["ver"].width = 3
+tecExit["ver"].height = 10
+
+--Use these to adjust nenw icons
+local nenwExitIconSize = 10 --square size of icon
+
+--now set ne table
+tecExit["ne"] = {"0", "1", width, height}
+tecExit["ne"]["0"] = { tecExitStyleSheet = [[border-image: url("]]..getMudletHomeDir()
+	..[[/]].."imgs"..[[/]].."exits"..[[/ne_closed.png");]]}
+tecExit["ne"]["1"] = { tecExitStyleSheet = [[border-image: url("]]..getMudletHomeDir()
+	..[[/]].."imgs"..[[/]].."exits"..[[/ne_open.png");]]}
+tecExit["ne"].width = nenwExitIconSize
+tecExit["ne"].height = nenwExitIconSize
+
+--now set nw table
+tecExit["nw"] = {"0", "1", width, height}
+tecExit["nw"]["0"] = { tecExitStyleSheet = [[border-image: url("]]..getMudletHomeDir()
+	..[[/]].."imgs"..[[/]].."exits"..[[/nw_closed.png");]]}
+tecExit["nw"]["1"] = { tecExitStyleSheet = [[border-image: url("]]..getMudletHomeDir()
+	..[[/]].."imgs"..[[/]].."exits"..[[/nw_open.png");]]}
+tecExit["nw"].width = nenwExitIconSize
+tecExit["nw"].height = nenwExitIconSize</script>
 				<eventHandlerList />
 			</Script>
 			<ScriptGroup isActive="yes" isFolder="yes">
@@ -2210,11 +2301,7 @@ end</script>
 		<ScriptGroup isActive="yes" isFolder="yes">
 			<name>TECFunctions</name>
 			<packageName></packageName>
-			<script>-------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external scripts --
--------------------------------------------------
+			<script>--Functions made by The Eternal Citizens
 </script>
 			<eventHandlerList />
 			<ScriptGroup isActive="yes" isFolder="yes">
@@ -2603,6 +2690,8 @@ end --end function tecClearDisplay</script>
 function guiChange()
 	setMainWindowAutoWrap() --adjusts word wrap for user.
 	if getTECDisplayDebugMode() then geyserDebug() end --if displaydebug is on
+	compass.drawKeepSquare()
+	tecMapdrawKeepSquare()
 end --end function guiChange
 
 --whenever event sysWindowReizeEvent occurs run setMainWindowAutowrap.
@@ -2699,6 +2788,42 @@ Data Functions are in Variables Data themes
 </script>
 				<eventHandlerList />
 			</Script>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>TEC Map</name>
+				<packageName></packageName>
+				<script>--Functions used for TEC's map system.</script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>tecMapPixelToPercent</name>
+					<packageName></packageName>
+					<script>--used to convert a number into what percent it would be on TECs Map 
+function tecMapPixelToPercent(tecNumToConvert)
+	--converts a size in pixels in reference to TECs map to a percent.
+	--TECs map is 240 by 240 pixels.
+	--Than adjusts with zoom.
+	--Intended for calculating dimmensions of object on the map.
+	return ((tonumber(tecNumToConvert) / 240) * 100) * mapZoom
+end --end function tecMapPixelToPercent</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecMapIconAdjustment</name>
+					<packageName></packageName>
+					<script>--position a static icon on the map "probably an exit icon".
+--tecIconDimmension is the height or width of the icon being positioned.
+--tecMapDimmension is the height or width of the background label of the map.
+--Both should be either height or width. One being a height and the other a width may result
+--in incorrect icon positioning. Later map release will offer user to not have a square map, if wanted.
+function tecMapIconAdjustment(tecIconDimmension, tecMapDimmension)	
+	--Turn half the icons size into a percent of what it is on a tecMap 240x240
+	tecIconDimmension = tecMapPixelToPercent(tecIconDimmension / 2)
+	--Device the entire dimmension of the map by tecMaps 240 size.
+	--Than device the % of the icon size by that resulting number.
+	return tecIconDimmension / (tecMapDimmension / 240)
+end --end tecMapIconAdjustment</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
 			<name>GUI</name>
@@ -2860,6 +2985,7 @@ compass.box = Geyser.HBox:new({
     width = "100%", --How wide box is, % of parent
     height = "100%", --How tall box is, % of parent
   },compass.back) --parent of this Hbox
+--draw the window after creation keeping it square.
 
 --create 3 vertical rows
 --in parent object compas.box
@@ -2946,11 +3072,23 @@ for k,v in pairs(compass.dirs) do
   compass[v]:setClickCallback("compass.click",v)
 end
 
-function compass.resize()
-  compass.back:resize(compass.back.width, compass.back:get_width())
-end
+function compass.drawKeepSquare()
 
-compass.resize()</script>
+	--if the width of the parent label is less than the height.
+	--Resize the background label itself keeping the width and height equal.
+	if compass_bar:get_width() &lt; compass_bar:get_height() then
+  	compass.back:resize(compass_bar:get_width(), compass_bar:get_width())
+	end --en if width is less than height.
+	
+	--if the height of the parent label is less than the width.
+	--Resize the background label itself keeping the width and height equal.
+	if compass_bar:get_height() &lt; compass_bar:get_width() then
+  	compass.back:resize(compass_bar:get_height(), compass_bar.height)
+	end --end if height is less than width
+	
+end --end function keep square.
+
+compass.drawKeepSquare() --function at the bottom of this script.</script>
 					<eventHandlerList>
 						<string>sysWindowResizeEvent</string>
 					</eventHandlerList>
@@ -2989,7 +3127,15 @@ tecMap.back = Geyser.Label:new({
   width = "100%", --% of parent
   height = "100%", --% of parent
 },tecMap) --The parent of this label.
-tecMap.back:setColor(0,0,255)
+
+--set the appearance of what is behind the map
+tecMap.back:setStyleSheet([[
+  qproperty-alignment: 'AlignLeft | AlignTop';
+	background-color: rgba(152,153,181);
+	font-size: 32px;
+]])
+
+--tecMap.back:addScrollbars(tecMap, "RV")
 
 mapRoom = {} --Table to hold labels we will draw the rooms with
 mapExit = {} --Table to hold labels we will draw the exits with.
@@ -3001,7 +3147,26 @@ for i = 1, 100 do
   mapRoom[i]:hide() --Hide the tab so they don't layer
 	mapExit[i]:hide() --Hide the tab so they don't layer
 end --end loop create tabs and consoles
-</script>
+
+function tecMapdrawKeepSquare()
+
+	--if the width of the parent label is less than the height.
+	--Resize the background label itself keeping the width and height the equal.
+	if tecMap:get_width() &lt; tecMap:get_height() then
+  	tecMap.back:resize(tecMap:get_width(), tecMap:get_width())
+	end --en if width is less than height.
+	
+	--if the height of the parent label is less than the width.
+	--Resize the background label itself keeping the width and height equal.
+	if tecMap:get_height() &lt; tecMap:get_width() then
+  	tecMap.back:resize(tecMap:get_height(), tecMap.height)
+	end --en if width is less than height.
+	
+	echo("tecMap.back","Exits may be slightly\noff until you walk.")
+	
+end --end function keep square.
+
+tecMapdrawKeepSquare() --call it to size the map properly</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="no" isFolder="no">
