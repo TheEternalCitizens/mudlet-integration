@@ -3215,9 +3215,9 @@ GUIframe.addWindow(dontknowyet,"don't know yet","topleft")</script>
 
 --ideas for future
 --When click a tab is stays dark to show that is the active tab.
---fix the minor resizing issue with the scroll bar.
+--fix the minor resizing issue with the back label not having a right margin.
 --take tabs out of that damn menu table
---create the option for a combat bar. Only shows combat text.
+--create the option for a combat bar. Only shows combat text...
 
 --Origional menu from the tabs tutorial.
 --Only kept it because using a lone table caused issues.
@@ -3252,15 +3252,10 @@ menu.footer = Geyser.Label:new({
   x = 0, --horizontal position
 	y = tabsHeight, --adjusted for tabs
   width = "100%",
-	height = tecSettings.comTextWindowHeight -3
+	height = tecSettings.comTextWindowHeight - 3
 },menu.container)
 
-menu.footer:setStyleSheet([[background-color: gray;
-								border-width: 1px;
-								border-style: outset;
-								border-color: lightgray;
-								padding-right: 50px
-								]]) --set to default label style
+menu.footer:setStyleSheet(labelsStyle) --set to default label style
 
 --Create the tabs
 for k,v in pairs(menu.tabs) do
@@ -3284,7 +3279,7 @@ for k,v in pairs(menu.tabs) do
   	x = 3, --%horizontally position in parent
   	y = 0, --%vertical position in parent
   	width = "100%", --% of parent
-  	height = tecSettings.comTextWindowHeight, --% of parent
+  	height = tecSettings.comTextWindowHeight -3, --% of parent
 		autoWrap = true, --allows text to wrap if too long
 		fontSize = getTECFont(), --in variables
 		font = getFont(), --get font type from main
@@ -3308,17 +3303,22 @@ function tecComWindowResize()
 	
 	--subtract GUIframe.defaults.resizeHeight from menu.footer.height 
 	local tecResizedComHeight = menu.container:get_height() - GUIframe.defaults.resizeHeight 
-	menu.footer:resize("99.5%", tecResizedComHeight) --resize the footer
+	menu.footer:resize("100%", tecResizedComHeight) --resize the footer
 	--reflect changes in tecSettings so there is a chance to save the size.
 	tecSettings.comTextWindowHeight = tecResizedComHeight
 	
-	--resize all of the miniconsoles so we have the 3px border on the bottom.
-	for k,v in pairs(menu.tabs) do menu[v]:resize("100%", tecResizedComHeight - 3) end
+	--resize comm windows according to header width. Footer doesn't like being used for this...
+	local tecResiedComWidth = menu.header:get_width() - 8
 	
-	if getTECDisplayDebugMode() then --if display debug mode is on
+	--resize all of the miniconsoles so we have the 3px border on the bottom.
+	for k,v in pairs(menu.tabs) do menu[v]:resize(tecResiedComWidth, tecResizedComHeight - 3) end
+	
+	if getTECDebugMode() then --if display debug mode is on
 		debugToDisplay("Communication Window, menu.footer Height: "..menu.footer:get_height()
 			.." menu.ctainer Height: "..menu.container:get_height()
-			.." New meno.footer Height: "..tecResizedComHeight)--end debugToDisplay
+			.." New menu.footer Height: "..tecResizedComHeight
+			.." mini consoles width: "..tecResiedComWidth.."%"
+			)--end debugToDisplay
 	end --end if display debug is enabled.
 
 end --resizeKeepTabsStatis
