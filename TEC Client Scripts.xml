@@ -3252,7 +3252,7 @@ menu.footer = Geyser.Label:new({
   x = 0, --horizontal position
 	y = tabsHeight, --adjusted for tabs
   width = "100%",
-	height = tecSettings.comTextWindowHeight
+	height = tecSettings.comTextWindowHeight -3
 },menu.container)
 
 menu.footer:setStyleSheet([[background-color: gray;
@@ -3261,7 +3261,6 @@ menu.footer:setStyleSheet([[background-color: gray;
 								border-color: lightgray;
 								padding-right: 50px
 								]]) --set to default label style
-menu.footer:lower()
 
 --Create the tabs
 for k,v in pairs(menu.tabs) do
@@ -3285,7 +3284,7 @@ for k,v in pairs(menu.tabs) do
   	x = 3, --%horizontally position in parent
   	y = 0, --%vertical position in parent
   	width = "100%", --% of parent
-  	height = tecSettings.comTextWindowHeight - 3, --% of parent
+  	height = tecSettings.comTextWindowHeight, --% of parent
 		autoWrap = true, --allows text to wrap if too long
 		fontSize = getTECFont(), --in variables
 		font = getFont(), --get font type from main
