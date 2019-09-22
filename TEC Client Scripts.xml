@@ -3110,14 +3110,21 @@ GUIframe.addWindow(settings_bar,"Settings","bottomleft")</script>
 			<Script isActive="yes" isFolder="no">
 				<name>tec map</name>
 				<packageName></packageName>
-				<script>tecMap = Geyser.Container:new({
-  name = "2d Map",    -- give it a unique name here
+				<script>--creates tec's 2d getAllMapUserData
+--future ideas. create a zoom scroll with --tecMap.back:addScrollbars(tecMap, "RV")
+--will probably need to complete that function for mudlet...
+
+--Don't forget. Creating room and exit labels ahead of time reduces the time it takes to draw
+--rooms while the user is playing. Do not create a system where we create labels as they play.
+
+tecMap = Geyser.Container:new({
+  name = "TEC Map",    -- give it a unique name here
   x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
   width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
 })
 
 --Add the status bar to the screen. On the bottom
-GUIframe.addWindow(tecMap,"2d Map","bottomright")
+GUIframe.addWindow(tecMap,"TEC Map","bottomright")
 
 --Creating the background for the 2d tec map.
 tecMap.back = Geyser.Label:new({
@@ -3131,16 +3138,14 @@ tecMap.back = Geyser.Label:new({
 --set the appearance of what is behind the map
 tecMap.back:setStyleSheet([[
   qproperty-alignment: 'AlignLeft | AlignTop';
-	background-color: rgba(152,153,181);
+	background-color: rgba(25, 50, 150);
 	font-size: 32px;
 ]])
-
---tecMap.back:addScrollbars(tecMap, "RV")
 
 mapRoom = {} --Table to hold labels we will draw the rooms with
 mapExit = {} --Table to hold labels we will draw the exits with.
 --Creating empty rooms for our map system.
-for i = 1, 100 do
+for i = 1, 150 do
 	--Create empty room and exit labels. Hide them so no junk is on screen.
   mapRoom[i] = Geyser.Label:new({name = "mapRoom"..tostring(i),},tecMap.back) 
   mapExit[i] = Geyser.Label:new({name = "mapExit"..tostring(i),},tecMap.back) 

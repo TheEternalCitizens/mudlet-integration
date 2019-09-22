@@ -104,7 +104,7 @@ echo("tecMap.back","")
 --that are not being used unless we find a need for it.
 --Likely hiding rooms will be error free and is obviously nearly
 --processor free.
-for i = 1, 100 do --We know the room count because we set it in script 2dMap.
+for i = 1, 150 do --We know the room count because we set it in script 2dMap.
  	mapExit[i]:hide() --Hide exits
 	mapRoom[i]:hide() --Hide rooms
 end --end of hide rooms loop
