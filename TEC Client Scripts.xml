@@ -51,6 +51,9 @@ tecSettings.tecDisplayDebugMode = false
 --for map debug messages.
 tecSettings.tecMapDebugMode = false
 
+--Height of the communications window text area.
+tecSettings.comTextWindowHeight = 100
+
 --This line is used to buffer the main line.
 --Than we filter this line in triggers - filter text 
 --It is important that this variable be global.
@@ -1175,7 +1178,7 @@ GUIframe.defaults = {
     tabEchoStyle = tabsFontStyle,
     leftStartWidth = eighthW,
     leftStartHeight = halfH,
-    rightStartWidth = eighthW,
+    rightStartWidth = quarterW,
     rightStartHeight = halfH,
     topStartHeight = eighthH,
     bottomStartHeight = 50,
@@ -2692,6 +2695,7 @@ function guiChange()
 	if getTECDisplayDebugMode() then geyserDebug() end --if displaydebug is on
 	compass.drawKeepSquare()
 	tecMapdrawKeepSquare()
+	tecComWindowResize() --resize com window
 end --end function guiChange
 
 --whenever event sysWindowReizeEvent occurs run setMainWindowAutowrap.
@@ -3207,17 +3211,13 @@ GUIframe.addWindow(dontknowyet,"don't know yet","topleft")</script>
 			<Script isActive="yes" isFolder="no">
 				<name>Communications Menu</name>
 				<packageName></packageName>
-				<script>--issues with sizing
---likely can fix with a resize getMapEvents
---https://wiki.mudlet.org/w/Manual:Geyser#Create_a_Window_with_a_resize_label
---I do not recommend resolving in GUIframe, it causes issues.
+				<script>--Communications windows at the top of the screen.
 
---https://www.mudlet.org/geyser/files/geyser/GeyserReposition.html
-
---Getting frustrated with difficulty of adjusting settings with GUIframe.
--- Want to look into creating user user windows 
---https://wiki.mudlet.org/w/Manual:UI_Functions#openUserWindow
---Follow up, they are a nice idea, but are unfinushed. miniconsole only.
+--ideas for future
+--When click a tab is stays dark to show that is the active tab.
+--fix the minor resizing issue with the scroll bar.
+--take tabs out of that damn menu table
+--create the option for a combat bar. Only shows combat text.
 
 --Origional menu from the tabs tutorial.
 --Only kept it because using a lone table caused issues.
@@ -3243,27 +3243,34 @@ menu.header = Geyser.HBox:new({
   x = 0, --horizontal
 	y = 0, --vertical position 
   width = "100%",
-  height = "20%", --for now using % rather than pixel math
+  height = tabsHeight, --for now using % rather than pixel math
 },menu.container)
 
 --box that will store the miniconsoles
 menu.footer = Geyser.Label:new({
   name = "menu.footer",
   x = 0, --horizontal position
-	y = "20%", --adjusted for tabs
+	y = tabsHeight, --adjusted for tabs
   width = "100%",
-  height = "80%", --leave space for tabs
+	height = tecSettings.comTextWindowHeight
 },menu.container)
-menu.footer:setStyleSheet(labelsStyle) --set to default label style
+
+menu.footer:setStyleSheet([[background-color: gray;
+								border-width: 1px;
+								border-style: outset;
+								border-color: lightgray;
+								padding-right: 50px
+								]]) --set to default label style
+menu.footer:lower()
 
 --Create the tabs
 for k,v in pairs(menu.tabs) do
   menu[v.."tab"] = Geyser.Label:new({
     name = "menu."..v.."tab",
-		x = 0, --horizontal position 
+		x = 3, --horizontal position 
 		y = 0, --vertical position
 		width = "100%",
-		height = 30,
+		height = tabsHeight,
   },menu.header)
 	
   menu[v.."tab"]:setStyleSheet(tabsStyle) --set style in themes
@@ -3275,10 +3282,10 @@ for k,v in pairs(menu.tabs) do
 	--These are the miniconsoles that will hold the text
   menu[v] = Geyser.MiniConsole:new({ --menu v will be a tab name.
     name = v, --Issues experienced if I attempt to name them v.."Console"
-  	x = 5, --%horizontally position in parent
+  	x = 3, --%horizontally position in parent
   	y = 0, --%vertical position in parent
-  	width = "99.5%", --% of parent
-  	height = "99%", --% of parent
+  	width = "100%", --% of parent
+  	height = tecSettings.comTextWindowHeight - 3, --% of parent
 		autoWrap = true, --allows text to wrap if too long
 		fontSize = getTECFont(), --in variables
 		font = getFont(), --get font type from main
@@ -3296,7 +3303,29 @@ end --end menu.click(tab) function
 
 --A menu has to be selected otherwise on startup it will just show.
 --The label behind the menu, becuase they are hidden directly after creation.
-menu[menu.current]:show()</script>
+menu[menu.current]:show()
+
+function tecComWindowResize()
+	
+	--subtract GUIframe.defaults.resizeHeight from menu.footer.height 
+	local tecResizedComHeight = menu.container:get_height() - GUIframe.defaults.resizeHeight 
+	menu.footer:resize("99.5%", tecResizedComHeight) --resize the footer
+	--reflect changes in tecSettings so there is a chance to save the size.
+	tecSettings.comTextWindowHeight = tecResizedComHeight
+	
+	--resize all of the miniconsoles so we have the 3px border on the bottom.
+	for k,v in pairs(menu.tabs) do menu[v]:resize("100%", tecResizedComHeight - 3) end
+	
+	if getTECDisplayDebugMode() then --if display debug mode is on
+		debugToDisplay("Communication Window, menu.footer Height: "..menu.footer:get_height()
+			.." menu.ctainer Height: "..menu.container:get_height()
+			.." New meno.footer Height: "..tecResizedComHeight)--end debugToDisplay
+	end --end if display debug is enabled.
+
+end --resizeKeepTabsStatis
+
+tecComWindowResize() --resize com window
+</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
