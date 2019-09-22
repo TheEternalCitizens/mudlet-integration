@@ -82,7 +82,9 @@ _________________
 I want lightning.
 I want a toggleable weather affect.
 When it is storming. At a random set interval say 3 - 5 minutes. A thunder will play and the screen will flash for a moment. 
-
+_________________
+Convert all regex triggers to lua functions.
+To save on processing time, convert all regex triggers to lua functions triggers. It is very common for lua functions to be 450% faster than regex triggers.
 
 --Should we? tasks:
 
