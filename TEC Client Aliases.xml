@@ -166,6 +166,14 @@ tecClearDisplay()</script>
 				<packageName></packageName>
 				<regex>^display clear$</regex>
 			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display clear characters</name>
+				<script>--in tecFunctions - autocheck - room character checks
+clearRoomCharacterWindow()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display clear characters$</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>font</name>
@@ -247,6 +255,14 @@ tecColorTest()</script>
 				<packageName></packageName>
 				<regex>^tecclient test colors$</regex>
 			</Alias>
+			<Alias isActive="no" isFolder="no">
+				<name>tecclient reset</name>
+				<script>--reloads user profile. Can't complete this right now.
+resetProfile()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient reset$</regex>
+			</Alias>
 		</AliasGroup>
 		<Alias isActive="yes" isFolder="no">
 			<name>Login</name>
@@ -258,8 +274,7 @@ hash = md5.sumhexa(username .. password .. "NONE")
 
 
 -- https://wiki.mudlet.org/w/Manual:Lua_Functions#sendAll
-sendAll("USER " .. username .. "\n", "SECRET NONE", "HASH " .. hash .. "\n", false)
-</script>
+sendAll("USER " .. username .. "\n", "SECRET NONE", "HASH " .. hash .. "\n", false)</script>
 			<command></command>
 			<packageName></packageName>
 			<regex>^LOGIN (.+) (.+)$</regex>
@@ -269,7 +284,7 @@ sendAll("USER " .. username .. "\n", "SECRET NONE", "HASH " .. hash .. "\n", fal
 			<script>tecDebugHelp() --display help window.</script>
 			<command></command>
 			<packageName></packageName>
-			<regex>^debug$</regex>
+			<regex>^room obect check$</regex>
 			<Alias isActive="yes" isFolder="no">
 				<name>debug on</name>
 				<script>--function in scripts - variables.
@@ -328,6 +343,40 @@ setTECMapDebugMode(false)</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^debug map off</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>debug timers on</name>
+				<script>--output timers to debug window
+setTECTimerDebugMode(true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^debug timers on</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>debug timers off</name>
+				<script>--stop outputing timers to debug window
+setTECTimerDebugMode(false)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^debug timers off</regex>
+			</Alias>
+		</AliasGroup>
+		<AliasGroup isActive="yes" isFolder="yes">
+			<name>atuo checks</name>
+			<script>--[[
+Commands that interact with auto checks the client does.
+Mostly these will be used to manually run a check for dev testing.
+]]--</script>
+			<command></command>
+			<packageName></packageName>
+			<regex></regex>
+			<Alias isActive="yes" isFolder="no">
+				<name>Room Object Check</name>
+				<script>--Check room for characters and fill the room character window.
+runTECRoomObjectCheck()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^room check$</regex>
 			</Alias>
 		</AliasGroup>
 	</AliasPackage>
