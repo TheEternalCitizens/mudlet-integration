@@ -1160,7 +1160,9 @@ hecho("Speech", filteredLine.."\n")
 --after the login it is not [[login]] it is [[login ]]
 send("SKOTOS Zealous 0.7.12.2") --sending the zealous handshake
 
---The login control continues in TEC CLient Triggers - login - Secret Triger</script>
+--The login control continues in TEC CLient Triggers - login - Secret Triger
+
+stopRoomCharacterCheck() --This stops the login timmer.</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
