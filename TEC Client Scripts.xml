@@ -61,7 +61,50 @@ tecSettings.comTextWindowHeight = 100
 filteredLine = "Reset filteredLine."
 
 --Zoom level of the map. 
-mapZoom = 1</script>
+mapZoom = 1
+
+--used to keep track of characters in current room.
+function clearTECRoomObjects()
+	tecRoomObjects = {characters = {}, checkActive = false, lc = 1}
+end --fuctoin clearTecRoomObjects
+clearTECRoomObjects() --run it so the data is created
+
+--stores a command list for the room character window
+--Done this way so it can be customized. 
+tecSettings.commandList = { 
+	[[send "look ]],
+	[[send "guard ]],
+	[[send "follow ]],
+	[[send "target ]],
+	[[send "approach ]],
+	[[printCmdLine "say to ]] }
+tecSettings.commandHelp = {
+	"Look",
+	"Guard",
+	"Follow",
+	"Target",
+	"Approach",
+	"Talk" }
+tecSettings.approachedCommandList = { 
+	[[send "look ]],
+	[[send "guard ]],
+	[[send "follow ]],
+	[[send "target ]],
+	[[send "approach ]],
+	[[printCmdLine "say to ]] }
+tecSettings.approachedCommandHelp = {
+	"Look",
+	"Guard",
+	"Follow",
+	"Target",
+	"Approach",
+	"Talk" }
+	
+--Used to check if a room Character check is needed.
+doRoomCharacterCheck = false
+
+--used for if timer debug is or is not wanted.
+</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
@@ -73,6 +116,10 @@ mapZoom = 1</script>
 --https://doc.qt.io/qt-5.12/stylesheet-reference.html
 --QT style sheets don't always act they was
 --standard css does. Just buggy...
+
+--lua showColors(3) shows a color chooser on screen.
+--A good reference of colors, but when we offer color custimization to users, it can give them a 
+--list to choose from.
 
 --Upgrade options.
 --add these variables to tecSettings so they can be saved and loaded.
@@ -258,7 +305,11 @@ end</script>
 				<Script isActive="yes" isFolder="no">
 					<name>tecFileLoadSettings()</name>
 					<packageName></packageName>
-					<script>--Loads variable and theme settings from file.
+					<script>--This perhaps should be in a sysLoadEvent
+
+--This bugs on startup because it is calling debugToDisplay before it is declared.
+
+--Loads variable and theme settings from file.
 --Notify is boolean, to let the user know the event occured.
 --In this case it is also a to screen notification that it was 
 --successfull
@@ -269,13 +320,15 @@ function tecFileLoadSettings(notify)
 	path = path:gsub("\\","/")
 	--If the file does not exist let the user know.
   if not io.exists(path) then 
-		debugToDisplay("tecFileLoadSettings: save file doesn't exist.")
-		debugc("tecFileLoadSettings: save file doesn't exist.") 
+		debugToDisplay("tecFileLoadSettings: save file doesn't exist.") --TEC debug screen
+		debugc("tecFileLoadSettings: save file doesn't exist.") --mudlets debug screen
 		echo("settings did not load from file")
-	return end --kill the function before real errors occur
+	return --kill the function before real errors occur
+	else
   table.load(path, tecSettings) --Load the settings in from file
 	if notify then echo("\nSettings successfully loaded from file\n") end
-end
+	end --end if file exists else
+end --function tecFileLoadSettings
 
 --Call the function so data loads when mudlet starts.
 tecFileLoadSettings(true)
@@ -2319,13 +2372,18 @@ Debug like functions:
 				<Script isActive="yes" isFolder="no">
 					<name>setTECDebugMode()</name>
 					<packageName></packageName>
-					<script>function setTECDebugMode(enableDebug)
+					<script>--opens a debug window.
+--triggers system to send debug information to it.
+
+function setTECDebugMode(enableDebug)
 	
 	--Set debug mode
 	tecSettings.tecDebugMode = enableDebug or false
 	
 	if enableDebug then
 		openUserWindow("DebugWindow")
+		--saveWindowLayout() --save floating miniconsole locations
+		--loadWindowLayout() --load previously save miniconsole position.
 		--DebugWindow:addScrollbars(parent, "Vertical")
 		echo("Debug mode enabled.\n")
 	end --end if debug is enabled.
@@ -2378,7 +2436,7 @@ end --end displayToDebug function
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>geyserDebug() &amp; resize event</name>
+					<name>geyserDebug()</name>
 					<packageName></packageName>
 					<script>--poll GUIFrame for 
 --Geyser API Reference https://www.mudlet.org/geyser/files/geyser/GeyserContainer.html
@@ -2516,6 +2574,25 @@ function getTECMapDebugMode()
 end --end function getTECdebugMode</script>
 					<eventHandlerList />
 				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>setTECTimerDebugMode(boolean)</name>
+					<packageName></packageName>
+					<script>--enables or disables debug for timers
+function setTECTimerDebugMode(setTECTimmerDebugBoolean)
+	tecSettings.tecTimerDebugMode = setTECTimmerDebugBoolean or false
+	debugToDisplay("Timer debugging set to: "..tostring(setTECTimmerDebugBoolean))
+end --setTECTimerDebugMode</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>getTECTimerDebugMode()</name>
+					<packageName></packageName>
+					<script>--enables or disables debug for timers
+function getTECTimerDebugMode()
+	return tecSettings.tecTimerDebugMode
+end --getTECTimerDebugMode</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>font</name>
@@ -2580,7 +2657,7 @@ GUI like functions
 ]]--</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
-					<name>setMainWindowAutoWrap() &amp; Reize event</name>
+					<name>setMainWindowAutoWrap()</name>
 					<packageName></packageName>
 					<script>--set main window word wrap size.
 --Function is called via an alias and in compass.resize
@@ -2695,7 +2772,8 @@ function guiChange()
 	if getTECDisplayDebugMode() then geyserDebug() end --if displaydebug is on
 	compass.drawKeepSquare()
 	tecMapdrawKeepSquare()
-	tecComWindowResize() --resize com window
+	tecComWindowResize() --resize commmunications window
+	tecCRWindowResize() --resize the Room Character window now
 end --end function guiChange
 
 --whenever event sysWindowReizeEvent occurs run setMainWindowAutowrap.
@@ -2726,13 +2804,9 @@ cechoLink("&lt;:blue&gt;display",
 "Change display settings.", true)
 echo(" save or load display positions. Reset display to defaults. Adjust autowrap. and clear text off the display.\n")
 
-cechoLink("&lt;:blue&gt;debug", 
+cechoLink("&lt;:blue&gt;debug&lt;reset&gt;, Used to get assistance with client issues.\n", 
 [[tecDebugHelp()]], 
 "Debug messages to get help.", true)
-echo(" Used to get assistance with client issues.\n")
-
-
-
 
 echo("\n")
 end --end function tecHelpClient</script>
@@ -2768,10 +2842,9 @@ cechoLink("&lt;:blue&gt;debug display off",
 "Stop showing display draw messages to debug window", true)
 echo(", Stop sending display draw messages to debug window, leaves debug mode unchanged.\n")
 
-cechoLink("&lt;:blue&gt;debug map on", 
+cechoLink("&lt;:blue&gt;debug map on&lt;reset&gt;, Displays map information to debug window.\n", 
 [[setTECMapDebugMode(true)]],
 "Show map messages to debug window", true)
-echo(", Displays map information to debug window.\n")
 
 cechoLink("&lt;:blue&gt;debug map off", 
 [[setTECMapDebugMode(false)]],
@@ -2827,6 +2900,118 @@ function tecMapIconAdjustment(tecIconDimmension, tecMapDimmension)
 end --end tecMapIconAdjustment</script>
 					<eventHandlerList />
 				</Script>
+			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>Auto Checks</name>
+				<packageName></packageName>
+				<script>--[[
+Some times you will want to run a command but not display the output of that command 
+to the user.
+The functions here I untended to work with the triggers that are involved with that.
+]]--</script>
+				<eventHandlerList />
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>Room Characters</name>
+					<packageName></packageName>
+					<script>--[[
+Scripts for working with filtering the approach check command 
+]]--</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>getTECRoomCheckActive()</name>
+						<packageName></packageName>
+						<script>function getTECRoomCheckActive()
+	return tecRoomObjects.checkActive
+end --end function getRoomCharactersActive</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>setTECRoomCheckActive(boolean)</name>
+						<packageName></packageName>
+						<script>function setTECRoomCheckActive(tecRoomCheckActive)
+	tecRoomObjects.checkActive = tecRoomCheckActive
+end --end function setRoomCharactersActive</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="no" isFolder="no">
+						<name>clearTECRoomObjects()</name>
+						<packageName></packageName>
+						<script>--Moved to variables Data Themese - Variables script</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>runTECRoomObjectCheck()</name>
+						<packageName></packageName>
+						<script>--used for functions that track objects in the current room.
+function runTECRoomObjectCheck()
+
+	--clear room data before running check 
+	clearTECRoomObjects()
+
+	--clear the character window.
+	clearWindow("roomCharacters.console")
+	
+	--set a room check to true.
+	setTECRoomCheckActive(true)
+
+	--send an ac . command to list characters in the room.
+	send("ac .", false)
+
+end --function runRoomCharacterCheck()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>setRoomCharacterCheck(boolean)</name>
+						<packageName></packageName>
+						<script>--Used to tell a Room Character Check timer if a check for characters
+--in the room should be run 
+
+function setRoomCharacterCheck(booleanRoomCheck)
+	doRoomCharacterCheck = booleanRoomCheck
+end --function setRoomCheck</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>getRoomCharacterCheck()</name>
+						<packageName></packageName>
+						<script>--Used to tell a Room Character Check timer if a check for characters
+--in the room should be run 
+
+function getRoomCharacterCheck()
+	return doRoomCharacterCheck
+end --end function getRoomCharacterCheck</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>clearRoomCharacterWindow()</name>
+						<packageName></packageName>
+						<script>function clearRoomCharacterWindow()
+	clearWindow("roomCharacters.console")
+end --clearRoomCharacterWindow</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>stopRoomCharacterCheck()</name>
+						<packageName></packageName>
+						<script>--disables the once a second check if a roomCharacterCheck is needed
+function stopRoomCharacterCheck()
+disableTimer("Room Character Check")
+end --stopRoomCharacterCheck()
+
+stopRoomCharacterCheck() --run it now. As system starts.
+--so the timmer doesn't run at login.</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>startRoomCharacterCheck()</name>
+						<packageName></packageName>
+						<script>--enables the once a second check if a roomCharacterCheck is needed
+function startRoomCharacterCheck()
+	enableTimer("Room Character Check")
+end --startRoomCharacterCheck()</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
 			</ScriptGroup>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
@@ -2960,6 +3145,20 @@ GUIframe.addWindow(compass_bar,"Compass","topright")</script>
 					<name>Compass</name>
 					<packageName></packageName>
 					<script>--Reference https://wiki.mudlet.org/w/Manual:Geyser#Create_a_Clickable_Compass
+
+--[[
+found bug with this code mudlets error output:
+LUA: code compiled without errors. OK
+LUA: ERROR running script Compass (Compass)
+Error: attempt to call a nil value
+LUA: ERROR running script dispatchEventToFunctions (dispatchEventToFunctions)
+Error: [string "Script: tec map"]:55: attempt to index field 'back' (a nil value)
+
+LUA: ERROR running script Compass (Compass)
+Error: attempt to call a nil value
+LUA: ERROR running script dispatchEventToFunctions (dispatchEventToFunctions)
+Error: [string "return guiChange()(...)"]:1: attempt to call a nil value
+]]--
 
 --max width max height
 local mw, mh = getMainWindowSize()
@@ -3194,18 +3393,69 @@ GUIframe.addWindow(threed_map,"3d Map","bottomright")
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
-				<name>topleft</name>
+				<name>Room Characters</name>
 				<packageName></packageName>
-				<script>--I am wondering if we could use this space to list npcs and pcs in the room.
+				<script>--Creates an interactive list of PC and NPCs in players current room.
 
-dontknowyet = Geyser.Container:new({
-  name = "don't know yet",    -- give it a unique name here
+roomCharacters = Geyser.Container:new({
+  name = "Room Characters",    -- give it a unique name here
   x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
   width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
 })
 
+--box that will store the miniconsoles
+roomCharacters.back = Geyser.Label:new({
+  name = "roomCharacters.back",
+  x = 0, --horizontal position
+	y = 0, --adjusted for tabs
+  width = "100%",
+	height = "100%"
+},roomCharacters)
+
+roomCharacters.back:setStyleSheet(labelsStyle) --set to default label style
+
+--This are the miniconsoles that will hold the text
+roomCharacters.console = Geyser.MiniConsole:new({ --menu v will be a tab name.
+  name = "roomCharacters.console", --Issues experienced if I attempt to name them v.."Console"
+	x = 0, --%horizontally position in parent
+	y = 0, --%vertical position in parent
+	width = "100%", --% of parent
+	height = "100%", --% of parent
+	autoWrap = true, --allows text to wrap if too long
+	fontSize = getTECFont(), --in variables
+	font = getFont(), --get font type from main
+	--scrollBar = true,
+},roomCharacters.back)
+roomCharacters.console:setColor(getBgColor()) --set miniconsoles to main consol BG color
+roomCharacters.console:raise()
+
 --Add the status bar to the screen. On the bottom
-GUIframe.addWindow(dontknowyet,"don't know yet","topleft")</script>
+GUIframe.addWindow(roomCharacters,"Room Characters","topleft")
+
+function tecCRWindowResize()
+	
+	--Resize the back label by 6. We want a 3px border around the entire
+	roomCharacters.back:resize(tostring(roomCharacters:get_width() - 6)
+		, tostring(roomCharacters:get_height() - 6))
+	roomCharacters.back:move (3, 3) --left and top borders
+	
+	--Resize the room character window by 6. We want a 3px border around the entire
+	roomCharacters.console:resize(tostring(roomCharacters.back:get_width() - 6)
+		, tostring(roomCharacters.back:get_height() - 6))
+	roomCharacters.console:move (3, 3) --left and top borders
+	
+	if getTECDisplayDebugMode() then --if display debug mode is on
+		debugToDisplay("Room Character Window,"
+			.." roomCharacters.back width: "..roomCharacters.back:get_width()
+			.." roomCharacters.back Height: "..roomCharacters.back:get_height()
+			.." roomCharacters.console Width: "..tecResizedCRHeight:get_width()
+			.." roomCharacters.console Height: "..roomCharacters.console:get_height()
+			)--end debugToDisplay
+	end --end if display debug is enabled.
+
+end --tecCRWindowResize()
+
+tecCRWindowResize() --resize the Room Character window now</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
@@ -3254,7 +3504,6 @@ menu.footer = Geyser.Label:new({
   width = "100%",
 	height = tecSettings.comTextWindowHeight - 3
 },menu.container)
-
 menu.footer:setStyleSheet(labelsStyle) --set to default label style
 
 --Create the tabs
@@ -3313,7 +3562,7 @@ function tecComWindowResize()
 	--resize all of the miniconsoles so we have the 3px border on the bottom.
 	for k,v in pairs(menu.tabs) do menu[v]:resize(tecResiedComWidth, tecResizedComHeight - 3) end
 	
-	if getTECDebugMode() then --if display debug mode is on
+	if getTECDisplayDebugMode() then --if display debug mode is on
 		debugToDisplay("Communication Window, menu.footer Height: "..menu.footer:get_height()
 			.." menu.ctainer Height: "..menu.container:get_height()
 			.." New menu.footer Height: "..tecResizedComHeight
