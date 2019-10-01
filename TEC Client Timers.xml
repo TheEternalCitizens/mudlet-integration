@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MudletPackage>
+<MudletPackage version="1.001">
+	<TriggerPackage />
+	<TimerPackage>
+		<Timer isActive="yes" isFolder="no" isTempTimer="no" isOffsetTimer="no">
+			<name>Room Character Check</name>
+			<script>--[[
+Once a second checks if client has asked for a room check.
+If one has not, check to see if the room character console is empty.
+If it is run a room check
+]]-- 
+
+if getRoomCharacterCheck() then --If a room check has been requested
+	setRoomCharacterCheck(false) --We do not want to run another room check
+	runTECRoomObjectCheck() --check for characters in room, populate Room Characters window
+	if getTECTimerDebugMode() then --if timer debug is on
+		debugToDisplay("Room check for characters run, "
+		.."started by a game trigger.")
+	end--timer debug
+else
+
+	selectSection("roomCharacters.console", 0,1) --select first character of window
+	local RoomCharacterWindowEmpty = getSelection("roomCharacters.console") 
+		or "Error in Room Character Check timer getSelection."
+
+	if RoomCharacterWindowEmpty == "" then --if the window returns nil
+		runTECRoomObjectCheck() --check room for characters.
+		if getTECTimerDebugMode() then --if timer debug is on
+			debugToDisplay("Room check for characters run, "
+			.."started when room character window was found empty.")
+		end--timer debug
+	elseif RoomCharacterWindowEmpty == "Error in Room Character Check timer getSelection." then
+		--error was found. Output it to debug. Not trigger debug. Actual error.
+		debugToDisplay(RoomCharacterWindowEmpty)
+	end --if getSelection
+	deselect("roomCharacters.console") --don't forget you deselects!
+	
+end --end if getRoomCharacterCheck() else</script>
+			<command></command>
+			<packageName></packageName>
+			<time>00:00:01.000</time>
+		</Timer>
+	</TimerPackage>
+	<AliasPackage />
+	<ActionPackage />
+	<ScriptPackage />
+	<KeyPackage />
+	<HelpPackage>
+		<helpURL></helpURL>
+	</HelpPackage>
+</MudletPackage>

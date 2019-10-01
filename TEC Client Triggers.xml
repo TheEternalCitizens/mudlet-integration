@@ -676,6 +676,178 @@ deleteLine()</script>
 			</Trigger>
 		</TriggerGroup>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>Auto Checks</name>
+			<script>--[[
+For automated checks the client runs.
+]]--</script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Room Character Check</name>
+				<script>--[[
+We have to use a lua function because we do not know how many lines we need to read.
+If you know how many lines your function needs, set fire length (top right) instead of a lua function.
+
+Room check when:
+you retreat DONE
+You enter a room DONE Works poorly
+You are approached DONE
+Something arrives ONE
+Something enters the room DONE
+Something exits the room. DONE
+If character window is empty, run it during filter so it happens with every trigger.
+No more than once a second.
+
+First user request is to make the command list on right click custamizale.
+ 
+]]--
+
+--Remove these to items if they are found.
+if line == "&lt;/pre&gt;&lt;pre&gt;&lt;font size=+1&gt;&lt;b&gt;Checking the approach status of &amp;quot;.&amp;quot;&lt;/b&gt;&lt;/font&gt;&lt;/font&gt;"
+	or line == "&lt;hr&gt;" then
+  --Delete main's line
+  --selectCurrentLine() --proper code for when hinsert is fixed.
+  --replace("")
+  --deselect()
+  deleteLine()
+	
+--pull character name from output.
+elseif line:match("^%d+:") then --if line starts with "#: "
+	
+	--holds check if characting being checked is engaging our players character
+	local characterEngaged = nil
+	local tecCharacterShort = nil
+	--Keep track of how many times a simular target has been found. Needed to accurately interact
+	--with targets that have the same shortname. Starts at 1 because 1 is the current short name
+	local tecNameMatches = 1
+	
+	--pulls the match text from the line using a string match
+	tecRoomObjects.characters[tecRoomObjects.lc], characterEngaged = line:match("^%d+:([ %a+]+)([%s%(]?)")
+	
+	--remove the space at the start of the character name. We need those other spaces...
+	tecRoomObjects.characters[tecRoomObjects.lc] = tecRoomObjects.characters[tecRoomObjects.lc]:sub(2)
+	
+	--If there are any leading a's or an's use the second word for targeting
+	--tec has an odd system where you can look at "a man" but you can not attack "a man"
+	tecCharacterShort = tecRoomObjects.characters[tecRoomObjects.lc]:match("^[a ]?[an ]?(%a+)")
+	
+		--Loop through all previous character names, looking for previous shortname matches.
+	for i = (tecRoomObjects.lc - 1), 1, -1 do
+		debugToDisplay("Loop Count: "..tostring(i))
+		
+		--Collect short name of previous characters
+		local tmpCharacterShort = tecRoomObjects.characters[i]:match("^[a ]?[an ]?(%a+)")
+		
+		--if the current short name matches a previous one keep track of the count.
+		if tecCharacterShort == tmpCharacterShort then
+			tecNameMatches = tecNameMatches + 1
+		end --end if character short name previously existed.
+	end --end for look for short names matches
+
+  if getTECDebugMode() then --if debug mode is on
+  	debugToDisplay("Room Objects, Character: "
+  		..tecRoomObjects.characters[tecRoomObjects.lc]
+  		.." Loop Count: "..tecRoomObjects.lc
+  		.." Engaged: "..characterEngaged
+  		.." Character Short Name: "..tecCharacterShort
+  	) --end displayToDebug
+  end --end if debug is on.
+
+	--This ( only occurs if your character is approached. If your character is approached.
+	if characterEngaged == "(" then
+		--create a right clickable list with the characters full name.
+		cechoPopup("roomCharacters.console","&lt;red&gt;"..tecRoomObjects.characters[tecRoomObjects.lc].."\n",
+		{
+		--apprachedCommandList is list of commands for characters that have approached yours
+		--tecNameMatches is now many times something with the same short name was previously found
+		--tecCharacterShort is the first word after a in a name. We can not target with full name.
+		tecSettings.approachedCommandList[1]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
+		tecSettings.approachedCommandList[2]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
+		tecSettings.approachedCommandList[3]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
+		tecSettings.approachedCommandList[4]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
+		tecSettings.approachedCommandList[5]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
+		tecSettings.approachedCommandList[6]..tostring(tecNameMatches).." "..tecCharacterShort..[["]]},
+		{ 
+		--Tool bar tips that show on mouse over and right click.
+		tecSettings.approachedCommandHelp[1], 
+		tecSettings.approachedCommandHelp[2], 
+		tecSettings.approachedCommandHelp[3],
+		tecSettings.approachedCommandHelp[4],
+		tecSettings.approachedCommandHelp[5],
+		tecSettings.approachedCommandHelp[6]}, true)
+	else
+		--characters that are not approached to the players
+		cechoPopup("roomCharacters.console","&lt;green&gt;"..tecRoomObjects.characters[tecRoomObjects.lc].."\n",
+		{
+		--list of commands for characters not approached to yours.
+		--refer to approached logic explination above for reference.
+		tecSettings.commandList[1]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
+		tecSettings.commandList[2]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
+		tecSettings.commandList[3]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
+		tecSettings.commandList[4]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
+		tecSettings.commandList[5]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
+		tecSettings.commandList[6]..tostring(tecNameMatches).." "..tecCharacterShort..[["]]},
+		{ 
+		--Tool bar tips that show on mouse over and right click.
+		tecSettings.commandHelp[1], 
+		tecSettings.commandHelp[2], 
+		tecSettings.commandHelp[3],
+		tecSettings.commandHelp[4],
+		tecSettings.commandHelp[5],
+		tecSettings.commandHelp[6]}, true)
+	end --end if else characterEnaged == "("
+	
+		--Delete main's line
+  --selectCurrentLine() --proper code for when hinsert is fixed.
+  --replace("")
+  --deselect()
+  deleteLine()
+	
+	--iterate our loop counter
+	tecRoomObjects.lc = tecRoomObjects.lc + 1
+	
+elseif line == "&lt;/pre&gt;" then --end of command found.
+
+	--disable room check for characters. This is the end of the check.
+	setTECRoomCheckActive(false)
+  --Delete main's line
+  --selectCurrentLine() --proper code for when hinsert is fixed.
+  --replace("")
+  --deselect()
+  deleteLine()
+end --if line has a ac . character in it.
+
+--No else, becase if it isn't one of the items we are looking for above.
+--We want to make certain to keep it.</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>return getTECRoomCheckActive()</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>4</integer>
+				</regexCodePropertyList>
+			</Trigger>
+		</TriggerGroup>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>Text Filters</name>
 			<script>--!!!!!!!!!!!!!!!!!!READ BEFORE CHANGING FILTER CODE!!!!!!!!!!!!!!!!!!!!!
 --Needed because TEC does not support GMCP or MSDP
@@ -711,7 +883,7 @@ deleteLine()</script>
 --selectCurrentLine() --proper code for when hinsert is fixed.
 --replace("")
 --deselect()
-deletedLine()</script>
+deleteLine()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -738,6 +910,9 @@ deletedLine()</script>
 --^means start of line. Nothing after it means line with anything in it
 
 --hreplace Code provided by s/Mud/Game on mudletdiscord. THANK YOU s/Mud/Game!!!!
+
+--errors that appear in mudlet debug 
+--&lt;moveCursor: wrong argument type&gt;
 
 --Starting with most likely items moving to less likely.
 --Fewer processor cycles...
@@ -983,9 +1158,13 @@ hecho("Speech", filteredLine.."\n")
 			<regexCodePropertyList />
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Login</name>
-				<script>--This trigger handles the handshake for the user.
---This WILL fail if the developers stop having a blank space
+				<script>--Triggers on game login prompt.
+--This trigger WILL fail if the developers stop having a blank space
 --after the login it is not [[login]] it is [[login ]]
+
+stopRoomCharacterCheck() --This stops the login timmer.
+
+--This trigger function does the client handshake for the user.
 send("SKOTOS Zealous 0.7.12.2") --sending the zealous handshake
 
 --The login control continues in TEC CLient Triggers - login - Secret Triger</script>
@@ -1033,6 +1212,244 @@ printCmdLine("LOGIN ")
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>3</integer>
+				</regexCodePropertyList>
+			</Trigger>
+		</TriggerGroup>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>Game Events</name>
+			<script>--[[
+Use to hold triggers that keep track of misc events you would like to run one or more functions for
+Like entering a room, or being approached.
+
+We would like to avoid repeated trigger checks so include them all within one check...
+]]--</script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Player retreats</name>
+				<script>--Check room for characters and fill the room character window.
+setRoomCharacterCheck(true)
+
+if getTECTimerDebugMode() then --if timer debug is on
+	debugToDisplay("Room check requested by player retreating from target.")
+end--timer debug</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You retreat.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>3</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Player is approached</name>
+				<script>--Check room for characters and fill the room character window.
+setRoomCharacterCheck(true)
+
+if getTECTimerDebugMode() then --if timer debug is on
+	debugToDisplay("Room check requested by player being approached.")
+end--timer debug</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>stops next to you.$</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>character walks into players room</name>
+				<script>--Check room for characters and fill the room character window.
+setRoomCharacterCheck(true)
+
+if getTECTimerDebugMode() then --if timer debug is on
+	debugToDisplay("Room check requested by character moving into players room.")
+end--timer debug</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>walks in</string>
+					<string>runs in</string>
+					<string>flies in</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>0</integer>
+					<integer>0</integer>
+					<integer>0</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>character leave players room</name>
+				<script>--Check room for characters and fill the room character window.
+setRoomCharacterCheck(true)
+
+if getTECTimerDebugMode() then --if timer debug is on
+	debugToDisplay("Room check requested by character leaving players room.")
+end--timer debug</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>walks away</string>
+					<string>runs away</string>
+					<string>flies away</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>0</integer>
+					<integer>0</integer>
+					<integer>0</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Character Arrives</name>
+				<script>--Check room for characters and fill the room character window.
+setRoomCharacterCheck(true)
+
+if getTECTimerDebugMode() then --if timer debug is on
+	debugToDisplay("Room check requested by a character arrival.")
+end--timer debug</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>arrives.$</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Player enters a room</name>
+				<script>--Check room for characters and fill the room character window.
+setRoomCharacterCheck(true)
+
+if getTECTimerDebugMode() then --if timer debug is on
+	debugToDisplay("Room check requested by entering a room.")
+end--timer debug</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You arrive at </string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Successful login</name>
+				<script>--[[
+Occurs after a successful login
+]]--
+
+--checking for characters in the room
+startRoomCharacterCheck()
+
+--Check room for characters and fill the room character window.
+setRoomCharacterCheck(true)
+if getTECTimerDebugMode() then --if timer debug is on
+	debugToDisplay("Room check requested by successful login.")
+end--timer debug</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>&lt;center&gt;*** Login successful</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Player approaches a character</name>
+				<script>--[[
+triggers when the player approaches something.
+]]--
+
+--Check room for characters and fill the room character window.
+setRoomCharacterCheck(true)
+if getTECTimerDebugMode() then --if timer debug is on
+	debugToDisplay("Room check requested by successful login.")
+end--timer debug</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You stop next to </string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>0</integer>
 				</regexCodePropertyList>
 			</Trigger>
 		</TriggerGroup>
