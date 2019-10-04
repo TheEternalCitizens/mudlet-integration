@@ -3381,17 +3381,6 @@ macroMenu.back = Geyser.Label:new({
   width = "100%",
 }, macroMenu.container)
 
---Set the parent label stylesheet
---This will create the ?? that makes up most of the macro menu. The background color is a radial
---gradient that goes from a deep blue to a brighter shade. The border radius rounds the edges. When
---the radius is exactly half of the label width it forms a circle. The arrows of the compass actually
---protrude from the sphere so we give it a margin to suck it in a bit for this effect.
-
-macroMenu.back:setStyleSheet([[
-  background-color: black;
-  margin: 1px;
-]])
-
 --Create a 3x5 grid
 --The macro menu is split into 15 sections, one for each macro. This 3x5 grid is created by 5 VBoxes
 --that sit within a single HBox (or vice versa, it doesn't matter). So first off, we create the HBox.
@@ -3402,8 +3391,6 @@ macroMenu.box = Geyser.VBox:new({
   x = 0,
   y = 0,
   width = "100%",
-  height = "90%",
-
 }, macroMenu.back)
 
 --Next, we create our 5 HBoxes. We don't need to specify position or size because these are placed
@@ -3527,18 +3514,6 @@ end
 function onMacroClick(name)
   send(name)
 end
-
---Resize the compass into a 3x5 rectangle
---Most screen size ratios aren't a perfect 1:1. This will cause a 10% x 10% label to be far from
---a 3x5 rectangle. By setting our height (the smaller of the two numbers) to 60% of our width, we
---can resize our macro menu to a near perfect rectangle. This function is also the name of our
---script because we want it to run each time sysWindowResizeEvent is raised.
-
-function macroMenu.resize()
-  macroMenu.back:resize(macroMenu.back.width, macroMenu.back:get_width())
-end
-
-macroMenu.resize()
 
 --Add the macro menu to the top left of the screen
 GUIframe.addWindow(macroMenu.container, "Macros", "bottomleft")</script>
