@@ -3348,15 +3348,9 @@ I like the 3 columns because it gives us big chunky buttons that will work well 
 screens.
 ]]--
 
---Store the screen size
---We'll want to store the screen size in some local variables so they can be easily referenced to later on.
-local mw, mh = getMainWindowSize()
-
 --Create a global table or namespace
 --Creating a global table will make each of our variables unique. Our namespace will be called
---macroMenu and everything we make from here on out will be stored within the macroMenu table. We'll 
---also add a few values to it: macros and ratio. macroMenu.macros will store each direction while 
---macroMenu.ratio will store the ratio of our screen size so we can 'square up' our macro menu.
+--macroMenu and everything we make from here on out will be stored within the macroMenu table.
 
 macroMenu = macroMenu or {}
 
@@ -3365,8 +3359,7 @@ macroMenu = macroMenu or {}
 --subclass container, every window can do that. But containers do not have any visible content by
 --themselves. Our tabbed "Macros" window will need a container. This will be the bottom layer.
 --Containers are invisible, so no need to set a stylesheet. At the end of the file, we will add this
---container as a "window", which the "GUIframe" library to render for us. It's container is main
---because it's parent is the main window.
+--container as a "window", which the "GUIframe" library to render for us.
 macroMenu.container = Geyser.Container:new({
   name = "macroMenu",
 })
@@ -3382,8 +3375,8 @@ macroMenu.back = Geyser.Label:new({
 }, macroMenu.container)
 
 --Create a 3x5 grid
---The macro menu is split into 15 sections, one for each macro. This 3x5 grid is created by 5 VBoxes
---that sit within a single HBox (or vice versa, it doesn't matter). So first off, we create the HBox.
+--The macro menu is split into 15 sections, one for each macro. This 3x5 grid is created by 5 HBoxes
+--that sit within a single VBox (or vice versa, it doesn't matter). So first off, we create the VBox.
 --It will be the same size as its parent, macroMenu.back.
 
 macroMenu.box = Geyser.VBox:new({
@@ -3394,7 +3387,7 @@ macroMenu.box = Geyser.VBox:new({
 }, macroMenu.back)
 
 --Next, we create our 5 HBoxes. We don't need to specify position or size because these are placed
---within macroMenu.box, an VBox.
+--within macroMenu.box, a VBox.
 macroMenu.row1 = Geyser.HBox:new({
   name = "macroMenu.row1",
 }, macroMenu.box)
@@ -3411,7 +3404,7 @@ macroMenu.row5 = Geyser.HBox:new({
   name = "macroMenu.row5",
 }, macroMenu.box)
 
---Finally, we add our 15 labels. Take note that they are split up into even groups of 5. Each group
+--Finally, we add our 15 labels. Take note that they are split up into five groups of three. Each group
 --is placed into a different "macroMenu.row" number.
 local mappings = {
   {
@@ -3499,11 +3492,11 @@ for _, mapping in pairs(mappings) do
   }, mapping.row)
   macroMenu[mapping.name]:setClickCallback("onMacroClick", mapping.name)
   macroMenu[mapping.name]:setStyleSheet([[
-	  background-color: gray;
-		margin: 1px;
+    background-color: gray;
+    margin: 1px;
     border-width: 1px;
-		border-style: solid;
-		border-color: white;
+    border-style: solid;
+    border-color: white;
   ]])
 end
 
