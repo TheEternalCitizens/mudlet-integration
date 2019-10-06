@@ -3408,9 +3408,9 @@ macroMenu.row5 = Geyser.HBox:new({
 --is placed into a different "macroMenu.row" number.
 local mappings = {
   {
-    name = "fe1",
-    label = "I",
-    row = macroMenu.row1,
+    name = "fe1", --name of label that will be created. Will be passed to setClickCallBack function
+    label = "I", --What will be on the label
+    row = macroMenu.row1, --the geyser box we want this label to go in
   },
   {
     name = "fe2",
@@ -3484,32 +3484,28 @@ local mappings = {
   },
 }
 
-for _, mapping in pairs(mappings) do
+--add onto standard label. We want a small margin for this label.								
+macroLabelStyle = labelsStyle.."margin: 1px\n";
+
+for _, mapping in pairs(mappings) do --loop trough mappings table using data within
   macroMenu[mapping.name] = Geyser.Label:new({
-    name = "macroMenu." .. mapping.name,
-    fgColor = "white",
-	  message = "&lt;center&gt;" .. mapping.label .. "&lt;/center&gt;",
-  }, mapping.row)
+    name = "macroMenu." .. mapping.name, --name label fe# so it is easy to pass
+	  message = "&lt;center&gt;" .. mapping.label .. "&lt;/center&gt;", --puts roman numerals on label
+  }, mapping.row) --parent is gettings passed via mapping table row reference
   macroMenu[mapping.name]:setClickCallback("onMacroClick", mapping.name)
-  macroMenu[mapping.name]:setStyleSheet([[
-    background-color: gray;
-    margin: 1px;
-    border-width: 1px;
-    border-style: solid;
-    border-color: white;
-  ]])
+  macroMenu[mapping.name]:setStyleSheet(macroLabelStyle) --create window layout
 end
 
 --Create a callback function
 --When the user clicks a macro button, this function will send the button name to the server. For
 --example, when the user clicks the first button, we will send "fe1" to the server.
-
 function onMacroClick(name)
   send(name)
 end
 
 --Add the macro menu to the top left of the screen
-GUIframe.addWindow(macroMenu.container, "Macros", "bottomleft")</script>
+GUIframe.addWindow(macroMenu.container, "Macros", "bottomleft")
+</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
