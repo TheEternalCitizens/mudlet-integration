@@ -94,10 +94,10 @@ SKOOT 6 lines I am nearly certain are for drawing the 2d map
 --17.1111 can go fuck itself because I can't figure out what is is.
 ]]--
 
---selectCurrentLine("tecMap.back") --proper code for when hinsert is fixed.
+--selectCurrentLine("tecMap_back") --proper code for when hinsert is fixed.
 --replace("")
 --deselect()
-echo("tecMap.back","")
+echo("tecMap_back","")
 
 --We are about to draw a new map, so hide all the rooms.
 --We are not going to bother with setting room sizes and moving moves to off screen
@@ -262,7 +262,7 @@ for xpos, ypos, exitDirection, exitOpen in string.gmatch( line, "(-?%d+),(-?%d+)
 	--convert half the size of the icons for exits into % of the total map window.
 	--Than take the overall size of the map window / that by our standard 240 window size.
 	--The resulting number is used to adjust the icon position as the map is scaled.
-	iconWidthAdjustment = tecMapIconAdjustment(tecExit[exitDirection].width, tecMap.back:get_width())
+	iconWidthAdjustment = tecMapIconAdjustment(tecExit[exitDirection].width, tecMap_back:get_width())
 	
   --TEC uses grid logic for their map. xposition is 120 +-.
   --240 is the total size of their draw space. What percent is our position in that space.
@@ -270,7 +270,7 @@ for xpos, ypos, exitDirection, exitOpen in string.gmatch( line, "(-?%d+),(-?%d+)
 	xposScaler = ((((tonumber(xpos) + 120) / 240) * 100) - iconWidthAdjustment) * mapZoom
 	
 	--same logic as aboive
-	iconHeightAdjustment = tecMapIconAdjustment(tecExit[exitDirection].height, tecMap.back:get_height())
+	iconHeightAdjustment = tecMapIconAdjustment(tecExit[exitDirection].height, tecMap_back:get_height())
 	yposScaler = ((((tonumber(ypos) + 120) / 240) * 100) - iconHeightAdjustment) * mapZoom	
 	
 	--Move the Exit into position.
@@ -281,7 +281,7 @@ for xpos, ypos, exitDirection, exitOpen in string.gmatch( line, "(-?%d+),(-?%d+)
   lc = lc +1 --Iterate so we can do this again on a new exit.
 end --end gmatch room data search loop
 
-tecMap.back:lower() --lower the background behind the exits.
+tecMap_back:lower() --lower the background behind the exits.
 
 --We want the map zoon level, but not 100 times...
 if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end

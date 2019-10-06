@@ -3812,7 +3812,7 @@ tecSettingsWindowResize() --resize the Room Character window now</script>
 				<name>tec map</name>
 				<packageName></packageName>
 				<script>--creates tec's 2d getAllMapUserData
---future ideas. create a zoom scroll with --tecMap.back:addScrollbars(tecMap, "RV")
+--future ideas. create a zoom scroll with --tecMap_back:addScrollbars(tecMap, "RV")
 --will probably need to complete that function for mudlet...
 
 --Don't forget. Creating room and exit labels ahead of time reduces the time it takes to draw
@@ -3828,8 +3828,8 @@ tecMap = Geyser.Container:new({
 GUIframe.addWindow(tecMap,"TEC Map","bottomright")
 
 --Creating the background for the 2d tec map.
-tecMap.back = Geyser.Label:new({
-  name = "tecMap.back",
+tecMap_back = Geyser.Label:new({
+  name = "tecMap_back",
   x = "0%", --%horizontally position in parent
   y = "0%", --%vertical position in parent
   width = "100%", --% of parent
@@ -3837,7 +3837,7 @@ tecMap.back = Geyser.Label:new({
 },tecMap) --The parent of this label.
 
 --set the appearance of what is behind the map
-tecMap.back:setStyleSheet([[
+tecMap_back:setStyleSheet([[
   qproperty-alignment: 'AlignLeft | AlignTop';
 	background-color: rgba(25, 50, 150);
 	font-size: 32px;
@@ -3848,8 +3848,8 @@ mapExit = {} --Table to hold labels we will draw the exits with.
 --Creating empty rooms for our map system.
 for i = 1, 150 do
 	--Create empty room and exit labels. Hide them so no junk is on screen.
-  mapRoom[i] = Geyser.Label:new({name = "mapRoom"..tostring(i),},tecMap.back) 
-  mapExit[i] = Geyser.Label:new({name = "mapExit"..tostring(i),},tecMap.back) 
+  mapRoom[i] = Geyser.Label:new({name = "mapRoom"..tostring(i),},tecMap_back) 
+  mapExit[i] = Geyser.Label:new({name = "mapExit"..tostring(i),},tecMap_back) 
   mapRoom[i]:hide() --Hide the tab so they don't layer
 	mapExit[i]:hide() --Hide the tab so they don't layer
 end --end loop create tabs and consoles
@@ -3859,16 +3859,16 @@ function tecMapdrawKeepSquare()
 	--if the width of the parent label is less than the height.
 	--Resize the background label itself keeping the width and height the equal.
 	if tecMap:get_width() &lt; tecMap:get_height() then
-  	tecMap.back:resize(tecMap:get_width(), tecMap:get_width())
+  	tecMap_back:resize(tecMap:get_width(), tecMap:get_width())
 	end --en if width is less than height.
 	
 	--if the height of the parent label is less than the width.
 	--Resize the background label itself keeping the width and height equal.
 	if tecMap:get_height() &lt; tecMap:get_width() then
-  	tecMap.back:resize(tecMap:get_height(), tecMap.height)
+  	tecMap_back:resize(tecMap:get_height(), tecMap:get_height())
 	end --en if width is less than height.
 	
-	echo("tecMap.back","Exits may be slightly\noff until you walk.")
+	echo("tecMap_back","Exits may be slightly\noff until you walk.")
 	
 end --end function keep square.
 
