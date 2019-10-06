@@ -4295,7 +4295,8 @@ end
 
 --Add the macro menu to the top left of the screen
 GUIframe.addWindow(macroMenu.container, "Macros", "bottomleft")
-</script>
+
+GUIframe.activate("Macros") --Make the macros bar the active bar on bottom left.</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
