@@ -2888,43 +2888,6 @@ end --function tecClientDisplayLoad</script>
 				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>Events</name>
-				<packageName></packageName>
-				<script>-------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external scripts --
--------------------------------------------------
-</script>
-				<eventHandlerList />
-				<Script isActive="yes" isFolder="no">
-					<name>guiChange()</name>
-					<packageName></packageName>
-					<script>--calls events that are needed when a window change occurs.
---Do NOT put any function that changes the GUI here!!!
-
---I am suspicious that calling multiple functions in one event is a no no
---I did this though because creating multiple AnonymousEvents caused issues.
---If I Recall the last event would not occur.
-
-function guiChange()
-	setMainWindowAutoWrap() --adjusts word wrap for user.
-	if getTECDisplayDebugMode() then geyserDebug() end --if displaydebug is on
-	compass.drawKeepSquare()
-	tecMapdrawKeepSquare()
-	tecComWindowResize() --resize commmunications window
-	tecCRWindowResize() --resize the Room Character window now
-	tecSettingsWindowResize() --resize the Room Character window now
-end --end function guiChange
-
---whenever event sysWindowReizeEvent occurs run setMainWindowAutowrap.
---In otherwords when any window geyser or main is CHANGED, run setMainWindowAutoWrap.
---That is NOT just resizing.
-registerAnonymousEventHandler("sysWindowResizeEvent", "guiChange()")</script>
-					<eventHandlerList />
-				</Script>
-			</ScriptGroup>
-			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>help</name>
 				<packageName></packageName>
 				<script>-------------------------------------------------
@@ -3622,13 +3585,13 @@ encumbrancebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;le
 				<name>compasbar</name>
 				<packageName></packageName>
 				<script>compass_bar = Geyser.Container:new({
-  name = "Compass",    -- give it a unique name here
+  name = "compass",    -- give it a unique name here
   x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
   width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
 })
 
 --Add the status bar to the screen. On the bottom
-GUIframe.addWindow(compass_bar,"Compass","topleft")</script>
+GUIframe.addWindow(compass_bar,"compass","topleft")</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
 					<name>Compass</name>
@@ -4297,6 +4260,43 @@ end
 GUIframe.addWindow(macroMenu.container, "Macros", "bottomleft")
 
 GUIframe.activate("Macros") --Make the macros bar the active bar on bottom left.</script>
+				<eventHandlerList />
+			</Script>
+		</ScriptGroup>
+		<ScriptGroup isActive="yes" isFolder="yes">
+			<name>Events</name>
+			<packageName></packageName>
+			<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external scripts --
+-------------------------------------------------
+</script>
+			<eventHandlerList />
+			<Script isActive="yes" isFolder="no">
+				<name>guiChange()</name>
+				<packageName></packageName>
+				<script>--calls events that are needed when a window change occurs.
+--Do NOT put any function that changes the GUI here!!!
+
+--I am suspicious that calling multiple functions in one event is a no no
+--I did this though because creating multiple AnonymousEvents caused issues.
+--If I Recall the last event would not occur.
+
+function guiChange()
+	setMainWindowAutoWrap() --adjusts word wrap for user.
+	if getTECDisplayDebugMode() then geyserDebug() end --if displaydebug is on
+	compass.drawKeepSquare()
+	tecMapdrawKeepSquare()
+	tecComWindowResize() --resize commmunications window
+	tecCRWindowResize() --resize the Room Character window now
+	tecSettingsWindowResize() --resize the Room Character window now
+end --end function guiChange
+
+--whenever event sysWindowReizeEvent occurs run setMainWindowAutowrap.
+--In otherwords when any window geyser or main is CHANGED, run setMainWindowAutoWrap.
+--That is NOT just resizing.
+registerAnonymousEventHandler("sysWindowResizeEvent", "guiChange()")</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
