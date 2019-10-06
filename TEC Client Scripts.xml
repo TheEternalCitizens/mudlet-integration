@@ -3590,13 +3590,7 @@ encumbrancebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;le
   width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
 })
 
---Add the status bar to the screen. On the bottom
-GUIframe.addWindow(compass_bar,"compass","topleft")</script>
-				<eventHandlerList />
-				<Script isActive="yes" isFolder="no">
-					<name>Compass</name>
-					<packageName></packageName>
-					<script>--Reference https://wiki.mudlet.org/w/Manual:Geyser#Create_a_Clickable_Compass
+--Reference https://wiki.mudlet.org/w/Manual:Geyser#Create_a_Clickable_Compass
 
 --[[
 found bug with this code mudlets error output:
@@ -3743,11 +3737,11 @@ function compass.drawKeepSquare()
 	
 end --end function keep square.
 
+--Add the status bar to the screen. On the bottom
+GUIframe.addWindow(compass_bar,"compass","topleft")
+
 compass.drawKeepSquare() --function at the bottom of this script.</script>
-					<eventHandlerList>
-						<string>sysWindowResizeEvent</string>
-					</eventHandlerList>
-				</Script>
+				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
 				<name>Settings bar</name>
