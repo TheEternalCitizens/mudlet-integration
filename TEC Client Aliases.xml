@@ -58,24 +58,28 @@ echo("\nWith some effort you are able focus your mind and clear your vision back
 			<regex>^help$</regex>
 			<Alias isActive="yes" isFolder="no">
 				<name>Help (.w+)</name>
-				<script>--The user tried to get help for something we have not created
---a help for. So we will search the wiki site for them.
-echo("\nTry as you may you can not remember. Would you like to search the great beyond for\n")
+				<script>if matches[2] == "client" then
 
---Turns just the background of the word(s) blue "&lt;color:color&gt;"
---For font than background colors
---command is the global for what is in command line.
---string.sub pulls text from a string. In this case what starts AT
---Line 6 than after.
-cechoLink("&lt;:blue&gt;"..string.sub(command, 6), 
-
---if clicked, opens a link to
-[[openUrl("http://eternal-city.wikidot.com/search:site/q/"..string.sub(command, 6))]], 
-
---Tool tip that appears when moused over.
---True if I recall is needed for a bug fix.
-"Search the wiki for: "..string.sub(command, 6), true)
-echo("\n\n")</script>
+else
+  --The user tried to get help for something we have not created
+  --a help for. So we will search the wiki site for them.
+  echo("\nTry as you may you can not remember. Would you like to search the great beyond for\n")
+  
+  --Turns just the background of the word(s) blue "&lt;color:color&gt;"
+  --For font than background colors
+  --command is the global for what is in command line.
+  --string.sub pulls text from a string. In this case what starts AT
+  --Line 6 than after.
+  cechoLink("&lt;:blue&gt;"..string.sub(command, 6), 
+  
+  --if clicked, opens a link to
+  [[openUrl("http://eternal-city.wikidot.com/search:site/q/"..string.sub(command, 6))]], 
+  
+  --Tool tip that appears when moused over.
+  --True if I recall is needed for a bug fix.
+  "Search the wiki for: "..string.sub(command, 6), true)
+  echo("\n\n")
+--end if matches[2] == "client" else</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^help (.*)</regex>
@@ -162,6 +166,13 @@ clearRoomCharacterWindow()
 				<packageName></packageName>
 				<regex>^display clear characters$</regex>
 			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display refresh settings</name>
+				<script>tecRefreshSettingsWindow() --reloads the settings window.</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display refresh settings$</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>tecclient</name>
@@ -214,6 +225,13 @@ tecClientReset(true)</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^tecclient reset$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient font size</name>
+				<script>tecClientResetAll() --resets all client settings</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient reset all$</regex>
 			</Alias>
 			<AliasGroup isActive="yes" isFolder="yes">
 				<name>font</name>
@@ -355,6 +373,13 @@ tecColorTest()</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^debug test colors$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>debug report issue</name>
+				<script>tecReportIssues() --help user report issues.</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^debug report issue$</regex>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
