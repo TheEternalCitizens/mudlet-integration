@@ -4290,7 +4290,7 @@ end --end function guiChange
 --whenever event sysWindowReizeEvent occurs run setMainWindowAutowrap.
 --In otherwords when any window geyser or main is CHANGED, run setMainWindowAutoWrap.
 --That is NOT just resizing.
-registerAnonymousEventHandler("sysWindowResizeEvent", "guiChange()")</script>
+registerAnonymousEventHandler("sysWindowResizeEvent", "guiChange")</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
