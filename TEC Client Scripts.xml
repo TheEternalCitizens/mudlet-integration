@@ -3577,7 +3577,7 @@ tecComWindowResize() --resize com window
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
-				<name>Macro Bar</name>
+				<name>Macro Menu</name>
 				<packageName></packageName>
 				<script>--[[
 Tec uses a macro system that players can set within the game.
@@ -3595,7 +3595,166 @@ in a row or if you are attacking a person you receive a major debuff.
 The 5 is while training. You need to do 5 unique moves to get the most skill points.
 I like the 3 columns because it gives us big chunky buttons that will work well with touch
 screens.
-]]--</script>
+]]--
+
+--Create a global table or namespace
+--Creating a global table will make each of our variables unique. Our namespace will be called
+--macroMenu and everything we make from here on out will be stored within the macroMenu table.
+
+macroMenu = macroMenu or {}
+
+--Create the container
+--Containers are windows that can contain other windows. Actually, since all other Geyser windows
+--subclass container, every window can do that. But containers do not have any visible content by
+--themselves. Our tabbed "Macros" window will need a container. This will be the bottom layer.
+--Containers are invisible, so no need to set a stylesheet. At the end of the file, we will add this
+--container as a "window", which the "GUIframe" library to render for us.
+macroMenu.container = Geyser.Container:new({
+  name = "macroMenu",
+})
+
+--Create the parent label
+--The 'parent label' refers to the label on the bottom layer. The entire macro menu will be created 
+--within this label.
+macroMenu.back = Geyser.Label:new({
+  name = "macroMenu.back",
+  x = 0,
+  y = 0,
+  width = "100%",
+}, macroMenu.container)
+
+--Create a 3x5 grid
+--The macro menu is split into 15 sections, one for each macro. This 3x5 grid is created by 5 HBoxes
+--that sit within a single VBox (or vice versa, it doesn't matter). So first off, we create the VBox.
+--It will be the same size as its parent, macroMenu.back.
+
+macroMenu.box = Geyser.VBox:new({
+  name = "macroMenu.box",
+  x = 0,
+  y = 0,
+  width = "100%",
+}, macroMenu.back)
+
+--Next, we create our 5 HBoxes. We don't need to specify position or size because these are placed
+--within macroMenu.box, a VBox.
+macroMenu.row1 = Geyser.HBox:new({
+  name = "macroMenu.row1",
+}, macroMenu.box)
+macroMenu.row2 = Geyser.HBox:new({
+  name = "macroMenu.row2",
+},macroMenu.box)
+macroMenu.row3 = Geyser.HBox:new({
+  name = "macroMenu.row3",
+}, macroMenu.box)
+macroMenu.row4 = Geyser.HBox:new({
+  name = "macroMenu.row4",
+}, macroMenu.box)
+macroMenu.row5 = Geyser.HBox:new({
+  name = "macroMenu.row5",
+}, macroMenu.box)
+
+--Finally, we add our 15 labels. Take note that they are split up into five groups of three. Each group
+--is placed into a different "macroMenu.row" number.
+local mappings = {
+  {
+    name = "fe1", --name of label that will be created. Will be passed to setClickCallBack function
+    label = "I", --What will be on the label
+    row = macroMenu.row1, --the geyser box we want this label to go in
+  },
+  {
+    name = "fe2",
+    label = "II",
+    row = macroMenu.row1,
+  },
+  {
+    name = "fe3",
+    label = "III",
+    row = macroMenu.row1,
+  },
+  {
+    name = "fe4",
+    label = "IV",
+    row = macroMenu.row2,
+  },
+  {
+    name = "fe5",
+    label = "V",
+    row = macroMenu.row2,
+  },
+  {
+    name = "fe6",
+    label = "VI",
+    row = macroMenu.row2,
+  },
+  {
+    name = "fe7",
+    label = "VII",
+    row = macroMenu.row3,
+  },
+  {
+    name = "fe8",
+    label = "VIII",
+    row = macroMenu.row3,
+  },
+  {
+    name = "fe9",
+    label = "IX",
+    row = macroMenu.row3,
+  },
+  {
+    name = "fe10",
+    label = "X",
+    row = macroMenu.row4,
+  },
+  {
+    name = "fe11",
+    label = "XI",
+    row = macroMenu.row4,
+  },
+  {
+    name = "fe12",
+    label = "XII",
+    row = macroMenu.row4,
+  },
+  {
+    name = "fe13",
+    label = "XIII",
+    row = macroMenu.row5,
+  },
+  {
+    name = "fe14",
+    label = "XIV",
+    row = macroMenu.row5,
+  },
+  {
+    name = "fe15",
+    label = "XV",
+    row = macroMenu.row5,
+  },
+}
+
+--add onto standard label. We want a small margin for this label.								
+macroLabelStyle = labelsStyle.."margin: 1px\n";
+
+for _, mapping in pairs(mappings) do --loop trough mappings table using data within
+  macroMenu[mapping.name] = Geyser.Label:new({
+    name = "macroMenu." .. mapping.name, --name label fe# so it is easy to pass
+	  message = "&lt;center&gt;" .. mapping.label .. "&lt;/center&gt;", --puts roman numerals on label
+  }, mapping.row) --parent is gettings passed via mapping table row reference
+  macroMenu[mapping.name]:setClickCallback("onMacroClick", mapping.name)
+  macroMenu[mapping.name]:setStyleSheet(macroLabelStyle) --create window layout
+end
+
+--Create a callback function
+--When the user clicks a macro button, this function will send the button name to the server. For
+--example, when the user clicks the first button, we will send "fe1" to the server.
+function onMacroClick(name)
+  send(name)
+end
+
+--Add the macro menu to the top left of the screen
+GUIframe.addWindow(macroMenu.container, "Macros", "bottomleft")
+</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
