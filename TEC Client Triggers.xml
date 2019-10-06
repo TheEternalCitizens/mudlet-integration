@@ -883,7 +883,7 @@ end --if line has a ac . character in it.
 --selectCurrentLine() --proper code for when hinsert is fixed.
 --replace("")
 --deselect()
-deletedLine()</script>
+deleteLine()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -910,6 +910,9 @@ deletedLine()</script>
 --^means start of line. Nothing after it means line with anything in it
 
 --hreplace Code provided by s/Mud/Game on mudletdiscord. THANK YOU s/Mud/Game!!!!
+
+--errors that appear in mudlet debug 
+--&lt;moveCursor: wrong argument type&gt;
 
 --Starting with most likely items moving to less likely.
 --Fewer processor cycles...
@@ -1155,9 +1158,13 @@ hecho("Speech", filteredLine.."\n")
 			<regexCodePropertyList />
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Login</name>
-				<script>--This trigger handles the handshake for the user.
---This WILL fail if the developers stop having a blank space
+				<script>--Triggers on game login prompt.
+--This trigger WILL fail if the developers stop having a blank space
 --after the login it is not [[login]] it is [[login ]]
+
+stopRoomCharacterCheck() --This stops the login timmer.
+
+--This trigger function does the client handshake for the user.
 send("SKOTOS Zealous 0.7.12.2") --sending the zealous handshake
 
 --The login control continues in TEC CLient Triggers - login - Secret Triger
