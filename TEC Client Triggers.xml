@@ -920,10 +920,10 @@ if "&lt;center&gt;" == string.match(filteredLine, "&lt;center&gt;") then
   cecho(myFormatter:format(filteredLine)) --echo out out ftext
 else --text that does not need to be centered.
  
-  --hreplace is in scripts under mudlet communicty functions.
-  --Though in short it uses hinserttext to push text with colors to a window...
-  hreplace(filteredLine)	
-	
+	selectCurrentLine() --select current line in main.
+	replace("") --Erase text from main. Otherwise variable line will apear on console.
+	hinsertText(filteredLine) --insert text into console. Replacing hex color codes with colored text.
+	deselect() --Don't forget your deselects!
 end --if &lt;center&gt; in line else hreplace.
 
 --displays unfiltered line to debug screen.

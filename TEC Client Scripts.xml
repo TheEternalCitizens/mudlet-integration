@@ -1172,45 +1172,6 @@ end</script>
 				</Script>
 			</ScriptGroup>
 			<Script isActive="yes" isFolder="no">
-				<name>hreplace</name>
-				<packageName></packageName>
-				<script>function hreplace(window, text)
-    if not text then text, window = window, nil end
-    window = window or "main"
-    local str, start, stop = getSelection(window)
-    if window ~= "main" then
-        moveCursor(window, start, getLineNumber(window))
-				selectCurrentLine()
-				replace(window, "")
-				hinsertText(window, text)
-				deselect()
-    else
-				selectCurrentLine()
-        replace("")
-				hinsertText(text)
-				deselect()
-    end
-end</script>
-				<eventHandlerList />
-			</Script>
-			<Script isActive="yes" isFolder="no">
-				<name>xReplace</name>
-				<packageName></packageName>
-				<script>function xreplace(type, window, text)
-    if not text then text, window = window, nil end
-    window = window or "main"
-    local str, start, stop = getSelection(window)
-    if window ~= "main" then
-        replace(window, "")
-    else
-        replace("")
-    end
-    moveCursor(window, start, getLineNumber(window))
-    xEcho(type, "insertText", window, text)
-end</script>
-				<eventHandlerList />
-			</Script>
-			<Script isActive="yes" isFolder="no">
 				<name>guiFramework</name>
 				<packageName></packageName>
 				<script>-- Jor'Mox's GUIframe Script
@@ -3467,6 +3428,27 @@ function tecOpenDirectory(tecTMPDir)
 			..tecTMPDir)
 	end --if os version
 end --tecOpenDirectory</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>techreplace</name>
+					<packageName></packageName>
+					<script>function techreplace(window, text)
+    if not text then text, window = window, nil end
+    window = window or "main"
+    local str, start, stop = getSelection(window)
+    if window ~= "main" then
+				selectCurrentLine(window)
+				replace(window, "")
+				hinsertText(window, text)
+				deselect()
+    else
+				selectCurrentLine()
+        replace("")
+				hinsertText(text)
+				deselect()
+    end
+end</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
