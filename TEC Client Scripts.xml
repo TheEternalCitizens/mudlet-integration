@@ -1179,12 +1179,17 @@ end</script>
     window = window or "main"
     local str, start, stop = getSelection(window)
     if window ~= "main" then
-        replace(window, "")
+        moveCursor(window, start, getLineNumber(window))
+				selectCurrentLine()
+				replace(window, "")
+				hinsertText(window, text)
+				deselect()
     else
+				selectCurrentLine()
         replace("")
+				hinsertText(text)
+				deselect()
     end
-    moveCursor(window, start, getLineNumber(window))
-    hinsertText(window, text)
 end</script>
 				<eventHandlerList />
 			</Script>

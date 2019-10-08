@@ -22,20 +22,10 @@
 				<script>--unfortunately I have no idea what SKOOT 9 lines are for.
 --My GUESS is they are poorly maintaned room numbers?
 --SKOOT 9 I hate you! Damn ninja number!
-
---if debug mode is on display unfiltered line to it.
-if getTECDebugMode() then
-	debugToDisplay("Unfiltered line: "..line)
-end --if Debug Mode is on
-
-
 --lpeg.P("TestString")
 
---Delete main's line
---selectCurrentLine() --proper code for when hinsert is fixed.
---replace("")
---deselect()
-deleteLine()</script>
+deleteLine() --remove line from main console. line variable remains unchanged.
+</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -158,16 +148,7 @@ end --end gmatch room data search loop
 --We want the map zoon level, but not 100 times...
 if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
 
---if debug mode is on display unfiltered line to it.
-if getTECDebugMode() then
-	debugToDisplay("Unfiltered line: "..line)
-end --if Debug Mode is on
-
---Delete main's line
---selectCurrentLine() --proper code for when hinsert is fixed.
---replace("")
---deselect()
-deleteLine()
+deleteLine() --remove line from main console. line variable remains unchanged.
 
 --[[
 in the for loop the string pattern: "(-?%d+),(-?%d+),(%d+),(#%x+),%d+[.%d*]?,?"
@@ -286,16 +267,8 @@ tecMap_back:lower() --lower the background behind the exits.
 --We want the map zoon level, but not 100 times...
 if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
 
---if debug mode is on display unfiltered line to it.
-if getTECDebugMode() then
-	debugToDisplay("Unfiltered line: "..line)
-end --if Debug Mode is on
-
---Delete main's line
---selectCurrentLine() --proper code for when hinsert is fixed.
---replace("")
---deselect()
-deleteLine()</script>
+deleteLine() --remove line from main console. line variable remains unchanged.
+</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -410,16 +383,7 @@ end
 --	compass.unlit("d")
 --end
 
---if debug mode is on display unfiltered line to it.
-if getTECDebugMode() then
-	debugToDisplay("Unfiltered line: "..line)
-end --if Debug Mode is on
-
---Delete main's line
---selectCurrentLine() --proper code for when hinsert is fixed.
---replace("")
---deselect()
-deleteLine()</script>
+deleteLine() --remove line from main console. line variable remains unchanged.</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -479,16 +443,7 @@ deleteLine()</script>
 	--echo("\nYour current health is: ")
 	--echo(health)
 
---if debug mode is on display unfiltered line to it.
-if getTECDebugMode() then
-	debugToDisplay("Unfiltered line: "..line)
-end --if Debug Mode is on
-
---Delete main's line
---selectCurrentLine() --proper code for when hinsert is fixed.
---replace("")
---deselect()
-deleteLine()</script>
+deleteLine() --remove line from main console. line variable remains unchanged.</script>
 					<triggerType>0</triggerType>
 					<conditonLineDelta>0</conditonLineDelta>
 					<mStayOpen>0</mStayOpen>
@@ -518,16 +473,7 @@ deleteLine()</script>
 	--echo("\nYour current fatigue is: ")
 	--echo(fatigue)
 	
---if debug mode is on display unfiltered line to it.
-if getTECDebugMode() then
-	debugToDisplay("Unfiltered line: "..line)
-end --if Debug Mode is on
-	
---Delete main's line
---selectCurrentLine() --proper code for when hinsert is fixed.
---replace("")
---deselect()
-deleteLine()</script>
+deleteLine() --remove line from main console. line variable remains unchanged.</script>
 					<triggerType>0</triggerType>
 					<conditonLineDelta>0</conditonLineDelta>
 					<mStayOpen>0</mStayOpen>
@@ -557,16 +503,7 @@ deleteLine()</script>
 	--echo("\nYour current encumbrance rate is: ")
 	--echo(encumbrance)
 	
---if debug mode is on display unfiltered line to it.
-if getTECDebugMode() then
-	debugToDisplay("Unfiltered line: "..line)
-end --if Debug Mode is on
-	
---Delete main's line
---selectCurrentLine() --proper code for when hinsert is fixed.
---replace("")
---deselect()
-deleteLine()</script>
+deleteLine() --remove line from main console. line variable remains unchanged.</script>
 					<triggerType>0</triggerType>
 					<conditonLineDelta>0</conditonLineDelta>
 					<mStayOpen>0</mStayOpen>
@@ -596,16 +533,7 @@ deleteLine()</script>
 	--echo("\nYour current hunger rate is: ")
 	--echo(hunger)
 	
---if debug mode is on display unfiltered line to it.
-if getTECDebugMode() then
-	debugToDisplay("Unfiltered line: "..line)
-end --if Debug Mode is on
-	
---Delete main's line
---selectCurrentLine() --proper code for when hinsert is fixed.
---replace("")
---deselect()
-deleteLine()</script>
+deleteLine() --remove line from main console. line variable remains unchanged.</script>
 					<triggerType>0</triggerType>
 					<conditonLineDelta>0</conditonLineDelta>
 					<mStayOpen>0</mStayOpen>
@@ -630,12 +558,14 @@ deleteLine()</script>
 --It is for all URL calls.
 --example: SKOOT 5 http://tec.skotos.net:1180/bin/help?$help_commands_command
 
---debug does not trigger.
-
+-- The Eternal-City needs your support! Please vote! www.topmudsites.com/vote-scarlatc.html
 --opens the voting window at login
-if(line == "SKOOT 5 http://www.topmudsites.com/vote-scarlatc.html ") then
-	echo("To help the world know this game exists you could:\n")
+local tecVoteTopMudSites = [[topmudsites]]
+if tecVoteTopMudSites == string.match(line, tecVoteTopMudSites) then
+	deleteLine() --remove line text from main console. line variable remains unchanged.
 	
+	echo("To help the world know this game exists you could:\n")
+
 	cechoLink("&lt;:blue&gt;Vote for TEC on topmudsites.com", 
 	[[openUrl("http://www.topmudsites.com/vote-scarlatc.html")]], 
 	"Vote for TEC!", true)
@@ -645,18 +575,9 @@ if(line == "SKOOT 5 http://www.topmudsites.com/vote-scarlatc.html ") then
 	[[openUrl("https://www.facebook.com/SkotosTheEternalCity/")]], 
 	"Vote for TEC!", true)
 	echo("\n")
-end --if vote skoot appears. 
-
---if debug mode is on display unfiltered line to it.
-if getTECDebugMode() then
-	debugToDisplay("Unfiltered line: "..line)
-end --if Debug Mode is on
-
---Delete main's line
---selectCurrentLine() --proper code for when hinsert is fixed.
---replace("")
---deselect()
-deleteLine()</script>
+else --if it is not a vote prompt
+	deleteLine() --remove line from main console. line variable remains unchanged.
+end --if vote skoot appears else just delete</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -879,11 +800,8 @@ end --if line has a ac . character in it.
 				<name>delete lines</name>
 				<script>--Lines that are not needed. Because we do not use html tags as of yet.
 --&lt;pre&gt; would never have a function for us reguardless.
---Delete main's line
---selectCurrentLine() --proper code for when hinsert is fixed.
---replace("")
---deselect()
-deleteLine()</script>
+
+deleteLine() --remove line from main console. line variable remains unchanged.</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -911,8 +829,14 @@ deleteLine()</script>
 
 --hreplace Code provided by s/Mud/Game on mudletdiscord. THANK YOU s/Mud/Game!!!!
 
---errors that appear in mudlet debug 
---&lt;moveCursor: wrong argument type&gt;
+selectCurrentLine() --select current line in main console.
+--pull the text from the current line in main into filteredLine variable.
+--So what would appear in the main window is now in filteredLine
+local filteredLine, tecLineStart, tecLinelength = getSelection()
+deselect() --unselect line in main.
+
+if not filteredLine then filteredLine = "" end --if nothing was in main make filteredLine empty.
+--Without this you will receive errors that filteredLine is nil.
 
 --Starting with most likely items moving to less likely.
 --Fewer processor cycles...
@@ -920,7 +844,7 @@ deleteLine()</script>
 --Make filtered line a copy of the main line, removing all &lt;/font&gt; declarations
 --string.gsub referece: https://wiki.mudlet.org/w/Manual:String_Functions
 --string.gsub('The whole string to modify', 'what to replace in the string', 'what to replace it with')
-filteredLine = string.gsub(line, [[&lt;/font&gt;]], "")
+filteredLine = string.gsub(filteredLine, [[&lt;/font&gt;]], "")
 
 --string.gsub referece: https://wiki.mudlet.org/w/Manual:String_Functions
 --string.gsub('The whole string to modify', 'what to replace in the string', 'what to replace it with')
@@ -978,17 +902,31 @@ if "#%x+" ~= string.match(filteredLine, "#%x+") then
 	filteredLine = tecSettings.tecTextColor..filteredLine --Add current text color to the start of the line
 end
 
---center filter
---center lines with &lt;center&gt;
---center with ftext
+--if text needs to be centered.
+if "&lt;center&gt;" == string.match(filteredLine, "&lt;center&gt;") then
+	
+	--remove hex color codes @ &lt;center&gt; from filteredLine
+	filteredLine = string.gsub(filteredLine, "#%x+", "")
+	filteredLine = string.gsub(filteredLine, "&lt;center&gt;", "")
+	filteredLine = string.gsub(filteredLine, "&lt;/center&gt;", "")
+	
+  myFormatter = demonnic.TextFormatter:new( { --use ftext function to center text.
+    width = (getColumnCount() - 1), --width of main console -1 is so autowrap no trigger
+    textColor = "&lt;orange&gt;" --in TEC centered text is already orange.
+  })
+	selectCurrentLine() --select current line in main.
+	replace("") --Erase text from main. Otherwise variable line will apear on console.
+	deselect() --Don't forget your deselects!
+  cecho(myFormatter:format(filteredLine)) --echo out out ftext
+else --text that does not need to be centered.
+ 
+  --hreplace is in scripts under mudlet communicty functions.
+  --Though in short it uses hinserttext to push text with colors to a window...
+  hreplace(filteredLine)	
+	
+end --if &lt;center&gt; in line else hreplace.
 
-selectCurrentLine() --Selects main. 
---hreplace is in scripts under mudlet communicty functions.
---Though in short it uses hinserttext to push text with colors to a window...
-hreplace(filteredLine)		
-deselect()
-
---displays unfiltered line to screen.
+--displays unfiltered line to debug screen.
 --display with setTECDebugMode(true)
 --or command line: debug on
 debugToDisplay("Unfiltered line: "..line)
