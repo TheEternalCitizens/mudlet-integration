@@ -1172,40 +1172,6 @@ end</script>
 				</Script>
 			</ScriptGroup>
 			<Script isActive="yes" isFolder="no">
-				<name>hreplace</name>
-				<packageName></packageName>
-				<script>function hreplace(window, text)
-    if not text then text, window = window, nil end
-    window = window or "main"
-    local str, start, stop = getSelection(window)
-    if window ~= "main" then
-        replace(window, "")
-    else
-        replace("")
-    end
-    moveCursor(window, start, getLineNumber(window))
-    hinsertText(window, text)
-end</script>
-				<eventHandlerList />
-			</Script>
-			<Script isActive="yes" isFolder="no">
-				<name>xReplace</name>
-				<packageName></packageName>
-				<script>function xreplace(type, window, text)
-    if not text then text, window = window, nil end
-    window = window or "main"
-    local str, start, stop = getSelection(window)
-    if window ~= "main" then
-        replace(window, "")
-    else
-        replace("")
-    end
-    moveCursor(window, start, getLineNumber(window))
-    xEcho(type, "insertText", window, text)
-end</script>
-				<eventHandlerList />
-			</Script>
-			<Script isActive="yes" isFolder="no">
 				<name>guiFramework</name>
 				<packageName></packageName>
 				<script>-- Jor'Mox's GUIframe Script
@@ -2888,43 +2854,6 @@ end --function tecClientDisplayLoad</script>
 				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>Events</name>
-				<packageName></packageName>
-				<script>-------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external scripts --
--------------------------------------------------
-</script>
-				<eventHandlerList />
-				<Script isActive="yes" isFolder="no">
-					<name>guiChange()</name>
-					<packageName></packageName>
-					<script>--calls events that are needed when a window change occurs.
---Do NOT put any function that changes the GUI here!!!
-
---I am suspicious that calling multiple functions in one event is a no no
---I did this though because creating multiple AnonymousEvents caused issues.
---If I Recall the last event would not occur.
-
-function guiChange()
-	setMainWindowAutoWrap() --adjusts word wrap for user.
-	if getTECDisplayDebugMode() then geyserDebug() end --if displaydebug is on
-	compass.drawKeepSquare()
-	tecMapdrawKeepSquare()
-	tecComWindowResize() --resize commmunications window
-	tecCRWindowResize() --resize the Room Character window now
-	tecSettingsWindowResize() --resize the Room Character window now
-end --end function guiChange
-
---whenever event sysWindowReizeEvent occurs run setMainWindowAutowrap.
---In otherwords when any window geyser or main is CHANGED, run setMainWindowAutoWrap.
---That is NOT just resizing.
-registerAnonymousEventHandler("sysWindowResizeEvent", "guiChange()")</script>
-					<eventHandlerList />
-				</Script>
-			</ScriptGroup>
-			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>help</name>
 				<packageName></packageName>
 				<script>-------------------------------------------------
@@ -3501,6 +3430,27 @@ function tecOpenDirectory(tecTMPDir)
 end --tecOpenDirectory</script>
 					<eventHandlerList />
 				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>techreplace</name>
+					<packageName></packageName>
+					<script>function techreplace(window, text)
+    if not text then text, window = window, nil end
+    window = window or "main"
+    local str, start, stop = getSelection(window)
+    if window ~= "main" then
+				selectCurrentLine(window)
+				replace(window, "")
+				hinsertText(window, text)
+				deselect()
+    else
+				selectCurrentLine()
+        replace("")
+				hinsertText(text)
+				deselect()
+    end
+end</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
@@ -3622,18 +3572,12 @@ encumbrancebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;le
 				<name>compasbar</name>
 				<packageName></packageName>
 				<script>compass_bar = Geyser.Container:new({
-  name = "Compass",    -- give it a unique name here
+  name = "compass",    -- give it a unique name here
   x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
   width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
 })
 
---Add the status bar to the screen. On the bottom
-GUIframe.addWindow(compass_bar,"Compass","topleft")</script>
-				<eventHandlerList />
-				<Script isActive="yes" isFolder="no">
-					<name>Compass</name>
-					<packageName></packageName>
-					<script>--Reference https://wiki.mudlet.org/w/Manual:Geyser#Create_a_Clickable_Compass
+--Reference https://wiki.mudlet.org/w/Manual:Geyser#Create_a_Clickable_Compass
 
 --[[
 found bug with this code mudlets error output:
@@ -3780,11 +3724,11 @@ function compass.drawKeepSquare()
 	
 end --end function keep square.
 
+--Add the status bar to the screen. On the bottom
+GUIframe.addWindow(compass_bar,"compass","topleft")
+
 compass.drawKeepSquare() --function at the bottom of this script.</script>
-					<eventHandlerList>
-						<string>sysWindowResizeEvent</string>
-					</eventHandlerList>
-				</Script>
+				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
 				<name>Settings bar</name>
@@ -3855,7 +3799,7 @@ tecSettingsWindowResize() --resize the Room Character window now</script>
 				<name>tec map</name>
 				<packageName></packageName>
 				<script>--creates tec's 2d getAllMapUserData
---future ideas. create a zoom scroll with --tecMap.back:addScrollbars(tecMap, "RV")
+--future ideas. create a zoom scroll with --tecMap_back:addScrollbars(tecMap, "RV")
 --will probably need to complete that function for mudlet...
 
 --Don't forget. Creating room and exit labels ahead of time reduces the time it takes to draw
@@ -3871,8 +3815,8 @@ tecMap = Geyser.Container:new({
 GUIframe.addWindow(tecMap,"TEC Map","bottomright")
 
 --Creating the background for the 2d tec map.
-tecMap.back = Geyser.Label:new({
-  name = "tecMap.back",
+tecMap_back = Geyser.Label:new({
+  name = "tecMap_back",
   x = "0%", --%horizontally position in parent
   y = "0%", --%vertical position in parent
   width = "100%", --% of parent
@@ -3880,7 +3824,7 @@ tecMap.back = Geyser.Label:new({
 },tecMap) --The parent of this label.
 
 --set the appearance of what is behind the map
-tecMap.back:setStyleSheet([[
+tecMap_back:setStyleSheet([[
   qproperty-alignment: 'AlignLeft | AlignTop';
 	background-color: rgba(25, 50, 150);
 	font-size: 32px;
@@ -3891,8 +3835,8 @@ mapExit = {} --Table to hold labels we will draw the exits with.
 --Creating empty rooms for our map system.
 for i = 1, 150 do
 	--Create empty room and exit labels. Hide them so no junk is on screen.
-  mapRoom[i] = Geyser.Label:new({name = "mapRoom"..tostring(i),},tecMap.back) 
-  mapExit[i] = Geyser.Label:new({name = "mapExit"..tostring(i),},tecMap.back) 
+  mapRoom[i] = Geyser.Label:new({name = "mapRoom"..tostring(i),},tecMap_back) 
+  mapExit[i] = Geyser.Label:new({name = "mapExit"..tostring(i),},tecMap_back) 
   mapRoom[i]:hide() --Hide the tab so they don't layer
 	mapExit[i]:hide() --Hide the tab so they don't layer
 end --end loop create tabs and consoles
@@ -3902,16 +3846,16 @@ function tecMapdrawKeepSquare()
 	--if the width of the parent label is less than the height.
 	--Resize the background label itself keeping the width and height the equal.
 	if tecMap:get_width() &lt; tecMap:get_height() then
-  	tecMap.back:resize(tecMap:get_width(), tecMap:get_width())
+  	tecMap_back:resize(tecMap:get_width(), tecMap:get_width())
 	end --en if width is less than height.
 	
 	--if the height of the parent label is less than the width.
 	--Resize the background label itself keeping the width and height equal.
 	if tecMap:get_height() &lt; tecMap:get_width() then
-  	tecMap.back:resize(tecMap:get_height(), tecMap.height)
+  	tecMap_back:resize(tecMap:get_height(), tecMap:get_height())
 	end --en if width is less than height.
 	
-	echo("tecMap.back","Exits may be slightly\noff until you walk.")
+	echo("tecMap_back","Exits may be slightly\noff until you walk.")
 	
 end --end function keep square.
 
@@ -4007,7 +3951,7 @@ tecCRWindowResize() --resize the Room Character window now</script>
 --ideas for future
 --When click a tab is stays dark to show that is the active tab.
 --fix the minor resizing issue with the back label not having a right margin.
---take tabs out of that damn menu table
+--take tabs out of that damn tecComWindows table
 --create the option for a combat bar. Only shows combat text...
 
 --Origional menu from the tabs tutorial.
@@ -4015,56 +3959,56 @@ tecCRWindowResize() --resize the Room Character window now</script>
 --Feelfree to take the tabs table out of the menu table.
 --For me it is a logic not I just didn't feel like unting.
 --menu has to be global.
-menu = menu or {tabs = {"Communication","Thoughts","Speech"},}
-menu.current = menu.current or menu.tabs[1]
+tecComWindows = tecComWindows or {tabs = {"Communication","Thoughts","Speech"},}
+tecComWindows.current = tecComWindows.current or tecComWindows.tabs[1]
 
 --A container for everything to be in.
 --No size or position because that is handled
 --In GUIframe
-menu.container = Geyser.Container:new({
-  name = "menu.container",
+tecComWindows.container = Geyser.Container:new({
+  name = "tecComWindows.container",
 })
 
 --Add the status bar to the screen. On the bottom
-GUIframe.addWindow(menu.container,"menu.container","top")
+GUIframe.addWindow(tecComWindows.container,"tecComWindows.container","top")
 
 --box that will hold the tabs
-menu.header = Geyser.HBox:new({
-  name = "menu.header",
+tecComWindows.header = Geyser.HBox:new({
+  name = "tecComWindows.header",
   x = 0, --horizontal
 	y = 0, --vertical position 
   width = "100%",
   height = tabsHeight, --for now using % rather than pixel math
-},menu.container)
+},tecComWindows.container)
 
 --box that will store the miniconsoles
-menu.footer = Geyser.Label:new({
-  name = "menu.footer",
+tecComWindows.footer = Geyser.Label:new({
+  name = "tecComWindows.footer",
   x = 0, --horizontal position
 	y = tabsHeight, --adjusted for tabs
   width = "100%",
 	height = tecSettings.comTextWindowHeight - 3
-},menu.container)
-menu.footer:setStyleSheet(labelsStyle) --set to default label style
+},tecComWindows.container)
+tecComWindows.footer:setStyleSheet(labelsStyle) --set to default label style
 
 --Create the tabs
-for k,v in pairs(menu.tabs) do
-  menu[v.."tab"] = Geyser.Label:new({
-    name = "menu."..v.."tab",
+for k,v in pairs(tecComWindows.tabs) do
+  tecComWindows[v.."tab"] = Geyser.Label:new({
+    name = "tecComWindows."..v.."tab",
 		x = 3, --horizontal position 
 		y = 0, --vertical position
 		width = "100%",
 		height = tabsHeight,
-  },menu.header)
+  },tecComWindows.header)
 	
-  menu[v.."tab"]:setStyleSheet(tabsStyle) --set style in themes
+  tecComWindows[v.."tab"]:setStyleSheet(tabsStyle) --set style in themes
 	
-	menu[v.."tab"]:echo(tabsFontStyle..v) --lable the tabs, set style in themes
+	tecComWindows[v.."tab"]:echo(tabsFontStyle..v) --lable the tabs, set style in themes
 
-	menu[v.."tab"]:setClickCallback("menu.click",v) --for charing tabs
+	tecComWindows[v.."tab"]:setClickCallback("tecComWindows.click",v) --for charing tabs
 
 	--These are the miniconsoles that will hold the text
-  menu[v] = Geyser.MiniConsole:new({ --menu v will be a tab name.
+  tecComWindows[v] = Geyser.MiniConsole:new({ --tecComWindows v will be a tab name.
     name = v, --Issues experienced if I attempt to name them v.."Console"
   	x = 3, --%horizontally position in parent
   	y = 0, --%vertical position in parent
@@ -4074,40 +4018,44 @@ for k,v in pairs(menu.tabs) do
 		fontSize = getTECFont(), --in variables
 		font = getFont(), --get font type from main
 		scrollBar = true,
-  },menu.footer) --attach to footer show they show below tabs
-	menu[v]:setColor(getBgColor()) --set miniconsoles to main consol BG color 
-  menu[v]:hide() --Hide the tab so they don't layer
+  },tecComWindows.footer) --attach to footer show they show below tabs
+	tecComWindows[v]:setColor(getBgColor()) --set miniconsoles to main consol BG color 
+  tecComWindows[v]:hide() --Hide the tab so they don't layer
 end --end loop create tabs and consoles
 
-function menu.click(tab) --Choose what happens when a tab is clicked.
-  menu[menu.current]:hide() --Hide the current tab
-  menu.current = tab --Make the clicked tab the current one.
-  menu[menu.current]:show() --Show the current tab.
-end --end menu.click(tab) function
+function tecComWindows.click(tab) --Choose what happens when a tab is clicked.
+  tecComWindows[tecComWindows.current]:hide() --Hide the current tab
+  tecComWindows.current = tab --Make the clicked tab the current one.
+  tecComWindows[tecComWindows.current]:show() --Show the current tab.
+end --end tecComWindows.click(tab) function
 
---A menu has to be selected otherwise on startup it will just show.
---The label behind the menu, becuase they are hidden directly after creation.
-menu[menu.current]:show()
+--A tecComWindows has to be selected otherwise on startup it will just show.
+--The label behind the tecComWindows, becuase they are hidden directly after creation.
+tecComWindows[tecComWindows.current]:show()
 
 function tecComWindowResize()
 	
-	--subtract GUIframe.defaults.resizeHeight from menu.footer.height 
-	local tecResizedComHeight = menu.container:get_height() - GUIframe.defaults.resizeHeight 
-	menu.footer:resize("100%", tecResizedComHeight) --resize the footer
-	--reflect changes in tecSettings so there is a chance to save the size.
-	tecSettings.comTextWindowHeight = tecResizedComHeight
+	--subtract GUIframe.defaults.resizeHeight from tecComWindows.footer.height 
+	local tecResizedFooterHeight = tecComWindows.container:get_height() - GUIframe.defaults.resizeHeight 
+	local tecResizedFooterWidth = tecComWindows.container:get_width() - 2 --6 the width 2 borders
+	tecComWindows.footer:resize(tecResizedFooterWidth, tecResizedFooterHeight) --resize the footer
+	tecComWindows.footer:move(1,(tabsHeight + 1))
 	
-	--resize comm windows according to header width. Footer doesn't like being used for this...
-	local tecResiedComWidth = menu.header:get_width() - 8
+	--reflect changes in tecSettings so there is a chance to save the size.
+	tecSettings.comTextWindowHeight = tecResizedFooterHeight
+	
 	
 	--resize all of the miniconsoles so we have the 3px border on the bottom.
-	for k,v in pairs(menu.tabs) do menu[v]:resize(tecResiedComWidth, tecResizedComHeight - 3) end
+	for k,v in pairs(tecComWindows.tabs) do 
+  	tecComWindows[v]:move(1, 1)
+  	tecComWindows[v]:resize(tecResizedFooterWidth - 2, tecResizedFooterHeight - 2)
+	end --for tecComWindows.tabs
 	
 	if getTECDisplayDebugMode() then --if display debug mode is on
-		debugToDisplay("Communication Window, menu.footer Height: "..menu.footer:get_height()
-			.." menu.ctainer Height: "..menu.container:get_height()
-			.." New menu.footer Height: "..tecResizedComHeight
-			.." mini consoles width: "..tecResiedComWidth.."%"
+		debugToDisplay("Communication Window, tecComWindows.footer Height: "..tecComWindows.footer:get_height()
+			.." tecComWindows.ctainer Height: "..tecComWindows.container:get_height()
+			.." New tecComWindows.footer Height: "..tecResizedFooterHeight
+			.." mini consoles width: "..(tecResizedFooterWidth - 2).."%"
 			)--end debugToDisplay
 	end --end if display debug is enabled.
 
@@ -4295,7 +4243,45 @@ end
 
 --Add the macro menu to the top left of the screen
 GUIframe.addWindow(macroMenu.container, "Macros", "bottomleft")
+
+GUIframe.activate("Macros") --Make the macros bar the active bar on bottom left.</script>
+				<eventHandlerList />
+			</Script>
+		</ScriptGroup>
+		<ScriptGroup isActive="yes" isFolder="yes">
+			<name>Events</name>
+			<packageName></packageName>
+			<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external scripts --
+-------------------------------------------------
 </script>
+			<eventHandlerList />
+			<Script isActive="yes" isFolder="no">
+				<name>guiChange()</name>
+				<packageName></packageName>
+				<script>--calls events that are needed when a window change occurs.
+--Do NOT put any function that changes the GUI here!!!
+
+--I am suspicious that calling multiple functions in one event is a no no
+--I did this though because creating multiple AnonymousEvents caused issues.
+--If I Recall the last event would not occur.
+
+function guiChange()
+	setMainWindowAutoWrap() --adjusts word wrap for user.
+	if getTECDisplayDebugMode() then geyserDebug() end --if displaydebug is on
+	compass.drawKeepSquare()
+	tecMapdrawKeepSquare()
+	tecComWindowResize() --resize commmunications window
+	tecCRWindowResize() --resize the Room Character window now
+	tecSettingsWindowResize() --resize the Room Character window now
+end --end function guiChange
+
+--whenever event sysWindowReizeEvent occurs run setMainWindowAutowrap.
+--In otherwords when any window geyser or main is CHANGED, run setMainWindowAutoWrap.
+--That is NOT just resizing.
+registerAnonymousEventHandler("sysWindowResizeEvent", "guiChange")</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
