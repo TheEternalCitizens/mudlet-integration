@@ -831,8 +831,8 @@ deleteLine() --remove line from main console. line variable remains unchanged.</
 
 selectCurrentLine() --select current line in main console.
 --pull the text from the current line in main into filteredLine variable.
---So what would appear in the main window is now in filteredLine
-local filteredLine, tecLineStart, tecLinelength = getSelection()
+--What would appear in the main window's newest line is now in filteredLine
+filteredLine , _ , _ = getSelection() --_ prevents the variable from being retained
 deselect() --unselect line in main.
 
 if not filteredLine then filteredLine = "" end --if nothing was in main make filteredLine empty.
