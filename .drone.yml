@@ -15,6 +15,10 @@ steps:
     - ls src/resources
 - name: build
   image: demonnic/muddler
+- name: sanity-check
+  image: busybox
+  commands:
+    - ls build
 - name: publish
   image: plugins/github-release
   settings:
