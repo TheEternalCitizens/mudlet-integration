@@ -297,91 +297,91 @@ deleteLine() --remove line from main console. line variable remains unchanged.
 --print(string.sub(line, 11, 14)) --Test the count numbers
 --north
 if  string.sub(line, 11, 14) == "show" then
-	compass.lit("n")
+	tecCompass.lit("n")
 else
-	compass.unlit("n")
+	tecCompass.unlit("n")
 end
 
 --print("\nNorth East is: ") --Test the count numbers
 --print(string.sub(line, 19, 22)) --Test the count numbers
 --ne
 if  string.sub(line, 19, 22) == "show" then
-	compass.lit("ne")
+	tecCompass.lit("ne")
 else
-	compass.unlit("ne")
+	tecCompass.unlit("ne")
 end
 
 --print("\nEast is: ") --Test the count numbers
 --print(string.sub(line, 26, 29)) --Test the count numbers
 --e
 if  string.sub(line, 26, 29) == "show" then
-	compass.lit("e")
+	tecCompass.lit("e")
 else
-	compass.unlit("e") 
+	tecCompass.unlit("e") 
 end
 
 --print("\nSouth East is: ") --Test the count numbers
 --print(string.sub(line, 34, 37)) --Test the count numbers
 --se
 if  string.sub(line, 34, 37) == "show" then
-	compass.lit("se")
+	tecCompass.lit("se")
 else
-	compass.unlit("se")
+	tecCompass.unlit("se")
 end
 
 --print("\nSouth  is: ") --Test the count numbers
 --print(string.sub(line, 41, 44)) --Test the count numbers
 --s
 if  string.sub(line, 41, 44) == "show" then
-	compass.lit("s")
+	tecCompass.lit("s")
 else
-	compass.unlit("s")
+	tecCompass.unlit("s")
 end
 
 --print("\nSouth West  is: ") --Test the count numbers
 --print(string.sub(line, 49, 52)) --Test the count numbers
 --sw
 if  string.sub(line, 49, 52) == "show" then
-	compass.lit("sw")
+	tecCompass.lit("sw")
 else
-	compass.unlit("sw")
+	tecCompass.unlit("sw")
 end
 
 --print("\nWest  is: ") --Test the count numbers
 --print(string.sub(line, 56, 59)) --Test the count numbers
 --w
 if  string.sub(line, 56, 59) == "show" then
-	compass.lit("w")
+	tecCompass.lit("w")
 else
-	compass.unlit("w")
+	tecCompass.unlit("w")
 end
 
 --print("\nNorth West  is: ") --Test the count numbers
 --print(string.sub(line, 64, 67)) --Test the count numbers
 --nw
 if  string.sub(line, 64, 67) == "show" then
-	compass.lit("nw")
+	tecCompass.lit("nw")
 else
-	compass.unlit("nw")
+	tecCompass.unlit("nw")
 end
 
 --print("\nUp  is: ") --Test the count numbers
 --print(string.sub(line, 71, 74)) --Test the count numbers
 --up not supported YET
---if  string.sub(line, 71, 74) == "show" then
---	compass.lit("u")
---else
---	compass.unlit("u")
---end
+if  string.sub(line, 71, 74) == "show" then
+	tecCompass.lit("up")
+else
+	tecCompass.unlit("up")
+end
 
 --print("\nDown  is: ") --Test the count numbers
 --print(string.sub(line, 78, 81)) --Test the count numbers
 --down not supported YET
---if  string.sub(line, 78, 81) == "show" then
---	compass.lit("d")
---else
---	compass.unlit("d")
---end
+if  string.sub(line, 78, 81) == "show" then
+	tecCompass.lit("down")
+else
+	tecCompass.unlit("down")
+end
 
 deleteLine() --remove line from main console. line variable remains unchanged.</script>
 				<triggerType>0</triggerType>
