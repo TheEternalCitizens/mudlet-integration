@@ -3571,121 +3571,110 @@ encumbrancebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;le
 			<Script isActive="yes" isFolder="no">
 				<name>compasbar</name>
 				<packageName></packageName>
-				<script>compass_bar = Geyser.Container:new({
-  name = "compass",    -- give it a unique name here
+				<script>--Reference https://wiki.mudlet.org/w/Manual:Geyser#Create_a_Clickable_Compass
+
+--create compass object
+--dirs directory
+tecCompass = tecCompass or {
+  dirs = {"nw","n","ne","w","up","down","e","sw","s","se"},
+} --end tecCompass object declaration
+
+--main container for tecCompass
+tecCompass.window = Geyser.Container:new({
+  name = "tecCompass",    -- give it a unique name here
   x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
   width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
 })
 
---Reference https://wiki.mudlet.org/w/Manual:Geyser#Create_a_Clickable_Compass
-
---[[
-found bug with this code mudlets error output:
-LUA: code compiled without errors. OK
-LUA: ERROR running script Compass (Compass)
-Error: attempt to call a nil value
-LUA: ERROR running script dispatchEventToFunctions (dispatchEventToFunctions)
-Error: [string "Script: tec map"]:55: attempt to index field 'back' (a nil value)
-
-LUA: ERROR running script Compass (Compass)
-Error: attempt to call a nil value
-LUA: ERROR running script dispatchEventToFunctions (dispatchEventToFunctions)
-Error: [string "return guiChange()(...)"]:1: attempt to call a nil value
-]]--
-
---max width max height
-local mw, mh = getMainWindowSize()
-
---create compass object
---dirs directory
---ratio is ratio of parent object.
---ratio is for resizing.
-compass = compass or {
-  dirs = {"nw","n","ne","w","center","e","sw","s","se"},
-  ratio = mw / mh
-} --end compass object declaration
-
---Creating the parent label for the compass
-compass.back = Geyser.Label:new({
-  name = "compass.back",
+--back label for tecCompass
+tecCompass.back = Geyser.Label:new({
+  name = "tecCompass.back",
   x = "0%", --%horizontally position in parent
   y = "0%", --%vertical position in parent
   width = "100%", --% of parent
   height = "100%", --% of parent
-},compass_bar) --The parent of this label. Main is main window.
+},tecCompass.window) --The parent of this label. Main is main window.
 
-compass.box = Geyser.HBox:new({
-    name = "compass.box",
+--Horizontal box
+tecCompass.hbox = Geyser.HBox:new({
+    name = "tecCompass.box",
     x = 0, --horizonal position in parent
     y = 0, --vertical position in parent
     width = "100%", --How wide box is, % of parent
     height = "100%", --How tall box is, % of parent
-  },compass.back) --parent of this Hbox
---draw the window after creation keeping it square.
+  },tecCompass.back) --parent of this Hbox
 
 --create 3 vertical rows
 --in parent object compas.box
-compass.row1 = Geyser.VBox:new({name = "compass.row1",},compass.box)
-compass.row2 = Geyser.VBox:new({name = "compass.row2",},compass.box)
-compass.row3 = Geyser.VBox:new({name = "compass.row3",},compass.box)
+tecCompass.row1 = Geyser.VBox:new({name = "tecCompass.row1",},tecCompass.hbox)
+tecCompass.row2 = Geyser.VBox:new({name = "tecCompass.row2",},tecCompass.hbox)
+tecCompass.row3 = Geyser.VBox:new({name = "tecCompass.row3",},tecCompass.hbox)
 
 --create labels to hold compas images
 --Each parent is the row that were 
 --created with VBox above.
 --row1 left row2 center row3 right
-compass.nw = Geyser.Label:new({
-  name = "compass.nw",
-},compass.row1)
+tecCompass.nw = Geyser.Label:new({
+  name = "tecCompass.nw",
+},tecCompass.row1)
 
-compass.w = Geyser.Label:new({
-  name = "compass.w",
-},compass.row1)
+tecCompass.w = Geyser.Label:new({
+  name = "tecCompass.w",
+},tecCompass.row1)
 
-compass.sw = Geyser.Label:new({
-  name = "compass.sw",
-},compass.row1)
+tecCompass.sw = Geyser.Label:new({
+  name = "tecCompass.sw",
+},tecCompass.row1)
 
-compass.n = Geyser.Label:new({
-  name = "compass.n",
-},compass.row2)
+tecCompass.n = Geyser.Label:new({
+  name = "tecCompass.n",
+},tecCompass.row2)
         
-compass.center = Geyser.Label:new({
-  name = "compass.center",
-},compass.row2)
+tecCompass.center = Geyser.VBox:new({
+  name = "tecCompass.center",
+},tecCompass.row2)
 
-compass.s = Geyser.Label:new({
-  name = "compass.s",
-},compass.row2)
+tecCompass.up = Geyser.Label:new({
+  name = "tecCompass.up",
+},tecCompass.center)
 
-compass.ne = Geyser.Label:new({
-  name = "compass.ne",
-},compass.row3)
+tecCompass.down = Geyser.Label:new({
+  name = "tecCompass.down",
+},tecCompass.center)
+
+tecCompass.s = Geyser.Label:new({
+  name = "tecCompass.s",
+},tecCompass.row2)
+
+tecCompass.ne = Geyser.Label:new({
+  name = "tecCompass.ne",
+},tecCompass.row3)
     
-compass.e = Geyser.Label:new({
-  name = "compass.e",
-},compass.row3)
+tecCompass.e = Geyser.Label:new({
+  name = "tecCompass.e",
+},tecCompass.row3)
   
-compass.se = Geyser.Label:new({
-  name = "compass.se",
-},compass.row3)
+tecCompass.se = Geyser.Label:new({
+  name = "tecCompass.se",
+},tecCompass.row3)
 --end of compas labels
 
 --when a label is clicked we want to
 --go in that direction
-function compass.click(name)
+function tecCompass.click(name)
   send(name)
 end
 
---Function that will put images to direction labels. name will be n nw so on in compass under triggers
-function compass.lit(name)
-  compass[name]:setStyleSheet([[
+--Function that will put images to direction labels. name will be n nw so on in tecCompass under triggers
+function tecCompass.lit(name)
+  tecCompass[name]:setStyleSheet([[
     border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"..[[/]].."compass"..[[/]]..name..[[hover.png");
     margin: 5px;
   ]])
 end
 --when the space should be unlit change it back to white.
-function compass.unlit(name)
-  compass[name]:setStyleSheet([[
+function tecCompass.unlit(name)
+  tecCompass[name]:setStyleSheet([[
     border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"..[[/]].."compass"..[[/]]..name..[[.png");
     margin: 5px;
   ]])
@@ -3693,41 +3682,46 @@ end
 
 --Each of the 9 labels need an image of an arrow.
 --Rather than setting each individually, we'll
---iterate over the compass.dirs table we made 
+--iterate over the tecCompass.dirs table we made 
 --awhile back and add the respective image to each.
---The names of images are a reflection of the compass.dirs 
+--The names of images are a reflection of the tecCompass.dirs 
 --table. This keeps it consistent and easy to refer to.
 --During the iteration, the callback, setLabelOnEnter and
 --setLabelOnLeave are also set for each label.
 
-for k,v in pairs(compass.dirs) do
-  compass[v]:setStyleSheet([[
-    border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"..[[/]].."compass"..[[/]]..v..[[.png");
-    margin: 5px;
-  ]])
-  compass[v]:setClickCallback("compass.click",v)
-end
+--loop through dirs in table tecCompass
+for k,v in pairs(tecCompass.dirs) do
+  tecCompass[v]:setStyleSheet([[
+    border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"
+		..[[/]].."compass"..[[/]]..v..[[.png");
+    margin: 5px;]]) --apply pictures to directions on compass
+  
+	--if tecCompass is clicked, go in that direction
+	tecCompass[v]:setClickCallback("tecCompass.click",v)  
+end --end loop through tecCompass.dirs
 
-function compass.drawKeepSquare()
+--keeps the tecCompass square as the windows are adjusted.
+function tecCompass.drawKeepSquare()
 
 	--if the width of the parent label is less than the height.
 	--Resize the background label itself keeping the width and height equal.
-	if compass_bar:get_width() &lt; compass_bar:get_height() then
-  	compass.back:resize(compass_bar:get_width(), compass_bar:get_width())
+	if tecCompass.window:get_width() &lt; tecCompass.window:get_height() then
+  	tecCompass.back:resize(tecCompass.window:get_width(), tecCompass.window:get_width())
 	end --en if width is less than height.
 	
 	--if the height of the parent label is less than the width.
 	--Resize the background label itself keeping the width and height equal.
-	if compass_bar:get_height() &lt; compass_bar:get_width() then
-  	compass.back:resize(compass_bar:get_height(), compass_bar.height)
+	if tecCompass.window:get_height() &lt; tecCompass.window:get_width() then
+  	tecCompass.back:resize(tecCompass.window:get_height(), tecCompass.window.height)
 	end --end if height is less than width
 	
 end --end function keep square.
 
 --Add the status bar to the screen. On the bottom
-GUIframe.addWindow(compass_bar,"compass","topleft")
+GUIframe.addWindow(tecCompass.window,"compass","topleft")
 
-compass.drawKeepSquare() --function at the bottom of this script.</script>
+--Now that we created the window. Make certain it is drawn correctly.
+tecCompass.drawKeepSquare() --function at the bottom of this script.</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
@@ -4061,8 +4055,7 @@ function tecComWindowResize()
 
 end --resizeKeepTabsStatis
 
-tecComWindowResize() --resize com window
-</script>
+tecComWindowResize() --resize com window</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
