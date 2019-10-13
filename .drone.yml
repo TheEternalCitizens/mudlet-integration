@@ -1,0 +1,27 @@
+---
+kind: pipeline
+type: docker
+name: default
+
+steps:
+  - name: prep
+    image: busybox
+    environment:
+      COMMIT: ${DRONE_COMMIT_SHA:0:8}
+    commands:
+      - echo { \"package\": \"mudlet-integration\", \"version\": \"$COMMIT\" } > mfile
+      - mkdir src/resources
+      - mv src/**.* src/resources
+      - ls
+      - ls src
+      - ls src/resources
+  - name: build
+    image: demonnic/muddler
+  - name: publish
+    image: plugins/github-release
+    settings:
+      api_key:
+        from_secret: github_token
+      files: build/mudlet-integration.mpackage
+    when:
+      event: tag
