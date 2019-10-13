@@ -6,10 +6,9 @@ name: default
 steps:
   - name: prep
     image: busybox
-    environment:
-      COMMIT: ${DRONE_COMMIT_SHA:0:8}
     commands:
-      - echo { \"package\": \"mudlet-integration\", \"version\": \"$COMMIT\" } > mfile
+      - echo { \"package\": \"mudlet-integration\", \"version\": \"${DRONE_COMMIT_SHA:0:8}\" } > mfile
+      - cat mfile
       - mkdir src/resources
       - mv src/**.* src/resources
       - ls
