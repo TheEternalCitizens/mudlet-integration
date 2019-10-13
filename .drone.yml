@@ -24,6 +24,6 @@ steps:
   settings:
     api_key:
       from_secret: github_token
-    files: build/mudlet-integration.mpackage
+    files: build/tec-mudlet-integration.mpackage
   when:
     event: tag
