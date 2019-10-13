@@ -6,7 +6,7 @@ steps:
   image: busybox
   commands:
     - |
-      echo { \"package\": \"mudlet-integration\", \"version\": \"${DRONE_COMMIT_SHA:0:8}\" } > mfile
+      echo { \"package\": \"tec-mudlet-integration\", \"version\": \"${DRONE_COMMIT_SHA:0:8}\" } > mfile
     - cat mfile
     - mkdir src/resources
     - mv src/**.* src/resources
