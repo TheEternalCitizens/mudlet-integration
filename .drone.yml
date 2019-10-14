@@ -1,0 +1,29 @@
+kind: pipeline
+name: default
+
+steps:
+- name: prep
+  image: busybox
+  commands:
+    - |
+      echo { \"package\": \"tec-mudlet-integration\", \"version\": \"${DRONE_COMMIT_SHA:0:8}\" } > mfile
+    - cat mfile
+    - mkdir src/resources
+    - mv src/**.* src/resources
+    - ls
+    - ls src
+    - ls src/resources
+- name: build
+  image: demonnic/muddler
+- name: sanity-check
+  image: busybox
+  commands:
+    - ls build
+- name: publish
+  image: plugins/github-release
+  settings:
+    api_key:
+      from_secret: github_token
+    files: build/tec-mudlet-integration.mpackage
+  when:
+    event: tag

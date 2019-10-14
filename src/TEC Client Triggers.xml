@@ -741,7 +741,9 @@ elseif line == "&lt;/pre&gt;" then --end of command found.
 
 	--disable room check for characters. This is the end of the check.
 	setTECRoomCheckActive(false)
+
   deleteLine() --Make is so line does not appear in main console.
+
 end --if line has a ac . character in it.
 
 --No else, becase if it isn't one of the items we are looking for above.
