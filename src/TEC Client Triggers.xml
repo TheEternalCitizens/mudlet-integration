@@ -741,11 +741,9 @@ elseif line == "&lt;/pre&gt;" then --end of command found.
 
 	--disable room check for characters. This is the end of the check.
 	setTECRoomCheckActive(false)
-  --Delete main's line
-  --selectCurrentLine() --proper code for when hinsert is fixed.
-  --replace("")
-  --deselect()
-  deleteLine()
+
+  deleteLine() --Make is so line does not appear in main console.
+
 end --if line has a ac . character in it.
 
 --No else, becase if it isn't one of the items we are looking for above.
@@ -910,9 +908,9 @@ if "&lt;center&gt;" == string.match(filteredLine, "&lt;center&gt;") then
 	filteredLine = string.gsub(filteredLine, "&lt;center&gt;", "")
 	filteredLine = string.gsub(filteredLine, "&lt;/center&gt;", "")
 	
-  myFormatter = demonnic.TextFormatter:new( { --use ftext function to center text.
+  local myFormatter = demonnic.TextFormatter:new( { --use ftext function to center text.
     width = (getColumnCount() - 1), --width of main console -1 is so autowrap no trigger
-    textColor = "&lt;orange&gt;" --in TEC centered text is already orange.
+    textColor = "&lt;gray&gt;"
   })
 	selectCurrentLine() --select current line in main.
 	replace("") --Erase text from main. Otherwise variable line will apear on console.
@@ -1100,10 +1098,12 @@ hecho("Speech", filteredLine.."\n")
 --This trigger WILL fail if the developers stop having a blank space
 --after the login it is not [[login]] it is [[login ]]
 
+deleteLine() --remove line from main console. line variable remains unchanged.
+
 stopRoomCharacterCheck() --This stops the login timmer.
 
 --This trigger function does the client handshake for the user.
-send("SKOTOS Zealous 0.7.12.2") --sending the zealous handshake
+send("SKOTOS Zealous 0.7.12.2", false) --sending the zealous handshake
 
 --The login control continues in TEC CLient Triggers - login - Secret Triger</script>
 				<triggerType>0</triggerType>
@@ -1128,11 +1128,21 @@ send("SKOTOS Zealous 0.7.12.2") --sending the zealous handshake
 				<script>--The system has passed us SECRET NONE after we have provided the handshake.
 --This only works because this is the only time the system passes us SECRET NONE.
 --Now we need to get the USER ID from the user.
---We could put anything in the command line. Like User: 
---"USER " just happens to be easy for now...
 
-echo("\nLeaving the word LOGIN in the command line, enter your username and password separated by a whitespace.\n")
-printCmdLine("LOGIN ")
+deleteLine() --remove line from main console. line variable remains unchanged.
+
+echo("If you do not have a user ID ")
+cechoLink("&lt;:blue&gt;Create one", 
+[[openUrl("https://www.skotos.net/user/create/start.php")]], 
+"Create user ID for TEC", true)
+echo("\n")
+echo("If you are having issues you can verify or credentials at: ")
+cechoLink("&lt;:blue&gt;TEC's Login Page", 
+[[openUrl("https://www.skotos.net/user/login.php")]], 
+"TEC Login page", true)
+echo("\n")
+echo("Please enter your username.\n")
+printCmdLine("Username: ") --insert into the command line.
 
 --Login control continues in Aliases - TECCommandLineReplacement - USERLogin</script>
 				<triggerType>0</triggerType>
@@ -1147,6 +1157,84 @@ printCmdLine("LOGIN ")
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
 					<string>SECRET NONE</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>3</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Correct bad copy right</name>
+				<script>local myFormatter = demonnic.TextFormatter:new( { --use ftext function to center text.
+    width = (getColumnCount() - 1), --width of main console -1 is so autowrap no trigger
+    textColor = "&lt;gray&gt;"
+  })
+selectCurrentLine() --select current line in main.
+replace("") --Erase text from main. Otherwise variable line will apear on console.
+deselect() --Don't forget your deselects!
+echo("\n")
+cecho(myFormatter:format("  (c)1996-2019 Skotos Tech")) --echo out out ftext</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>                           (c)1996-2013 Skotos Tech</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>3</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Failed Login</name>
+				<script>connectToServer("tec.skotos.net", 6730) --reconnect if there is a disconnect at login.</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>If you still have difficulties, please contact tec-support@skotos.net.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>3</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>== replacement</name>
+				<script>myFormatter = demonnic.TextFormatter:new( {
+  width = (getColumnCount() - 1), 
+  cap = "=========",
+  capColor = "&lt;gray&gt;",
+  textColor = "&lt;gray&gt;"
+})
+selectCurrentLine() --select current line in main.
+replace("") --Erase text from main. Otherwise variable line will apear on console.
+deselect() --Don't forget your deselects!
+echo("\n")
+cecho(myFormatter:format("========="))</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>===============================================================================</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>3</integer>

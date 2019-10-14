@@ -4264,7 +4264,7 @@ GUIframe.activate("Macros") --Make the macros bar the active bar on bottom left.
 function guiChange()
 	setMainWindowAutoWrap() --adjusts word wrap for user.
 	if getTECDisplayDebugMode() then geyserDebug() end --if displaydebug is on
-	compass.drawKeepSquare()
+	tecCompass.drawKeepSquare()
 	tecMapdrawKeepSquare()
 	tecComWindowResize() --resize commmunications window
 	tecCRWindowResize() --resize the Room Character window now
@@ -4275,6 +4275,26 @@ end --end function guiChange
 --In otherwords when any window geyser or main is CHANGED, run setMainWindowAutoWrap.
 --That is NOT just resizing.
 registerAnonymousEventHandler("sysWindowResizeEvent", "guiChange")</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>controlInput(_, command)</name>
+				<packageName></packageName>
+				<script>--use bool checks to control user input.
+--Use this when you do not know what will be entered but DO know a trigger that will
+--occur before the command that will be sent.
+function controlInput(_, command) 
+  if tecPasswordEntry then --if password entry is set, we expect a password.
+  	tecPasswordEntry = false --set this if check to false to it doesn't occur every input.
+    --Log into the game. md5.sumhexa converts user ID and password to md5 hash.
+    sendAll("USER " .. tecUsername .. "\n", "SECRET NONE", "HASH "
+  	 .. md5.sumhexa(tecUsername .. command .. "NONE") .. "\n", false)
+    tecUsername = nil --Clear out the username.
+    clearCmdLine() --clear password from command input bar.
+    denyCurrentSend() --Deny the origional command, in this case the password.
+	end --tecPasswordEntry
+end --function tecPasswordPrompt
+registerAnonymousEventHandler("sysDataSendRequest", "controlInput")</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
