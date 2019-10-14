@@ -79,7 +79,7 @@ else
   --True if I recall is needed for a bug fix.
   "Search the wiki for: "..string.sub(command, 6), true)
   echo("\n\n")
---end if matches[2] == "client" else</script>
+end --if matches[2] == "client" else</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^help (.*)</regex>
@@ -270,21 +270,6 @@ Current font size: ]]..getTECFont())</script>
 				<regex>^tecclient font size (.*)</regex>
 			</Alias>
 		</AliasGroup>
-		<Alias isActive="yes" isFolder="no">
-			<name>Login</name>
-			<script>-- This alias gets 'triggered' from triggers - login - secret trigger 
-
-username = matches[2] --the first item
-password = matches[3]
-hash = md5.sumhexa(username .. password .. "NONE")
-
-
--- https://wiki.mudlet.org/w/Manual:Lua_Functions#sendAll
-sendAll("USER " .. username .. "\n", "SECRET NONE", "HASH " .. hash .. "\n", false)</script>
-			<command></command>
-			<packageName></packageName>
-			<regex>^LOGIN (.+) (.+)$</regex>
-		</Alias>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Debug</name>
 			<script>tecDebugHelp() --display help window.</script>
@@ -398,6 +383,24 @@ runTECRoomObjectCheck()</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^room check$</regex>
+			</Alias>
+		</AliasGroup>
+		<AliasGroup isActive="yes" isFolder="yes">
+			<name>login</name>
+			<script></script>
+			<command></command>
+			<packageName></packageName>
+			<regex></regex>
+			<Alias isActive="yes" isFolder="no">
+				<name>Username:</name>
+				<script>-- This alias gets 'triggered' from triggers - login - secret trigger 
+tecUsername = matches[2] --the first item
+echo("\nPlease enter your password.\n")
+clearCmdLine() --clear the text user entered from command line
+tecPasswordEntry = true --used to prevent the password entry from beind sent to servers.</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^Username: (.+)$</regex>
 			</Alias>
 		</AliasGroup>
 	</AliasPackage>
