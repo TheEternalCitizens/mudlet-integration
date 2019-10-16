@@ -103,9 +103,12 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   	
   --Used to check if a room Character check is needed.
   doRoomCharacterCheck = false
-  
+
   --used for if timer debug is or is not wanted.
   tecSettings.tecTimerDebugMode = false
+  
+  --Spaces inventory list 
+  tecInventorySpacer = ""
 
 	tecDebugSaveDir = getMudletHomeDir().."\/DebugingFiles\/"
 
@@ -2852,6 +2855,23 @@ end --function tecClientDisplaySave</script>
 end --function tecClientDisplayLoad</script>
 					<eventHandlerList />
 				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>setInventoryFormater(setFormater)</name>
+					<packageName></packageName>
+					<script>function setInventoryFormater(setFormater)
+  setFormater = setFormater or false
+  tecFormatInventory = setFormater
+end --function setInventoryFormater</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>getInventoryFormater()</name>
+					<packageName></packageName>
+					<script>function getInventoryFormater()
+  return tecFormatInventory
+end --function getInventoryFormater</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>help</name>
@@ -4231,7 +4251,7 @@ end
 --When the user clicks a macro button, this function will send the button name to the server. For
 --example, when the user clicks the first button, we will send "fe1" to the server.
 function onMacroClick(name)
-  send(name)
+  send(name, false)
 end
 
 --Add the macro menu to the top left of the screen
