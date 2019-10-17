@@ -1240,7 +1240,7 @@ GUIframe.defaults = {
     resizeWidth = 30,
     resizeHoverImage = "/imgs/blue_arrows.png",
     resizeRestImage = "/imgs/blue_arrows_30t.png",
-    borderOffset = 5,
+    borderOffset = 2,
 }
 
 GUIframe.windows = GUIframe.windows or {}
