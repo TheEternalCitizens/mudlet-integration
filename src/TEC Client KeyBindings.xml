@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
 <MudletPackage version="1.001">
+	<TriggerPackage />
+	<TimerPackage />
+	<AliasPackage />
+	<ActionPackage />
+	<ScriptPackage />
 	<KeyPackage>
 		<KeyGroup isActive="yes" isFolder="yes">
 			<name>TEC Client KeyBindings</name>
@@ -18,19 +23,19 @@
 				<keyModifier>536870912</keyModifier>
 			</Key>
 			<Key isActive="yes" isFolder="no">
-				<name>KeyPad minus -&gt; Down</name>
+				<name>KeyPad plus -&gt; Down</name>
 				<packageName></packageName>
 				<script></script>
 				<command>Down</command>
-				<keyCode>45</keyCode>
+				<keyCode>43</keyCode>
 				<keyModifier>536870912</keyModifier>
 			</Key>
 			<Key isActive="yes" isFolder="no">
-				<name>KeyPad plus -&gt; Up</name>
+				<name>KeyPad Minus -&gt; Up</name>
 				<packageName></packageName>
 				<script></script>
 				<command>UP</command>
-				<keyCode>43</keyCode>
+				<keyCode>45</keyCode>
 				<keyModifier>536870912</keyModifier>
 			</Key>
 			<Key isActive="yes" isFolder="no">
@@ -97,6 +102,18 @@
 				<keyCode>56</keyCode>
 				<keyModifier>536870912</keyModifier>
 			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>ctrl+r -&gt; Room Check</name>
+				<packageName></packageName>
+				<script>--Check room for characters and fill the room character window.
+runTECRoomObjectCheck()</script>
+				<command></command>
+				<keyCode>82</keyCode>
+				<keyModifier>67108864</keyModifier>
+			</Key>
 		</KeyGroup>
 	</KeyPackage>
+	<HelpPackage>
+		<helpURL></helpURL>
+	</HelpPackage>
 </MudletPackage>
