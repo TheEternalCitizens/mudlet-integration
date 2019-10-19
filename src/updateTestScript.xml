@@ -18,8 +18,8 @@
 				<script>--test</script>
 				<eventHandlerList />
 			</Script>
-			<Script isActive="no" isFolder="no">
-				<name>V.02 test</name>
+			<Script isActive="yes" isFolder="no">
+				<name>v .02 test</name>
 				<packageName></packageName>
 				<script>-------------------------------------------------
 --         Put your Lua functions here.        --

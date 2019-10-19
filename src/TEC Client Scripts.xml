@@ -3479,9 +3479,9 @@ end</script>
 tecUpdate.versionsFile = "/tecClientVersions.lua"
 tecUpdate.versionsRespitory = getMudletHomeDir()
 tecUpdate.version = ".01"
-tecUpdate.download_path = "https://github.com/TheEternalCitizens/mudlet-integration/blob/AutomatedUpdates/src"
+tecUpdate.download_path = "https://raw.githubusercontent.com/TheEternalCitizens/mudlet-integration/AutomatedUpdates/src"
 tecUpdate.aliasName = "tecclient update"
-tecUpdate.packageName = "tec Client"
+tecUpdate.packageName = "updateTestScript"
 tecUpdate.scriptName = "/updateTestScript.xml"
 
 local function check_version()
@@ -3513,18 +3513,30 @@ function tecUpdate.checkVersion()
 end
 
 local function update_version()
-    downloading = false
+    downloading = false 
     local path = tecUpdate.versionsRespitory .. tecUpdate.scriptName
+
+    debugToDisplay("Update: temporarily disabling alias: "..tecUpdate.aliasName)
     disableAlias(tecUpdate.aliasName)
+
+    debugToDisplay("Update: Uninstalling package: "..tecUpdate.packageName)
     uninstallPackage(tecUpdate.packageName)
+
+    debugToDisplay("Update: Installing package: "..path)
     installPackage(path)
+
+    enableAlias(tecUpdate.aliasName) --needed while testing...
     echo("TEC client updated successfully.")
 end
 
 function tecUpdate.updateVersion()
     local path, file = tecUpdate.versionsRespitory , tecUpdate.scriptName
     downloading = true
-    downloadFile(path .. file, tecUpdate.download_path .. file)
+    debugToDisplay(
+      "\nUpdate Downloading from: "..tecUpdate.download_path..file
+      .."\nUpdate: downloading file to: "..path..file
+      ) --end debugToDisplay
+    downloadFile(path..file, tecUpdate.download_path..file)
 end
 
 function tecUpdate.eventHandler(event, ...)
@@ -3537,11 +3549,13 @@ function tecUpdate.eventHandler(event, ...)
               tecUpdate.checkVersion()
           end
       elseif event == "sysDownloadDone" and downloading then
-          local file = arg[1]
+          local file = arg[1] -- in this case name of file downloaded
           if string.ends(file,tecUpdate.versionsFile) then
-              check_version()
+            debugToDisplay("Update Event: check_version() called")
+            check_version()
           elseif string.ends(file,tecUpdate.scriptName) then
-              update_version()
+            debugToDisplay("Update Event: update_version() called")
+            update_version()
           end
   end --if evnet == elseif
 end --function tecUpdate.eventHandler()
