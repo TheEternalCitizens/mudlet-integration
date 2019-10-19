@@ -900,6 +900,27 @@ if "#%x+" ~= string.match(filteredLine, "#%x+") then
 	filteredLine = tecSettings.tecTextColor..filteredLine --Add current text color to the start of the line
 end
 
+if [[&lt;ul&gt;]] == string.match(filteredLine, [[&lt;ul&gt;]]) then
+  --if we find a ul we need to tab an additional tab.  
+  tecInventorySpacer = tecInventorySpacer.."\t"
+  --and replace all occurances of &lt;ul&gt;
+  filteredLine = filteredLine:gsub([[&lt;ul&gt;]], "")
+end --line match &lt;ul&gt;
+
+if [[&lt;/ul&gt;]] == string.match(filteredLine, [[&lt;/ul&gt;]]) then
+  --Replace ONE tab in tecInventorySpacer  
+  tecInventorySpacer = tecInventorySpacer:gsub("\t", "", 1)
+  --and replace all occurances of &lt;/ul&gt;
+  filteredLine = filteredLine:gsub([[&lt;/ul&gt;]], "")
+end --line match &lt;/ul&gt;
+
+--replace all &lt;li&gt; with appropriate spacing created above.
+filteredLine = string.gsub(filteredLine, [[&lt;li&gt;]], tecInventorySpacer:gsub("\t", "", 1))
+
+--if we reached the end of out unsorted lists blank out tecInventorySpacer
+--It should be blank, but just in case...
+if [[&lt;/ul&gt;]] == filteredLine then tecInventorySpacer = "" end
+
 --if text needs to be centered.
 if "&lt;center&gt;" == string.match(filteredLine, "&lt;center&gt;") then
 	
