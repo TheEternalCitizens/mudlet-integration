@@ -3471,6 +3471,84 @@ end --tecOpenDirectory</script>
 end</script>
 					<eventHandlerList />
 				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tec Auto Updates</name>
+					<packageName></packageName>
+					<script>tecUpdate = {}
+
+tecUpdate.versionsFile = "/tecClientVersions.lua"
+tecUpdate.versionsRespitory = getMudletHomeDir()
+tecUpdate.version = ".01"
+tecUpdate.download_path = "https://github.com/TheEternalCitizens/mudlet-integration/blob/AutomatedUpdates/src"
+tecUpdate.aliasName = "tecclient update"
+tecUpdate.packageName = "tec Client"
+tecUpdate.scriptName = "/updateTestScript.xml"
+
+local function check_version()
+    downloading = false
+    local path = tecUpdate.versionsRespitory .. tecUpdate.versionsFile
+    local versions = {}
+    table.load(path, versions)
+    local pos = table.index_of(versions, tecUpdate.version) or 0
+    if pos ~= #versions then
+        enableAlias(tecUpdate.aliasName)
+        echo(string.format("TEC Client is currently &lt;red&gt;&lt;reset&gt; versions behind.",#versions - pos))
+        echo("To update now, please type: &lt;yellow&gt;tecclient update&lt;reset&gt;")
+    end
+    tecUpdate.update_timer = tempTimer(3600, [[tecUpdate.checkVersion()]])
+end
+
+function tecUpdate.checkVersion()
+    if tecUpdate.update_timer then --if the timer exists
+        killTimer(tecUpdate.update_timer) --stop the timer
+        tecUpdate.update_timer = nil --set the timer to nil
+    end -- if tecUpdate.update_timer exists
+    if not tecUpdate.update_waiting and tecUpdate.download_path ~= "" then
+        downloading = true --notifiy update process a download in in progress
+        --download the latest version file to the users profile
+        downloadFile(profilePath .. tecUpdate.versionsFile, 
+          tecUpdate.download_path .. tecUpdate.versionsFile)
+        tecUpdate.update_waiting = true
+    end
+end
+
+local function update_version()
+    downloading = false
+    local path = tecUpdate.versionsRespitory .. tecUpdate.scriptName
+    disableAlias(tecUpdate.aliasName)
+    uninstallPackage(tecUpdate.packageName)
+    installPackage(path)
+    echo("TEC client updated successfully.")
+end
+
+function tecUpdate.updateVersion()
+    local path, file = tecUpdate.versionsRespitory , tecUpdate.scriptName
+    downloading = true
+    downloadFile(path .. file, tecUpdate.download_path .. file)
+end
+
+function tecUpdate.eventHandler(event, ...)
+  if event == "sysDataSendRequest" then
+          -- check to prevent multiple version checks in a row without user intervention
+          if tecUpdate.update_waiting and tecUpdate.update_timer then
+              tecUpdate.update_waiting = nil
+          -- check to ensure version check cycle is started
+          elseif not tecUpdate.update_waiting and not tecUpdate.update_timer then
+              tecUpdate.checkVersion()
+          end
+      elseif event == "sysDownloadDone" and downloading then
+          local file = arg[1]
+          if string.ends(file,tecUpdate.versionsFile) then
+              check_version()
+          elseif string.ends(file,tecUpdate.scriptName) then
+              update_version()
+          end
+  end --if evnet == elseif
+end --function tecUpdate.eventHandler()
+
+registerAnonymousEventHandler("sysDownloadDone", "tecUpdate.eventHandler")</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
