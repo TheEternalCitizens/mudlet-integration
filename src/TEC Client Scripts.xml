@@ -3476,42 +3476,65 @@ end</script>
 					<packageName></packageName>
 					<script>tecUpdate = {}
 
+--make this a config function
 tecUpdate.versionsFile = "/tecClientVersions.lua"
 tecUpdate.versionsRespitory = getMudletHomeDir()
+--if not io.exists(tecUpdate.versionsRespitory) then --if folder does not exists
+--    lfs.mkdir(tecUpdate.versionsRespitory) --create the folder
+--end if tecUpdate.versionsRespitory not exist
 tecUpdate.version = ".01"
 tecUpdate.download_path = "https://raw.githubusercontent.com/TheEternalCitizens/mudlet-integration/AutomatedUpdates/src"
 tecUpdate.aliasName = "tecclient update"
 tecUpdate.packageName = "updateTestScript"
 tecUpdate.scriptName = "/updateTestScript.xml"
 
+--The version file is already downloaded. 
 local function check_version()
     downloading = false
     local path = tecUpdate.versionsRespitory .. tecUpdate.versionsFile
+    debugToDisplay("Update: Checking version file: "..path)
     local versions = {}
-    table.load(path, versions)
+    table.load(path, versions) --load the versions file.
+    --debugToDisplay("Update: Version file output: "..versions)
+    --Find the currently used versions position in the versions master file.
     local pos = table.index_of(versions, tecUpdate.version) or 0
-    if pos ~= #versions then
-        enableAlias(tecUpdate.aliasName)
-        echo(string.format("TEC Client is currently &lt;red&gt;&lt;reset&gt; versions behind.",#versions - pos))
-        echo("To update now, please type: &lt;yellow&gt;tecclient update&lt;reset&gt;")
+    debugToDisplay("Update: Current client version: "..tecUpdate.version
+      .."\n\tfound in versions file at position: "..tostring(pos))
+    if pos ~= #versions then --if the current version is the not last in the version file.
+      debugToDisplay("Update: An update is available")
+      enableAlias(tecUpdate.aliasName) --enable alias
+      cecho(string.format("TEC Client is currently &lt;red&gt;%s&lt;reset&gt; versions behind.\n",#versions - pos))
+      echo("To update now, please type: ")
+      cechoLink("&lt;:blue&gt;tecclient update\n", 
+        [[tecUpdate.updateVersion()]], 
+        "Update game client", true)
     end
+    --restart the check timer
     tecUpdate.update_timer = tempTimer(3600, [[tecUpdate.checkVersion()]])
 end
 
+--Deletes timer if it exists.
+--Download file used to check version
 function tecUpdate.checkVersion()
-    if tecUpdate.update_timer then --if the timer exists
-        killTimer(tecUpdate.update_timer) --stop the timer
-        tecUpdate.update_timer = nil --set the timer to nil
-    end -- if tecUpdate.update_timer exists
-    if not tecUpdate.update_waiting and tecUpdate.download_path ~= "" then
+--    if tecUpdate.update_timer then --if the timer exists
+--        killTimer(tecUpdate.update_timer) --stop the timer
+--        tecUpdate.update_timer = nil --set the timer to nil
+--    end -- if tecUpdate.update_timer exists
+--    if not tecUpdate.update_waiting and tecUpdate.download_path ~= "" then
+  debugToDisplay(
+    "\nUpdate: Version file Downloading from: "
+      ..tecUpdate.download_path .. tecUpdate.versionsFile
+    .."\nUpdate: downloading version file to: "..tecUpdate.versionsRespitory..tecUpdate.versionsFile
+  ) --end debugToDisplay
         downloading = true --notifiy update process a download in in progress
         --download the latest version file to the users profile
-        downloadFile(profilePath .. tecUpdate.versionsFile, 
+        downloadFile(tecUpdate.versionsRespitory .. tecUpdate.versionsFile, 
           tecUpdate.download_path .. tecUpdate.versionsFile)
         tecUpdate.update_waiting = true
-    end
-end
+--    end
+end --tecUpdate.checkVersion
 
+--install the new client after download was completed
 local function update_version()
     downloading = false 
     local path = tecUpdate.versionsRespitory .. tecUpdate.scriptName
@@ -3529,6 +3552,7 @@ local function update_version()
     echo("TEC client updated successfully.")
 end
 
+--Download the new client
 function tecUpdate.updateVersion()
     local path, file = tecUpdate.versionsRespitory , tecUpdate.scriptName
     downloading = true
@@ -3541,26 +3565,33 @@ end
 
 function tecUpdate.eventHandler(event, ...)
   if event == "sysDataSendRequest" then
-          -- check to prevent multiple version checks in a row without user intervention
-          if tecUpdate.update_waiting and tecUpdate.update_timer then
-              tecUpdate.update_waiting = nil
-          -- check to ensure version check cycle is started
-          elseif not tecUpdate.update_waiting and not tecUpdate.update_timer then
-              tecUpdate.checkVersion()
-          end
-      elseif event == "sysDownloadDone" and downloading then
-          local file = arg[1] -- in this case name of file downloaded
-          if string.ends(file,tecUpdate.versionsFile) then
-            debugToDisplay("Update Event: check_version() called")
-            check_version()
-          elseif string.ends(file,tecUpdate.scriptName) then
-            debugToDisplay("Update Event: update_version() called")
-            update_version()
-          end
+    -- check to prevent multiple version checks in a row without user intervention
+    if tecUpdate.update_waiting and tecUpdate.update_timer then
+      debugToDisplay("Update: timer and update_waiting is true.")
+        tecUpdate.update_waiting = nil
+    -- check to ensure version check cycle is started
+    elseif not tecUpdate.update_waiting and not tecUpdate.update_timer then
+      debugToDisplay("Update: update_waiting and update_timer are false."
+        .."Running tecUpdate.checkVersion()")
+        tecUpdate.checkVersion()
+    end
+    elseif event == "sysDownloadDone" and downloading then
+        local file = arg[1] -- in this case name of file downloaded
+        if string.ends(file,tecUpdate.versionsFile) then
+          debugToDisplay("Update sysDownloadDone Event: check_version() called")
+          check_version()
+        elseif string.ends(file,tecUpdate.scriptName) then
+          debugToDisplay("Update sysDownloadDone Event: update_version() called")
+          update_version()
+        end
+    elseif event == "sysConnectionEvent" and downloading then
+      debugToDisplay("Update: ConnectionEvent Running tecUpdate.checkVersion()")
+      tecUpdate.checkVersion()
   end --if evnet == elseif
 end --function tecUpdate.eventHandler()
 
-registerAnonymousEventHandler("sysDownloadDone", "tecUpdate.eventHandler")</script>
+registerAnonymousEventHandler("sysDownloadDone", "tecUpdate.eventHandler")
+registerAnonymousEventHandler("sysConnectionEvent", "tecUpdate.eventHandler")</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>

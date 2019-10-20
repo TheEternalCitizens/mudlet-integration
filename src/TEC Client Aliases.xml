@@ -269,12 +269,19 @@ Current font size: ]]..getTECFont())</script>
 				<packageName></packageName>
 				<regex>^tecclient font size (.*)</regex>
 			</Alias>
-			<Alias isActive="yes" isFolder="no">
+			<Alias isActive="no" isFolder="no">
 				<name>tecclient update</name>
 				<script>tecUpdate.updateVersion()</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^tecclient update$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient update check</name>
+				<script>tecUpdate.checkVersion()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient update check$</regex>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
