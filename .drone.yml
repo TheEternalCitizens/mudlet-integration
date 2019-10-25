@@ -10,7 +10,6 @@ steps:
     - cat mfile
     - mkdir src/resources
     - mv src/**.* src/resources
-    - mv src/resources/tecClientVersions.lua build
     - ls
     - ls src
     - ls src/resources
