@@ -22,6 +22,7 @@ steps:
     - cat mfile
     - mkdir src/resources
     - mv src/**.* src/resources
+    - cp mfile src/resources
     - ls
     - ls src
     - ls src/resources
