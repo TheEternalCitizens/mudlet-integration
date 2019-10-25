@@ -3483,10 +3483,10 @@ function tecUpdate.config() --Create variables used for updates
     lfs.mkdir(tecUpdate.versionsRespitory) --create the folder
   end --if tecUpdate.versionsRespitory not exist
   tecUpdate.version = ".01"
-  tecUpdate.download_path = "https://raw.githubusercontent.com/TheEternalCitizens/mudlet-integration/AutomatedUpdates/src"
+  tecUpdate.download_path = "https://github.com/TheEternalCitizens/mudlet-integration/releases/download/v0.0.2"
   tecUpdate.aliasName = "tecclient update"
-  tecUpdate.packageName = "updateTestScript"
-  tecUpdate.scriptName = "/updateTestScript.xml"
+  tecUpdate.packageName = "tec-mudlet-integration"
+  tecUpdate.scriptName = "/tec-mudlet-integration.mpackage"
 end --function tecUpdate.config
 tecUpdate.config() --run it on startup so data is configured.
 
