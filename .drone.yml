@@ -2,14 +2,12 @@ kind: pipeline
 name: default
 
 steps:
-- name: version-is-commit
+- name: write-mfile
   image: busybox
   commands:
     - |
       echo { \"package\": \"tec-mudlet-integration\", \"version\": \"${DRONE_COMMIT_SHA:0:8}\" } > mfile
-  when:
-    event: push
-- name: version-is-tag
+- name: overwrite-mfile-if-tag
   image: busybox
   commands:
     - |
