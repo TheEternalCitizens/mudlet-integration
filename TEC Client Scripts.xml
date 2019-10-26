@@ -19,92 +19,104 @@
 			<Script isActive="yes" isFolder="no">
 				<name>Variables</name>
 				<packageName></packageName>
-				<script>--All variables should have corrisponding functions(s) to work with them.
---Most should have a save to file function.
+				<script>--[[
+Used for creating variables that should be global.
+Anything in the tecSettings table WILL be saved from file.
+Meaning it WILL be loaded from file on a load.
+]]--
 
---Creating a table that will be used to easily save these
---Variables to file. So NOT putting tec.Settings. before
---a variable will mean that it does not get saved to file.
-tecSettings = {}
+function tecClientReset(displayToScreen) --reset all client settings to defaults
+  --Creating a table that will be used to easily save these
+  --Variables to file. So NOT putting tec.Settings. before
+  --a variable will mean that it does not get saved to file.
+  tecSettings = {}
+  
+  --set primary text color in game
+  --needs to be a hex number WITH # before it.
+  --If the back ground is dark this will AUTOMATICALLY be changed
+  --in the text filter trigger.
+  tecSettings.tecTextColor = "#c0c0c0"
+  
+  --default font size. Do not save it to file.
+  tecDefaultFontSize = 14
+  
+  --adjustable font size
+  tecSettings.tecFontSize = 14
+  
+  --enable or disable debug mode.
+  --Currently display red background main line to screen.
+  --The code for this is at the bottom of
+  --tec client triggers - text filters - text filters
+  tecSettings.tecDebugMode = false
+  
+  --For gui messages debug, having all this put to screen when not needed muxs things up.
+  tecSettings.tecDisplayDebugMode = false
+  
+  --for map debug messages.
+  tecSettings.tecMapDebugMode = false
+  
+  --Height of the communications window text area.
+  tecSettings.comTextWindowHeight = 100
+  
+  --This line is used to buffer the main line.
+  --Than we filter this line in triggers - filter text 
+  --It is important that this variable be global.
+  --DO NOT SAVE THIS TO FILE
+  filteredLine = "Reset filteredLine."
+  
+  --Zoom level of the map. 
+  mapZoom = 1
+  
+  --used to keep track of characters in current room.
+  	tecRoomObjects = {characters = {}, checkActive = false, lc = 1}
+  
+  --stores a command list for the room character window
+  --Done this way so it can be customized. 
+  tecSettings.commandList = { 
+  	[[send "look ]],
+  	[[send "guard ]],
+  	[[send "follow ]],
+  	[[send "target ]],
+  	[[send "approach ]],
+  	[[printCmdLine "say to ]] }
+  tecSettings.commandHelp = {
+  	"Look",
+  	"Guard",
+  	"Follow",
+  	"Target",
+  	"Approach",
+  	"Talk" }
+  tecSettings.approachedCommandList = { 
+  	[[send "look ]],
+  	[[send "guard ]],
+  	[[send "follow ]],
+  	[[send "target ]],
+  	[[send "approach ]],
+  	[[printCmdLine "say to ]] }
+  tecSettings.approachedCommandHelp = {
+  	"Look",
+  	"Guard",
+  	"Follow",
+  	"Target",
+  	"Approach",
+  	"Talk" }
+  	
+  --Used to check if a room Character check is needed.
+  doRoomCharacterCheck = false
 
---set primary text color in game
---needs to be a hex number WITH # before it.
---If the back ground is dark this will AUTOMATICALLY be changed
---in the text filter trigger.
-tecSettings.tecTextColor = "#c0c0c0"
+  --used for if timer debug is or is not wanted.
+  tecSettings.tecTimerDebugMode = false
+  
+  --Spaces inventory list 
+  tecInventorySpacer = ""
 
---default font size. Do not save it to file.
-tecDefaultFontSize = 14
+	tecDebugSaveDir = getMudletHomeDir().."\/DebugingFiles\/"
 
---adjustable font size
-tecSettings.tecFontSize = 14
+	if displayToScreen then echo("Client settings set to default.") end
 
---enable or disable debug mode.
---Currently display red background main line to screen.
---The code for this is at the bottom of
---tec client triggers - text filters - text filters
-tecSettings.tecDebugMode = false
+end --function tecClientReset()
 
---For gui messages debug, having all this put to screen when not needed muxs things up.
-tecSettings.tecDisplayDebugMode = false
-
---for map debug messages.
-tecSettings.tecMapDebugMode = false
-
---Height of the communications window text area.
-tecSettings.comTextWindowHeight = 100
-
---This line is used to buffer the main line.
---Than we filter this line in triggers - filter text 
---It is important that this variable be global.
---DO NOT SAVE THIS TO FILE
-filteredLine = "Reset filteredLine."
-
---Zoom level of the map. 
-mapZoom = 1
-
---used to keep track of characters in current room.
-function clearTECRoomObjects()
-	tecRoomObjects = {characters = {}, checkActive = false, lc = 1}
-end --fuctoin clearTecRoomObjects
-clearTECRoomObjects() --run it so the data is created
-
---stores a command list for the room character window
---Done this way so it can be customized. 
-tecSettings.commandList = { 
-	[[send "look ]],
-	[[send "guard ]],
-	[[send "follow ]],
-	[[send "target ]],
-	[[send "approach ]],
-	[[printCmdLine "say to ]] }
-tecSettings.commandHelp = {
-	"Look",
-	"Guard",
-	"Follow",
-	"Target",
-	"Approach",
-	"Talk" }
-tecSettings.approachedCommandList = { 
-	[[send "look ]],
-	[[send "guard ]],
-	[[send "follow ]],
-	[[send "target ]],
-	[[send "approach ]],
-	[[printCmdLine "say to ]] }
-tecSettings.approachedCommandHelp = {
-	"Look",
-	"Guard",
-	"Follow",
-	"Target",
-	"Approach",
-	"Talk" }
-	
---Used to check if a room Character check is needed.
-doRoomCharacterCheck = false
-
---used for if timer debug is or is not wanted.
-</script>
+tecClientReset(false) --Calling the function so these variables get created.</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
@@ -288,10 +300,10 @@ tecExit["nw"].height = nenwExitIconSize</script>
 --For example they aren't all variables for display settings, all for font or debuging.</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
-					<name>tecFileSaveSettings()</name>
+					<name>tecFileSaveSettings(displayToScreen)</name>
 					<packageName></packageName>
 					<script>--Save client settings to file
-function tecFileSaveSettings()
+function tecFileSaveSettings(displayToScreen)
 
 --Idealy implimenting some kind of error checking would be great.
 --Maybe making tecFileLoadSettings into a function that returns a table
@@ -299,11 +311,14 @@ function tecFileSaveSettings()
 
   --Save the table to file.
   table.save(getMudletHomeDir() .. "/TECClientData.lua", tecSettings)
+	
+	--display save to screen
+	if displayToScreen then echo("Client settings saved.") end
 end</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>tecFileLoadSettings()</name>
+					<name>tecFileLoadSettings(displayToScreen)</name>
 					<packageName></packageName>
 					<script>--This perhaps should be in a sysLoadEvent
 
@@ -313,7 +328,7 @@ end</script>
 --Notify is boolean, to let the user know the event occured.
 --In this case it is also a to screen notification that it was 
 --successfull
-function tecFileLoadSettings(notify)
+function tecFileLoadSettings(displayToScreen)
 
 	--Set the location and name of file.	
 	local path = getMudletHomeDir() .. "/TECClientData.lua"
@@ -322,11 +337,11 @@ function tecFileLoadSettings(notify)
   if not io.exists(path) then 
 		debugToDisplay("tecFileLoadSettings: save file doesn't exist.") --TEC debug screen
 		debugc("tecFileLoadSettings: save file doesn't exist.") --mudlets debug screen
-		echo("settings did not load from file")
+		echo("settings did not load from file\n")
 	return --kill the function before real errors occur
 	else
   table.load(path, tecSettings) --Load the settings in from file
-	if notify then echo("\nSettings successfully loaded from file\n") end
+	if displayToScreen then echo("Settings successfully loaded from file\n") end
 	end --end if file exists else
 end --function tecFileLoadSettings
 
@@ -335,6 +350,29 @@ tecFileLoadSettings(true)
 
 --Now change some settings since data has been loaded
 setFontSize(tecSettings.tecFontSize) --font size</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecClientSaveAll(displayToScreen)</name>
+					<packageName></packageName>
+					<script>function tecClientSaveAll(displayToScreen)
+  --Save client data to file.
+  tecFileSaveSettings()
+  if displayToScreen then echo("Client data saved to file.\n") end
+  
+  --saves the gui loadWindowLayout
+  GUIframe.saveSettings()
+  if displayToScreen then echo("Display settings saved to file.\n") end
+end --function tecClientSaveAll</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>clearTECRoomObjects()</name>
+					<packageName></packageName>
+					<script>--used to keep track of characters in current room.
+function clearTECRoomObjects()
+	tecRoomObjects = {characters = {}, checkActive = false, lc = 1}
+end --fuctoin clearTecRoomObjects</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -1137,40 +1175,6 @@ end</script>
 				</Script>
 			</ScriptGroup>
 			<Script isActive="yes" isFolder="no">
-				<name>hreplace</name>
-				<packageName></packageName>
-				<script>function hreplace(window, text)
-    if not text then text, window = window, nil end
-    window = window or "main"
-    local str, start, stop = getSelection(window)
-    if window ~= "main" then
-        replace(window, "")
-    else
-        replace("")
-    end
-    moveCursor(window, start, getLineNumber(window))
-    hinsertText(window, text)
-end</script>
-				<eventHandlerList />
-			</Script>
-			<Script isActive="yes" isFolder="no">
-				<name>xReplace</name>
-				<packageName></packageName>
-				<script>function xreplace(type, window, text)
-    if not text then text, window = window, nil end
-    window = window or "main"
-    local str, start, stop = getSelection(window)
-    if window ~= "main" then
-        replace(window, "")
-    else
-        replace("")
-    end
-    moveCursor(window, start, getLineNumber(window))
-    xEcho(type, "insertText", window, text)
-end</script>
-				<eventHandlerList />
-			</Script>
-			<Script isActive="yes" isFolder="no">
 				<name>guiFramework</name>
 				<packageName></packageName>
 				<script>-- Jor'Mox's GUIframe Script
@@ -1239,7 +1243,7 @@ GUIframe.defaults = {
     resizeWidth = 30,
     resizeHoverImage = "/imgs/blue_arrows.png",
     resizeRestImage = "/imgs/blue_arrows_30t.png",
-    borderOffset = 5,
+    borderOffset = 2,
 }
 
 GUIframe.windows = GUIframe.windows or {}
@@ -2370,33 +2374,34 @@ Debug like functions:
 ]]--</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
-					<name>setTECDebugMode()</name>
+					<name>setTECDebugMode(tectmpSetDebug)</name>
 					<packageName></packageName>
 					<script>--opens a debug window.
 --triggers system to send debug information to it.
 
-function setTECDebugMode(enableDebug)
+function setTECDebugMode(tectmpSetDebug)
 	
 	--Set debug mode
-	tecSettings.tecDebugMode = enableDebug or false
+	tecSettings.tecDebugMode = tectmpSetDebug or false
 	
-	if enableDebug then
-		openUserWindow("DebugWindow")
+	if tecSettings.tecDebugMode then --if enabling debug
+		openUserWindow("tecDebugWindow")
 		--saveWindowLayout() --save floating miniconsole locations
 		--loadWindowLayout() --load previously save miniconsole position.
-		--DebugWindow:addScrollbars(parent, "Vertical")
+		--tecDebugWindow:addScrollbars(parent, "Vertical")
 		echo("Debug mode enabled.\n")
-	end --end if debug is enabled.
-	
-	if not enableDebug then
+	else --else disabling debug
 		echo("Debug mode disabled.\n")
-	end--if turning off debug mode. Close the window.
+		setTECDisplayDebugMode(tectmpSetDebug)
+		setTECMapDebugMode(tectmpSetDebug)
+		setTECTimerDebugMode(tectmpSetDebug)
+	end -- if tectmpSetDebug
 	
 end --end function setTecDebugMode</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>getTECDebugMode</name>
+					<name>getTECDebugMode()</name>
 					<packageName></packageName>
 					<script>--Get state of debug mode.
 function getTECDebugMode() 
@@ -2407,7 +2412,7 @@ end --end function getTECdebugMode</script>
 				<Script isActive="yes" isFolder="no">
 					<name>debugToDisplay()</name>
 					<packageName></packageName>
-					<script>--this takes a string from function input, and displays it to screen.
+					<script>--this takes a string from function input, and displays it to the debug screen.
 
 --error("") Test this one.
 --debugc("") fairly certain this exports to mudlets debug screen.
@@ -2420,19 +2425,11 @@ function debugToDisplay(textMessage)
 	if getTECDebugMode() then --Is debug mode on?
 		local redBG, greenBG, blueBG = getBgColor() --keep track of current screen color
 		setBgColor( 255,50,50) --change text background to red
-		echo("DebugWindow","\n"..textMessage) -- print message to screen
+		echo("tecDebugWindow","\n"..textMessage) -- print message to screen
 		setBgColor(redBG,greenBG,blueBG) --change text background back to what it was
 	end --if debug mode if check
 end --end displayToDebug function
-
---Completed version of this should send debug to file.
---Not to screen. If screen is thought needed we could make
---a debug tab for the top GUIframe container. That hides when
---debug is off.
---Once debug off is run, the file gets pushed with the new
---httppush option coming out next release.
-
---For now we want debug to screen for ourselves.</script>
+</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
@@ -2443,7 +2440,7 @@ end --end displayToDebug function
 
 function Geyser.Container:getDebug ()
 	 
-	 if getTECDisplayDebugMode() then
+ if getTECDisplayDebugMode() then
 	 
   	 local string guiLog = ""
   	 
@@ -2464,7 +2461,7 @@ function Geyser.Container:getDebug ()
        for k,v in pairs(self.windowList) do
     	 		
           if k ~= self then
-    				guiLog = guiLog..v:getDebug()
+    				guiLog = guiLog..v:getDebug() --Collect debug data to string
     					
           end --end if k not = self check
        end --end for loop pair(self windowlist)
@@ -2505,26 +2502,143 @@ end --end geyserDebug() function</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>sendDebug("location")</name>
+					<name>tecReportIssuesHelp(tecBrief, tecWindow)</name>
 					<packageName></packageName>
-					<script>--This function will enable debug mode.
---automatically run things to trigger debug events.
---Like changing font to get a resizeEvent or send
---a dummy command to get a line back.
---Once done it will send the collecting information
---to something via http push.</script>
+					<script>--help user create an issue request
+--tecBrief is if screen reporting should be brief
+--tecWindow is the string name of the window to send the command help to
+function tecReportIssuesHelp(tecBrief, tecWindow) 
+
+	--if a window was forgotten default to main
+	tecWindow = tecWindow or "main"
+	tecBrief = tecBrief or false
+
+  cechoLink(tecWindow, "&lt;:blue&gt;debug report issue", 
+  	[[tecReportIssues()]], 
+  	"Report client issues", true)
+  if not tecBrief then --if we do not want to be brief
+  	echo(tecWindow, ", Report client issues to developers.\n")
+	else echo(tecWindow, "\n")
+  end --end if not tecBrief
+
+end --function tecReportIssues
+
+function tecReportDebugHelp()
+	echo("\n---Debug collection helper---\n")
+	echo("Please do not follow these steps unless you have opened an issue report and "
+		.."were asked to collect debug data from a developer.\n"
+		.."The debug modes available are: ")
+  cechoLink("&lt;:blue&gt;debug on&lt;reset&gt;, ", 
+  	[[setTECDebugMode(true)]], 
+  	"Enable basic debug", true)
+  cechoLink("&lt;:blue&gt;debug display on&lt;reset&gt;, ", 
+  	[[setTECDisplayDebugMode(true)]], 
+  	"Enable display debugging", true)
+  cechoLink("&lt;:blue&gt;debug map on&lt;reset&gt;, ", 
+  	[[setTECMapDebugMode(true)]], 
+  	"Enable map debugging", true)
+	echo("and ")
+  cechoLink("&lt;:blue&gt;debug timer on&lt;reset&gt;.\n", 
+  	[[setTECTimerDebugMode(true)]], 
+  	"Enable timer debugging", true)
+	echo("After enabling the debug mode or modes requested clear your main window with, ") 
+  cechoLink("&lt;:blue&gt;display clear\n", 
+  [[tecClearDisplay() tecReportDebugHelp()]], 
+  "Remove text from main screen", true)
+	echo("Now cause the issue reported to occur. After you have disable debug mode with ")
+  cechoLink("&lt;:blue&gt;debug off.\n", 
+  	[[setTECDebugMode(false)]], 
+  	"Disable debugging", true)
+	echo("Please verify the debug window has text in it than click ")
+	cechoLink("&lt;:blue&gt;Save debug window.\n", 
+  	[[tecSaveWindowText("tecDebugWindow")]], 
+  	"Save debug window text to file", true)
+	echo("Please save the text in the main window to file by clicking: ")
+	cechoLink("&lt;:blue&gt;Save main window.\n", 
+  	[[tecSaveWindowText()]], 
+  	"Save main window text to file", true)
+	echo("Open your issue report, at the TEC gitHub ")
+	  cechoLink("&lt;:blue&gt;Issue Page.\n", 
+  	[[openUrl("https://github.com/TheEternalCitizens/mudlet-integration/issues")]], 
+  	"Goto issues page", true)
+	echo("Open the folder that contains the debug window text by clicking ")
+	cechoLink("&lt;:blue&gt;Open Folder.\n", 
+  	[[tecOpenDirectory(tecDebugSaveDir)]], 
+  	"Open debug save folder", true)
+	cecho("Open main.txt and tecDebugWindow.txt and verify nothing is in it that you would "
+		.."not want to be viewed by the public.\n"
+		.."&lt;black:red&gt;If for any reason you do not want to make text on your screen publically visable "
+		.."please skip the next step highlighted in blue.&lt;reset&gt; "
+		.."&lt;:blue&gt;Drag the files tecDebugWindow.txt and main.txt into the comment area of your "
+		.."gitHub issues report.&lt;reset&gt;\n"
+		.."To update your issue click the green button labeled -Comment-\n"
+		.."It may take days or weeks to receive a reply to your issue report.\n")
+end --function tecReportDebugHelp()
+
+function tecReportStandardIssue()
+	echo("\n---Create an issue request helper---\n")
+	echo("Go to the client's issue reporting gitHub page: ")
+  cechoLink("&lt;:blue&gt;Issue Page.\n", 
+  	[[openUrl("https://github.com/TheEternalCitizens/mudlet-integration/issues")]], 
+  	"Goto issues page", true)
+	echo("Please view our current open issues to see if your issue was already reported.\n"
+		.."If you have not you will need to log into gitHub.\n"
+		.."To create an issue report click the green -New Issue- button, on the right side of the page.\n"
+		.."A new page will load. In the -Title- section please provide a brief description of your issue\(s\).\n"
+		.."In the comment section labeled -Leave a comment-. Fully describe your issue\(s\).\n"
+		.."It is highly recommendable to clear you main display and recreate your issue "
+		.."before continuing forward.\n"
+		.."If you would like to, clear your display with: ")
+  cechoLink("&lt;:blue&gt;display clear\n", 
+  [[tecClearDisplay() tecReportDebugHelp()]], 
+  "Remove text from main screen", true)
+	echo("Save the text in the main window to file by clicking: ")
+	cechoLink("&lt;:blue&gt;Save main window.\n", 
+  	[[tecSaveWindowText()]], 
+  	"Save main window text to file", true)
+	echo("This file is called main.txt and can easily found by clicking: ")
+	cechoLink("&lt;:blue&gt;Open Folder.\n", 
+  	[[tecOpenDirectory(tecDebugSaveDir)]], 
+  	"Open debug save folder", true)
+	cecho("Open main.txt and verify nothing is in it that you would not want to be viewed "
+		.."by the public!\n"
+		.."&lt;black:red&gt;If for any reason you do not want to make text on your screen publically visable "
+		.."please skip the next step highlighted in blue.&lt;reset&gt; "
+		.."&lt;:blue&gt;Now drag the file main.txt into the comment area of the gitHub issues report.&lt;reset&gt;\n"
+		.."At this time, please do not attach any other files to the issue report.\n"
+		.."To submit your issue click the green button labeled -Submit new issue-\n"
+		.."It may take days or weeks to receive a reply to your issue report.\n")
+end --end function tecReportMajorIssue
+
+function tecReportIssues()
+
+	cecho("&lt;black:red&gt;\nPlease follow the instructions below.\n")
+
+	cechoLink("&lt;:blue&gt;\n---Start an issue request---\n", 
+  	[[tecReportStandardIssue()]], 
+  	"Standard issue report tutorial", true)
+	
+	cechoLink("&lt;:blue&gt;\n---A developer asked you to enable debug---", 
+  	[[tecReportDebugHelp()]], 
+  	"Debug collection tutorial", true)
+		
+	echo("\n") --leave this as the last line. cechlink does not autoscroll main display.
+	
+end --function tecReportIssues</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
 					<name>setTECDisplayDebugMode</name>
 					<packageName></packageName>
 					<script>function setTECDisplayDebugMode(tmpDebugMode)
-	if tmpDebugMode then setTECDebugMode(true) end --Enable debug mode, if enabling map debug
+	if tmpDebugMode then 
+		if not getTECDebugMode() then setTECDebugMode(true) end --debug is not on enable it
+	end --if tmpDebugMode
 	
 	tecSettings.tecDisplayDebugMode = tmpDebugMode or false
 	
-	if tmpDebugMode then echo("\nDebug and display debug modes on.\n")
-	else echo("\nDisplay Debug Off. Debug mode unchanged.\n") end
+	if tecSettings.tecDisplayDebugMode then echo("Display debug mode on.\n")
+	else echo("Display Debug Off.\n") end
 end --end setTECVideoDebugMode</script>
 					<eventHandlerList />
 				</Script>
@@ -2540,7 +2654,9 @@ end --end function getTECdebugMode</script>
 				<Script isActive="yes" isFolder="no">
 					<name>tecColorTest()</name>
 					<packageName></packageName>
-					<script>function tecColorTest()
+					<script>--Just a simple test outputting colors to screen using three main methods.
+
+function tecColorTest()
 
   echo("\ndefault text\n")
   cecho("\ncecho: &lt;:blue&gt;blue background, &lt;red:white&gt;Red text white background.\n")
@@ -2551,16 +2667,18 @@ end --end tecColorTest function</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>setTECMapDebugMode</name>
+					<name>setTECMapDebugMode(boolean)</name>
 					<packageName></packageName>
 					<script>function setTECMapDebugMode(tmpDebugMode)
 
-	if tmpDebugMode then setTECDebugMode(true) end --Enable debug mode, if enabling map debug
+	if tmpDebugMode then 
+		if not getTECDebugMode() then setTECDebugMode(true) end --debug is not on enable it
+	end --if tmpDebugMode
 	
 	tecSettings.tecMapDebugMode = tmpDebugMode or false --enable map debug mode
 	
-	if tmpDebugMode then echo("\nDebug and map debug modes on.\n")
-	else echo("\nMap Debug Off. Debug mode unchanged.\n") end
+	if tecSettings.tecMapDebugMode then echo("Debug map mode on.\n")
+	else echo("Map Debug Off.\n") end
 	
 end --end setTECVideoDebugMode</script>
 					<eventHandlerList />
@@ -2578,9 +2696,15 @@ end --end function getTECdebugMode</script>
 					<name>setTECTimerDebugMode(boolean)</name>
 					<packageName></packageName>
 					<script>--enables or disables debug for timers
-function setTECTimerDebugMode(setTECTimmerDebugBoolean)
-	tecSettings.tecTimerDebugMode = setTECTimmerDebugBoolean or false
-	debugToDisplay("Timer debugging set to: "..tostring(setTECTimmerDebugBoolean))
+function setTECTimerDebugMode(tmpDebugMode)
+
+	if tmpDebugMode then 
+		if not getTECDebugMode() then setTECDebugMode(true) end --debug is not on enable it
+	end --if tmpDebugMode
+
+	tecSettings.tecTimerDebugMode = tmpDebugMode or false
+	if tecSettings.tecTimerDebugMode then echo("Debug timer mode on.\n")
+	else echo("Timer Debug Off.\n") end
 end --setTECTimerDebugMode</script>
 					<eventHandlerList />
 				</Script>
@@ -2595,60 +2719,7 @@ end --getTECTimerDebugMode</script>
 				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>font</name>
-				<packageName></packageName>
-				<script>--[[
-for functions directly affecting fonts both console and geyser label.
-
-font like functions
-setMainWindowAutoWrap() sets main windows autowrap character count, is in scripts - GUI
-
-]]--</script>
-				<eventHandlerList />
-				<Script isActive="yes" isFolder="no">
-					<name>setTECFont</name>
-					<packageName></packageName>
-					<script>--sets the font for all console displays.
---A different function should be made for geyser labels.
-
-function setTECFont(numbertemp)--set font settings with this function
-	
-	--if somethings is attempting to set the font below 8, tell them no.
-	--It sets the font size for main and the editor window. very frustrating
-	--when font is 1...
-	if numbertemp &lt; 8 then
-		numbertemp = 8
-		echo("\nFonts below 8 are not supported, setting font to 8.\n")
-	end --end if numbertemp is below 8
-	
-	tecSettings.tecFontSize = numbertemp or tecDefaultFontSize --set it to size passed OR default on fail
-	setFontSize(tecSettings.tecFontSize) --Set main window font size &amp; creates a resize event
-	setFontSize("Communication", tecSettings.tecFontSize) --resize font in communication window &amp; creates a resize event
-	setFontSize("Thoughts", tecSettings.tecFontSize) --resize font in Thoughts window &amp; creates a resize event
-	setFontSize("Speech", tecSettings.tecFontSize) --resize font in Speech window &amp; creates a resize event
-	--Each font adjustment WILL trigger a screen resize event.
-	
-	if getTECDebugMode() then --if debug mode is enabled
-  	debugToDisplay("setTECFont was sent: "..tostring(numbertemp)..
-  		". tecSettings.tecFontSize is currently: "..tostring(tecSettings.tecFontSize)..
-  		". Communication console font size: "..tostring(getFontSize(Communication)))		
-	end --end if debug mode is on
-end --end setTECFontSize</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>getTECFont</name>
-					<packageName></packageName>
-					<script>--Currently returns the font size.
---later hope to return font type also.
-function getTECFont()
-	return tecSettings.tecFontSize
-end</script>
-					<eventHandlerList />
-				</Script>
-			</ScriptGroup>
-			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>GUI</name>
+				<name>GUI or display</name>
 				<packageName></packageName>
 				<script>--[[
 for funtions that directly affect the clients GUI.
@@ -2676,7 +2747,7 @@ function setMainWindowAutoWrap()
     local mainWidth, mainHeight = getMainWindowSize()
     
     --Get the width of left and right gui bars.
-    local leftSideWidth =   GUIframe.topLeftContainer:get_width()
+    local leftSideWidth = GUIframe.topLeftContainer:get_width()
     local rightSideWidth = GUIframe.topRightContainer:get_width()
 	
   	--displays actual sizes to screen.
@@ -2746,40 +2817,59 @@ function tecClearDisplay()
 end --end function tecClearDisplay</script>
 					<eventHandlerList />
 				</Script>
-			</ScriptGroup>
-			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>Events</name>
-				<packageName></packageName>
-				<script>-------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external scripts --
--------------------------------------------------
-</script>
-				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
-					<name>guiChange()</name>
+					<name>tecClientDisplayReset()</name>
 					<packageName></packageName>
-					<script>--calls events that are needed when a window change occurs.
---Do NOT put any function that changes the GUI here!!!
+					<script>function tecClientDisplayReset()
 
---I am suspicious that calling multiple functions in one event is a no no
---I did this though because creating multiple AnonymousEvents caused issues.
---If I Recall the last event would not occur.
+echo("Display settings reset. You MUST restart mudlet.")
 
-function guiChange()
-	setMainWindowAutoWrap() --adjusts word wrap for user.
-	if getTECDisplayDebugMode() then geyserDebug() end --if displaydebug is on
-	compass.drawKeepSquare()
-	tecMapdrawKeepSquare()
-	tecComWindowResize() --resize commmunications window
-	tecCRWindowResize() --resize the Room Character window now
-end --end function guiChange
+  GUIframe.reinitialize()  --reset window positions to default
+	tecClientDisplaySave(true) --save default window positions to file
+  send("exit") --disconnect
+  send("exit")
+  disconnect()
 
---whenever event sysWindowReizeEvent occurs run setMainWindowAutowrap.
---In otherwords when any window geyser or main is CHANGED, run setMainWindowAutoWrap.
---That is NOT just resizing.
-registerAnonymousEventHandler("sysWindowResizeEvent", "guiChange()")</script>
+end --function tecClientDisplayReset()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecClientDisplaySave(displayToScreen)</name>
+					<packageName></packageName>
+					<script>function tecClientDisplaySave(displayToScreen)
+  GUIframe.saveSettings()
+  if displayToScreen then echo("\nDisplay settings saved.\n") end
+end --function tecClientDisplaySave</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecClientDisplayLoad(displayToScreen)</name>
+					<packageName></packageName>
+					<script>function tecClientDisplayLoad(displayToScreen)
+
+  GUIframe.loadSettings(redraw) --loads display settings from file
+  if displayToScreen then 
+		echo("\nDisplay settings loaded from last save.\n")
+	end --if displayToScreen
+	
+end --function tecClientDisplayLoad</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>setInventoryFormater(setFormater)</name>
+					<packageName></packageName>
+					<script>function setInventoryFormater(setFormater)
+  setFormater = setFormater or false
+  tecFormatInventory = setFormater
+end --function setInventoryFormater</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>getInventoryFormater()</name>
+					<packageName></packageName>
+					<script>function getInventoryFormater()
+  return tecFormatInventory
+end --function getInventoryFormater</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -2794,64 +2884,200 @@ registerAnonymousEventHandler("sysWindowResizeEvent", "guiChange()")</script>
 </script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
-					<name>Help Client</name>
+					<name>tecClientFullHelp(tecBrief, tecWindow)</name>
 					<packageName></packageName>
-					<script>function tecHelpClient()
-echo("There are a number of commands with adjustig the game client. They are:\n")
-
-cechoLink("&lt;:blue&gt;display", 
-[[tecDisplayHelp()]], 
-"Change display settings.", true)
-echo(" save or load display positions. Reset display to defaults. Adjust autowrap. and clear text off the display.\n")
-
-cechoLink("&lt;:blue&gt;debug&lt;reset&gt;, Used to get assistance with client issues.\n", 
-[[tecDebugHelp()]], 
-"Debug messages to get help.", true)
-
-echo("\n")
-end --end function tecHelpClient</script>
+					<script>function tecClientFullHelp(tecBrief, tecWindow)
+  
+	--if a window was forgotten default to main
+	tecWindow = tecWindow or "main"
+	tecBrief = tecBrief or false
+	
+	if not tecBrief then --if we do not want to be brief
+    echo(tecWindow, "There are a number of commands to adjust the game client. "
+  		.."They are:\n")	
+  end --end if not tecBrief
+ 
+  cechoLink(tecWindow, "&lt;:blue&gt;client", 
+  [[tecClientHelp()]], 
+  "Save or load client settings.", true)
+  if not tecBrief then --if we do not want to be brief
+  	echo(tecWindow, " Save or load client settings.\n")
+	else echo(tecWindow, "\n")
+  end --end if not tecBrief
+ 
+  cechoLink(tecWindow, "&lt;:blue&gt;display", 
+  [[tecDisplayHelp()]], 
+  "Change display settings.", true)
+  if not tecBrief then --if we do not want to be brief
+    echo(tecWindow, " Save or load display positions, "
+			.."reset display to defaults, "
+  		.."and clear text off the display.\n") 
+	else echo(tecWindow, "\n")
+  end --end if not tecBrief
+  
+  cechoLink(tecWindow, "&lt;:blue&gt;debug", 
+  [[tecDebugHelp()]], 
+  "Create debug messages", true)
+  if not tecBrief then --if we do not want to be brief
+  	echo(tecWindow, " Use to get information to report issues.\n")
+	else echo(tecWindow, "\n")
+  end --end if not tecBrief
+  
+  echo(tecWindow, "\n")
+end --end function tecClientFullHelp</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>debug</name>
+					<name>tecDebugHelp()</name>
 					<packageName></packageName>
 					<script>function tecDebugHelp()
-echo([[
-Please do not use debug unless a developer has ask you to.
-
-Commands are
-]])
-
-cechoLink("&lt;:blue&gt;debug on", 
-[[setTECDebugMode(true)]],
-"Send debug text to debug window", true)
-echo(", Opens a debug window if one is not opened. Sends basic debug text to debug window.\n")
-
-cechoLink("&lt;:blue&gt;debug off", 
-[[setTECDisplayDebugMode(false) setTECMapDebugMode(false) setTECDebugMode(false)]],
-"Stop all debug messages", true)
-echo(", Stops sending all debug messages.\n")
-
-cechoLink("&lt;:blue&gt;debug display on", 
-[[setTECDisplayDebugMode(true)]],
-"Show display draw messages to debug window", true)
-echo(", Sends display draw messages to debug window, leaves debug mode unchanged.\n")
-
-cechoLink("&lt;:blue&gt;debug display off", 
-[[setTECDisplayDebugMode(false)]],
-"Stop showing display draw messages to debug window", true)
-echo(", Stop sending display draw messages to debug window, leaves debug mode unchanged.\n")
-
-cechoLink("&lt;:blue&gt;debug map on&lt;reset&gt;, Displays map information to debug window.\n", 
-[[setTECMapDebugMode(true)]],
-"Show map messages to debug window", true)
-
-cechoLink("&lt;:blue&gt;debug map off", 
-[[setTECMapDebugMode(false)]],
-"Stop showing map messages to debug window", true)
-echo(", Disables map debug messages, leaves debug mode unchanged.\n")
+  cecho("\n&lt;black:red&gt;Debug mode is intended for collecting data to report "
+		.."issues.&lt;reset&gt;\n")
+  
+  cechoLink("&lt;:blue&gt;debug on", 
+  [[setTECDebugMode(true)]],
+  "Send debug text to debug window", true)
+  echo(", Create debug window and send basic info to it.\n")
+  
+  cechoLink("&lt;:blue&gt;debug off", 
+  [[setTECDisplayDebugMode(false) setTECMapDebugMode(false) setTECDebugMode(false)]],
+  "Stop all debug messages", true)
+  echo(", Stops sending all debug messages.\n")
+  
+  cechoLink("&lt;:blue&gt;debug display on", 
+  [[setTECDisplayDebugMode(true)]],
+  "Show display messages to debug window", true)
+  echo(", Send display information to debug.\n")
+  
+  cechoLink("&lt;:blue&gt;debug display off", 
+  [[setTECDisplayDebugMode(false)]],
+  "Stop showing display messages to debug window", true)
+  echo(", Disables display debug messages only.\n")
+  
+  cechoLink("&lt;:blue&gt;debug map on", 
+  [[setTECMapDebugMode(true)]],
+  "Show map messages to debug window", true)
+  echo(", Send map debug messages to debug.\n")
+  
+  cechoLink("&lt;:blue&gt;debug map off", 
+  [[setTECMapDebugMode(false)]],
+  "Stop showing map messages to debug window", true)
+  echo(", Disables map debug messages only.\n")
+  
+  cechoLink("&lt;:blue&gt;debug timers on", 
+  [[setTECTimerDebugMode(true)]],
+  "Start showing timmer messages to debug window", true)
+  echo(", Send timer debug messages to debug.\n")
+  
+  cechoLink("&lt;:blue&gt;debug timers off", 
+  [[setTECTimerDebugMode(false)]],
+  "Stop showing timmer messages to debug window", true)
+  echo(", Disables timmer debug messages only.\n")
+  
+  cechoLink("&lt;:blue&gt;debug test colors", 
+  [[tecColorTest()]],
+  "Send basic colors to screen", true)
+  echo(", Sends colored text to screen.\n")
+	
+	tecReportIssuesHelp(false, "main")
+  
+  cecho("&lt;black:red&gt;Debug mode is intended for collecting data to report "
+		.."issues.&lt;reset&gt;\n")
 
 end --end function tecDebugHelp</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecDisplayHelp()</name>
+					<packageName></packageName>
+					<script>function tecResizeDisplayHelp() --explains how to resize display
+	cecho("\n&lt;red:blue&gt;\\\/\\\/All windows can be resized! Read Below.\\\/\\\/&lt;reset&gt;\n"
+		.."Version one allows this by RIGHT "
+		.."clicking one of the four faint blue arrows and dragging it. "
+		.."These arrows are on the top, bottom, left and right outer edges "
+		.."of the main text window that this text appears in. "
+		.."When you move your mouse over the arrows they will "
+		.."become bold blue arrows."
+		.."\n&lt;red:blue&gt;\/\\\/\\All windows can be resized! Read Above.\/\\\/\\&lt;reset&gt;\n")
+end --function tecResizeDisplayHelp
+
+function tecDisplayHelp()
+  
+  echo("\nDisplay commands:\n")
+	
+  cechoLink("&lt;:blue&gt;display clear", 
+  [[tecClearDisplay()]], 
+  "Remove text from main screen", true)
+	echo(", clear text from main text console.\n")
+	
+  cechoLink("&lt;:blue&gt;display save", 
+  [[tecClientDisplaySave(true)]], 
+  "Save window positions", true)
+	echo(", save window positions.\n")
+	
+	cechoLink("&lt;:blue&gt;display load", 
+  [[tecClientDisplayLoad(true)]], 
+  "Load window positions", true)
+	echo(", reset window positions to last save.\n")
+	
+	cechoLink("&lt;:blue&gt;display reset", 
+  [[tecClientDisplayReset()]], 
+  "Reset window positions", true)
+	echo(", reset window positions to default. "
+		.."This WILL require you to restart mudlet.\n")
+		
+	cechoLink("&lt;:blue&gt;display refresh settings", 
+  [[tecClientDisplayReset()]], 
+  "Refresh text in settings", true)
+	echo(", clears and reloads text in settings window. ")
+			
+	tecResizeDisplayHelp() --explains how to resize display
+	
+end --end tecDisplayHelp()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecClientHelp()</name>
+					<packageName></packageName>
+					<script>function tecClientHelp()
+
+  echo("\ntecclient command:\n")
+	
+  cechoLink("&lt;:blue&gt;tecclient font size", 
+  [[printCmdLine("tecclient font size ")]],
+  "Change client font size", true)
+  echo(", Change font size for all consoles.\n")
+  
+  cechoLink("&lt;:blue&gt;tecclient save all", 
+  [[tecClientSaveAll(true)]],
+  "Save all client settings", true)
+  echo(", Save client and display settings to file.\n")
+  
+  cechoLink("&lt;:blue&gt;tecclient save", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  echo(", Save basic client settings to file.\n")
+  
+  cechoLink("&lt;:blue&gt;tecclient load", 
+  [[tecFileLoadSettings(true)]],
+  "Load client settings from file", true)
+  echo(", Loads client settings from file. You need to run -tecclient"
+  	.." save- or -tecclient save all- to create a settings file.\n")
+  
+  cechoLink("&lt;:blue&gt;tecclient reset", 
+  [[tecClientReset(true)]],
+  "Reset client to default", true)
+  echo(", Reset client to default client settings.\n"
+  	.."Use -display reset- or -tecclient reset all- to reset display.\n")
+  	
+  cechoLink("&lt;:blue&gt;tecclient reset all", 
+  [[tecClientResetAll()]],
+  "Reset all client settings to default", true)
+  echo(", Reset client and display to default settings. "
+  	.."Saves default settings to file and disconnects client.\n"
+  	.."This command REQUIRES a restart of mudlet!\n")
+
+end --function tecClientHelp</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -3013,6 +3239,239 @@ end --startRoomCharacterCheck()</script>
 					</Script>
 				</ScriptGroup>
 			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>Settings Window</name>
+				<packageName></packageName>
+				<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external scripts --
+-------------------------------------------------
+</script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>tecRefreshSettingsWindow()</name>
+					<packageName></packageName>
+					<script>function tecRefreshSettingsWindow()
+
+	clearWindow("tecSettingsConsole")
+
+  cechoLink("tecSettingsConsole", "&lt;:blue&gt;Save\n", 
+  [[tecClientSaveAll(true)]],
+  "Save all client settings", true)
+	
+  cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Load\n", 
+  [[tecFileLoadSettings(true)]],
+  "Load client settings from last save", true)
+	
+  cechoLink("tecSettingsConsole", "&lt;:blue&gt;Font Size\n", 
+  [[printCmdLine("tecclient font size ")]],
+  "Change client font size", true)
+	
+  cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Resize Windows\n", 
+  [[tecResizeDisplayHelp()]],
+  "Change client font size", true)
+	
+  cechoLink("tecSettingsConsole", "&lt;:blue&gt;Report Issues\n", 
+  [[tecReportIssues()]],
+  "Report issues or bugs", true)
+  
+	echo("tecSettingsConsole","\nFull Lists:\n")
+	--run the client help command. It is a function so it can be clicked.
+	tecClientFullHelp(true, "tecSettingsConsole")
+
+end --function tecRefreshSettingsWindow</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>TEC Client</name>
+				<packageName></packageName>
+				<script></script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>tecClientResetAll()</name>
+					<packageName></packageName>
+					<script>--Resets all client settings
+function tecClientResetAll()
+
+  --reset client settings
+  tecClientReset(true)
+  tecFileSaveSettings(true)
+  
+  --reset display settings
+  tecClientDisplayReset()
+  tecClientDisplaySave(true)
+
+end --function tecClientResetAll()</script>
+					<eventHandlerList />
+				</Script>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>Font</name>
+					<packageName></packageName>
+					<script>--[[
+Functions that work with the font.
+All windows
+
+font like functions
+setMainWindowAutoWrap() sets main windows autowrap character count, is in scripts - GUI
+
+]]--</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>getTECFont</name>
+						<packageName></packageName>
+						<script>--Currently returns the font size.
+--later hope to return font type also.
+function getTECFont()
+	return tecSettings.tecFontSize
+end</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>tecClientSetFontSize(numbertemp)</name>
+						<packageName></packageName>
+						<script>--sets the font for all console displays.
+--A different function should be made for geyser labels.
+
+function tecClientSetFontSize(numbertemp)--set font settings with this function
+
+	echo("\nSetting font to: "..numbertemp.."\n")
+
+	--if somethings is attempting to set the font below 8, tell them no.
+	--It sets the font size for main and the editor window. very frustrating
+	--when font is 1...
+	if numbertemp &lt; 8 then
+		numbertemp = 8
+		echo("\nFonts below 8 are not supported, setting font to 8.\n")
+	end --end if numbertemp is below 8
+	
+	tecSettings.tecFontSize = numbertemp or tecDefaultFontSize --set it to size passed OR default on fail
+	setFontSize(tecSettings.tecFontSize) --Set main window font size &amp; creates a resize event
+	setFontSize("Communication", tecSettings.tecFontSize) --resize font in communication window &amp; creates a resize event
+	setFontSize("Thoughts", tecSettings.tecFontSize) --resize font in Thoughts window &amp; creates a resize event
+	setFontSize("Speech", tecSettings.tecFontSize) --resize font in Speech window &amp; creates a resize event
+	--Each font adjustment WILL trigger a screen resize event.
+	
+	if getTECDebugMode() then --if debug mode is enabled
+  	debugToDisplay("tecClientSetFontSize was sent: "..tostring(numbertemp)..
+  		". tecSettings.tecFontSize is currently: "..tostring(tecSettings.tecFontSize)..
+  		". Communication console font size: "..tostring(getFontSize(Communication)))		
+	end --end if debug mode is on
+end --end tecClientSetFontSize</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+				<Script isActive="yes" isFolder="no">
+					<name>tecSaveWindowText(tecWindow, tecDirectory)</name>
+					<packageName></packageName>
+					<script>--copy text in a window to clip board
+function tecSaveWindowText(tecWindow, tecDirectory)
+	
+	--if directory not specified default to debug folder.
+	tecDirectory = tecDirectory or tecDebugSaveDir
+	--if a window was forgotten default to main
+	tecWindow = tecWindow or "main"
+
+	--get total number of lines in window
+	local tecWinLineCount = getLastLineNumber(tecWindow)
+	--create a table with windows contents
+	local windowDataToCopy = getLines(tecWindow, 1, tecWinLineCount)
+
+	--Create a table to save to file. Has to be a file because a string can not be saved
+	--to a file we specify.
+	local tecWindowBufferString = "INFO: Text shown from latest line to oldest."
+	--Loop through all the lines in the table created from the lines in the window.
+	for i = tecWinLineCount, 1, -1 do
+		--check if a password or login ID may be in the line
+		if string.find(tostring(windowDataToCopy[i]), "LOGIN") 
+		or string.find(tostring(windowDataToCopy[i]), "Login")
+		or string.find(tostring(windowDataToCopy[i]), "login")
+		or string.find(tostring(windowDataToCopy[i]), "PASSWORD")
+		or string.find(tostring(windowDataToCopy[i]), "Password")
+		or string.find(tostring(windowDataToCopy[i]), "password")
+		then --replace them with a notice if they are
+			tecWindowBufferString = tecWindowBufferString.."A login event was on this line.\n"
+		else
+			--Put all the lines into one easy to read string.
+			tecWindowBufferString = tecWindowBufferString..tostring(windowDataToCopy[i]).."\n"
+		end --if else tecWindowBufferString contains login or password
+	end --for tecWinLineCount
+
+
+	--Checking if folder user requested exists.
+	--If it does not, then create the folder.
+	--if folder created without error write the buffer string to file.
+	--If a folder can not be created, output an error
+  local lfs = require( "lfs" ) --load lfs module www.tutorialspoint.com/lua/lua_modules.htm
+  --Attempt to change current working directory
+  local tecFolderExists = lfs.chdir( tecDirectory )  --returns true on success
+  if ( tecFolderExists ) then --if folder exists, can be cd into...
+  	--Save window contents to file.
+    io.output( tecDirectory..tecWindow..".txt" ) --Open new file in text mode
+    io.write( tecWindowBufferString ) --Write the string used as a buffer to file.
+    io.output():close() --Close the file
+		echo("Window saved\n")
+  else --if the folder does not exist.
+  	lfs.mkdir( tecDirectory ) --make the directory.
+		tecFolderExists = nil --clear the folder check
+    tecFolderExists = lfs.chdir( tecDirectory )  --returns true on success
+    if ( tecFolderExists ) then --if folder exists or can be cd into.
+    	--Save window to file.
+      io.output( tecDirectory..tecWindow..".txt" ) --Open new file in text mode
+      io.write( tecWindowBufferString ) --Write the string used as a buffer to file.
+      io.output():close() --Close the file
+			echo("Window saved\n")
+		else --the folder could not be created.
+			echo("unable to create folder"..tecDirectory)
+			debugToDisplay("unable to create folder"..tecDirectory)
+		end --if tecFolderExists
+  end --if tecFolderExists else
+		
+end --function tecSaveWindowText</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecOpenDirectory(tecTMPDir)</name>
+					<packageName></packageName>
+					<script>--opens a directory in the local browser.
+--This will need to have code added to detect linux and mac.
+
+function tecOpenDirectory(tecTMPDir)
+	if getOS() == "windows" then
+		os.execute("start \"\" \""..tecTMPDir.."\"") --opens explorer to the folder requested
+	elseif getOS() == "mac" then
+		echo("Sorry mac is currently not supported. Please open finder and go to: "
+			..tecTMPDir)
+	elseif getOS() == "linux" then
+		echo("Sorry linux is currently not supported. Please open a file browser and go to: "
+			..tecTMPDir)
+	end --if os version
+end --tecOpenDirectory</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>techreplace</name>
+					<packageName></packageName>
+					<script>function techreplace(window, text)
+    if not text then text, window = window, nil end
+    window = window or "main"
+    local str, start, stop = getSelection(window)
+    if window ~= "main" then
+				selectCurrentLine(window)
+				replace(window, "")
+				hinsertText(window, text)
+				deselect()
+    else
+				selectCurrentLine()
+        replace("")
+				hinsertText(text)
+				deselect()
+    end
+end</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
 			<name>GUI</name>
@@ -3132,127 +3591,110 @@ encumbrancebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;le
 			<Script isActive="yes" isFolder="no">
 				<name>compasbar</name>
 				<packageName></packageName>
-				<script>compass_bar = Geyser.Container:new({
-  name = "Compass",    -- give it a unique name here
+				<script>--Reference https://wiki.mudlet.org/w/Manual:Geyser#Create_a_Clickable_Compass
+
+--create compass object
+--dirs directory
+tecCompass = tecCompass or {
+  dirs = {"nw","n","ne","w","up","down","e","sw","s","se"},
+} --end tecCompass object declaration
+
+--main container for tecCompass
+tecCompass.window = Geyser.Container:new({
+  name = "tecCompass",    -- give it a unique name here
   x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
   width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
 })
 
---Add the status bar to the screen. On the bottom
-GUIframe.addWindow(compass_bar,"Compass","topright")</script>
-				<eventHandlerList />
-				<Script isActive="yes" isFolder="no">
-					<name>Compass</name>
-					<packageName></packageName>
-					<script>--Reference https://wiki.mudlet.org/w/Manual:Geyser#Create_a_Clickable_Compass
-
---[[
-found bug with this code mudlets error output:
-LUA: code compiled without errors. OK
-LUA: ERROR running script Compass (Compass)
-Error: attempt to call a nil value
-LUA: ERROR running script dispatchEventToFunctions (dispatchEventToFunctions)
-Error: [string "Script: tec map"]:55: attempt to index field 'back' (a nil value)
-
-LUA: ERROR running script Compass (Compass)
-Error: attempt to call a nil value
-LUA: ERROR running script dispatchEventToFunctions (dispatchEventToFunctions)
-Error: [string "return guiChange()(...)"]:1: attempt to call a nil value
-]]--
-
---max width max height
-local mw, mh = getMainWindowSize()
-
---create compass object
---dirs directory
---ratio is ratio of parent object.
---ratio is for resizing.
-compass = compass or {
-  dirs = {"nw","n","ne","w","center","e","sw","s","se"},
-  ratio = mw / mh
-} --end compass object declaration
-
---Creating the parent label for the compass
-compass.back = Geyser.Label:new({
-  name = "compass.back",
+--back label for tecCompass
+tecCompass.back = Geyser.Label:new({
+  name = "tecCompass.back",
   x = "0%", --%horizontally position in parent
   y = "0%", --%vertical position in parent
   width = "100%", --% of parent
   height = "100%", --% of parent
-},compass_bar) --The parent of this label. Main is main window.
+},tecCompass.window) --The parent of this label. Main is main window.
 
-compass.box = Geyser.HBox:new({
-    name = "compass.box",
+--Horizontal box
+tecCompass.hbox = Geyser.HBox:new({
+    name = "tecCompass.box",
     x = 0, --horizonal position in parent
     y = 0, --vertical position in parent
     width = "100%", --How wide box is, % of parent
     height = "100%", --How tall box is, % of parent
-  },compass.back) --parent of this Hbox
---draw the window after creation keeping it square.
+  },tecCompass.back) --parent of this Hbox
 
 --create 3 vertical rows
 --in parent object compas.box
-compass.row1 = Geyser.VBox:new({name = "compass.row1",},compass.box)
-compass.row2 = Geyser.VBox:new({name = "compass.row2",},compass.box)
-compass.row3 = Geyser.VBox:new({name = "compass.row3",},compass.box)
+tecCompass.row1 = Geyser.VBox:new({name = "tecCompass.row1",},tecCompass.hbox)
+tecCompass.row2 = Geyser.VBox:new({name = "tecCompass.row2",},tecCompass.hbox)
+tecCompass.row3 = Geyser.VBox:new({name = "tecCompass.row3",},tecCompass.hbox)
 
 --create labels to hold compas images
 --Each parent is the row that were 
 --created with VBox above.
 --row1 left row2 center row3 right
-compass.nw = Geyser.Label:new({
-  name = "compass.nw",
-},compass.row1)
+tecCompass.nw = Geyser.Label:new({
+  name = "tecCompass.nw",
+},tecCompass.row1)
 
-compass.w = Geyser.Label:new({
-  name = "compass.w",
-},compass.row1)
+tecCompass.w = Geyser.Label:new({
+  name = "tecCompass.w",
+},tecCompass.row1)
 
-compass.sw = Geyser.Label:new({
-  name = "compass.sw",
-},compass.row1)
+tecCompass.sw = Geyser.Label:new({
+  name = "tecCompass.sw",
+},tecCompass.row1)
 
-compass.n = Geyser.Label:new({
-  name = "compass.n",
-},compass.row2)
+tecCompass.n = Geyser.Label:new({
+  name = "tecCompass.n",
+},tecCompass.row2)
         
-compass.center = Geyser.Label:new({
-  name = "compass.center",
-},compass.row2)
+tecCompass.center = Geyser.VBox:new({
+  name = "tecCompass.center",
+},tecCompass.row2)
 
-compass.s = Geyser.Label:new({
-  name = "compass.s",
-},compass.row2)
+tecCompass.up = Geyser.Label:new({
+  name = "tecCompass.up",
+},tecCompass.center)
 
-compass.ne = Geyser.Label:new({
-  name = "compass.ne",
-},compass.row3)
+tecCompass.down = Geyser.Label:new({
+  name = "tecCompass.down",
+},tecCompass.center)
+
+tecCompass.s = Geyser.Label:new({
+  name = "tecCompass.s",
+},tecCompass.row2)
+
+tecCompass.ne = Geyser.Label:new({
+  name = "tecCompass.ne",
+},tecCompass.row3)
     
-compass.e = Geyser.Label:new({
-  name = "compass.e",
-},compass.row3)
+tecCompass.e = Geyser.Label:new({
+  name = "tecCompass.e",
+},tecCompass.row3)
   
-compass.se = Geyser.Label:new({
-  name = "compass.se",
-},compass.row3)
+tecCompass.se = Geyser.Label:new({
+  name = "tecCompass.se",
+},tecCompass.row3)
 --end of compas labels
 
 --when a label is clicked we want to
 --go in that direction
-function compass.click(name)
+function tecCompass.click(name)
   send(name)
 end
 
---Function that will put images to direction labels. name will be n nw so on in compass under triggers
-function compass.lit(name)
-  compass[name]:setStyleSheet([[
+--Function that will put images to direction labels. name will be n nw so on in tecCompass under triggers
+function tecCompass.lit(name)
+  tecCompass[name]:setStyleSheet([[
     border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"..[[/]].."compass"..[[/]]..name..[[hover.png");
     margin: 5px;
   ]])
 end
 --when the space should be unlit change it back to white.
-function compass.unlit(name)
-  compass[name]:setStyleSheet([[
+function tecCompass.unlit(name)
+  tecCompass[name]:setStyleSheet([[
     border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"..[[/]].."compass"..[[/]]..name..[[.png");
     margin: 5px;
   ]])
@@ -3260,61 +3702,118 @@ end
 
 --Each of the 9 labels need an image of an arrow.
 --Rather than setting each individually, we'll
---iterate over the compass.dirs table we made 
+--iterate over the tecCompass.dirs table we made 
 --awhile back and add the respective image to each.
---The names of images are a reflection of the compass.dirs 
+--The names of images are a reflection of the tecCompass.dirs 
 --table. This keeps it consistent and easy to refer to.
 --During the iteration, the callback, setLabelOnEnter and
 --setLabelOnLeave are also set for each label.
 
-for k,v in pairs(compass.dirs) do
-  compass[v]:setStyleSheet([[
-    border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"..[[/]].."compass"..[[/]]..v..[[.png");
-    margin: 5px;
-  ]])
-  compass[v]:setClickCallback("compass.click",v)
-end
+--loop through dirs in table tecCompass
+for k,v in pairs(tecCompass.dirs) do
+  tecCompass[v]:setStyleSheet([[
+    border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"
+		..[[/]].."compass"..[[/]]..v..[[.png");
+    margin: 5px;]]) --apply pictures to directions on compass
+  
+	--if tecCompass is clicked, go in that direction
+	tecCompass[v]:setClickCallback("tecCompass.click",v)  
+end --end loop through tecCompass.dirs
 
-function compass.drawKeepSquare()
+--keeps the tecCompass square as the windows are adjusted.
+function tecCompass.drawKeepSquare()
 
 	--if the width of the parent label is less than the height.
 	--Resize the background label itself keeping the width and height equal.
-	if compass_bar:get_width() &lt; compass_bar:get_height() then
-  	compass.back:resize(compass_bar:get_width(), compass_bar:get_width())
+	if tecCompass.window:get_width() &lt; tecCompass.window:get_height() then
+  	tecCompass.back:resize(tecCompass.window:get_width(), tecCompass.window:get_width())
 	end --en if width is less than height.
 	
 	--if the height of the parent label is less than the width.
 	--Resize the background label itself keeping the width and height equal.
-	if compass_bar:get_height() &lt; compass_bar:get_width() then
-  	compass.back:resize(compass_bar:get_height(), compass_bar.height)
+	if tecCompass.window:get_height() &lt; tecCompass.window:get_width() then
+  	tecCompass.back:resize(tecCompass.window:get_height(), tecCompass.window.height)
 	end --end if height is less than width
 	
 end --end function keep square.
 
-compass.drawKeepSquare() --function at the bottom of this script.</script>
-					<eventHandlerList>
-						<string>sysWindowResizeEvent</string>
-					</eventHandlerList>
-				</Script>
+--Add the status bar to the screen. On the bottom
+GUIframe.addWindow(tecCompass.window,"compass","topleft")
+
+--Now that we created the window. Make certain it is drawn correctly.
+tecCompass.drawKeepSquare() --function at the bottom of this script.</script>
+				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
 				<name>Settings bar</name>
 				<packageName></packageName>
-				<script>settings_bar = Geyser.Container:new({
+				<script>tecSettingsBar = Geyser.Container:new({
   name = "Settings",    -- give it a unique name here
   x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
   width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
 })
 
+--box that will store the miniconsoles
+tecSettingsBack = Geyser.Label:new({
+  name = "tecSettingsBack",
+  x = 0, --horizontal position
+	y = 0, --adjusted for tabs
+  width = "100%",
+	height = "100%"
+},tecSettingsBar)
+
+tecSettingsBack:setStyleSheet(labelsStyle) --set to default label style
+
+--This are the miniconsoles that will hold the text
+tecSettingsConsole = Geyser.MiniConsole:new({
+  name = "tecSettingsConsole",
+	x = 0, --%horizontally position in parent
+	y = 0, --%vertical position in parent
+	width = "100%", --% of parent
+	height = "100%", --% of parent
+	autoWrap = true, --allows text to wrap if too long
+	fontSize = getTECFont(), --in variables
+	font = getFont(), --get font type from main
+	--scrollBar = true,
+},tecSettingsBack)
+tecSettingsConsole:setColor(getBgColor()) --set miniconsoles to main consol BG color
+tecSettingsConsole:raise()
+
 --Add the status bar to the screen. On the bottom
-GUIframe.addWindow(settings_bar,"Settings","bottomleft")</script>
+GUIframe.addWindow(tecSettingsBar,"Settings","bottomleft")
+
+function tecSettingsWindowResize()
+	
+	--Resize the back label by 6. We want a 3px border around the entire window
+	tecSettingsBack:resize(tostring(tecSettingsBar:get_width() - 6)
+		, tostring(tecSettingsBar:get_height() - 6))
+	tecSettingsBack:move (3, 3) --left and top borders
+	
+	--Resize the room character window by 6. We want a 3px border around the entire window
+	tecSettingsConsole:resize(tostring(tecSettingsBack:get_width() - 6)
+		, tostring(tecSettingsBack:get_height() - 6))
+	tecSettingsConsole:move (3, 3) --left and top borders
+	
+	if getTECDisplayDebugMode() then --if display debug mode is on
+		debugToDisplay("Room Character Window,"
+			.." tecSettingsBack width: "..tecSettingsBack:get_width()
+			.." tecSettingsBack Height: "..tecSettingsBack:get_height()
+			.." tecSettingsConsole Width: "..tecSettingsConsole:get_width()
+			.." tecSettingsConsole Height: "..tecSettingsConsole:get_height()
+			)--end debugToDisplay
+	end --end if display debug is enabled.
+
+end --tecSettingsWindowResize()
+
+tecRefreshSettingsWindow() --Refreshes text in settings window.
+tecSettingsWindowResize() --resize the Room Character window now</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
 				<name>tec map</name>
 				<packageName></packageName>
 				<script>--creates tec's 2d getAllMapUserData
---future ideas. create a zoom scroll with --tecMap.back:addScrollbars(tecMap, "RV")
+--future ideas. create a zoom scroll with --tecMap_back:addScrollbars(tecMap, "RV")
 --will probably need to complete that function for mudlet...
 
 --Don't forget. Creating room and exit labels ahead of time reduces the time it takes to draw
@@ -3330,8 +3829,8 @@ tecMap = Geyser.Container:new({
 GUIframe.addWindow(tecMap,"TEC Map","bottomright")
 
 --Creating the background for the 2d tec map.
-tecMap.back = Geyser.Label:new({
-  name = "tecMap.back",
+tecMap_back = Geyser.Label:new({
+  name = "tecMap_back",
   x = "0%", --%horizontally position in parent
   y = "0%", --%vertical position in parent
   width = "100%", --% of parent
@@ -3339,7 +3838,7 @@ tecMap.back = Geyser.Label:new({
 },tecMap) --The parent of this label.
 
 --set the appearance of what is behind the map
-tecMap.back:setStyleSheet([[
+tecMap_back:setStyleSheet([[
   qproperty-alignment: 'AlignLeft | AlignTop';
 	background-color: rgba(25, 50, 150);
 	font-size: 32px;
@@ -3350,8 +3849,8 @@ mapExit = {} --Table to hold labels we will draw the exits with.
 --Creating empty rooms for our map system.
 for i = 1, 150 do
 	--Create empty room and exit labels. Hide them so no junk is on screen.
-  mapRoom[i] = Geyser.Label:new({name = "mapRoom"..tostring(i),},tecMap.back) 
-  mapExit[i] = Geyser.Label:new({name = "mapExit"..tostring(i),},tecMap.back) 
+  mapRoom[i] = Geyser.Label:new({name = "mapRoom"..tostring(i),},tecMap_back) 
+  mapExit[i] = Geyser.Label:new({name = "mapExit"..tostring(i),},tecMap_back) 
   mapRoom[i]:hide() --Hide the tab so they don't layer
 	mapExit[i]:hide() --Hide the tab so they don't layer
 end --end loop create tabs and consoles
@@ -3361,16 +3860,16 @@ function tecMapdrawKeepSquare()
 	--if the width of the parent label is less than the height.
 	--Resize the background label itself keeping the width and height the equal.
 	if tecMap:get_width() &lt; tecMap:get_height() then
-  	tecMap.back:resize(tecMap:get_width(), tecMap:get_width())
+  	tecMap_back:resize(tecMap:get_width(), tecMap:get_width())
 	end --en if width is less than height.
 	
 	--if the height of the parent label is less than the width.
 	--Resize the background label itself keeping the width and height equal.
 	if tecMap:get_height() &lt; tecMap:get_width() then
-  	tecMap.back:resize(tecMap:get_height(), tecMap.height)
+  	tecMap_back:resize(tecMap:get_height(), tecMap:get_height())
 	end --en if width is less than height.
 	
-	echo("tecMap.back","Exits may be slightly\noff until you walk.")
+	echo("tecMap_back","Exits may be slightly\noff until you walk.")
 	
 end --end function keep square.
 
@@ -3430,16 +3929,16 @@ roomCharacters.console:setColor(getBgColor()) --set miniconsoles to main consol 
 roomCharacters.console:raise()
 
 --Add the status bar to the screen. On the bottom
-GUIframe.addWindow(roomCharacters,"Room Characters","topleft")
+GUIframe.addWindow(roomCharacters,"Room Characters","topright")
 
 function tecCRWindowResize()
 	
-	--Resize the back label by 6. We want a 3px border around the entire
+	--Resize the back label by 6. We want a 3px border around the entire window
 	roomCharacters.back:resize(tostring(roomCharacters:get_width() - 6)
 		, tostring(roomCharacters:get_height() - 6))
 	roomCharacters.back:move (3, 3) --left and top borders
 	
-	--Resize the room character window by 6. We want a 3px border around the entire
+	--Resize the room character window by 6. We want a 3px border around the entire window
 	roomCharacters.console:resize(tostring(roomCharacters.back:get_width() - 6)
 		, tostring(roomCharacters.back:get_height() - 6))
 	roomCharacters.console:move (3, 3) --left and top borders
@@ -3466,7 +3965,7 @@ tecCRWindowResize() --resize the Room Character window now</script>
 --ideas for future
 --When click a tab is stays dark to show that is the active tab.
 --fix the minor resizing issue with the back label not having a right margin.
---take tabs out of that damn menu table
+--take tabs out of that damn tecComWindows table
 --create the option for a combat bar. Only shows combat text...
 
 --Origional menu from the tabs tutorial.
@@ -3474,56 +3973,56 @@ tecCRWindowResize() --resize the Room Character window now</script>
 --Feelfree to take the tabs table out of the menu table.
 --For me it is a logic not I just didn't feel like unting.
 --menu has to be global.
-menu = menu or {tabs = {"Communication","Thoughts","Speech"},}
-menu.current = menu.current or menu.tabs[1]
+tecComWindows = tecComWindows or {tabs = {"Communication","Thoughts","Speech"},}
+tecComWindows.current = tecComWindows.current or tecComWindows.tabs[1]
 
 --A container for everything to be in.
 --No size or position because that is handled
 --In GUIframe
-menu.container = Geyser.Container:new({
-  name = "menu.container",
+tecComWindows.container = Geyser.Container:new({
+  name = "tecComWindows.container",
 })
 
 --Add the status bar to the screen. On the bottom
-GUIframe.addWindow(menu.container,"menu.container","top")
+GUIframe.addWindow(tecComWindows.container,"tecComWindows.container","top")
 
 --box that will hold the tabs
-menu.header = Geyser.HBox:new({
-  name = "menu.header",
+tecComWindows.header = Geyser.HBox:new({
+  name = "tecComWindows.header",
   x = 0, --horizontal
 	y = 0, --vertical position 
   width = "100%",
   height = tabsHeight, --for now using % rather than pixel math
-},menu.container)
+},tecComWindows.container)
 
 --box that will store the miniconsoles
-menu.footer = Geyser.Label:new({
-  name = "menu.footer",
+tecComWindows.footer = Geyser.Label:new({
+  name = "tecComWindows.footer",
   x = 0, --horizontal position
 	y = tabsHeight, --adjusted for tabs
   width = "100%",
 	height = tecSettings.comTextWindowHeight - 3
-},menu.container)
-menu.footer:setStyleSheet(labelsStyle) --set to default label style
+},tecComWindows.container)
+tecComWindows.footer:setStyleSheet(labelsStyle) --set to default label style
 
 --Create the tabs
-for k,v in pairs(menu.tabs) do
-  menu[v.."tab"] = Geyser.Label:new({
-    name = "menu."..v.."tab",
+for k,v in pairs(tecComWindows.tabs) do
+  tecComWindows[v.."tab"] = Geyser.Label:new({
+    name = "tecComWindows."..v.."tab",
 		x = 3, --horizontal position 
 		y = 0, --vertical position
 		width = "100%",
 		height = tabsHeight,
-  },menu.header)
+  },tecComWindows.header)
 	
-  menu[v.."tab"]:setStyleSheet(tabsStyle) --set style in themes
+  tecComWindows[v.."tab"]:setStyleSheet(tabsStyle) --set style in themes
 	
-	menu[v.."tab"]:echo(tabsFontStyle..v) --lable the tabs, set style in themes
+	tecComWindows[v.."tab"]:echo(tabsFontStyle..v) --lable the tabs, set style in themes
 
-	menu[v.."tab"]:setClickCallback("menu.click",v) --for charing tabs
+	tecComWindows[v.."tab"]:setClickCallback("tecComWindows.click",v) --for charing tabs
 
 	--These are the miniconsoles that will hold the text
-  menu[v] = Geyser.MiniConsole:new({ --menu v will be a tab name.
+  tecComWindows[v] = Geyser.MiniConsole:new({ --tecComWindows v will be a tab name.
     name = v, --Issues experienced if I attempt to name them v.."Console"
   	x = 3, --%horizontally position in parent
   	y = 0, --%vertical position in parent
@@ -3533,51 +4032,54 @@ for k,v in pairs(menu.tabs) do
 		fontSize = getTECFont(), --in variables
 		font = getFont(), --get font type from main
 		scrollBar = true,
-  },menu.footer) --attach to footer show they show below tabs
-	menu[v]:setColor(getBgColor()) --set miniconsoles to main consol BG color 
-  menu[v]:hide() --Hide the tab so they don't layer
+  },tecComWindows.footer) --attach to footer show they show below tabs
+	tecComWindows[v]:setColor(getBgColor()) --set miniconsoles to main consol BG color 
+  tecComWindows[v]:hide() --Hide the tab so they don't layer
 end --end loop create tabs and consoles
 
-function menu.click(tab) --Choose what happens when a tab is clicked.
-  menu[menu.current]:hide() --Hide the current tab
-  menu.current = tab --Make the clicked tab the current one.
-  menu[menu.current]:show() --Show the current tab.
-end --end menu.click(tab) function
+function tecComWindows.click(tab) --Choose what happens when a tab is clicked.
+  tecComWindows[tecComWindows.current]:hide() --Hide the current tab
+  tecComWindows.current = tab --Make the clicked tab the current one.
+  tecComWindows[tecComWindows.current]:show() --Show the current tab.
+end --end tecComWindows.click(tab) function
 
---A menu has to be selected otherwise on startup it will just show.
---The label behind the menu, becuase they are hidden directly after creation.
-menu[menu.current]:show()
+--A tecComWindows has to be selected otherwise on startup it will just show.
+--The label behind the tecComWindows, becuase they are hidden directly after creation.
+tecComWindows[tecComWindows.current]:show()
 
 function tecComWindowResize()
 	
-	--subtract GUIframe.defaults.resizeHeight from menu.footer.height 
-	local tecResizedComHeight = menu.container:get_height() - GUIframe.defaults.resizeHeight 
-	menu.footer:resize("100%", tecResizedComHeight) --resize the footer
-	--reflect changes in tecSettings so there is a chance to save the size.
-	tecSettings.comTextWindowHeight = tecResizedComHeight
+	--subtract GUIframe.defaults.resizeHeight from tecComWindows.footer.height 
+	local tecResizedFooterHeight = tecComWindows.container:get_height() - GUIframe.defaults.resizeHeight 
+	local tecResizedFooterWidth = tecComWindows.container:get_width() - 2 --6 the width 2 borders
+	tecComWindows.footer:resize(tecResizedFooterWidth, tecResizedFooterHeight) --resize the footer
+	tecComWindows.footer:move(1,(tabsHeight + 1))
 	
-	--resize comm windows according to header width. Footer doesn't like being used for this...
-	local tecResiedComWidth = menu.header:get_width() - 8
+	--reflect changes in tecSettings so there is a chance to save the size.
+	tecSettings.comTextWindowHeight = tecResizedFooterHeight
+	
 	
 	--resize all of the miniconsoles so we have the 3px border on the bottom.
-	for k,v in pairs(menu.tabs) do menu[v]:resize(tecResiedComWidth, tecResizedComHeight - 3) end
+	for k,v in pairs(tecComWindows.tabs) do 
+  	tecComWindows[v]:move(1, 1)
+  	tecComWindows[v]:resize(tecResizedFooterWidth - 2, tecResizedFooterHeight - 2)
+	end --for tecComWindows.tabs
 	
 	if getTECDisplayDebugMode() then --if display debug mode is on
-		debugToDisplay("Communication Window, menu.footer Height: "..menu.footer:get_height()
-			.." menu.ctainer Height: "..menu.container:get_height()
-			.." New menu.footer Height: "..tecResizedComHeight
-			.." mini consoles width: "..tecResiedComWidth.."%"
+		debugToDisplay("Communication Window, tecComWindows.footer Height: "..tecComWindows.footer:get_height()
+			.." tecComWindows.ctainer Height: "..tecComWindows.container:get_height()
+			.." New tecComWindows.footer Height: "..tecResizedFooterHeight
+			.." mini consoles width: "..(tecResizedFooterWidth - 2).."%"
 			)--end debugToDisplay
 	end --end if display debug is enabled.
 
 end --resizeKeepTabsStatis
 
-tecComWindowResize() --resize com window
-</script>
+tecComWindowResize() --resize com window</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
-				<name>Macro Bar</name>
+				<name>Macro Menu</name>
 				<packageName></packageName>
 				<script>--[[
 Tec uses a macro system that players can set within the game.
@@ -3595,7 +4097,224 @@ in a row or if you are attacking a person you receive a major debuff.
 The 5 is while training. You need to do 5 unique moves to get the most skill points.
 I like the 3 columns because it gives us big chunky buttons that will work well with touch
 screens.
-]]--</script>
+]]--
+
+--Create a global table or namespace
+--Creating a global table will make each of our variables unique. Our namespace will be called
+--macroMenu and everything we make from here on out will be stored within the macroMenu table.
+
+macroMenu = macroMenu or {}
+
+--Create the container
+--Containers are windows that can contain other windows. Actually, since all other Geyser windows
+--subclass container, every window can do that. But containers do not have any visible content by
+--themselves. Our tabbed "Macros" window will need a container. This will be the bottom layer.
+--Containers are invisible, so no need to set a stylesheet. At the end of the file, we will add this
+--container as a "window", which the "GUIframe" library to render for us.
+macroMenu.container = Geyser.Container:new({
+  name = "macroMenu",
+})
+
+--Create the parent label
+--The 'parent label' refers to the label on the bottom layer. The entire macro menu will be created 
+--within this label.
+macroMenu.back = Geyser.Label:new({
+  name = "macroMenu.back",
+  x = 0,
+  y = 0,
+  width = "100%",
+}, macroMenu.container)
+
+--Create a 3x5 grid
+--The macro menu is split into 15 sections, one for each macro. This 3x5 grid is created by 5 HBoxes
+--that sit within a single VBox (or vice versa, it doesn't matter). So first off, we create the VBox.
+--It will be the same size as its parent, macroMenu.back.
+
+macroMenu.box = Geyser.VBox:new({
+  name = "macroMenu.box",
+  x = 0,
+  y = 0,
+  width = "100%",
+}, macroMenu.back)
+
+--Next, we create our 5 HBoxes. We don't need to specify position or size because these are placed
+--within macroMenu.box, a VBox.
+macroMenu.row1 = Geyser.HBox:new({
+  name = "macroMenu.row1",
+}, macroMenu.box)
+macroMenu.row2 = Geyser.HBox:new({
+  name = "macroMenu.row2",
+},macroMenu.box)
+macroMenu.row3 = Geyser.HBox:new({
+  name = "macroMenu.row3",
+}, macroMenu.box)
+macroMenu.row4 = Geyser.HBox:new({
+  name = "macroMenu.row4",
+}, macroMenu.box)
+macroMenu.row5 = Geyser.HBox:new({
+  name = "macroMenu.row5",
+}, macroMenu.box)
+
+--Finally, we add our 15 labels. Take note that they are split up into five groups of three. Each group
+--is placed into a different "macroMenu.row" number.
+local mappings = {
+  {
+    name = "fe1", --name of label that will be created. Will be passed to setClickCallBack function
+    label = "I", --What will be on the label
+    row = macroMenu.row1, --the geyser box we want this label to go in
+  },
+  {
+    name = "fe2",
+    label = "II",
+    row = macroMenu.row1,
+  },
+  {
+    name = "fe3",
+    label = "III",
+    row = macroMenu.row1,
+  },
+  {
+    name = "fe4",
+    label = "IV",
+    row = macroMenu.row2,
+  },
+  {
+    name = "fe5",
+    label = "V",
+    row = macroMenu.row2,
+  },
+  {
+    name = "fe6",
+    label = "VI",
+    row = macroMenu.row2,
+  },
+  {
+    name = "fe7",
+    label = "VII",
+    row = macroMenu.row3,
+  },
+  {
+    name = "fe8",
+    label = "VIII",
+    row = macroMenu.row3,
+  },
+  {
+    name = "fe9",
+    label = "IX",
+    row = macroMenu.row3,
+  },
+  {
+    name = "fe10",
+    label = "X",
+    row = macroMenu.row4,
+  },
+  {
+    name = "fe11",
+    label = "XI",
+    row = macroMenu.row4,
+  },
+  {
+    name = "fe12",
+    label = "XII",
+    row = macroMenu.row4,
+  },
+  {
+    name = "fe13",
+    label = "XIII",
+    row = macroMenu.row5,
+  },
+  {
+    name = "fe14",
+    label = "XIV",
+    row = macroMenu.row5,
+  },
+  {
+    name = "fe15",
+    label = "XV",
+    row = macroMenu.row5,
+  },
+}
+
+--add onto standard label. We want a small margin for this label.								
+macroLabelStyle = labelsStyle.."margin: 1px\n";
+
+for _, mapping in pairs(mappings) do --loop trough mappings table using data within
+  macroMenu[mapping.name] = Geyser.Label:new({
+    name = "macroMenu." .. mapping.name, --name label fe# so it is easy to pass
+	  message = "&lt;center&gt;" .. mapping.label .. "&lt;/center&gt;", --puts roman numerals on label
+  }, mapping.row) --parent is gettings passed via mapping table row reference
+  macroMenu[mapping.name]:setClickCallback("onMacroClick", mapping.name)
+  macroMenu[mapping.name]:setStyleSheet(macroLabelStyle) --create window layout
+end
+
+--Create a callback function
+--When the user clicks a macro button, this function will send the button name to the server. For
+--example, when the user clicks the first button, we will send "fe1" to the server.
+function onMacroClick(name)
+  send(name, false)
+end
+
+--Add the macro menu to the top left of the screen
+GUIframe.addWindow(macroMenu.container, "Macros", "bottomleft")
+
+GUIframe.activate("Macros") --Make the macros bar the active bar on bottom left.</script>
+				<eventHandlerList />
+			</Script>
+		</ScriptGroup>
+		<ScriptGroup isActive="yes" isFolder="yes">
+			<name>Events</name>
+			<packageName></packageName>
+			<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external scripts --
+-------------------------------------------------
+</script>
+			<eventHandlerList />
+			<Script isActive="yes" isFolder="no">
+				<name>guiChange()</name>
+				<packageName></packageName>
+				<script>--calls events that are needed when a window change occurs.
+--Do NOT put any function that changes the GUI here!!!
+
+--I am suspicious that calling multiple functions in one event is a no no
+--I did this though because creating multiple AnonymousEvents caused issues.
+--If I Recall the last event would not occur.
+
+function guiChange()
+	setMainWindowAutoWrap() --adjusts word wrap for user.
+	if getTECDisplayDebugMode() then geyserDebug() end --if displaydebug is on
+	tecCompass.drawKeepSquare()
+	tecMapdrawKeepSquare()
+	tecComWindowResize() --resize commmunications window
+	tecCRWindowResize() --resize the Room Character window now
+	tecSettingsWindowResize() --resize the Room Character window now
+end --end function guiChange
+
+--whenever event sysWindowReizeEvent occurs run setMainWindowAutowrap.
+--In otherwords when any window geyser or main is CHANGED, run setMainWindowAutoWrap.
+--That is NOT just resizing.
+registerAnonymousEventHandler("sysWindowResizeEvent", "guiChange")</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>controlInput(_, command)</name>
+				<packageName></packageName>
+				<script>--use bool checks to control user input.
+--Use this when you do not know what will be entered but DO know a trigger that will
+--occur before the command that will be sent.
+function controlInput(_, command) 
+  if tecPasswordEntry then --if password entry is set, we expect a password.
+  	tecPasswordEntry = false --set this if check to false to it doesn't occur every input.
+    --Log into the game. md5.sumhexa converts user ID and password to md5 hash.
+    sendAll("USER " .. tecUsername .. "\n", "SECRET NONE", "HASH "
+  	 .. md5.sumhexa(tecUsername .. command .. "NONE") .. "\n", false)
+    tecUsername = nil --Clear out the username.
+    clearCmdLine() --clear password from command input bar.
+    denyCurrentSend() --Deny the origional command, in this case the password.
+	end --tecPasswordEntry
+end --function tecPasswordPrompt
+registerAnonymousEventHandler("sysDataSendRequest", "controlInput")</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>

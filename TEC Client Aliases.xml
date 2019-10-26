@@ -17,6 +17,12 @@ cechoLink("&lt;:blue&gt;Character creation guide",
 "Character creation tutorial", true)
 echo("\n\n")
 
+cechoLink("&lt;:blue&gt;Help Anything", 
+[[printCmdLine("help ")]], 
+"wiki search", true)
+echo(" Type help followed by anything. "
+	.." You will be able to search the wiki for it.\n\n")
+
 cechoLink("&lt;:blue&gt;World maps", 
 [[openUrl("http://eternal-city.wikidot.com/maps")]], 
 "Maps of all major areas in this game", true)
@@ -43,7 +49,7 @@ cechoLink("&lt;:blue&gt;Full respitory of this worlds interworkings",
 echo("\n\n")
 
 cechoLink("&lt;:blue&gt;help client", 
-[[tecHelpClient()]], 
+[[tecClientFullHelp(false, "main")]], 
 "wiki site home", true)
 
 echo("\nWith some effort you are able focus your mind and clear your vision back to reality.\n\n")</script>
@@ -52,24 +58,28 @@ echo("\nWith some effort you are able focus your mind and clear your vision back
 			<regex>^help$</regex>
 			<Alias isActive="yes" isFolder="no">
 				<name>Help (.w+)</name>
-				<script>--The user tried to get help for something we have not created
---a help for. So we will search the wiki site for them.
-echo("\nTry as you may you can not remember. Would you like to search the great beyond for\n")
+				<script>if matches[2] == "client" then
 
---Turns just the background of the word(s) blue "&lt;color:color&gt;"
---For font than background colors
---command is the global for what is in command line.
---string.sub pulls text from a string. In this case what starts AT
---Line 6 than after.
-cechoLink("&lt;:blue&gt;"..string.sub(command, 6), 
-
---if clicked, opens a link to
-[[openUrl("http://eternal-city.wikidot.com/search:site/q/"..string.sub(command, 6))]], 
-
---Tool tip that appears when moused over.
---True if I recall is needed for a bug fix.
-"Search the wiki for: "..string.sub(command, 6), true)
-echo("\n\n")</script>
+else
+  --The user tried to get help for something we have not created
+  --a help for. So we will search the wiki site for them.
+  echo("\nTry as you may you can not remember. Would you like to search the great beyond for\n")
+  
+  --Turns just the background of the word(s) blue "&lt;color:color&gt;"
+  --For font than background colors
+  --command is the global for what is in command line.
+  --string.sub pulls text from a string. In this case what starts AT
+  --Line 6 than after.
+  cechoLink("&lt;:blue&gt;"..string.sub(command, 6), 
+  
+  --if clicked, opens a link to
+  [[openUrl("http://eternal-city.wikidot.com/search:site/q/"..string.sub(command, 6))]], 
+  
+  --Tool tip that appears when moused over.
+  --True if I recall is needed for a bug fix.
+  "Search the wiki for: "..string.sub(command, 6), true)
+  echo("\n\n")
+end --if matches[2] == "client" else</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^help (.*)</regex>
@@ -77,7 +87,7 @@ echo("\n\n")</script>
 			<Alias isActive="yes" isFolder="no">
 				<name>help client</name>
 				<script>--run the client help command. It is a function so it can be clicked.
-tecHelpClient()</script>
+tecClientFullHelp(false, "main")</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^help client$</regex>
@@ -85,33 +95,14 @@ tecHelpClient()</script>
 		</Alias>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Display</name>
-			<script>--The $ at the end of the pattern is end of line check 
-
-echo([[
-Display allows you to interact with the display at command line.
-It commands are:]].."\n")
-cechoLink("&lt;:blue&gt;display clear", 
-[[tecClearDisplay()]], 
-"Remove text from main screen", true)
-echo([[, clears all text off the main screen.
-display save, save settings to file. These settings will automatically load on startup.
-display load, load display settings you have on file from your last save.
-display reset, WILL DISCONNECT YOU FROM THE GAME
-	resets the display from default settings.
-	This is useful if something unexpect occurs.
-	A restart is required for these changes to take affect
-	so it will disconnect you for the game.
-display update autowrap, updates the font autowrap on screen.
-	
-	]])</script>
+			<script>tecDisplayHelp() --help for client display</script>
 			<command></command>
 			<packageName></packageName>
 			<regex>^display$</regex>
 			<Alias isActive="yes" isFolder="no">
 				<name>display save</name>
 				<script>--saves the gui loadWindowLayout
-GUIframe.saveSettings()
-echo("\nDisplay settings saved.\n")</script>
+tecClientDisplaySave(true)</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^display save</regex>
@@ -119,8 +110,7 @@ echo("\nDisplay settings saved.\n")</script>
 			<Alias isActive="yes" isFolder="no">
 				<name>display load</name>
 				<script>--loads the display from file.
-GUIframe.loadSettings(redraw)
-echo("\nDisplay settings loaded from last save.\n")</script>
+tecClientDisplayLoad(true)</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^display load$</regex>
@@ -129,10 +119,7 @@ echo("\nDisplay settings loaded from last save.\n")</script>
 				<name>display reset</name>
 				<script>--Sets guiframe back to default settings
 --these settings can be found in scripts - tec client scripts - community scripts - guiframe
-GUIframe.reinitialize()
-send("exit")
-send("exit")
-disconnect()</script>
+tecClientDisplayReset()</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^display reset</regex>
@@ -142,14 +129,18 @@ disconnect()</script>
 				<script>--set main window word wrap size.
 --Function is is scripts - GUI - GUI Functions
 setMainWindowAutoWrap()
-echo("\nScreen wrap adjusted\n")</script>
+echo("\nScreen wrap adjusted\n")
+
+--No need to grant users access. This works automatically.</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^display update autowrap</regex>
 			</Alias>
-			<Alias isActive="yes" isFolder="no">
+			<Alias isActive="no" isFolder="no">
 				<name>Display Open Communication</name>
-				<script>--opens an external comm hideWindow
+				<script>--Indended for future use
+
+--opens an external comm hideWindow
 openUserWindow("UndockCommWindow")
 
 --for this to be functional the communications filters need a
@@ -169,40 +160,18 @@ tecClearDisplay()</script>
 			<Alias isActive="yes" isFolder="no">
 				<name>display clear characters</name>
 				<script>--in tecFunctions - autocheck - room character checks
-clearRoomCharacterWindow()</script>
+clearRoomCharacterWindow()
+--I don't think players need access to this as it autoruns</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^display clear characters$</regex>
 			</Alias>
-		</AliasGroup>
-		<AliasGroup isActive="yes" isFolder="yes">
-			<name>font</name>
-			<script></script>
-			<command></command>
-			<packageName></packageName>
-			<regex></regex>
 			<Alias isActive="yes" isFolder="no">
-				<name>font Size</name>
-				<script>echo("\nSetting font to: "..matches[2].."\n")
-setTECFont(tonumber(matches[2])) 
---matches[2] is the second word in input.
-</script>
+				<name>display refresh settings</name>
+				<script>tecRefreshSettingsWindow() --reloads the settings window.</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^font (.*)</regex>
-			</Alias>
-			<Alias isActive="yes" isFolder="no">
-				<name>font</name>
-				<script>echo([[
-The font command is used to change font settings.
-Currently you can change the size of the font.
-Uses are:
-font size, changes the size of the font to the size entered.
-IE: font 12, sets the font size to 12.
-Current font size: ]]..getTECFont())</script>
-				<command></command>
-				<packageName></packageName>
-				<regex>^font$</regex>
+				<regex>^display refresh settings$</regex>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
@@ -222,63 +191,85 @@ tecFileLoadSettings(true)</script>
 				<regex>^tecclient load$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
+				<name>tecclient save all</name>
+				<script>--save display and client settings.
+tecClientSaveAll(true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient save all$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
 				<name>tecclient save</name>
-				<script>--Save client data to file.
-tecFileSaveSettings()
-echo("\nClient data saved to file.\n")
-
---saves the gui loadWindowLayout
-GUIframe.saveSettings()
-echo("\nDisplay settings saved to file.\n")</script>
+				<script>--save client settings
+--not display settings.
+tecFileSaveSettings(true)</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^tecclient save$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>tecclient</name>
-				<script>--[[
-Uses of the client command are:
-tecclient save, to save settings to file.
-tecclient load, load settings from file.
-    Currently loading will not directly apply those settings.
-tecclient test colors, test text color test to screen.
-]]--</script>
+				<script>--display tecClientHelp to screen
+tecClientHelp()</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^tecclient$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>tecclient test colors</name>
-				<script>--Run a color test, function in scripts, techfunctions, debug
-tecColorTest()</script>
-				<command></command>
-				<packageName></packageName>
-				<regex>^tecclient test colors$</regex>
-			</Alias>
-			<Alias isActive="no" isFolder="no">
 				<name>tecclient reset</name>
 				<script>--reloads user profile. Can't complete this right now.
-resetProfile()</script>
+--resetProfile()
+
+--reset tec client settings to default. Not display though.
+tecClientReset(true)</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^tecclient reset$</regex>
 			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient font size</name>
+				<script>tecClientResetAll() --resets all client settings</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient reset all$</regex>
+			</Alias>
+			<AliasGroup isActive="yes" isFolder="yes">
+				<name>font</name>
+				<script></script>
+				<command></command>
+				<packageName></packageName>
+				<regex></regex>
+				<Alias isActive="yes" isFolder="no">
+					<name>font Size</name>
+					<script>tecClientSetFontSize(tonumber(matches[2])) 
+--matches[2] is the word in () in the pattern</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^font (.*)</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>font</name>
+					<script>echo([[
+The font command is used to change font settings.
+Currently you can change the size of the font.
+Uses are:
+font size, changes the size of the font to the size entered.
+IE: font 12, sets the font size to 12.
+Current font size: ]]..getTECFont())</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^font$</regex>
+				</Alias>
+			</AliasGroup>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient font size #</name>
+				<script>tecClientSetFontSize(tonumber(matches[2])) 
+--matches[2] is the word in () in the pattern</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient font size (.*)</regex>
+			</Alias>
 		</AliasGroup>
-		<Alias isActive="yes" isFolder="no">
-			<name>Login</name>
-			<script>-- This alias gets 'triggered' from triggers - login - secret trigger 
-
-username = matches[2] --the first item
-password = matches[3]
-hash = md5.sumhexa(username .. password .. "NONE")
-
-
--- https://wiki.mudlet.org/w/Manual:Lua_Functions#sendAll
-sendAll("USER " .. username .. "\n", "SECRET NONE", "HASH " .. hash .. "\n", false)</script>
-			<command></command>
-			<packageName></packageName>
-			<regex>^LOGIN (.+) (.+)$</regex>
-		</Alias>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Debug</name>
 			<script>tecDebugHelp() --display help window.</script>
@@ -288,8 +279,7 @@ sendAll("USER " .. username .. "\n", "SECRET NONE", "HASH " .. hash .. "\n", fal
 			<Alias isActive="yes" isFolder="no">
 				<name>debug on</name>
 				<script>--function in scripts - variables.
-setTECDebugMode(true)
-echo("\nDebug mode on.\n")</script>
+setTECDebugMode(true)</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^debug on</regex>
@@ -304,6 +294,9 @@ setTECDisplayDebugMode(false)
 
 --turn off map debug mode
 setTECMapDebugMode(false)
+
+--turn off timer debug mesages
+setTECTimerDebugMode(false)
 
 echo("\nAll debug modes off.\n")</script>
 				<command></command>
@@ -329,9 +322,7 @@ setTECDisplayDebugMode(false)</script>
 			<Alias isActive="yes" isFolder="no">
 				<name>debug map on</name>
 				<script>--Enable debug output for tec map
-setTECMapDebugMode(true)
-
-</script>
+setTECMapDebugMode(true)</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^debug map on</regex>
@@ -360,6 +351,21 @@ setTECTimerDebugMode(false)</script>
 				<packageName></packageName>
 				<regex>^debug timers off</regex>
 			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>debug test colors</name>
+				<script>--Run a color test, function in scripts, techfunctions, debug
+tecColorTest()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^debug test colors$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>debug report issue</name>
+				<script>tecReportIssues() --help user report issues.</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^debug report issue$</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>atuo checks</name>
@@ -377,6 +383,24 @@ runTECRoomObjectCheck()</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^room check$</regex>
+			</Alias>
+		</AliasGroup>
+		<AliasGroup isActive="yes" isFolder="yes">
+			<name>login</name>
+			<script></script>
+			<command></command>
+			<packageName></packageName>
+			<regex></regex>
+			<Alias isActive="yes" isFolder="no">
+				<name>Username:</name>
+				<script>-- This alias gets 'triggered' from triggers - login - secret trigger 
+tecUsername = matches[2] --the first item
+echo("\nPlease enter your password.\n")
+clearCmdLine() --clear the text user entered from command line
+tecPasswordEntry = true --used to prevent the password entry from beind sent to servers.</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^Username: (.+)$</regex>
 			</Alias>
 		</AliasGroup>
 	</AliasPackage>
