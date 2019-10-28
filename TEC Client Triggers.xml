@@ -729,17 +729,26 @@ elseif line:match("^%d+:") then --if line starts with "#: "
 	--iterate our loop counter
 	tecRoomObjects.lc = tecRoomObjects.lc + 1
 	
-elseif line == "&lt;/pre&gt;" then --end of command found.
-
+elseif line == "&lt;/pre&gt;" then --end of ac . command found.
 	--disable room check for characters. This is the end of the check.
 	setTECRoomCheckActive(false)
-
   deleteLine() --Make is so line does not appear in main console.
   
 --if it is dark set RoomCheck to false so it does not remain active.
 elseif line == "It is too dark to see anything." then
   setTECRoomCheckActive(false) --disable room check for characters.
   cecho("roomCharacters.console", "It is too dark to see anything.")
+  
+--if it is dark set RoomCheck to false so it does not remain active.
+elseif line == "You cannot do that while stunned" then
+  setTECRoomCheckActive(false) --disable room check for characters.
+  cecho("roomCharacters.console", "You cannot do that while stunned")
+  
+--if it is dark set RoomCheck to false so it does not remain active.
+elseif line == "You cannot do that while unconcious." then
+  setTECRoomCheckActive(false) --disable room check for characters.
+  cecho("roomCharacters.console", "You cannot do that while unconcious.")
+
 end --if line has a ac . character in it.
 
 --No else, becase if it isn't one of the items we are looking for above.
