@@ -634,6 +634,7 @@ if line == "&lt;/pre&gt;&lt;pre&gt;&lt;font size=+1&gt;&lt;b&gt;Checking the app
 	or line == "&lt;hr&gt;" then
   --Delete main's line if we are not displaying it to screen
   if not tecRoomObjects.displayToScreen then deleteLine() end
+
 	
 --pull character name from output.
 elseif line:match("^%d+:") then --if line starts with "#: "
@@ -1457,7 +1458,6 @@ Occurs after a successful login
 				<script>--[[
 triggers when the player approaches something.
 ]]--
-
 --checks if a refresh notification is already in window displays it if needed
 tecRoomCharRefreshNotification()</script>
 				<triggerType>0</triggerType>

@@ -377,13 +377,16 @@ Mostly these will be used to manually run a check for dev testing.
 			<packageName></packageName>
 			<regex></regex>
 			<Alias isActive="yes" isFolder="no">
+
 				<name>Room Check</name>
+
 				<script>--Check room for characters and fill the room character window.
 runTECRoomObjectCheck()</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^room check$</regex>
 			</Alias>
+
 			<Alias isActive="yes" isFolder="no">
 				<name>room refresh</name>
 				<script>--checks if a refresh notification is already in window displays it if needed

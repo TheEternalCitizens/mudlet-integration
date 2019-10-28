@@ -3136,6 +3136,110 @@ to the user.
 The functions here I untended to work with the triggers that are involved with that.
 ]]--</script>
 				<eventHandlerList />
+
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>Room Characters</name>
+					<packageName></packageName>
+					<script>--[[
+Scripts for working with filtering the approach check command 
+]]--</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>getTECRoomCheckActive()</name>
+						<packageName></packageName>
+						<script>function getTECRoomCheckActive()
+	return tecRoomObjects.checkActive
+end --end function getRoomCharactersActive</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>setTECRoomCheckActive(boolean)</name>
+						<packageName></packageName>
+						<script>function setTECRoomCheckActive(tecRoomCheckActive)
+	tecRoomObjects.checkActive = tecRoomCheckActive
+end --end function setRoomCharactersActive</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="no" isFolder="no">
+						<name>clearTECRoomObjects()</name>
+						<packageName></packageName>
+						<script>--Moved to variables Data Themese - Variables script</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>runTECRoomObjectCheck()</name>
+						<packageName></packageName>
+						<script>--used for functions that track objects in the current room.
+function runTECRoomObjectCheck()
+
+	--clear room data before running check 
+	clearTECRoomObjects()
+
+	--clear the character window.
+	clearWindow("roomCharacters.console")
+	
+	--set a room check to true.
+	setTECRoomCheckActive(true)
+
+	--send an ac . command to list characters in the room.
+	send("ac .", false)
+
+end --function runRoomCharacterCheck()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>setRoomCharacterCheck(boolean)</name>
+						<packageName></packageName>
+						<script>--Used to tell a Room Character Check timer if a check for characters
+--in the room should be run 
+
+function setRoomCharacterCheck(booleanRoomCheck)
+	doRoomCharacterCheck = booleanRoomCheck
+end --function setRoomCheck</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>getRoomCharacterCheck()</name>
+						<packageName></packageName>
+						<script>--Used to tell a Room Character Check timer if a check for characters
+--in the room should be run 
+
+function getRoomCharacterCheck()
+	return doRoomCharacterCheck
+end --end function getRoomCharacterCheck</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>clearRoomCharacterWindow()</name>
+						<packageName></packageName>
+						<script>function clearRoomCharacterWindow()
+	clearWindow("roomCharacters.console")
+end --clearRoomCharacterWindow</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>stopRoomCharacterCheck()</name>
+						<packageName></packageName>
+						<script>--disables the once a second check if a roomCharacterCheck is needed
+function stopRoomCharacterCheck()
+disableTimer("Room Character Check")
+end --stopRoomCharacterCheck()
+
+stopRoomCharacterCheck() --run it now. As system starts.
+--so the timmer doesn't run at login.</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>startRoomCharacterCheck()</name>
+						<packageName></packageName>
+						<script>--enables the once a second check if a roomCharacterCheck is needed
+function startRoomCharacterCheck()
+	enableTimer("Room Character Check")
+end --startRoomCharacterCheck()</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>Settings Window</name>
@@ -3369,6 +3473,7 @@ end --tecOpenDirectory</script>
 end</script>
 					<eventHandlerList />
 				</Script>
+
 				<Script isActive="yes" isFolder="no">
 					<name>tecLastLineEqualCheck(tecConsoleName, tecLineToCheck)</name>
 					<packageName></packageName>
@@ -3475,6 +3580,7 @@ function tecRoomCharRefreshNotification()
 end --function recRoomCharRefreshNotification()</script>
 					<eventHandlerList />
 				</Script>
+
 			</ScriptGroup>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
@@ -3970,6 +4076,7 @@ cecho("roomCharacters.console", "\nWe can not automate this because TEC can only
   .."one command per second.\nUsing current methods auto filling this list can prevent you "
   .."from sending commands.")
 tecRoomObjects.refreshMessageDisplayed = true --tell client no further refreshes needed</script>
+
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
