@@ -12,7 +12,7 @@ This is step by step series of examples that tell you how to get a development e
 
 We use [git](https://hackernoon.com/understanding-git-fcffd87c15a3) to track our file changes when developing. If you are new to git, consider downloading [github desktop](https://desktop.github.com/), and familiarize yourself with some git basics [here](https://hackernoon.com/understanding-git-fcffd87c15a3) and [here](https://hackernoon.com/understanding-git-2-81feb12b8b26). Once you're set up, clone this project to your machine.
 
-Install [mudlet](https://www.mudlet.org/download/). Open it up, and add a new profile with "tec.skotos.net" as the host and "6730" as the port. Do not enter a character name and password.
+Install [mudlet](https://www.mudlet.org/download/). Open it up, and add a new profile with `tec.skotos.net` as the host and `6730` as the port. Do not enter a character name and password.
 
 ![Screenshot from 2019-10-17 07-30-59](https://user-images.githubusercontent.com/3466499/67005268-38d67580-f0b0-11e9-9660-70ecffb995b7.png)
 
@@ -20,17 +20,17 @@ Click "Offline" rather than "Connect" to load the profile without connecting. Op
 
 ![Screenshot from 2019-10-31 18-10-17](https://user-images.githubusercontent.com/3466499/67989620-c619de00-fc09-11e9-849f-df91d68e8c6f.png)
 
-From this point on, you should be ready to tinker! Click "Connect" to connect to the game, and it will prompt you for your username and password. To edit the code, open one of the files you just installed, by clicking the "Scripts" button for example. Any changes you make here will be written back to your file system when you click "Save Profile". From here, you can use [git](https://hackernoon.com/understanding-git-2-81feb12b8b26) to contribute your changes to this repository.
+From this point on, you should be ready to tinker! Click "Connect" to connect to the game, and it will prompt you for your username and password. To edit some source code, open one of the files that you just installed -- for example, by clicking the "Scripts" button. Any changes you make here will be written back to your file system when you click "Save Profile". From here, you can use git to contribute your changes to this repository.
 
 ![Screenshot from 2019-10-31 18-20-21](https://user-images.githubusercontent.com/3466499/67990077-2b220380-fc0b-11e9-913d-79bee6ecc008.png)
 
 ## Running the tests
 
-Currently, we don't have a way to test our code, other than manually clicking through UI. The developers of mudlet itself have been considering adopting [a GUI testing framework](https://www.froglogic.com/squish/), and maybe we should consider it too.
+Currently, we don't have a way to test our code, other than manually clicking through UI. The developers of mudlet itself have been considering adopting a [GUI testing framework](https://www.froglogic.com/squish/), and maybe we should consider it too.
 
 ## Deployment
 
-We use [drone.io](https://drone.io), a cloud-based project automation service, to watch for activity on this github repository, and take action when it sees that we do certain things. Every time we cut [a release](https://github.com/TheEternalCitizens/mudlet-integration/releases), it uses [muddler](https://github.com/demonnic/muddler) to combine all the code in the `src` directory into an `mpackage` file, and then it uploads this file to the release page. This `mpackage` is how our users can install our code into their mudlet client.
+We use [drone.io](https://drone.io) -- a cloud-based project automation service -- to watch for activity on this github repository, and take action when it sees that we do certain things. Every time we cut [a release](https://github.com/TheEternalCitizens/mudlet-integration/releases), it uses [muddler](https://github.com/demonnic/muddler) to combine all the code in the `src` directory into an `mpackage` file, and then it uploads this file to the release page. This `mpackage` is how our users can install our code into their mudlet client.
 
 ## Built With
 
