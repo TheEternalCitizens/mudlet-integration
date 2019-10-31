@@ -60,6 +60,6 @@ This project is licensed under the GNU General Public License v2.0 License - see
 
 ## Acknowledgments
 
-* **Vadim Peretokin** [vadi2](https://github.com/vadi2) and the [many people that collaborate](https://github.com/Mudlet/Mudlet/contributors) with him in maintaining Mudlet
+* **Vadim Peretokin** - [vadi2](https://github.com/vadi2) and the [many people that collaborate](https://github.com/Mudlet/Mudlet/contributors) with him in maintaining Mudlet
 * **Damian Monogue** - [demonnic](https://github.com/demonnic) for muddler
 * **Billie Thompson** - [PurpleBooth](https://github.com/PurpleBooth) for this README's [template](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2)
