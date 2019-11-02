@@ -1,2 +1,2 @@
-return {{[1] = [[TEC Client Aliases.xml]],[2] = [[TEC Client KeyBindings.xml]],[3] = [[TEC Client Scripts.xml]],[4] = [[TEC Client Timers.xml]],[5] = [[TEC Client Triggers.xml]],[6] = [[imgs.mpackage]],},
+return {{[1] = [[TEC Client Aliases.xml]],[2] = [[TEC Client KeyBindings.xml]],[3] = [[imgs.mpackage]],[4] = [[TEC Client Timers.xml]],[5] = [[TEC Client Triggers.xml]],[6] = [[TEC Client Scripts.xml]],},
 }
