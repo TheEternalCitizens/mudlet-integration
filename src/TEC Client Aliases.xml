@@ -269,19 +269,35 @@ Current font size: ]]..getTECFont())</script>
 				<packageName></packageName>
 				<regex>^tecclient font size (.*)</regex>
 			</Alias>
-			<Alias isActive="yes" isFolder="no">
+			<Alias isActive="no" isFolder="no">
 				<name>tecclient update</name>
-				<script>tecUpdate.updateVersion()</script>
+				<script>tecUpdate.downloadScriptsNames() --Begin downloading updates</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^tecclient update$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>tecclient update check</name>
-				<script>tecUpdate.checkVersion()</script>
+				<script>tecUpdate.checkVersion() --check if an update is needed.</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^tecclient update check$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient save script names</name>
+				<script>--Intended for developers.
+tecUpdate.saveScriptNames() --Saves script names</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient save script names$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient save versions</name>
+				<script>--Intended for developers.
+tecUpdate.saveVersions() --Saves versions table to file.</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient save versions$</regex>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">

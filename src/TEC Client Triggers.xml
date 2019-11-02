@@ -1446,6 +1446,10 @@ end--timer debug</script>
 Occurs after a successful login
 ]]--
 
+--Sort delay before processing update check. Without this the update request may be barried
+--under login text.
+tecUpdate.update_timer = tempTimer(1, [[tecUpdate.checkVersion()]])
+
 --checking for characters in the room
 startRoomCharacterCheck()
 
