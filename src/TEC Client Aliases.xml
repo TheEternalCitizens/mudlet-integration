@@ -7,48 +7,48 @@
 		<Alias isActive="yes" isFolder="no">
 			<name>help</name>
 			<script>echo("\nYour vision blurs as a sudden wealth of information becomes available with a touch you can gain access to:\n")
-cechoLink("&lt;:blue&gt;Newbie guide", 
+cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Newbie guide", 
 [[openUrl("http://eternal-city.wikidot.com/newbie-guides")]], 
 "Guide explaining this games basic interworkings", true)
 echo("        ") --There is a bug with cechoLink tabs cause issues
 
-cechoLink("&lt;:blue&gt;Character creation guide", 
+cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Character creation guide", 
 [[openUrl("http://eternal-city.wikidot.com/character-generator")]], 
 "Character creation tutorial", true)
 echo("\n\n")
 
-cechoLink("&lt;:blue&gt;Help Anything", 
+cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Help Anything", 
 [[printCmdLine("help ")]], 
 "wiki search", true)
 echo(" Type help followed by anything. "
 	.." You will be able to search the wiki for it.\n\n")
 
-cechoLink("&lt;:blue&gt;World maps", 
+cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;World maps", 
 [[openUrl("http://eternal-city.wikidot.com/maps")]], 
 "Maps of all major areas in this game", true)
 echo("          ") --There is a bug with cechoLink tabs cause issues
 
-cechoLink("&lt;:blue&gt;Hunting grounds", 
+cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Hunting grounds", 
 [[openUrl("http://eternal-city.wikidot.com/hunting-grounds")]], 
 "Maps and explanation of hunting areas", true)
 echo("\n\n")
 
-cechoLink("&lt;:blue&gt;Commands", 
+cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Commands", 
 [[openUrl("http://eternal-city.wikidot.com/commands")]], 
 "Full list of game commands", true)
 echo("            ")
 
-cechoLink("&lt;:blue&gt;Commune with mortals", 
+cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Commune with mortals", 
 [[openUrl("https://discord.gg/fevBA8j")]], 
 "TEC Discord", true)
 echo("\n\n")
 
-cechoLink("&lt;:blue&gt;Full respitory of this worlds interworkings", 
+cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Full respitory of this worlds interworkings", 
 [[openUrl("http://eternal-city.wikidot.com/")]], 
 "wiki site home", true)
 echo("\n\n")
 
-cechoLink("&lt;:blue&gt;help client", 
+cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;help client", 
 [[tecClientFullHelp(false, "main")]], 
 "wiki site home", true)
 
@@ -70,7 +70,7 @@ else
   --command is the global for what is in command line.
   --string.sub pulls text from a string. In this case what starts AT
   --Line 6 than after.
-  cechoLink("&lt;:blue&gt;"..string.sub(command, 6), 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;"..string.sub(command, 6), 
   
   --if clicked, opens a link to
   [[openUrl("http://eternal-city.wikidot.com/search:site/q/"..string.sub(command, 6))]], 
@@ -299,6 +299,83 @@ tecUpdate.saveVersions() --Saves versions table to file.</script>
 				<packageName></packageName>
 				<regex>^tecclient save versions$</regex>
 			</Alias>
+			<AliasGroup isActive="yes" isFolder="yes">
+				<name>colors</name>
+				<script></script>
+				<command></command>
+				<packageName></packageName>
+				<regex></regex>
+				<Alias isActive="yes" isFolder="no">
+					<name>tecclient colors</name>
+					<script>showColors(3)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^tecclient colors$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>tecclient change colors</name>
+					<script>tecClientChangeColors() --Help user change color scheams.</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^tecclient change colors$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>tecclient windows background color</name>
+					<script>tecLabelBackgroundColor(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^tecclient windows background color (.*)</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>tecclient tabs background color</name>
+					<script>tecTabsBackgroundColor(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^tecclient tabs background color (.*)</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>tecclient hover color</name>
+					<script>tecSetMouseHoverColor(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^tecclient hover color (.*)</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>tecclient greentext color</name>
+					<script>tecSetGreenTextColor(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^tecclient greentext color (.*)</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>tecclient bluetext color</name>
+					<script>tecSetBlueTextColor(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^tecclient bluetext color (.*)</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>tecclient text color</name>
+					<script>tecSetTextColor(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^tecclient text color (.*)</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>tecclient helphighlight color</name>
+					<script>tecSetHelpHighlightColor(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^tecclient helphighlight color (.*)</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>tecclient background color</name>
+					<script>tecSetBackgroundColor(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^tecclient background (.*)</regex>
+				</Alias>
+			</AliasGroup>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Debug</name>
@@ -433,6 +510,13 @@ tecPasswordEntry = true --used to prevent the password entry from beind sent to 
 				<regex>^Username: (.+)$</regex>
 			</Alias>
 		</AliasGroup>
+		<Alias isActive="no" isFolder="no">
+			<name>Control Command Echo</name>
+			<script>--send(matches[2])</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^(.*)123</regex>
+		</Alias>
 	</AliasPackage>
 	<ActionPackage />
 	<ScriptPackage />
