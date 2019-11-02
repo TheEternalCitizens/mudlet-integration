@@ -18,7 +18,6 @@ steps:
   image: busybox
   commands:
     - cat mfile
-    - mkdir src/resources
     - mv src/**.* src/resources
     - cp mfile src/resources
     - ls
