@@ -16,9 +16,9 @@ Install [mudlet](https://www.mudlet.org/download/). Open it up, and add a new pr
 
 ![Screenshot from 2019-10-17 07-30-59](https://user-images.githubusercontent.com/3466499/67005268-38d67580-f0b0-11e9-9660-70ecffb995b7.png)
 
-Click "Offline" rather than "Connect" to load the profile without connecting. Open the "Module manager", which you can find in the "Toolbox" select menu in the toolbar at the top of the screen. "Install" all the `.xml` files in this project's `src/` directory, and set them to priority 1. Install `src/imgs.mpackage` as well, and set it to priority 0.
+Click "Offline" rather than "Connect" to load the profile without connecting. Open the "Module manager", which you can find in the "Toolbox" select menu in the toolbar at the top of the screen. "Install" all the `.xml` files in this project's `src/` directory, with the "Sync" checkbox checked.
 
-![Screenshot from 2019-10-31 18-10-17](https://user-images.githubusercontent.com/3466499/67989620-c619de00-fc09-11e9-849f-df91d68e8c6f.png)
+![Screenshot from 2019-11-04 12-07-02](https://user-images.githubusercontent.com/3466499/68141492-a3364500-fefb-11e9-9028-b059a4e168f1.png)
 
 From this point on, you should be ready to tinker! Click "Connect" to connect to the game, and it will prompt you for your username and password. To edit some source code, open one of the files that you just installed -- for example, by clicking the "Scripts" button. Any changes you make here will be written back to your file system when you click "Save Profile". From here, you can use git to contribute your changes to this repository.
 
