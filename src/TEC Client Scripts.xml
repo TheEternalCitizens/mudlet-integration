@@ -33,6 +33,8 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   tecSettings.projectRoot = ""
   tecSettings.projectVersion = ""
   local mudletHomeDir = getMudletHomeDir()
+  --See if our project has been installed as a package
+  --If so, record the path to it
   for file in lfs.dir(mudletHomeDir) do
     if file:sub(1, 22) == "tec-mudlet-integration" then
        tecSettings.projectRoot = mudletHomeDir.."/"..file
@@ -40,7 +42,15 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
        break
     end
   end
-  tecSettings.imagesDir = tecSettings.projectRoot.."/".."images"
+  --If we don't have a project root, then our project must have been
+  --installed as a module rather than a package. In this case, record
+  --the path to the source code where it is synced to
+  if tecSettings.projectRoot == "" then
+    local moduleName = "TEC Client Scripts"
+    local modulePath = getModulePath(moduleName)
+    tecSettings.projectRoot = modulePath:match("(.+)\/src\/"..moduleName)
+  end
+  tecSettings.imagesDir = tecSettings.projectRoot.."/images"
   --set primary text color in game
   --needs to be a hex number WITH # before it.
   --If the back ground is dark this will AUTOMATICALLY be changed
@@ -409,9 +419,6 @@ local nenwExitIconSize = 10 --square size of icon
 tecExit["ne"] = {"0", "1", width, height}
 tecExit["ne"]["0"] = { tecExitStyleSheet = [[border-image: url("]]..tecSettings.imagesDir
 	..[[/]].."exits"..[[/ne_closed.png");]]}
-echo("\n\n")
-echo(tecExit["ne"]["0"]["tecExitStyleSheet"])
-echo("\n\n")
 tecExit["ne"]["1"] = { tecExitStyleSheet = [[border-image: url("]]..tecSettings.imagesDir
 	..[[/]].."exits"..[[/ne_open.png");]]}
 tecExit["ne"].width = nenwExitIconSize
