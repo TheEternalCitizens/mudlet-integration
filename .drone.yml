@@ -19,7 +19,6 @@ steps:
   commands:
     - cat mfile
     - mv src/**.* src/resources
-    - cp mfile src/resources
     - ls
     - ls src
     - ls src/resources
