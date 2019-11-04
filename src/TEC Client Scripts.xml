@@ -30,25 +30,30 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   --Variables to file. So NOT putting tec.Settings. before
   --a variable will mean that it does not get saved to file.
   tecSettings = {}
-  tecSettings.projectRoot = ""
-  tecSettings.projectVersion = ""
+  tecSettings.projectRoot = "noRoot"
+  tecSettings.projectVersion = "noVersion"
   local mudletHomeDir = getMudletHomeDir()
   --See if our project has been installed as a package
   --If so, record the path to it
   for file in lfs.dir(mudletHomeDir) do
     if file:sub(1, 22) == "tec-mudlet-integration" then
-       tecSettings.projectRoot = mudletHomeDir.."/"..file
-       tecSettings.projectVersion = file:sub(24, string.len(file))
-       break
+      tecSettings.projectRoot = mudletHomeDir.."/"..file
+      tecSettings.projectVersion = file:sub(24, string.len(file))
+      break
     end
   end
   --If we don't have a project root, then our project must have been
   --installed as a module rather than a package. In this case, record
   --the path to the source code where it is synced to
-  if tecSettings.projectRoot == "" then
+  if tecSettings.projectRoot == "noRoot" then
     local moduleName = "TEC Client Scripts"
     local modulePath = getModulePath(moduleName)
-    tecSettings.projectRoot = modulePath:match("(.+)\/src\/"..moduleName)
+    if modulePath ~= nil then
+      local projectRoot = modulePath:match("(.+)\/src\/"..moduleName)
+      if projectRoot ~= nil then
+        tecSettings.projectRoot = projectRoot
+      end
+    end
   end
   tecSettings.imagesDir = tecSettings.projectRoot.."/images"
   --set primary text color in game
