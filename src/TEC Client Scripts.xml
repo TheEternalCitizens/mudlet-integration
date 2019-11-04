@@ -30,7 +30,17 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   --Variables to file. So NOT putting tec.Settings. before
   --a variable will mean that it does not get saved to file.
   tecSettings = {}
-  
+  tecSettings.projectRoot = ""
+  tecSettings.projectVersion = ""
+  local mudletHomeDir = getMudletHomeDir()
+  for file in lfs.dir(mudletHomeDir) do
+    if file:sub(1, 22) == "tec-mudlet-integration" then
+       tecSettings.projectRoot = mudletHomeDir.."/"..file
+       tecSettings.projectVersion = file:sub(24, string.len(file))
+       break
+    end
+  end
+  tecSettings.imagesDir = tecSettings.projectRoot.."/".."images"
   --set primary text color in game
   --needs to be a hex number WITH # before it.
   --If the back ground is dark this will AUTOMATICALLY be changed
@@ -395,22 +405,24 @@ tecExit["ver"].height = 10
 
 --Use these to adjust nenw icons
 local nenwExitIconSize = 10 --square size of icon
-
 --now set ne table
 tecExit["ne"] = {"0", "1", width, height}
-tecExit["ne"]["0"] = { tecExitStyleSheet = [[border-image: url("]]..getMudletHomeDir()
-	..[[/]].."imgs"..[[/]].."exits"..[[/ne_closed.png");]]}
-tecExit["ne"]["1"] = { tecExitStyleSheet = [[border-image: url("]]..getMudletHomeDir()
-	..[[/]].."imgs"..[[/]].."exits"..[[/ne_open.png");]]}
+tecExit["ne"]["0"] = { tecExitStyleSheet = [[border-image: url("]]..tecSettings.imagesDir
+	..[[/]].."exits"..[[/ne_closed.png");]]}
+echo("\n\n")
+echo(tecExit["ne"]["0"]["tecExitStyleSheet"])
+echo("\n\n")
+tecExit["ne"]["1"] = { tecExitStyleSheet = [[border-image: url("]]..tecSettings.imagesDir
+	..[[/]].."exits"..[[/ne_open.png");]]}
 tecExit["ne"].width = nenwExitIconSize
 tecExit["ne"].height = nenwExitIconSize
 
 --now set nw table
 tecExit["nw"] = {"0", "1", width, height}
-tecExit["nw"]["0"] = { tecExitStyleSheet = [[border-image: url("]]..getMudletHomeDir()
-	..[[/]].."imgs"..[[/]].."exits"..[[/nw_closed.png");]]}
-tecExit["nw"]["1"] = { tecExitStyleSheet = [[border-image: url("]]..getMudletHomeDir()
-	..[[/]].."imgs"..[[/]].."exits"..[[/nw_open.png");]]}
+tecExit["nw"]["0"] = { tecExitStyleSheet = [[border-image: url("]]..tecSettings.imagesDir
+	..[[/]].."exits"..[[/nw_closed.png");]]}
+tecExit["nw"]["1"] = { tecExitStyleSheet = [[border-image: url("]]..tecSettings.imagesDir
+	..[[/]].."exits"..[[/nw_open.png");]]}
 tecExit["nw"].width = nenwExitIconSize
 tecExit["nw"].height = nenwExitIconSize</script>
 				<eventHandlerList />
@@ -1280,8 +1292,8 @@ GUIframe.defaults = {
     bottomStartHeight = 50,
     resizeHeight = 30,
     resizeWidth = 30,
-    resizeHoverImage = "/imgs/blue_arrows.png",
-    resizeRestImage = "/imgs/blue_arrows_30t.png",
+    resizeHoverImage = "blue_arrows.png",
+    resizeRestImage = "blue_arrows_30t.png",
     borderOffset = 2,
 }
 
@@ -4102,14 +4114,14 @@ end
 --Function that will put images to direction labels. name will be n nw so on in tecCompass under triggers
 function tecCompass.lit(name)
   tecCompass[name]:setStyleSheet([[
-    border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"..[[/]].."compass"..[[/]]..name..[[hover.png");
+    border-image: url("]]..tecSettings.imagesDir..[[/]].."compass"..[[/]]..name..[[hover.png");
     margin: 5px;
   ]])
 end
 --when the space should be unlit change it back to white.
 function tecCompass.unlit(name)
   tecCompass[name]:setStyleSheet([[
-    border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"..[[/]].."compass"..[[/]]..name..[[.png");
+    border-image: url("]]..tecSettings.imagesDir..[[/]].."compass"..[[/]]..name..[[.png");
     margin: 5px;
   ]])
 end
@@ -4126,8 +4138,7 @@ end
 --loop through dirs in table tecCompass
 for k,v in pairs(tecCompass.dirs) do
   tecCompass[v]:setStyleSheet([[
-    border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"
-		..[[/]].."compass"..[[/]]..v..[[.png");
+    border-image: url("]]..tecSettings.imagesDir..[[/]].."compass"..[[/]]..v..[[.png");
     margin: 5px;]]) --apply pictures to directions on compass
   
 	--if tecCompass is clicked, go in that direction
