@@ -18,6 +18,7 @@ steps:
   image: busybox
   commands:
     - cat mfile
+    - mkdir -p src/resources
     - mv images src/resources
     - mv src/**.* src/resources
     - ls
