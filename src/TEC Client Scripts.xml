@@ -4660,11 +4660,29 @@ for _, mapping in pairs(mappings) do --loop trough mappings table using data wit
   macroMenu[mapping.name]:setStyleSheet(macroLabelStyle) --create window layout
 end
 
+function displayResponse(_, filename)
+  echo("\n\n"..filename.."\n\n")
+  -- is the file that downloaded ours?
+  if not filename:find("checkVersion", 1, true) then return end
+
+  -- read the contents of the webpage in
+  local f, s, response = io.open(filename)
+  if f then response = f:read("*a"); io.close(f) end
+  -- delete the file on disk, don't clutter
+  os.remove(filename)
+
+  local json = yajl.to_value(response)
+  display(json)
+end
+
+-- register our function to run on the event that something was downloaded
+registerAnonymousEventHandler("sysDownloadDone", "displayResponse")
+
 --Create a callback function
 --When the user clicks a macro button, this function will send the button name to the server. For
 --example, when the user clicks the first button, we will send "fe1" to the server.
 function onMacroClick(name)
-  send(name, false)
+  downloadFile(getMudletHomeDir().."/checkVersion", "https://api.github.com/repos/TheEternalCitizens/mudlet-integration/releases/latest")
 end
 
 --Add the macro menu to the top left of the screen
