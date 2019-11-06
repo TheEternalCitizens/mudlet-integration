@@ -37,6 +37,23 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   --in the text filter trigger.
   tecSettings.tecTextColor = "#c0c0c0"
   
+  --Changes colors because defaults have too much contrast.
+  tecSettings.GreenTextColor = "#77dd77"
+  tecSettings.BlueTextColor = "#8888ff"
+  tecSettings.PurpleTextColor = "#cca9dd"
+  
+  --background color for labels.
+  tecSettings.labelBackgroundColor = "#537dC0"
+  
+  --background color for tabs.
+  tecSettings.tabsBackgroundColor = "#436db0"
+  
+  --Color of label backgrounds and tabs as mouse hovers over them.
+  tecSettings.hoverColor = "#5e8eff"
+  
+  --color that help text is highlighted in
+  tecSettings.helpHighlightColor = "SteelBlue"
+  
   --default font size. Do not save it to file.
   tecDefaultFontSize = 14
   
@@ -109,16 +126,104 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   
   --Spaces inventory list 
   tecInventorySpacer = ""
+  
+  --use for functions that need to loop through all text windows 
+  tecTextWindowNames = {"main", "tecSettingsConsole"
+    ,"roomCharacters.console" , "Communication"
+    ,"Thoughts", "Speech"}
 
 	tecDebugSaveDir = getMudletHomeDir().."\/DebugingFiles\/"
 
-	if displayToScreen then echo("Client settings set to default.") end
+	if displayToScreen then echo("Client settings set to default.\n") end
 
 end --function tecClientReset()
 
 tecClientReset(false) --Calling the function so these variables get created.</script>
 				<eventHandlerList />
 			</Script>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>Data Functions</name>
+				<packageName></packageName>
+				<script>--Functions that work directly with many variables that have nothing logically in common.
+--For example they aren't all variables for display settings, all for font or debuging.</script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>tecFileSaveSettings(displayToScreen)</name>
+					<packageName></packageName>
+					<script>--Save client settings to file
+function tecFileSaveSettings(displayToScreen)
+
+--Idealy implimenting some kind of error checking would be great.
+--Maybe making tecFileLoadSettings into a function that returns a table
+--rather than loads the data into a global settings table
+
+  --Save the table to file.
+  table.save(getMudletHomeDir() .. "/TECClientData.lua", tecSettings)
+	
+	--display save to screen
+	if displayToScreen then echo("Client settings saved.") end
+end</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecFileLoadSettings(displayToScreen)</name>
+					<packageName></packageName>
+					<script>--This perhaps should be in a sysLoadEvent
+
+--This bugs on startup because it is calling debugToDisplay before it is declared.
+
+--Loads variable and theme settings from file.
+--Notify is boolean, to let the user know the event occured.
+--In this case it is also a to screen notification that it was 
+--successfull
+function tecFileLoadSettings(displayToScreen)
+
+	--Set the location and name of file.	
+	local path = getMudletHomeDir() .. "/TECClientData.lua"
+	path = path:gsub("\\","/")
+	--If the file does not exist let the user know.
+  if not io.exists(path) then 
+		debugToDisplay("tecFileLoadSettings: save file doesn't exist.") --TEC debug screen
+		debugc("tecFileLoadSettings: save file doesn't exist.") --mudlets debug screen
+		echo("settings did not load from file\n")
+	return --kill the function before real errors occur
+	else
+  table.load(path, tecSettings) --Load the settings in from file
+	if displayToScreen then echo("Settings successfully loaded from file\n") end
+	end --end if file exists else
+end --function tecFileLoadSettings
+
+--Call the function so data loads when mudlet starts.
+tecFileLoadSettings(true)
+
+--Now change some settings since data has been loaded
+setFontSize(tecSettings.tecFontSize) --font size</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecClientSaveAll(displayToScreen)</name>
+					<packageName></packageName>
+					<script>function tecClientSaveAll(displayToScreen)
+  --Save client data to file.
+  tecFileSaveSettings()
+  if displayToScreen then echo("Client data saved to file.\n") end
+  
+  --saves the gui loadWindowLayout
+  GUIframe.saveSettings()
+  if displayToScreen then echo("Display settings saved to file.\n") end
+end --function tecClientSaveAll</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>clearTECRoomObjects()</name>
+					<packageName></packageName>
+					<script>--used to keep track of characters in current room.
+function clearTECRoomObjects()
+	tecRoomObjects = {characters = {}, checkActive = false, lc = 1}
+end --fuctoin clearTecRoomObjects</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>
 			<Script isActive="yes" isFolder="no">
 				<name>Themes</name>
 				<packageName></packageName>
@@ -146,7 +251,7 @@ tabsHeight = 30
 --Used here for easy hover affects
 tabsStyle = [[
 	QLabel{
-		background-color: gray;
+		background-color: ]]..tecSettings.tabsBackgroundColor..[[;
     border-width: 1px;
     border-style: outset;
     border-color: lightgray;
@@ -158,7 +263,7 @@ tabsStyle = [[
     qproperty-alignment: 'AlignCenter | AlignCenter';
   }
 	QLabel::hover{
-		background-color: black;
+		background-color: ]]..tecSettings.hoverColor..[[;
     border-width: 1px;
     border-style: outset;
     border-color: gray;
@@ -172,13 +277,30 @@ tabsStyle = [[
 ]]
 
 --This is now tabs text looks
-tabsFontStyle = '&lt;center&gt;&lt;p style="font-size:18px; color:white"&gt;'
+tabsFontStyle = '&lt;center&gt;&lt;p style="font-size:18px; color:lightgray"&gt;'
 
---Default label style.
-labelsStyle = [[background-color: gray;
-								border-width: 1px;
-								border-style: outset;
-								border-color: lightgray;]]
+labelsStyle = [[
+	QLabel{
+		background-color: ]]..tecSettings.labelBackgroundColor..[[;
+    border-width: 1px;
+    border-style: outset;
+    border-color: lightgray;
+    margin-right: 1px;
+    margin-left: 1px;
+		font-size: 50px;
+    qproperty-alignment: 'AlignCenter | AlignCenter';
+  }
+	QLabel::hover{
+		background-color: ]]..tecSettings.hoverColor..[[;
+    border-width: 1px;
+    border-style: outset;
+    border-color: gray;
+    margin-right: 1px;
+    margin-left: 1px;
+		font-size: 50px;
+    qproperty-alignment: 'AlignCenter | AlignCenter';
+  }
+]]
 								
 buttonsStyle = [[QPushButton{
                 		background-color: gray;
@@ -293,89 +415,6 @@ tecExit["nw"].width = nenwExitIconSize
 tecExit["nw"].height = nenwExitIconSize</script>
 				<eventHandlerList />
 			</Script>
-			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>Data Functions</name>
-				<packageName></packageName>
-				<script>--Functions that work directly with many variables that have nothing logically in common.
---For example they aren't all variables for display settings, all for font or debuging.</script>
-				<eventHandlerList />
-				<Script isActive="yes" isFolder="no">
-					<name>tecFileSaveSettings(displayToScreen)</name>
-					<packageName></packageName>
-					<script>--Save client settings to file
-function tecFileSaveSettings(displayToScreen)
-
---Idealy implimenting some kind of error checking would be great.
---Maybe making tecFileLoadSettings into a function that returns a table
---rather than loads the data into a global settings table
-
-  --Save the table to file.
-  table.save(getMudletHomeDir() .. "/TECClientData.lua", tecSettings)
-	
-	--display save to screen
-	if displayToScreen then echo("Client settings saved.") end
-end</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>tecFileLoadSettings(displayToScreen)</name>
-					<packageName></packageName>
-					<script>--This perhaps should be in a sysLoadEvent
-
---This bugs on startup because it is calling debugToDisplay before it is declared.
-
---Loads variable and theme settings from file.
---Notify is boolean, to let the user know the event occured.
---In this case it is also a to screen notification that it was 
---successfull
-function tecFileLoadSettings(displayToScreen)
-
-	--Set the location and name of file.	
-	local path = getMudletHomeDir() .. "/TECClientData.lua"
-	path = path:gsub("\\","/")
-	--If the file does not exist let the user know.
-  if not io.exists(path) then 
-		debugToDisplay("tecFileLoadSettings: save file doesn't exist.") --TEC debug screen
-		debugc("tecFileLoadSettings: save file doesn't exist.") --mudlets debug screen
-		echo("settings did not load from file\n")
-	return --kill the function before real errors occur
-	else
-  table.load(path, tecSettings) --Load the settings in from file
-	if displayToScreen then echo("Settings successfully loaded from file\n") end
-	end --end if file exists else
-end --function tecFileLoadSettings
-
---Call the function so data loads when mudlet starts.
-tecFileLoadSettings(true)
-
---Now change some settings since data has been loaded
-setFontSize(tecSettings.tecFontSize) --font size</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>tecClientSaveAll(displayToScreen)</name>
-					<packageName></packageName>
-					<script>function tecClientSaveAll(displayToScreen)
-  --Save client data to file.
-  tecFileSaveSettings()
-  if displayToScreen then echo("Client data saved to file.\n") end
-  
-  --saves the gui loadWindowLayout
-  GUIframe.saveSettings()
-  if displayToScreen then echo("Display settings saved to file.\n") end
-end --function tecClientSaveAll</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>clearTECRoomObjects()</name>
-					<packageName></packageName>
-					<script>--used to keep track of characters in current room.
-function clearTECRoomObjects()
-	tecRoomObjects = {characters = {}, checkActive = false, lc = 1}
-end --fuctoin clearTecRoomObjects</script>
-					<eventHandlerList />
-				</Script>
-			</ScriptGroup>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
 			<name>mudlet Communidy Functions</name>
@@ -2513,7 +2552,7 @@ function tecReportIssuesHelp(tecBrief, tecWindow)
 	tecWindow = tecWindow or "main"
 	tecBrief = tecBrief or false
 
-  cechoLink(tecWindow, "&lt;:blue&gt;debug report issue", 
+  cechoLink(tecWindow, "&lt;:"..tecSettings.helpHighlightColor.."&gt;debug report issue", 
   	[[tecReportIssues()]], 
   	"Report client issues", true)
   if not tecBrief then --if we do not want to be brief
@@ -2528,48 +2567,48 @@ function tecReportDebugHelp()
 	echo("Please do not follow these steps unless you have opened an issue report and "
 		.."were asked to collect debug data from a developer.\n"
 		.."The debug modes available are: ")
-  cechoLink("&lt;:blue&gt;debug on&lt;reset&gt;, ", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug on&lt;reset&gt;, ", 
   	[[setTECDebugMode(true)]], 
   	"Enable basic debug", true)
-  cechoLink("&lt;:blue&gt;debug display on&lt;reset&gt;, ", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug display on&lt;reset&gt;, ", 
   	[[setTECDisplayDebugMode(true)]], 
   	"Enable display debugging", true)
-  cechoLink("&lt;:blue&gt;debug map on&lt;reset&gt;, ", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug map on&lt;reset&gt;, ", 
   	[[setTECMapDebugMode(true)]], 
   	"Enable map debugging", true)
 	echo("and ")
-  cechoLink("&lt;:blue&gt;debug timer on&lt;reset&gt;.\n", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug timer on&lt;reset&gt;.\n", 
   	[[setTECTimerDebugMode(true)]], 
   	"Enable timer debugging", true)
 	echo("After enabling the debug mode or modes requested clear your main window with, ") 
-  cechoLink("&lt;:blue&gt;display clear\n", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display clear\n", 
   [[tecClearDisplay() tecReportDebugHelp()]], 
   "Remove text from main screen", true)
 	echo("Now cause the issue reported to occur. After you have disable debug mode with ")
-  cechoLink("&lt;:blue&gt;debug off.\n", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug off.\n", 
   	[[setTECDebugMode(false)]], 
   	"Disable debugging", true)
 	echo("Please verify the debug window has text in it than click ")
-	cechoLink("&lt;:blue&gt;Save debug window.\n", 
+	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Save debug window.\n", 
   	[[tecSaveWindowText("tecDebugWindow")]], 
   	"Save debug window text to file", true)
 	echo("Please save the text in the main window to file by clicking: ")
-	cechoLink("&lt;:blue&gt;Save main window.\n", 
+	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Save main window.\n", 
   	[[tecSaveWindowText()]], 
   	"Save main window text to file", true)
 	echo("Open your issue report, at the TEC gitHub ")
-	  cechoLink("&lt;:blue&gt;Issue Page.\n", 
+	  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Issue Page.\n", 
   	[[openUrl("https://github.com/TheEternalCitizens/mudlet-integration/issues")]], 
   	"Goto issues page", true)
 	echo("Open the folder that contains the debug window text by clicking ")
-	cechoLink("&lt;:blue&gt;Open Folder.\n", 
+	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Open Folder.\n", 
   	[[tecOpenDirectory(tecDebugSaveDir)]], 
   	"Open debug save folder", true)
 	cecho("Open main.txt and tecDebugWindow.txt and verify nothing is in it that you would "
 		.."not want to be viewed by the public.\n"
 		.."&lt;black:red&gt;If for any reason you do not want to make text on your screen publically visable "
 		.."please skip the next step highlighted in blue.&lt;reset&gt; "
-		.."&lt;:blue&gt;Drag the files tecDebugWindow.txt and main.txt into the comment area of your "
+		.."&lt;:"..tecSettings.helpHighlightColor.."&gt;Drag the files tecDebugWindow.txt and main.txt into the comment area of your "
 		.."gitHub issues report.&lt;reset&gt;\n"
 		.."To update your issue click the green button labeled -Comment-\n"
 		.."It may take days or weeks to receive a reply to your issue report.\n")
@@ -2578,7 +2617,7 @@ end --function tecReportDebugHelp()
 function tecReportStandardIssue()
 	echo("\n---Create an issue request helper---\n")
 	echo("Go to the client's issue reporting gitHub page: ")
-  cechoLink("&lt;:blue&gt;Issue Page.\n", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Issue Page.\n", 
   	[[openUrl("https://github.com/TheEternalCitizens/mudlet-integration/issues")]], 
   	"Goto issues page", true)
 	echo("Please view our current open issues to see if your issue was already reported.\n"
@@ -2589,22 +2628,22 @@ function tecReportStandardIssue()
 		.."It is highly recommendable to clear you main display and recreate your issue "
 		.."before continuing forward.\n"
 		.."If you would like to, clear your display with: ")
-  cechoLink("&lt;:blue&gt;display clear\n", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display clear\n", 
   [[tecClearDisplay() tecReportDebugHelp()]], 
   "Remove text from main screen", true)
 	echo("Save the text in the main window to file by clicking: ")
-	cechoLink("&lt;:blue&gt;Save main window.\n", 
+	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Save main window.\n", 
   	[[tecSaveWindowText()]], 
   	"Save main window text to file", true)
 	echo("This file is called main.txt and can easily found by clicking: ")
-	cechoLink("&lt;:blue&gt;Open Folder.\n", 
+	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Open Folder.\n", 
   	[[tecOpenDirectory(tecDebugSaveDir)]], 
   	"Open debug save folder", true)
 	cecho("Open main.txt and verify nothing is in it that you would not want to be viewed "
 		.."by the public!\n"
 		.."&lt;black:red&gt;If for any reason you do not want to make text on your screen publically visable "
 		.."please skip the next step highlighted in blue.&lt;reset&gt; "
-		.."&lt;:blue&gt;Now drag the file main.txt into the comment area of the gitHub issues report.&lt;reset&gt;\n"
+		.."&lt;:"..tecSettings.helpHighlightColor.."&gt;Now drag the file main.txt into the comment area of the gitHub issues report.&lt;reset&gt;\n"
 		.."At this time, please do not attach any other files to the issue report.\n"
 		.."To submit your issue click the green button labeled -Submit new issue-\n"
 		.."It may take days or weeks to receive a reply to your issue report.\n")
@@ -2614,11 +2653,11 @@ function tecReportIssues()
 
 	cecho("&lt;black:red&gt;\nPlease follow the instructions below.\n")
 
-	cechoLink("&lt;:blue&gt;\n---Start an issue request---\n", 
+	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;\n---Start an issue request---\n", 
   	[[tecReportStandardIssue()]], 
   	"Standard issue report tutorial", true)
 	
-	cechoLink("&lt;:blue&gt;\n---A developer asked you to enable debug---", 
+	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;\n---A developer asked you to enable debug---", 
   	[[tecReportDebugHelp()]], 
   	"Debug collection tutorial", true)
 		
@@ -2659,7 +2698,7 @@ end --end function getTECdebugMode</script>
 function tecColorTest()
 
   echo("\ndefault text\n")
-  cecho("\ncecho: &lt;:blue&gt;blue background, &lt;red:white&gt;Red text white background.\n")
+  cecho("\ncecho: &lt;:"..tecSettings.helpHighlightColor.."&gt;blue background, &lt;red:white&gt;Red text white background.\n")
   decho("\ndecho: &lt;:255,0,0&gt;Red background, &lt;0,0,255:0,255,0&gt;Blue text green background.\n")
   hecho("\nhecho: #ff0000Red text, #3c00ffBlue text.\n")
 
@@ -2897,7 +2936,7 @@ end --function getInventoryFormater</script>
   		.."They are:\n")	
   end --end if not tecBrief
  
-  cechoLink(tecWindow, "&lt;:blue&gt;client", 
+  cechoLink(tecWindow, "&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient", 
   [[tecClientHelp()]], 
   "Save or load client settings.", true)
   if not tecBrief then --if we do not want to be brief
@@ -2905,7 +2944,7 @@ end --function getInventoryFormater</script>
 	else echo(tecWindow, "\n")
   end --end if not tecBrief
  
-  cechoLink(tecWindow, "&lt;:blue&gt;display", 
+  cechoLink(tecWindow, "&lt;:"..tecSettings.helpHighlightColor.."&gt;display", 
   [[tecDisplayHelp()]], 
   "Change display settings.", true)
   if not tecBrief then --if we do not want to be brief
@@ -2915,7 +2954,7 @@ end --function getInventoryFormater</script>
 	else echo(tecWindow, "\n")
   end --end if not tecBrief
   
-  cechoLink(tecWindow, "&lt;:blue&gt;debug", 
+  cechoLink(tecWindow, "&lt;:"..tecSettings.helpHighlightColor.."&gt;debug", 
   [[tecDebugHelp()]], 
   "Create debug messages", true)
   if not tecBrief then --if we do not want to be brief
@@ -2934,47 +2973,47 @@ end --end function tecClientFullHelp</script>
   cecho("\n&lt;black:red&gt;Debug mode is intended for collecting data to report "
 		.."issues.&lt;reset&gt;\n")
   
-  cechoLink("&lt;:blue&gt;debug on", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug on", 
   [[setTECDebugMode(true)]],
   "Send debug text to debug window", true)
   echo(", Create debug window and send basic info to it.\n")
   
-  cechoLink("&lt;:blue&gt;debug off", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug off", 
   [[setTECDisplayDebugMode(false) setTECMapDebugMode(false) setTECDebugMode(false)]],
   "Stop all debug messages", true)
   echo(", Stops sending all debug messages.\n")
   
-  cechoLink("&lt;:blue&gt;debug display on", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug display on", 
   [[setTECDisplayDebugMode(true)]],
   "Show display messages to debug window", true)
   echo(", Send display information to debug.\n")
   
-  cechoLink("&lt;:blue&gt;debug display off", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug display off", 
   [[setTECDisplayDebugMode(false)]],
   "Stop showing display messages to debug window", true)
   echo(", Disables display debug messages only.\n")
   
-  cechoLink("&lt;:blue&gt;debug map on", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug map on", 
   [[setTECMapDebugMode(true)]],
   "Show map messages to debug window", true)
   echo(", Send map debug messages to debug.\n")
   
-  cechoLink("&lt;:blue&gt;debug map off", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug map off", 
   [[setTECMapDebugMode(false)]],
   "Stop showing map messages to debug window", true)
   echo(", Disables map debug messages only.\n")
   
-  cechoLink("&lt;:blue&gt;debug timers on", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug timers on", 
   [[setTECTimerDebugMode(true)]],
   "Start showing timmer messages to debug window", true)
   echo(", Send timer debug messages to debug.\n")
   
-  cechoLink("&lt;:blue&gt;debug timers off", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug timers off", 
   [[setTECTimerDebugMode(false)]],
   "Stop showing timmer messages to debug window", true)
   echo(", Disables timmer debug messages only.\n")
   
-  cechoLink("&lt;:blue&gt;debug test colors", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug test colors", 
   [[tecColorTest()]],
   "Send basic colors to screen", true)
   echo(", Sends colored text to screen.\n")
@@ -2991,42 +3030,42 @@ end --end function tecDebugHelp</script>
 					<name>tecDisplayHelp()</name>
 					<packageName></packageName>
 					<script>function tecResizeDisplayHelp() --explains how to resize display
-	cecho("\n&lt;red:blue&gt;\\\/\\\/All windows can be resized! Read Below.\\\/\\\/&lt;reset&gt;\n"
+	cecho("\n&lt;black:"..tecSettings.helpHighlightColor.."&gt;\\\/\\\/All windows can be resized! Read Below.\\\/\\\/&lt;reset&gt;\n"
 		.."Version one allows this by RIGHT "
 		.."clicking one of the four faint blue arrows and dragging it. "
 		.."These arrows are on the top, bottom, left and right outer edges "
 		.."of the main text window that this text appears in. "
 		.."When you move your mouse over the arrows they will "
 		.."become bold blue arrows."
-		.."\n&lt;red:blue&gt;\/\\\/\\All windows can be resized! Read Above.\/\\\/\\&lt;reset&gt;\n")
+		.."\n&lt;black:"..tecSettings.helpHighlightColor.."&gt;\/\\\/\\All windows can be resized! Read Above.\/\\\/\\&lt;reset&gt;\n")
 end --function tecResizeDisplayHelp
 
 function tecDisplayHelp()
   
   echo("\nDisplay commands:\n")
 	
-  cechoLink("&lt;:blue&gt;display clear", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display clear", 
   [[tecClearDisplay()]], 
   "Remove text from main screen", true)
 	echo(", clear text from main text console.\n")
 	
-  cechoLink("&lt;:blue&gt;display save", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display save", 
   [[tecClientDisplaySave(true)]], 
   "Save window positions", true)
 	echo(", save window positions.\n")
 	
-	cechoLink("&lt;:blue&gt;display load", 
+	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display load", 
   [[tecClientDisplayLoad(true)]], 
   "Load window positions", true)
 	echo(", reset window positions to last save.\n")
 	
-	cechoLink("&lt;:blue&gt;display reset", 
+	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display reset", 
   [[tecClientDisplayReset()]], 
   "Reset window positions", true)
 	echo(", reset window positions to default. "
 		.."This WILL require you to restart mudlet.\n")
 		
-	cechoLink("&lt;:blue&gt;display refresh settings", 
+	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display refresh settings", 
   [[tecClientDisplayReset()]], 
   "Refresh text in settings", true)
 	echo(", clears and reloads text in settings window. ")
@@ -3043,41 +3082,125 @@ end --end tecDisplayHelp()</script>
 
   echo("\ntecclient command:\n")
 	
-  cechoLink("&lt;:blue&gt;tecclient font size", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient font size", 
   [[printCmdLine("tecclient font size ")]],
   "Change client font size", true)
   echo(", Change font size for all consoles.\n")
   
-  cechoLink("&lt;:blue&gt;tecclient save all", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient change colors", 
+  [[tecClientChangeColors()]],
+  "Change client colors", true)
+  echo(", Change color scheme for client.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save all", 
   [[tecClientSaveAll(true)]],
   "Save all client settings", true)
   echo(", Save client and display settings to file.\n")
   
-  cechoLink("&lt;:blue&gt;tecclient save", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save", 
   [[tecFileSaveSettings(true)]],
   "Save client settings", true)
   echo(", Save basic client settings to file.\n")
   
-  cechoLink("&lt;:blue&gt;tecclient load", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient load", 
   [[tecFileLoadSettings(true)]],
   "Load client settings from file", true)
   echo(", Loads client settings from file. You need to run -tecclient"
   	.." save- or -tecclient save all- to create a settings file.\n")
   
-  cechoLink("&lt;:blue&gt;tecclient reset", 
-  [[tecClientReset(true)]],
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient reset", 
+  [[tecClientReset(true);tecFileSaveSettings(true)]],
   "Reset client to default", true)
   echo(", Reset client to default client settings.\n"
   	.."Use -display reset- or -tecclient reset all- to reset display.\n")
   	
-  cechoLink("&lt;:blue&gt;tecclient reset all", 
-  [[tecClientResetAll()]],
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient reset all", 
+  [[tecClientResetAll();tecClientSaveAll("true")]],
   "Reset all client settings to default", true)
   echo(", Reset client and display to default settings. "
   	.."Saves default settings to file and disconnects client.\n"
   	.."This command REQUIRES a restart of mudlet!\n")
 
 end --function tecClientHelp</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecClientChangeColors()</name>
+					<packageName></packageName>
+					<script>function tecClientChangeColors()
+
+  cecho("\nList color names with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient colors\n", 
+  [[showColors(3)]],
+  "List color names", true)
+  
+  cecho("Color names in each command can be a hex color also, IE: #FF0000 is red."
+    .." If you would like to use hex colors here is a ")
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;hex color picker.\n", 
+  [[openUrl("https://www.w3schools.com/colors/colors_picker.asp")]],
+  "Hex color tool", true)
+  
+  cecho("Change background color of windows that do not have text with: ")
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient windows background color colorname", 
+  [[printCmdLine("tecclient windows background color ");
+    cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
+  "Change background color nontext windows", true)
+  cecho("&lt;-Restart required.\n")
+
+  cecho("Change background color of windows that have text in them with: ")
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient background colorname ", 
+  [[printCmdLine("tecclient background ");
+    cecho("You will need to restart for text background to change")]],
+  "Change background color of text windows", true)
+  cecho("&lt;-Restart required.\n")
+  cecho("Command echos must be changed in Options -&gt; Preferences -&gt; Color View -&gt; Command Background.\n")
+  
+  cecho("Change background color of the client's tabs with: ")
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient tabs background color colorname ", 
+  [[printCmdLine("tecclient tabs background color ");
+    cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
+  "Change background color clients tabs", true)
+  cecho("&lt;-Restart required.\n")
+  
+  cecho("Change the color of windows and tabs as your mouse hovers over them: ")
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient hover color colorname ", 
+  [[printCmdLine("tecclient hover color ");
+    cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
+  "Change mouse hover color", true)
+  cecho("&lt;-Restart required.\n")
+  
+  cecho("Change the color help commands are highlighted in: ")
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient helphighlight color colorname\n", 
+  [[printCmdLine("tecclient helphighlight color ");
+    cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
+  "Change help command highlight color", true)
+
+  cecho("Change TEC's primary text color: ")
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient text color colorname\n", 
+  [[printCmdLine("tecclient text color ");
+    cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
+  "Change TEC's primary text color", true)
+  
+  cecho("Change the color of TEC's default green: ")
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient greentext color colorname\n", 
+  [[printCmdLine("tecclient greentext color ");
+    cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
+  "Change TEC's green text color", true)
+  
+  cecho("Change the color of TEC's default blue: ")
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient bluetext color colorname\n", 
+  [[printCmdLine("tecclient bluetext color ");
+    cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
+  "Change TEC's blue text color", true)
+  
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  
+  cecho("")
+
+end --function tecClientChangeColors()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -3256,25 +3379,37 @@ end --startRoomCharacterCheck()</script>
 
 	clearWindow("tecSettingsConsole")
 
-  cechoLink("tecSettingsConsole", "&lt;:blue&gt;Save\n", 
+  cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Save\n", 
   [[tecClientSaveAll(true)]],
   "Save all client settings", true)
 	
   cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Load\n", 
   [[tecFileLoadSettings(true)]],
   "Load client settings from last save", true)
+  
+  cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Update\n", 
+  [[tecUpdate.checkVersion()]],
+  "Check for updates", true)
 	
-  cechoLink("tecSettingsConsole", "&lt;:blue&gt;Font Size\n", 
+  cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Font Size\n", 
   [[printCmdLine("tecclient font size ")]],
   "Change client font size", true)
 	
   cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Resize Windows\n", 
   [[tecResizeDisplayHelp()]],
   "Change client font size", true)
-	
-  cechoLink("tecSettingsConsole", "&lt;:blue&gt;Report Issues\n", 
+
+  cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Change Colors\n", 
+  [[tecClientChangeColors()]],
+  "Change client colors", true)
+
+  cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Report Issues\n", 
   [[tecReportIssues()]],
   "Report issues or bugs", true)
+  
+  cechoLink("tecSettingsConsole", "\n&lt;:"..tecSettings.helpHighlightColor.."&gt;Reset\n", 
+  [[tecClientResetAll()]],
+  "Reset all changes to default", true)
   
 	echo("tecSettingsConsole","\nFull Lists:\n")
 	--run the client help command. It is a function so it can be clicked.
@@ -3577,6 +3712,282 @@ function tecRoomCharRefreshNotification()
 end --function recRoomCharRefreshNotification()</script>
 					<eventHandlerList />
 				</Script>
+					<name>tec Auto Updates</name>
+					<packageName></packageName>
+					<script>--Script to handle downloading updates.
+
+tecUpdate = {}
+
+function tecUpdate.config() --Create variables used for updates
+  tecUpdate.versionsFile = "tecClientVersions.lua" --name of file containing versions
+  tecUpdate.scriptNamesFile = "tecClientScriptNames.lua" --name of file containing script names
+  tecUpdate.versionsRespitory = getMudletHomeDir().."/settings/" --local folder save files in
+  if not io.exists(tecUpdate.versionsRespitory) then --if folder does not exists
+    lfs.mkdir(tecUpdate.versionsRespitory) --create the folder
+  end --if tecUpdate.versionsRespitory not exist
+  tecUpdate.version = ".01" --current client version
+  tecUpdate.versions = {".01",".02"} --List of all versions, old and current
+  tecUpdate.download_path = "https://raw.githubusercontent.com/TheEternalCitizens/mudlet-integration/AutomatedUpdates/src/"
+  tecUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
+  
+  --The script that contains the update function must be at the end of this table!
+  tecUpdate.scriptNames = {[[TEC Client Aliases.xml]], [[TEC Client KeyBindings.xml]]
+    ,[[imgs.mpackage]], [[TEC Client Timers.xml]], [[TEC Client Triggers.xml]]
+    ,[[TEC Client Scripts.xml]]}
+end --function tecUpdate.config
+tecUpdate.config() --run it on startup so data is configured.
+
+--From this point until function tecUpdate.eventHandler the functions are in the 
+--same logical order they will be processed in. The only reason for this is to 
+--make it more simple to understand.
+--As you are following this, keep in mind that we do not know how long a file will
+--take to download. So we have to use tecUpdate.eventHandler to run the next function
+--after a download has completed.
+
+--Download file used to check version. Called on automatically on startup
+--or by clicking update in settings box.
+function tecUpdate.checkVersion()
+  if tecUpdate.update_timer then --if the timer exists
+    killTimer(tecUpdate.update_timer) --stop the timer
+    tecUpdate.update_timer = nil --set the timer to nil
+  end -- if tecUpdate.update_timer exists
+  debugToDisplay(
+    "\nUpdate: Version file Downloading from: "
+      ..tecUpdate.download_path .. tecUpdate.versionsFile
+      .."\nUpdate: downloading version file to: "..tecUpdate.versionsRespitory
+      ..tecUpdate.versionsFile
+  ) --end debugToDisplay
+  downloading = true --Used during sysDownloadDone event handler in this script
+  --download the latest version file to the users profile
+  downloadFile(tecUpdate.versionsRespitory .. tecUpdate.versionsFile, 
+    tecUpdate.download_path .. tecUpdate.versionsFile) --second half of downloadFile
+end --tecUpdate.checkVersion
+
+--Called when downloadDone event finds version file downloaded.
+--This function checks it latest version is installed. Prompts the user to update if it is.
+local function check_version()
+  downloading = false --Used during sysDownloadDone event handler in this script
+  local path = tecUpdate.versionsRespitory .. tecUpdate.versionsFile --folder and file names
+  debugToDisplay("Update: Loading version file: "..path)
+  tecUpdate.versions = {} --will hold the versions table that contains current list of versions.
+  table.load(path, tecUpdate.versions) --load the versions file.
+  --Find the currently used version's position in the versions master file.
+  local pos = table.index_of(tecUpdate.versions, tecUpdate.version) or 0
+  debugToDisplay("Update: Current client version: "..tecUpdate.version
+    .."\n\tfound in versions file at position: "..tostring(pos))
+  if pos ~= #tecUpdate.versions then --if the current version is the not last in the version file.
+    debugToDisplay("Update: An update is available")
+    enableAlias(tecUpdate.aliasName) --enable alias so user can run update with command
+    cecho(string.format("&lt;:maroon&gt;TEC Client is currently %s versions behind.\n",#tecUpdate.versions - pos))
+    cecho("&lt;:maroon&gt;To update now, please run: ")
+    cechoLink("&lt;:blue&gt;tecclient update", --link text to display
+      [[tecUpdate.downloadScriptsNames()]], --link command to run
+      "Update game client", true) --link tool tip for mouse hover
+    echo("\n") --cechoLinks don't cause the window to autoscroll.
+  else --if an update is not needed.
+    cecho("You are using the latest TEC Client.\n")
+    --restart the check timer that forces the version check in an hour.
+    tecUpdate.update_timer = tempTimer(3600, [[tecUpdate.checkVersion()]])
+  end --if current version is latest
+end --function check_version
+
+--At this point the user has a prompt on screen asking to update.
+
+--Run when user clicks tecclient update, on update prompt from end of check_version
+--or when user runs command tecclient update after check_version found an update was needed.
+--Downloads a file that contains a table listing all script files used in this project.
+--Doing this via downloaded file so scripts can be added in the future.
+function tecUpdate.downloadScriptsNames()
+  disableAlias(tecUpdate.aliasName) --so user does not start symotanious downloads
+  downloading = true --Used during sysDownloadDone event handler in this script
+  debugToDisplay("Update: Downloading "..tecUpdate.download_path..tecUpdate.scriptNamesFile
+    .."\n\t To folder: "..tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile)
+  downloadFile(tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile, tecUpdate.download_path..tecUpdate.scriptNamesFile)
+end --function tecUpdate.downloadScriptNames
+
+--Called when downloadDone event finds scriptsNames file downloaded.
+--loads scripts file into tecUpdates.scriptNames table.
+--Than runs the update.
+local function loadScriptsNames()
+  downloading = false --Used during sysDownloadDone event handler in this script
+  tecUpdate.scriptNames = {} --clear out script names
+  debugToDisplay("Update: Loading "..tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile
+    .."\n\tTo table: tecUpdate.scriptNames")
+  --Load script names from file to tec
+  table.load(tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile, tecUpdate.scriptNames)
+  --Run updates now that we have a full list of script names.
+  tecUpdate.updateVersion()
+end --function tecUpdate.loadScripts
+
+--runs once loadScripsName completes. These are two functions due to formating only.
+--Downloads the packages needed for the update.
+function tecUpdate.updateVersion() --Download the new client
+  for index, scriptName in ipairs(tecUpdate.scriptNames) do --Loop through all scripts
+    local path, file = tecUpdate.versionsRespitory , scriptName
+    downloading = true --Used during sysDownloadDone event handler in this script
+    debugToDisplay(
+      "Update Downloading from: "..tecUpdate.download_path..file
+      .."\nUpdate: downloading file to: "..path..file
+      ) --end debugToDisplay
+    downloadFile(path..file, tecUpdate.download_path..file) --download the new client scripts
+  end --for tecUpdate.scriptNames
+end --functyion tecUpdate.updateVersion()
+
+--Runs when sysDownloadDone event finds the LAST file in tecUpdate.scriptNames has downloaded
+local function update_version() --install the new client after download was completed
+  downloading = false --Used during sysDownloadDone event handler in this script
+  debugToDisplay("Update: Disabling alias: "..tecUpdate.aliasName)
+  for index, scriptName in ipairs(tecUpdate.scriptNames) do --loop through scripts, and install them
+    debugToDisplay("Update: Uninstalling package: "..scriptName:match("(.*)%."))
+    uninstallPackage(scriptName:match("(.*)%.")) --remove old package
+    debugToDisplay("Update: Installing package: "..tecUpdate.versionsRespitory..scriptName)
+    installPackage(tecUpdate.versionsRespitory..scriptName) --install new package
+  end --for tecUpdate.scriptNames
+  cecho("Updates completed.\n")
+end --function update_version
+
+--Make it easy for devs to create and manage scriptNames files.
+function tecUpdate.saveScriptNames()
+  tecUpdate.config() --Creates the script names table
+  --Save the script names table to file.
+  table.save(tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile, tecUpdate.scriptNames) 
+  cecho("Save script to: "..tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile.."\n")
+  cechoLink("&lt;:blue&gt;Open Directory", 
+  [[tecOpenDirectory(tecUpdate.versionsRespitory)]],
+  "Open folder "..tecUpdate.scriptNamesFile.." is in", true)
+  cecho(" "..tecUpdate.scriptNamesFile.." is in.\n")
+end --function tecUpdate.saveScriptNames
+
+--Make it easy for devs to create and manage versions files.
+function tecUpdate.saveVersions()
+  tecUpdate.config() --Creates the versions table
+  --Save the versions table to file.
+  table.save(tecUpdate.versionsRespitory..tecUpdate.versionsFile, tecUpdate.versions)
+  cecho("Save script to: "..tecUpdate.versionsRespitory..tecUpdate.versionsFile.."\n")
+  cechoLink("&lt;:blue&gt;Open Directory", 
+  [[tecOpenDirectory(tecUpdate.versionsRespitory)]],
+  "Open folder "..tecUpdate.versionsFile.." is in", true)
+  cecho(" "..tecUpdate.versionsFile.." is in.\n")
+end --function tecUpdate.saveScriptNames
+
+function tecUpdate.eventHandler(event, ...)
+  if event == "sysDownloadDone" and downloading then
+    local file = arg[1] -- in this case name of file downloaded
+    if string.ends(file,tecUpdate.versionsFile) then --download is version check  file
+      debugToDisplay("Update sysDownloadDone Event: Download: "..file
+        .."\n\tdownloaded, check_version() called.")
+      check_version() --Use downloaded version file to check if latest version is installed
+    elseif string.ends(file,tecUpdate.scriptNames[(#tecUpdate.scriptNames)]) then --if download is LAST downloaded script
+      debugToDisplay("Update sysDownloadDone Event: Download: "..file
+        .."\n\tdownloaded, update_version() called.")
+      update_version() --install the new client after download was completed
+    --elseif string.ends(file,tecUpdate.scriptNamesFile) then
+    elseif file == tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile then
+      debugToDisplay("Update sysDownloadDone Event: Download: "..file
+        .."\n\tdownloaded, loadScriptsNames() called.")
+      loadScriptsNames() --loads scripts names into table tecUpdate.scriptNames
+    else
+      debugToDisplay("Update sysDownloadDone Event: Downloaded file: "..file
+        .."\n\tWas NOT caught by event handler.")
+    end --elseif file downloaded is new script
+  end --if event == elseif
+end --function tecUpdate.eventHandler()
+
+registerAnonymousEventHandler("sysDownloadDone", "tecUpdate.eventHandler")
+</script>
+					<eventHandlerList />
+				</Script>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>Colors</name>
+					<packageName></packageName>
+					<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external scripts --
+-------------------------------------------------
+</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>tecLabelBackgroundColor(tecColor)</name>
+						<packageName></packageName>
+						<script>function tecLabelBackgroundColor(tecColor)
+  tecSettings.labelBackgroundColor = tecColor
+end --function tecLabelBackgroundColor</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>tecTabsBackgroundColor(tecColor)</name>
+						<packageName></packageName>
+						<script>function tecTabsBackgroundColor(tecColor)
+  tecSettings.tabsBackgroundColor = tecColor
+end --function tecLabelBackgroundColor</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>tecSetMouseHoverColor(tecColor)</name>
+						<packageName></packageName>
+						<script>function tecSetMouseHoverColor(tecColor)
+  tecSettings.hoverColor = tecColor
+end --function tecLabelBackgroundColor</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>tecSetHelpHighlightColor(tecColor)</name>
+						<packageName></packageName>
+						<script>function tecSetHelpHighlightColor(tecColor)
+  tecSettings.helpHighlightColor = tecColor
+end --function tecLabelBackgroundColor</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>tecSetGreenTextColor(tecColor)</name>
+						<packageName></packageName>
+						<script>--set the color that tec will use for green text.
+function tecSetGreenTextColor(tecColor)
+  --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
+  tecSettings.GreenTextColor = Geyser.Color.hex(tecColor)
+end --function tecLabelBackgroundColor</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>tecSetBlueTextColor(tecColor)</name>
+						<packageName></packageName>
+						<script>--set the color that tec will use for green text.
+function tecSetBlueTextColor(tecColor)
+  --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
+  tecSettings.BlueTextColor = Geyser.Color.hex(tecColor)
+end --function tecLabelBackgroundColor</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>tecSetTextColor(tecColor)</name>
+						<packageName></packageName>
+						<script>--set the color that tec will use for green text.
+function tecSetTextColor(tecColor)
+  --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
+  tecSettings.tecTextColor = Geyser.Color.hex(tecColor)
+end --function tecLabelBackgroundColor</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>tecSetBackgroundColor(tecColor)</name>
+						<packageName></packageName>
+						<script>--set the color that tec will use for green text.
+function tecSetBackgroundColor(tecColor)
+  --reference: https://wiki.mudlet.org/w/Manual:Lua_Functions#setBackgroundColor
+  --https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
+  --https://wiki.mudlet.org/w/Manual:Lua_Functions#setBgColor
+  
+  for index, windowName in ipairs(tecTextWindowNames) do
+    cecho(index..". "..windowName.."\n")
+    setBackgroundColor(windowName, Geyser.Color.parse(tecColor)) --change background color
+    --setBgColor(windowName, Geyser.Color.parse(tecColor)) --change background color
+    --bg(windowName, tecColor) --change background color
+  end
+end --function tecLabelBackgroundColor</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
 			</ScriptGroup>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
@@ -3604,13 +4015,13 @@ GUIframe.addWindow(status_bar,"status_bar","bottom")</script>
   x=0, y=0,
   width="50%", height="50%",
 },status_bar)
-hpbar.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f04141, stop: 0.1 #ef2929, stop: 0.49 #cc0000, stop: 0.5 #a40000, stop: 1 #cc0000);
+hpbar.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffdcdc, stop: 0.1 #ff8c8c, stop: 0.49 #ff4c4c, stop: 0.5 #ff4c4c, stop: 1 #ff6666);
     border-top: 1px black solid;
     border-left: 1px black solid;
     border-bottom: 1px black solid;
     border-radius: 7;
-    padding: 3px;]])
-hpbar.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #bd3333, stop: 0.1 #bd2020, stop: 0.49 #990000, stop: 0.5 #700000, stop: 1 #990000);
+    padding: 3px;]]) --                                                                           
+hpbar.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ff6666, stop: 0.1 #F05050, stop: 0.49 #E03030, stop: 0.5 #E03030, stop: 1 #E03030);
     border-width: 1px;
     border-color: black;
     border-style: solid;
@@ -3628,13 +4039,13 @@ hpbar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt
   x=0, y="50%",
   width="50%", height="50%",
 },status_bar)
-fatiguebar.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f0f00a, stop: 0.1 #f0e00a, stop: 0.49 #f0d00a, stop: 0.5 #f0c00a, stop: 1 #f09999);
+fatiguebar.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f0fff0, stop: 0.1 #f0ffca, stop: 0.49 #f0d09a, stop: 0.5 #f0d09a, stop: 1 #f0d09a);
     border-top: 1px black solid;
     border-left: 1px black solid;
     border-bottom: 1px black solid;
     border-radius: 7;
     padding: 3px;]])
-fatiguebar.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f09999, stop: 0.1 #f09000, stop: 0.49 #f08000, stop: 0.5 #f07000, stop: 1 #f06000);
+fatiguebar.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f0d09a, stop: 0.1 #e0c08a, stop: 0.49 #d0b07a, stop: 0.5 #d0b07a, stop: 1 #d0b07a);
     border-width: 1px;
     border-color: black;
     border-style: solid;
@@ -3653,13 +4064,13 @@ fatiguebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&g
   x="50%", y=0,
   width="50%", height="50%",
 },status_bar)
-hungerbar.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #98f041, stop: 0.1 #8cf029, stop: 0.49 #66cc00, stop: 0.5 #52a300, stop: 1 #66cc00);
+hungerbar.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #F0FEe0, stop: 0.1 #E6FDe0, stop: 0.49 #A0E070, stop: 0.5 #A0E070, stop: 1 #A0E070);
     border-top: 1px black solid;
     border-left: 1px black solid;
     border-bottom: 1px black solid;
     border-radius: 7;
     padding: 3px;]])
-hungerbar.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #78bd33, stop: 0.1 #6ebd20, stop: 0.49 #4c9900, stop: 0.5 #387000, stop: 1 #4c9900);
+hungerbar.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #A0E070, stop: 0.1 #99d869, stop: 0.49 #60c830, stop: 0.5 #60c830, stop: 1 #60c830);
     border-width: 1px;
     border-color: black;
     border-style: solid;
@@ -3677,13 +4088,13 @@ hungerbar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt
   x="50%", y="50%",
   width="50%", height="50%",
 },status_bar)
-encumbrancebar.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #98f041, stop: 0.1 #8cf029, stop: 0.49 #66cc00, stop: 0.5 #52a300, stop: 1 #66cc00);
+encumbrancebar.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #F0FBFE, stop: 0.1 #E6F8FD, stop: 0.49 #AFDDED, stop: 0.5 #AFDDED, stop: 1 #AFDDED);
     border-top: 1px black solid;
     border-left: 1px black solid;
     border-bottom: 1px black solid;
     border-radius: 7;
     padding: 3px;]])
-encumbrancebar.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #78bd33, stop: 0.1 #6ebd20, stop: 0.49 #4c9900, stop: 0.5 #387000, stop: 1 #4c9900);
+encumbrancebar.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #AFDDED, stop: 0.1 #A7D7E9, stop: 0.49 #80AEC7, stop: 0.5 #80AEC7, stop: 1 #80AEC7);
     border-width: 1px;
     border-color: black;
     border-style: solid;
@@ -3720,6 +4131,8 @@ tecCompass.back = Geyser.Label:new({
   width = "100%", --% of parent
   height = "100%", --% of parent
 },tecCompass.window) --The parent of this label. Main is main window.
+
+tecCompass.back:setStyleSheet(labelsStyle)
 
 --Horizontal box
 tecCompass.hbox = Geyser.HBox:new({
@@ -3844,7 +4257,7 @@ function tecCompass.drawKeepSquare()
 end --end function keep square.
 
 --Add the status bar to the screen. On the bottom
-GUIframe.addWindow(tecCompass.window,"compass","topleft")
+GUIframe.addWindow(tecCompass.window,"Compass","topleft")
 
 --Now that we created the window. Make certain it is drawn correctly.
 tecCompass.drawKeepSquare() --function at the bottom of this script.</script>
@@ -3944,11 +4357,9 @@ tecMap_back = Geyser.Label:new({
 },tecMap) --The parent of this label.
 
 --set the appearance of what is behind the map
-tecMap_back:setStyleSheet([[
-  qproperty-alignment: 'AlignLeft | AlignTop';
-	background-color: rgba(25, 50, 150);
-	font-size: 32px;
-]])
+tecMap_back:setStyleSheet(labelsStyle)
+
+--rgba(25, 50, 150)
 
 mapRoom = {} --Table to hold labels we will draw the rooms with
 mapExit = {} --Table to hold labels we will draw the exits with.
@@ -4353,7 +4764,8 @@ local mappings = {
 }
 
 --add onto standard label. We want a small margin for this label.								
-macroLabelStyle = labelsStyle.."margin: 1px\n";
+--macroLabelStyle = labelsStyle.."margin: 1px\n";
+macroLabelStyle = labelsStyle
 
 for _, mapping in pairs(mappings) do --loop trough mappings table using data within
   macroMenu[mapping.name] = Geyser.Label:new({
@@ -4428,6 +4840,8 @@ function controlInput(_, command)
   	 .. md5.sumhexa(tecUsername .. command .. "NONE") .. "\n", false)
     tecUsername = nil --Clear out the username.
     clearCmdLine() --clear password from command input bar.
+    --check if updates are needed, 1 second wait is so it appears after login text
+    tecUpdate.update_timer = tempTimer(1, [[tecUpdate.checkVersion()]])
     denyCurrentSend() --Deny the origional command, in this case the password.
 	end --tecPasswordEntry
 end --function tecPasswordPrompt

@@ -566,12 +566,12 @@ if tecVoteTopMudSites == string.match(line, tecVoteTopMudSites) then
 	
 	echo("To help the world know this game exists you could:\n")
 
-	cechoLink("&lt;:blue&gt;Vote for TEC on topmudsites.com", 
+	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Vote for TEC on topmudsites.com", 
 	[[openUrl("http://www.topmudsites.com/vote-scarlatc.html")]], 
 	"Vote for TEC!", true)
 	echo("\n")
 	
-	cechoLink("&lt;:blue&gt;Like us on facebook", 
+	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Like us on facebook", 
 	[[openUrl("https://www.facebook.com/SkotosTheEternalCity/")]], 
 	"Vote for TEC!", true)
 	echo("\n")
@@ -845,13 +845,13 @@ deselect() --unselect line in main.
 if not filteredLine then filteredLine = "" end --if nothing was in main make filteredLine empty.
 --Without this you will receive errors that filteredLine is nil.
 
---Starting with most likely items moving to less likely.
---Fewer processor cycles...
 --Removes what is in brackets
 --Make filtered line a copy of the main line, removing all &lt;/font&gt; declarations
 --string.gsub referece: https://wiki.mudlet.org/w/Manual:String_Functions
 --string.gsub('The whole string to modify', 'what to replace in the string', 'what to replace it with')
-filteredLine = string.gsub(filteredLine, [[&lt;/font&gt;]], "")
+--replace /font with default color. This adds support for old color standard.
+--Old standard was 'gray text with white highlights'
+filteredLine = string.gsub(filteredLine, [[&lt;/font&gt;]], tecSettings.tecTextColor)
 
 --string.gsub referece: https://wiki.mudlet.org/w/Manual:String_Functions
 --string.gsub('The whole string to modify', 'what to replace in the string', 'what to replace it with')
@@ -862,14 +862,24 @@ filteredLine = string.gsub(filteredLine, '&lt;font color="#(%x+)"&gt;', '#%1')
 --So now all &lt;font color="#hexcolorcode have turned into &lt;#hexcolorcode&gt; in replacement this is a standard format lua can work with.
 
 --if background is dark turn #000000 into #c0c0c0
-local redBG, greenBG, blueBG = getBgColor() --get main console background color
-if redBG &lt; 75 and greenBG &lt; 75 and blueBG &lt; 75 then --if the background is very dark, use light text
-	tecSettings.tecTextColor = "#c0c0c0" --setting to very light text. This should probably be a default variable
-	filteredLine = string.gsub(filteredLine, "#000000", tecSettings.tecTextColor) --turn all black text declarations into tecTextColor
-end
---It could also be possible just to invert the color numbers.
---That would be a VERY high contrast line. Would likely create 
---eye strain
+--local redBG, greenBG, blueBG = getBgColor() --get main console background color
+--if redBG &lt; 75 and greenBG &lt; 75 and blueBG &lt; 75 then --if the background is very dark, use light text
+--	tecSettings.tecTextColor = "#c0c0c0" --setting to very light text. This should probably be a default variable
+	
+  --turn all black text declarations into tecTextColor
+  filteredLine = string.gsub(filteredLine, "#000000", tecSettings.tecTextColor)
+  --turn all black text declarations into tecTextColor
+  filteredLine = string.gsub(filteredLine, "#646464", "#FFFFFF")
+  --Change deep blue to a much lighter blue
+  filteredLine = string.gsub(filteredLine, "#0020ff", tecSettings.BlueTextColor)
+  --Change deep green to a much lighter green
+  filteredLine = string.gsub(filteredLine, "#00cd20", tecSettings.GreenTextColor)
+  --Change deep purple to a much lighter purple
+  filteredLine = string.gsub(filteredLine, "#e119e1", tecSettings.PurpleTextColor)
+  
+--end
+
+
 
 --Replaces what is in brackets with what is in quotes
 filteredLine = string.gsub(filteredLine, [[&amp;lt;]], "&lt;")
@@ -1085,10 +1095,17 @@ hecho("Speech", filteredLine.."\n")
 					<integer>0</integer>
 				</regexCodePropertyList>
 			</Trigger>
-			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Rumors</name>
 				<script>--set bool to yes
---input line to CommunicationsAll &amp; rumor bar</script>
+--input line to CommunicationsAll &amp; rumor bar
+--https://wiki.mudlet.org/w/Manual:UI_Functions#hecho
+--Echo to Communication window, coloring hex colors
+hecho("Communication", filteredLine.."\n")
+
+--https://wiki.mudlet.org/w/Manual:UI_Functions#hecho
+--Echo to Communication window, coloring hex colors
+--hecho("Rumors", filteredLine.."\n")</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1100,10 +1117,10 @@ hecho("Speech", filteredLine.."\n")
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>&lt;/font&gt;&lt;font color="#e119e1"&gt;A rumor is circulating around:&lt;/font&gt;</string>
+					<string>&lt;/font&gt;&lt;font color="#e119e1"&gt;</string>
 				</regexCodeList>
 				<regexCodePropertyList>
-					<integer>3</integer>
+					<integer>2</integer>
 				</regexCodePropertyList>
 			</Trigger>
 		</TriggerGroup>
@@ -1160,12 +1177,12 @@ send("SKOTOS Zealous 0.7.12.2", false) --sending the zealous handshake
 deleteLine() --remove line from main console. line variable remains unchanged.
 
 echo("If you do not have a user ID ")
-cechoLink("&lt;:blue&gt;Create one", 
+cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Create one", 
 [[openUrl("https://www.skotos.net/user/create/start.php")]], 
 "Create user ID for TEC", true)
 echo("\n")
 echo("If you are having issues you can verify or credentials at: ")
-cechoLink("&lt;:blue&gt;TEC's Login Page", 
+cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;TEC's Login Page", 
 [[openUrl("https://www.skotos.net/user/login.php")]], 
 "TEC Login page", true)
 echo("\n")
