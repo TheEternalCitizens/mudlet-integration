@@ -1291,7 +1291,12 @@ We would like to avoid repeated trigger checks so include them all within one ch
 			<regexCodePropertyList />
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Player retreats</name>
-				<script>--checks if a refresh notification is already in window displays it if needed
+				<script>--[[
+triggers when the player retreats from combat.
+triggers when the player falls back from combat.
+]]--
+
+--checks if a refresh notification is already in window displays it if needed
 tecRoomCharRefreshNotification()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -1312,7 +1317,10 @@ tecRoomCharRefreshNotification()</script>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Player is approached</name>
-				<script>--checks if a refresh notification is already in window displays it if needed
+				<script>--[[
+triggers when the player is approached.
+]]--
+--checks if a refresh notification is already in window displays it if needed
 tecRoomCharRefreshNotification()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -1325,15 +1333,18 @@ tecRoomCharRefreshNotification()</script>
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>stops next to you.$</string>
+					<string>stops next to you.</string>
 				</regexCodeList>
 				<regexCodePropertyList>
-					<integer>1</integer>
+					<integer>0</integer>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>character walks into players room</name>
-				<script>--checks if a refresh notification is already in window displays it if needed
+				<script>--[[
+triggers when a character enters the players room.
+]]--
+--checks if a refresh notification is already in window displays it if needed
 tecRoomCharRefreshNotification()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -1358,7 +1369,10 @@ tecRoomCharRefreshNotification()</script>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>character leave players room</name>
-				<script>--checks if a refresh notification is already in window displays it if needed
+				<script>--[[
+triggers when a character leaves the players room.
+]]--
+--checks if a refresh notification is already in window displays it if needed
 tecRoomCharRefreshNotification()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -1383,7 +1397,11 @@ tecRoomCharRefreshNotification()</script>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Character Arrives</name>
-				<script>--checks if a refresh notification is already in window displays it if needed
+				<script>--[[
+triggers when an NPC is spawned.
+]]--
+
+--checks if a refresh notification is already in window displays it if needed
 tecRoomCharRefreshNotification()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -1396,15 +1414,18 @@ tecRoomCharRefreshNotification()</script>
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>arrives.$</string>
+					<string>arrives.</string>
 				</regexCodeList>
 				<regexCodePropertyList>
-					<integer>1</integer>
+					<integer>0</integer>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Player enters a room</name>
-				<script>clearRoomCharacterWindow() --Room characters window no longer accurate, clear it.
+				<script>--[[
+triggers when the player enters a new room.
+]]--
+clearRoomCharacterWindow() --Room characters window no longer accurate, clear it.
 cecho("roomCharacters.console", "Populate the Room Characters window by:\n")
 cecho("roomCharacters.console", "Runing command, ")
 cechoLink("roomCharacters.console","&lt;:maroon&gt;room check", 
