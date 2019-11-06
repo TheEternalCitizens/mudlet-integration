@@ -3136,7 +3136,6 @@ to the user.
 The functions here I untended to work with the triggers that are involved with that.
 ]]--</script>
 				<eventHandlerList />
-
 				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>Room Characters</name>
 					<packageName></packageName>
@@ -3239,7 +3238,6 @@ end --startRoomCharacterCheck()</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
-
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>Settings Window</name>
@@ -3473,7 +3471,6 @@ end --tecOpenDirectory</script>
 end</script>
 					<eventHandlerList />
 				</Script>
-
 				<Script isActive="yes" isFolder="no">
 					<name>tecLastLineEqualCheck(tecConsoleName, tecLineToCheck)</name>
 					<packageName></packageName>
@@ -3580,7 +3577,6 @@ function tecRoomCharRefreshNotification()
 end --function recRoomCharRefreshNotification()</script>
 					<eventHandlerList />
 				</Script>
-
 			</ScriptGroup>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
@@ -4076,7 +4072,6 @@ cecho("roomCharacters.console", "\nWe can not automate this because TEC can only
   .."one command per second.\nUsing current methods auto filling this list can prevent you "
   .."from sending commands.")
 tecRoomObjects.refreshMessageDisplayed = true --tell client no further refreshes needed</script>
-
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
