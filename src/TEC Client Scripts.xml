@@ -4832,19 +4832,29 @@ registerAnonymousEventHandler("sysWindowResizeEvent", "guiChange")</script>
 				<script>--use bool checks to control user input.
 --Use this when you do not know what will be entered but DO know a trigger that will
 --occur before the command that will be sent.
-function controlInput(_, command) 
+function controlInput(_, tecPassword) 
   if tecPasswordEntry then --if password entry is set, we expect a password.
   	tecPasswordEntry = false --set this if check to false to it doesn't occur every input.
     --Log into the game. md5.sumhexa converts user ID and password to md5 hash.
     sendAll("USER " .. tecUsername .. "\n", "SECRET NONE", "HASH "
-  	 .. md5.sumhexa(tecUsername .. command .. "NONE") .. "\n", false)
+  	 .. md5.sumhexa(tecUsername .. tecPassword .. "NONE") .. "\n", false)
     tecUsername = nil --Clear out the username.
     clearCmdLine() --clear password from command input bar.
-    --check if updates are needed, 1 second wait is so it appears after login text
-    tecUpdate.update_timer = tempTimer(1, [[tecUpdate.checkVersion()]])
     denyCurrentSend() --Deny the origional command, in this case the password.
+    
+    --clear the password off the screen.
+    local tecMainLastLine = (getLastLineNumber("main") - 1)
+    moveCursor(1,tecMainLastLine) --Move cursor to second from the newest line in main console
+    selectString(tecPassword,1) --Select the password in main.
+    replace("Password Entered\n") --Replaced the selected password with.
+    deselect() --Don't forget your deselects!
+    
+    tecPassword = nil --Just in case, lets make certain the password is cleared out.
+    command = nil --
 	end --tecPasswordEntry
 end --function tecPasswordPrompt
+
+--https://wiki.mudlet.org/w/Manual:Event_Engine#sysDataSendRequest
 registerAnonymousEventHandler("sysDataSendRequest", "controlInput")</script>
 				<eventHandlerList />
 			</Script>
