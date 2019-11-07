@@ -3,7 +3,7 @@
 <MudletPackage version="1.001">
 	<TriggerPackage />
 	<TimerPackage>
-		<Timer isActive="no" isFolder="no" isTempTimer="no" isOffsetTimer="no">
+		<Timer isActive="yes" isFolder="no" isTempTimer="no" isOffsetTimer="no">
 			<name>Room Character Check</name>
 			<script>--[[
 Once a second checks if client has asked for a room check.
