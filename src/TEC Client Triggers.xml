@@ -599,7 +599,7 @@ end --if vote skoot appears else just delete</script>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>Room Checks</name>
 			<script>--[[
-Triggers that get list of objects in players current room.
+For automated checks the client runs.
 ]]--</script>
 			<triggerType>0</triggerType>
 			<conditonLineDelta>0</conditonLineDelta>
@@ -741,16 +741,19 @@ elseif line:match("^%d+:") then --if line starts with "#: "
   --if it is dark set RoomCheck to false so it does not remain active.
   elseif line == "It is too dark to see anything." then
     setTECRoomCheckActive(false) --disable room check for characters.
+    clearRoomCharacterWindow()
     cecho("roomCharacters.console", "It is too dark to see anything.")
     
   --if it is dark set RoomCheck to false so it does not remain active.
   elseif line == "You cannot do that while stunned" then
     setTECRoomCheckActive(false) --disable room check for characters.
+    clearRoomCharacterWindow()
     cecho("roomCharacters.console", "You cannot do that while stunned")
     
   --if it is dark set RoomCheck to false so it does not remain active.
   elseif line == "You cannot do that while unconcious." then
     setTECRoomCheckActive(false) --disable room check for characters.
+    clearRoomCharacterWindow()
     cecho("roomCharacters.console", "You cannot do that while unconcious.")
 
 end --if line has a ac . character in it.
@@ -1308,7 +1311,12 @@ We would like to avoid repeated trigger checks so include them all within one ch
 			<regexCodePropertyList />
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Player retreats</name>
-				<script>--checks if a refresh notification is already in window displays it if needed
+				<script>--[[
+triggers when the player retreats from combat.
+triggers when the player falls back from combat.
+]]--
+
+--checks if a refresh notification is already in window displays it if needed
 tecRoomCharRefreshNotification()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -1329,7 +1337,9 @@ tecRoomCharRefreshNotification()</script>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Player is approached</name>
-				<script>--checks if a refresh notification is already in window displays it if needed
+				<script>--triggers when the player is approached.
+
+--checks if a refresh notification is already in window displays it if needed
 tecRoomCharRefreshNotification()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -1342,15 +1352,17 @@ tecRoomCharRefreshNotification()</script>
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>stops next to you.$</string>
+					<string>stops next to you.</string>
 				</regexCodeList>
 				<regexCodePropertyList>
-					<integer>1</integer>
+					<integer>0</integer>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>character walks into players room</name>
-				<script>--checks if a refresh notification is already in window displays it if needed
+				<script>--triggers when a character enters the players room.
+
+--checks if a refresh notification is already in window displays it if needed
 tecRoomCharRefreshNotification()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -1375,7 +1387,9 @@ tecRoomCharRefreshNotification()</script>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>character leave players room</name>
-				<script>--checks if a refresh notification is already in window displays it if needed
+				<script>--triggers when a character leaves the players room.
+
+--checks if a refresh notification is already in window displays it if needed
 tecRoomCharRefreshNotification()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -1400,7 +1414,9 @@ tecRoomCharRefreshNotification()</script>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Character Arrives</name>
-				<script>--checks if a refresh notification is already in window displays it if needed
+				<script>--triggers when an NPC is spawned.
+
+--checks if a refresh notification is already in window displays it if needed
 tecRoomCharRefreshNotification()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -1413,26 +1429,18 @@ tecRoomCharRefreshNotification()</script>
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>arrives.$</string>
+					<string>arrives.</string>
 				</regexCodeList>
 				<regexCodePropertyList>
-					<integer>1</integer>
+					<integer>0</integer>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Player enters a room</name>
-				<script>clearRoomCharacterWindow() --Room characters window no longer accurate, clear it.
-cecho("roomCharacters.console", "Populate the Room Characters window by:\n")
-cecho("roomCharacters.console", "Runing command, ")
-cechoLink("roomCharacters.console","&lt;:maroon&gt;room check", 
-  [[runTECRoomObjectCheck()]],
-  "Populate Room Character window.", true)
-cecho("roomCharacters.console", ".\n")
-cecho("roomCharacters.console", "Pressing ctrl+R.\n")
-cecho("roomCharacters.console", "\nWe can not automate this because TEC can only receive "
-  .."one command per second.\nUsing current methods auto filling this list can prevent you "
-  .."from sending commands.")
-tecRoomObjects.refreshMessageDisplayed = true --tell client no further refreshes needed</script>
+				<script>--triggers when the player enters a new room.
+
+--Set default text in room characters window
+tecResetRoomCharacterWindow()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1450,12 +1458,39 @@ tecRoomObjects.refreshMessageDisplayed = true --tell client no further refreshes
 					<integer>2</integer>
 				</regexCodePropertyList>
 			</Trigger>
-			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Player approaches a character</name>
+				<script>--triggers when the player approaches something.
+
+--checks if a refresh notification is already in window displays it if needed
+tecRoomCharRefreshNotification()</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You stop next to </string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>0</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Successful login</name>
-				<script>--[[
-Occurs after a successful login
-]]--
-</script>
+				<script>--triggers after a successful login
+
+--Sort delay before processing update check. Without this the update request may be barried
+--under login text.
+tecUpdate.update_timer = tempTimer(1, [[tecUpdate.checkVersion()]])
+
+--Set default text in room characters window
+tecResetRoomCharacterWindow()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1474,12 +1509,12 @@ Occurs after a successful login
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>Player approaches a character</name>
-				<script>--[[
-triggers when the player approaches something.
-]]--
---checks if a refresh notification is already in window displays it if needed
-tecRoomCharRefreshNotification()</script>
+				<name>Vision loss</name>
+				<script>--Triggers when the player can not see.
+
+--Notify user that room characters can not be populated.
+clearRoomCharacterWindow()
+cecho("roomCharacters.console", "It is too dark to see anything.")</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1491,10 +1526,10 @@ tecRoomCharRefreshNotification()</script>
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>You stop next to </string>
+					<string>It is too dark to see anything.</string>
 				</regexCodeList>
 				<regexCodePropertyList>
-					<integer>0</integer>
+					<integer>3</integer>
 				</regexCodePropertyList>
 			</Trigger>
 		</TriggerGroup>

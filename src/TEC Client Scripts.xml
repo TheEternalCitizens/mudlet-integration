@@ -3251,118 +3251,6 @@ end --end tecMapIconAdjustment</script>
 				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>Auto Checks</name>
-				<packageName></packageName>
-				<script>--[[
-Some times you will want to run a command but not display the output of that command 
-to the user.
-The functions here I untended to work with the triggers that are involved with that.
-]]--</script>
-				<eventHandlerList />
-				<ScriptGroup isActive="yes" isFolder="yes">
-					<name>Room Characters</name>
-					<packageName></packageName>
-					<script>--[[
-Scripts for working with filtering the approach check command 
-]]--</script>
-					<eventHandlerList />
-					<Script isActive="yes" isFolder="no">
-						<name>getTECRoomCheckActive()</name>
-						<packageName></packageName>
-						<script>function getTECRoomCheckActive()
-	return tecRoomObjects.checkActive
-end --end function getRoomCharactersActive</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>setTECRoomCheckActive(boolean)</name>
-						<packageName></packageName>
-						<script>function setTECRoomCheckActive(tecRoomCheckActive)
-	tecRoomObjects.checkActive = tecRoomCheckActive
-end --end function setRoomCharactersActive</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="no" isFolder="no">
-						<name>clearTECRoomObjects()</name>
-						<packageName></packageName>
-						<script>--Moved to variables Data Themese - Variables script</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>runTECRoomObjectCheck()</name>
-						<packageName></packageName>
-						<script>--used for functions that track objects in the current room.
-function runTECRoomObjectCheck()
-
-	--clear room data before running check 
-	clearTECRoomObjects()
-
-	--clear the character window.
-	clearWindow("roomCharacters.console")
-	
-	--set a room check to true.
-	setTECRoomCheckActive(true)
-
-	--send an ac . command to list characters in the room.
-	send("ac .", false)
-
-end --function runRoomCharacterCheck()</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>setRoomCharacterCheck(boolean)</name>
-						<packageName></packageName>
-						<script>--Used to tell a Room Character Check timer if a check for characters
---in the room should be run 
-
-function setRoomCharacterCheck(booleanRoomCheck)
-	doRoomCharacterCheck = booleanRoomCheck
-end --function setRoomCheck</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>getRoomCharacterCheck()</name>
-						<packageName></packageName>
-						<script>--Used to tell a Room Character Check timer if a check for characters
---in the room should be run 
-
-function getRoomCharacterCheck()
-	return doRoomCharacterCheck
-end --end function getRoomCharacterCheck</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>clearRoomCharacterWindow()</name>
-						<packageName></packageName>
-						<script>function clearRoomCharacterWindow()
-	clearWindow("roomCharacters.console")
-end --clearRoomCharacterWindow</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>stopRoomCharacterCheck()</name>
-						<packageName></packageName>
-						<script>--disables the once a second check if a roomCharacterCheck is needed
-function stopRoomCharacterCheck()
-disableTimer("Room Character Check")
-end --stopRoomCharacterCheck()
-
-stopRoomCharacterCheck() --run it now. As system starts.
---so the timmer doesn't run at login.</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>startRoomCharacterCheck()</name>
-						<packageName></packageName>
-						<script>--enables the once a second check if a roomCharacterCheck is needed
-function startRoomCharacterCheck()
-	enableTimer("Room Character Check")
-end --startRoomCharacterCheck()</script>
-						<eventHandlerList />
-					</Script>
-				</ScriptGroup>
-			</ScriptGroup>
-			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>Settings Window</name>
 				<packageName></packageName>
 				<script>-------------------------------------------------
@@ -3607,111 +3495,6 @@ end</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>tecLastLineEqualCheck(tecConsoleName, tecLineToCheck)</name>
-					<packageName></packageName>
-					<script>function tecLastLineEqualCheck(tecConsoleName, tecLineToCheck)
-  moveCursorEnd(tecConsoleName)
-  selectCurrentLine(tecConsoleName) --select most likely last line in console.
-  local tecLastLine, _, _ = getSelection(tecConsoleName) --pull the text from it
-  deselect(tecConsoleName) --Don't forget your deselects!
-  if tecLastLine == tecLineToCheck then
-    debugToDisplay("String Comparison: "..tecLastLine.." == "..tecLineToCheck)
-    return true --if the last line = what was passed
-  else
-    debugToDisplay("String Comparison: "..tecLastLine.." not == "..tecLineToCheck)
-    return false --if the last line does not equal what was passed
-  end --if lastline is not tecLineToCheck
-end --function tecLastLineEqualCheck</script>
-					<eventHandlerList />
-				</Script>
-			</ScriptGroup>
-			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>Room Characters</name>
-				<packageName></packageName>
-				<script>--[[
-Scripts for working with filtering the approach check command 
-]]--</script>
-				<eventHandlerList />
-				<Script isActive="yes" isFolder="no">
-					<name>getTECRoomCheckActive()</name>
-					<packageName></packageName>
-					<script>function getTECRoomCheckActive()
-	return tecRoomObjects.checkActive
-end --end function getRoomCharactersActive</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>setTECRoomCheckActive(tecRoomCheckActive, displayToScreen)</name>
-					<packageName></packageName>
-					<script>function setTECRoomCheckActive(tecRoomCheckActive, displayToScreen)
-  displayToScreen = displayToScreen or false
-	tecRoomObjects.checkActive = tecRoomCheckActive
-  tecRoomObjects.displayToScreen = displayToScreen --will ac . display to main
-end --end function setRoomCharactersActive</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>clearTECRoomObjects()</name>
-					<packageName></packageName>
-					<script>--Moved to variables Data Themese - Variables script</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>runTECRoomObjectCheck(displayToScreen)</name>
-					<packageName></packageName>
-					<script>--used for functions that track objects in the current room.
-function runTECRoomObjectCheck(displayToScreen)
-
-  displayToScreen = displayToScreen or false --if not declared default is false
-
-	--clear room data before running check 
-	clearTECRoomObjects()
-
-	--clear the character window.
-	clearWindow("roomCharacters.console")
-	
-	--set a room check to true.
-	setTECRoomCheckActive(true,displayToScreen)
-
-	--send an ac . command to list characters in the room.
-  send("ac .", false)
-
-end --function runRoomCharacterCheck()</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>clearRoomCharacterWindow()</name>
-					<packageName></packageName>
-					<script>function clearRoomCharacterWindow()
-	clearWindow("roomCharacters.console")
-  tecRoomObjects.refreshMessageDisplayed =false
-end --clearRoomCharacterWindow</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>tecRoomCharRefreshNotification()</name>
-					<packageName></packageName>
-					<script>local function tecRoomCharRefreshMessage()
-  cecho("roomCharacters.console", "Refresh Room Characters by:\n")
-  cecho("roomCharacters.console", "Runing command, ")
-  cechoLink("roomCharacters.console","&lt;:maroon&gt;room check", 
-    [[runTECRoomObjectCheck()]],
-    "Populate Room Character window.", true)
-  cecho("roomCharacters.console", ".\n")
-  cecho("roomCharacters.console", "Pressing ctrl+R.\n")
-  cecho("roomCharacters.console", "Refresh Recommended")
-end --function tecRoomCharRefreshMessage()
-
-function tecRoomCharRefreshNotification()
-
-  if not tecRoomObjects.refreshMessageDisplayed then
-    tecRoomCharRefreshMessage()
-    tecRoomObjects.refreshMessageDisplayed = true --tell client no further refreshes needed
-  end --if tecRefreshNotification is needed
-  
-end --function recRoomCharRefreshNotification()</script>
-					<eventHandlerList />
-				</Script>
 					<name>tec Auto Updates</name>
 					<packageName></packageName>
 					<script>--Script to handle downloading updates.
@@ -3988,6 +3771,112 @@ end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
+			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>Room Characters</name>
+				<packageName></packageName>
+				<script>--[[
+Scripts for working with filtering the approach check command 
+]]--</script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>getTECRoomCheckActive()</name>
+					<packageName></packageName>
+					<script>function getTECRoomCheckActive()
+	return tecRoomObjects.checkActive
+end --end function getRoomCharactersActive</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>setTECRoomCheckActive(tecRoomCheckActive, displayToScreen)</name>
+					<packageName></packageName>
+					<script>function setTECRoomCheckActive(tecRoomCheckActive, displayToScreen)
+  displayToScreen = displayToScreen or false
+	tecRoomObjects.checkActive = tecRoomCheckActive
+  tecRoomObjects.displayToScreen = displayToScreen --will ac . display to main
+end --end function setRoomCharactersActive</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="no" isFolder="no">
+					<name>clearTECRoomObjects()</name>
+					<packageName></packageName>
+					<script>--Moved to variables Data Themese - Variables script</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>runTECRoomObjectCheck(displayToScreen)</name>
+					<packageName></packageName>
+					<script>--used for functions that track objects in the current room.
+function runTECRoomObjectCheck(displayToScreen)
+
+  displayToScreen = displayToScreen or false --if not declared default is false
+
+	--clear room data before running check 
+	clearTECRoomObjects()
+
+	--clear the character window.
+	clearWindow("roomCharacters.console")
+	
+	--set a room check to true.
+	setTECRoomCheckActive(true,displayToScreen)
+
+	--send an ac . command to list characters in the room.
+  send("ac .", false)
+
+end --function runRoomCharacterCheck()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>clearRoomCharacterWindow()</name>
+					<packageName></packageName>
+					<script>function clearRoomCharacterWindow()
+	clearWindow("roomCharacters.console")
+  tecRoomObjects.refreshMessageDisplayed =false
+end --clearRoomCharacterWindow</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecRoomCharRefreshNotification()</name>
+					<packageName></packageName>
+					<script>local function tecRoomCharRefreshMessage()
+  cecho("roomCharacters.console", "Refresh Room Characters by:\n")
+  cecho("roomCharacters.console", "Runing command, ")
+  cechoLink("roomCharacters.console","&lt;:maroon&gt;room check", 
+    [[runTECRoomObjectCheck()]],
+    "Populate Room Character window.", true)
+  cecho("roomCharacters.console", ".\n")
+  cecho("roomCharacters.console", "Pressing ctrl+R.\n")
+  cecho("roomCharacters.console", "Refresh Recommended")
+end --function tecRoomCharRefreshMessage()
+
+function tecRoomCharRefreshNotification()
+
+  if not tecRoomObjects.refreshMessageDisplayed then
+    tecRoomCharRefreshMessage()
+    tecRoomObjects.refreshMessageDisplayed = true --tell client no further refreshes needed
+  end --if tecRefreshNotification is needed
+  
+end --function recRoomCharRefreshNotification()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>New scripttecResetRoomCharacterWindow()</name>
+					<packageName></packageName>
+					<script>function tecResetRoomCharacterWindow()
+  clearRoomCharacterWindow() --Room characters window no longer accurate, clear it.
+  cecho("roomCharacters.console", "Populate the Room Characters window by:\n")
+  cecho("roomCharacters.console", "Runing command, ")
+  cechoLink("roomCharacters.console","&lt;:maroon&gt;room check", 
+    [[runTECRoomObjectCheck()]],
+    "Populate Room Character window.", true)
+  cecho("roomCharacters.console", ".\n")
+  cecho("roomCharacters.console", "Pressing ctrl+R.\n")
+  cecho("roomCharacters.console", "\nCurrently this is not automated because TEC can only receive "
+    .."one command per second.\nWe will be automating this in future releases.\n")
+  tecRoomObjects.refreshMessageDisplayed = true --tell client no further refreshes needed
+end --function tecResetRoomCharacterWindow</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
@@ -4472,17 +4361,7 @@ function tecCRWindowResize()
 end --tecCRWindowResize()
 
 tecCRWindowResize() --resize the Room Character window now
-cecho("roomCharacters.console", "Populate the Room Characters window by:\n")
-cecho("roomCharacters.console", "Runing command, ")
-cechoLink("roomCharacters.console","&lt;:maroon&gt;room check", 
-  [[runTECRoomObjectCheck()]],
-  "Populate Room Character window.", true)
-cecho("roomCharacters.console", ".\n")
-cecho("roomCharacters.console", "Pressing ctrl+R.\n")
-cecho("roomCharacters.console", "\nWe can not automate this because TEC can only receive "
-  .."one command per second.\nUsing current methods auto filling this list can prevent you "
-  .."from sending commands.")
-tecRoomObjects.refreshMessageDisplayed = true --tell client no further refreshes needed</script>
+tecResetRoomCharacterWindow()</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
