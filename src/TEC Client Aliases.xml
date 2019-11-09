@@ -307,7 +307,7 @@ tecUpdate.saveVersions() --Saves versions table to file.</script>
 				<regex></regex>
 				<Alias isActive="yes" isFolder="no">
 					<name>tecclient colors</name>
-					<script>showColors(3)</script>
+					<script>tecColorWindow()</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^tecclient colors$</regex>

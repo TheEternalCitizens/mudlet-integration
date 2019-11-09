@@ -3130,17 +3130,6 @@ end --function tecClientHelp</script>
 					<name>tecClientChangeColors()</name>
 					<packageName></packageName>
 					<script>function tecClientChangeColors()
-
-  cecho("\nList color names with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient colors\n", 
-  [[showColors(3)]],
-  "List color names", true)
-  
-  cecho("Color names in each command can be a hex color also, IE: #FF0000 is red."
-    .." If you would like to use hex colors here is a ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;hex color picker.\n", 
-  [[openUrl("https://www.w3schools.com/colors/colors_picker.asp")]],
-  "Hex color tool", true)
   
   cecho("Change background color of windows that do not have text with: ")
   cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient windows background color colorname", 
@@ -3196,21 +3185,37 @@ end --function tecClientHelp</script>
   "Change TEC's blue text color", true)
   
   cecho("Change the color approached characters appear in Room Characters window: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient approached character color\n", 
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient approached character color colorname\n", 
   [[printCmdLine("tecclient approached character color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change color approached characters in Room Character Window", true)
   
   cecho("Change the color not approached characters appear in Room Characters window: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient approached character color\n", 
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient not approached character color colorname\n", 
   [[printCmdLine("tecclient not approached character color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change color not approached characters in Room Character Window", true)
   
   cecho("Don't forget to save your changes with: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
   [[tecFileSaveSettings(true)]],
   "Save client settings", true)
+  
+  cecho("List colornames in main window: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;lua showColors(3)\n", 
+  [[showColors(3);cecho("Click a color to add it to the end of the command bar")]],
+  "List color names", true)
+  
+  cecho("Open colorname chooser window: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient colors\n", 
+  [[tecColorWindow()]],
+  "Open color chooser window", true)
+  
+  cecho("Color names in each command can be a hex color also, IE: #FF0000 is red."
+    .." If you would like to use hex colors here is a ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;hex color picker.\n", 
+  [[openUrl("https://www.w3schools.com/colors/colors_picker.asp")]],
+  "Hex color tool", true)
   
   cecho("")
 
@@ -3802,6 +3807,170 @@ function tecSettecApproachedCharacter(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.ApproachedCharacters = Geyser.Color.hex(tecColor)
 end --function tecLabelBackgroundColor</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>tecShowColors()</name>
+						<packageName></packageName>
+						<script>-- internal sorting function, sorts first by hue, then luminosity, then value
+local sortColorsByHue = function(lhs,rhs)
+  local lh,ll,lv = unpack(lhs.sort)
+  local rh,rl,rv = unpack(rhs.sort)
+  if lh &lt; rh then
+    return true
+  elseif lh &gt; rh then
+    return false
+  elseif ll &lt; rl then
+    return true
+  elseif ll &gt; rl then
+    return false
+  else
+    return lv &lt; rv
+  end
+end
+
+-- internal sorting function, removes _ from snake_case and compares to camelCase
+local sortColorsByName = function(a,b)
+  local aname = string.gsub(string.lower(a.name), "_", "")
+  local bname = string.gsub(string.lower(b.name), "_", "")
+  return aname &lt; bname
+end
+
+-- internal function, converts rgb to hsv
+-- found at https://github.com/EmmanuelOga/columns/blob/master/utils/color.lua#L89
+local rgbToHsv = function(r, g, b)
+  r, g, b = r / 255, g / 255, b / 255
+  local max, min = math.max(r, g, b), math.min(r, g, b)
+  local h, s, v
+  v = max
+  
+  local d = max - min
+  if max == 0 then 
+    s = 0 
+  else 
+    s = d / max 
+  end
+  
+  if max == min then
+    h = 0 -- achromatic
+  else
+    if max == r then
+      h = (g - b) / d
+      if g &lt; b then h = h + 6 end
+    elseif max == g then 
+      h = (b - r) / d + 2
+    elseif max == b then 
+      h = (r - g) / d + 4
+    end
+    h = h / 6
+  end
+  
+  return h, s, v
+end
+
+-- internal stepping function, removes some of the noise for a more pleasing sort
+-- cribbed from the python on https://www.alanzucconi.com/2015/09/30/colour-sorting/
+local step = function(r,g,b)
+  local lum = math.sqrt( .241 * r + .691 * g + .068 * b )
+  local reps = 8
+  
+  local h, s, v = rgbToHsv(r,g,b)
+  
+  local h2 = math.floor(h * reps)
+  local v2 = math.floor(v * reps)
+  if h2 % 2 == 1 then 
+    v2 = reps - v2
+    lum = reps - lum
+  end
+  return h2, lum, v2
+end
+
+local function calc_luminosity(r,g,b)
+  r = r &lt; 11 and r / (255 * 12.92) or ((0.055 + r / 255) / 1.055) ^ 2.4
+  g = g &lt; 11 and g / (255 * 12.92) or ((0.055 + g / 255) / 1.055) ^ 2.4
+  b = b &lt; 11 and b / (255 * 12.92) or ((0.055 + b / 255) / 1.055) ^ 2.4
+  return (0.2126 * r) + (0.7152 * g) + (0.0722 * b)
+end
+
+
+--- Prints out a formatted list of all available named colors (EXCEPT FOR
+--- the 256 colors with names of form "ansi_###" where ### is 000 to 255),
+--- optional args specifies:
+--- * (number) number of columns to print in, defaults to 4;
+--- * (string) substring required to match to include in output, defaults to
+--- showing all if not supplied;
+--- * (boolean) whether to sort the output, defaults to false.
+--- @usage Print list in 4 columns by default.
+---   &lt;pre&gt;
+---   showColors()
+---   &lt;/pre&gt;
+--- @usage Print list in 2 columns.
+---   &lt;pre&gt;
+---   showColors(2)
+---   &lt;/pre&gt;
+---
+--- @see color_table
+
+function tecShowColors(...)
+  local cols, search, sort = 4, "", false
+  for _, val in ipairs(arg) do
+    if type(val) == "string" then
+      search = val:lower()
+    elseif type(val) == "number" then
+      cols = val
+    elseif type(val) == "boolean" then
+      sort = val
+    end
+  end
+  
+  local colors = {}
+  for k, v in pairs(color_table) do
+    local color = {}
+    color.rgb = v
+    color.name = k
+    color.sort = {step(unpack(v))}
+    if not string.find(k, "ansi_%d%d%d") then
+      table.insert(colors,color)
+    end
+  end
+  
+  if sort then 
+    table.sort(colors, sortColorsByName)
+  else
+    table.sort(colors,sortColorsByHue) 
+  end
+  local i = 1
+  for _, k in ipairs(colors) do
+    if k.name:lower():find(search) then
+      local v = k.rgb
+      local fgc = "white"
+      if calc_luminosity(v[1],v[2],v[3]) &gt; 0.5 then
+        fgc = "black"
+      end
+      cechoLink("Color_Selector", string.format('&lt;%s:%s&gt; %-23s&lt;reset&gt; ',fgc,k.name,k.name), [[appendCmdLine("]] .. k.name .. [[")]], table.concat(v, ", "), true)
+      if i == cols then
+        echo("Color_Selector","\n")
+        i = 1
+      else
+        i = i + 1
+      end
+    end
+  end
+  if i ~= 1 then echo("\n") end
+end</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>tecColorWindow()</name>
+						<packageName></packageName>
+						<script>function tecColorWindow()
+  openUserWindow("Color_Selector")
+  clearUserWindow("Color_Selector")
+  enableScrollBar("Color_Selector")
+  tecShowColors(4)
+  cecho("Color_Selector",
+    "\nClick a color to add it to the end of the command bar.")
+end --function tecColorWindow()</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
