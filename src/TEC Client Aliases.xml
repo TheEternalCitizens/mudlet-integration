@@ -136,19 +136,6 @@ echo("\nScreen wrap adjusted\n")
 				<packageName></packageName>
 				<regex>^display update autowrap</regex>
 			</Alias>
-			<Alias isActive="no" isFolder="no">
-				<name>Display Open Communication</name>
-				<script>--Indended for future use
-
---opens an external comm hideWindow
-openUserWindow("UndockCommWindow")
-
---for this to be functional the communications filters need a
---method of checking if this window exists.</script>
-				<command></command>
-				<packageName></packageName>
-				<regex>^Display Open Communication$</regex>
-			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>display clear</name>
 				<script>--clears the main screen.

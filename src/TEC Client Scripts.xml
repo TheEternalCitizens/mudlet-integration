@@ -3029,20 +3029,45 @@ end --end function tecDebugHelp</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>tecDisplayHelp()</name>
+					<name>tecResizeDisplayHelp()</name>
 					<packageName></packageName>
 					<script>function tecResizeDisplayHelp() --explains how to resize display
-	cecho("\n&lt;black:"..tecSettings.helpHighlightColor.."&gt;\\\/\\\/All windows can be resized! Read Below.\\\/\\\/&lt;reset&gt;\n"
+	cecho("&lt;black:"..tecSettings.helpHighlightColor.."&gt;\\\/\\\/All windows can be resized! Read Below.\\\/\\\/&lt;reset&gt;\n"
 		.."Version one allows this by RIGHT "
 		.."clicking one of the four faint blue arrows and dragging it. "
 		.."These arrows are on the top, bottom, left and right outer edges "
 		.."of the main text window that this text appears in. "
 		.."When you move your mouse over the arrows they will "
-		.."become bold blue arrows."
-		.."\n&lt;black:"..tecSettings.helpHighlightColor.."&gt;\/\\\/\\All windows can be resized! Read Above.\/\\\/\\&lt;reset&gt;\n")
-end --function tecResizeDisplayHelp
-
-function tecDisplayHelp()
+		.."become bold blue arrows.\n"
+    .."After changing don't forget to ")
+    cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Save\n", 
+      [[tecClientSaveAll(true)]],
+      "Save all client settings", true)
+		cecho("&lt;black:"..tecSettings.helpHighlightColor.."&gt;\/\\\/\\All windows can be resized! Read Above.\/\\\/\\&lt;reset&gt;\n")
+end --function tecResizeDisplayHelp</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecMoveTabsHelp()</name>
+					<packageName></packageName>
+					<script>function tecMoveTabsHelp() --explains how to move tabs on display
+	cecho("&lt;black:"..tecSettings.helpHighlightColor
+    .."&gt;\\\/\\\/Non communication tabs can be moved! Read Below.\\\/\\\/&lt;reset&gt;\n"
+		.."To move a tab you can right click it. Than drag it to the position of a different tab."
+    .."It may take a few tries because it requires the position to be nearly exact.\n"
+    .."After changing don't forget to ")
+    cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Save\n", 
+      [[tecClientSaveAll(true)]],
+      "Save all client settings", true)
+		cecho("&lt;black:"..tecSettings.helpHighlightColor
+      .."&gt;\/\\\/\\Non communication tabs can be moved! Read Above.\/\\\/\\&lt;reset&gt;\n")
+end --function tecResizeDisplayHelp</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecDisplayHelp()</name>
+					<packageName></packageName>
+					<script>function tecDisplayHelp()
   
   echo("\nDisplay commands:\n")
 	
@@ -3069,10 +3094,12 @@ function tecDisplayHelp()
 		
 	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display refresh settings", 
   [[tecClientDisplayReset()]], 
-  "Refresh text in settings", true)
-	echo(", clears and reloads text in settings window. ")
+  "Refresh text in settings window", true)
+	echo(", clears and reloads text in settings window.\n")
 			
 	tecResizeDisplayHelp() --explains how to resize display
+  
+  tecMoveTabsHelp() --Explains how to move tabs
 	
 end --end tecDisplayHelp()</script>
 					<eventHandlerList />
@@ -3304,17 +3331,21 @@ end --end tecMapIconAdjustment</script>
 	
   cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Resize Windows\n", 
   [[tecResizeDisplayHelp()]],
-  "Change client font size", true)
+  "Tutorial on how to resize windows", true)
+  
+  cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Move tabs\n", 
+  [[tecMoveTabsHelp()]],
+  "Tutorial on how to move display tabs", true)
 
-  cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Change Colors\n", 
+  cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Change Colors\n", 
   [[tecClientChangeColors()]],
   "Change client colors", true)
 
-  cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
+  cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Report Issues\n", 
   [[tecReportIssues()]],
   "Report issues or bugs", true)
   
-  cechoLink("tecSettingsConsole", "\n&lt;black:SkyBlue&gt;Reset\n", 
+  cechoLink("tecSettingsConsole", "\n&lt;:"..tecSettings.helpHighlightColor.."&gt;Reset\n", 
   [[tecClientResetAll()]],
   "Reset all changes to default", true)
   
