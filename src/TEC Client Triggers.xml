@@ -683,7 +683,8 @@ elseif line:match("^%d+:") then --if line starts with "#: "
     --Last character of an engaged name will be a space, this removes it.
     tecRoomObjects.characters[tecRoomObjects.lc] = tecRoomObjects.characters[tecRoomObjects.lc]:sub(1,-2)
 		--create a right clickable list with the characters full name.
-		cechoPopup("roomCharacters.console","&lt;red&gt;_"..tecRoomObjects.characters[tecRoomObjects.lc].."_\n",
+		hechoPopup("roomCharacters.console",tecSettings.ApproachedCharacters
+      .."_"..tecRoomObjects.characters[tecRoomObjects.lc].."_\n",
 		{
 		--apprachedCommandList is list of commands for characters that have approached yours
 		--tecNameMatches is now many times something with the same short name was previously found
@@ -704,7 +705,8 @@ elseif line:match("^%d+:") then --if line starts with "#: "
 		tecSettings.approachedCommandHelp[6]}, true)
 	else
 		--characters that are not approached to the players
-		cechoPopup("roomCharacters.console","&lt;green&gt;_"..tecRoomObjects.characters[tecRoomObjects.lc].."_\n",
+		hechoPopup("roomCharacters.console",tecSettings.notApproachedCharacter
+      .."_"..tecRoomObjects.characters[tecRoomObjects.lc].."_\n",
 		{
 		--list of commands for characters not approached to yours.
 		--refer to approached logic explination above for reference.

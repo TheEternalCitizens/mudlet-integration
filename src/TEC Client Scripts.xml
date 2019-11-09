@@ -41,6 +41,8 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   tecSettings.GreenTextColor = "#77dd77"
   tecSettings.BlueTextColor = "#8888ff"
   tecSettings.PurpleTextColor = "#cca9dd"
+  tecSettings.notApproachedCharacter = "#77dd77"
+  tecSettings.ApproachedCharacters = "#FF7F7F"
   
   --background color for labels.
   tecSettings.labelBackgroundColor = "#537dC0"
@@ -3193,6 +3195,18 @@ end --function tecClientHelp</script>
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change TEC's blue text color", true)
   
+  cecho("Change the color approached characters appear in Room Characters window: ")
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient approached character color\n", 
+  [[printCmdLine("tecclient approached character color ");
+    cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
+  "Change color approached characters in Room Character Window", true)
+  
+  cecho("Change the color not approached characters appear in Room Characters window: ")
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient approached character color\n", 
+  [[printCmdLine("tecclient not approached character color ");
+    cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
+  "Change color not approached characters in Room Character Window", true)
+  
   cecho("Don't forget to save your changes with: ")
   cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
   [[tecFileSaveSettings(true)]],
@@ -3509,7 +3523,7 @@ function tecUpdate.config() --Create variables used for updates
     lfs.mkdir(tecUpdate.versionsRespitory) --create the folder
   end --if tecUpdate.versionsRespitory not exist
   tecUpdate.version = ".01" --current client version
-  tecUpdate.versions = {".01",".02"} --List of all versions, old and current
+  tecUpdate.versions = {".01"} --List of all versions, old and current
   tecUpdate.download_path = "https://github.com/TheEternalCitizens/mudlet-integration/releases/download/tecLatest/"
   tecUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
   
@@ -3767,6 +3781,26 @@ function tecSetBackgroundColor(tecColor)
     --setBgColor(windowName, Geyser.Color.parse(tecColor)) --change background color
     --bg(windowName, tecColor) --change background color
   end
+end --function tecLabelBackgroundColor</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>tecSettecNotApproachedCharacter(tecColor)</name>
+						<packageName></packageName>
+						<script>--set the color that tec will use for not approached characters.
+function tecSettecNotApproachedCharacter(tecColor)
+  --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
+  tecSettings.notApproachedCharacter = Geyser.Color.hex(tecColor)
+end --function tecLabelBackgroundColor</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>tecSettecApproachedCharacter(tecColor)</name>
+						<packageName></packageName>
+						<script>--set the color that tec will use for approached characters.
+function tecSettecApproachedCharacter(tecColor)
+  --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
+  tecSettings.ApproachedCharacters = Geyser.Color.hex(tecColor)
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>

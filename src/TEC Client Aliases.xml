@@ -369,6 +369,20 @@ tecUpdate.saveVersions() --Saves versions table to file.</script>
 					<regex>^tecclient helphighlight color (.*)</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
+					<name>tecclient approached character color</name>
+					<script>tecSettecApproachedCharacter(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^tecclient tecclient approached character color (.*)</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>tecclient not approached character color</name>
+					<script>tecSettecNotApproachedCharacter(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^tecclient not approached character color (.*)</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
 					<name>tecclient background color</name>
 					<script>tecSetBackgroundColor(matches[2])</script>
 					<command></command>
