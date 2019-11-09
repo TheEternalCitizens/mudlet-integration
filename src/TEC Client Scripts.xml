@@ -338,27 +338,27 @@ mapRoomStyle = [[
 --Create a red style for creating map rooms
 --Done by completing the intentially unfinished mapRoomStyle
 mapRoomStyleRed = mapRoomStyle..[[
-	background-color: red;
+	background-color:  #ff6666;
   }
 ]]
 
 --Create a Green style for creating map rooms
 --Done by completing the intentially unfinished mapRoomStyle
 mapRoomStyleGreen = mapRoomStyle..[[
-	background-color: green;
+	background-color: #77dd77;
   }
 ]]
 
 --Create a white style for creating map rooms
 --Done by completing the intentially unfinished mapRoomStyle
 mapRoomStyleWhite = mapRoomStyle..[[
-	background-color: white;
+	background-color: GhostWhite;
   }
 ]]
 
 mapStraitOpenExitStyle = [[
 	QLabel{
-	background-color: white;
+	background-color: GhostWhite;
 	}
 ]]
 
@@ -3294,27 +3294,27 @@ end --end tecMapIconAdjustment</script>
   [[tecFileLoadSettings(true)]],
   "Load client settings from last save", true)
   
-  cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Update\n", 
+  cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Update\n", 
   [[tecUpdate.checkVersion()]],
   "Check for updates", true)
 	
-  cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Font Size\n", 
+  cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Font Size\n", 
   [[printCmdLine("tecclient font size ")]],
   "Change client font size", true)
 	
-  cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Resize Windows\n", 
+  cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Resize Windows\n", 
   [[tecResizeDisplayHelp()]],
   "Change client font size", true)
 
-  cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Change Colors\n", 
+  cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Change Colors\n", 
   [[tecClientChangeColors()]],
   "Change client colors", true)
 
-  cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Report Issues\n", 
+  cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
   [[tecReportIssues()]],
   "Report issues or bugs", true)
   
-  cechoLink("tecSettingsConsole", "\n&lt;:"..tecSettings.helpHighlightColor.."&gt;Reset\n", 
+  cechoLink("tecSettingsConsole", "\n&lt;black:SkyBlue&gt;Reset\n", 
   [[tecClientResetAll()]],
   "Reset all changes to default", true)
   
