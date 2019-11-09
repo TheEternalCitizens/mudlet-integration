@@ -3510,13 +3510,13 @@ function tecUpdate.config() --Create variables used for updates
   end --if tecUpdate.versionsRespitory not exist
   tecUpdate.version = ".01" --current client version
   tecUpdate.versions = {".01",".02"} --List of all versions, old and current
-  tecUpdate.download_path = "https://raw.githubusercontent.com/TheEternalCitizens/mudlet-integration/AutomatedUpdates/src/"
+  tecUpdate.download_path = "https://github.com/TheEternalCitizens/mudlet-integration/releases/download/tecLatest/"
   tecUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
   
   --The script that contains the update function must be at the end of this table!
-  tecUpdate.scriptNames = {[[TEC Client Aliases.xml]], [[TEC Client KeyBindings.xml]]
-    ,[[imgs.mpackage]], [[TEC Client Timers.xml]], [[TEC Client Triggers.xml]]
-    ,[[TEC Client Scripts.xml]]}
+  tecUpdate.scriptNames = {[[TEC_Client_Aliases.xml]], [[TEC_Client_KeyBindings.xml]]
+    ,[[imgs.mpackage]], [[TEC_Client_Timers.xml]], [[TEC_Client_Triggers.xml]]
+    ,[[TEC_Client_Scripts.xml]]}
 end --function tecUpdate.config
 tecUpdate.config() --run it on startup so data is configured.
 
