@@ -42,7 +42,7 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   tecSettings.BlueTextColor = "#8888ff"
   tecSettings.PurpleTextColor = "#cca9dd"
   tecSettings.notApproachedCharacter = "#77dd77"
-  tecSettings.ApproachedCharacters = "#FF7F7F"
+  tecSettings.ApproachedCharacters = "#ff6666"
   
   --background color for labels.
   tecSettings.labelBackgroundColor = "#537dC0"
