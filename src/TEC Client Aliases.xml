@@ -227,7 +227,7 @@ tecClientReset(true)</script>
 				<regex>^tecclient reset$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>tecclient font size</name>
+				<name>tecclient reset all</name>
 				<script>tecClientResetAll() --resets all client settings</script>
 				<command></command>
 				<packageName></packageName>
@@ -268,6 +268,36 @@ Current font size: ]]..getTECFont())</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^tecclient font size (.*)</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient update</name>
+				<script>tecUpdate.downloadScriptsNames() --Begin downloading updates</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient update$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient update check</name>
+				<script>tecUpdate.checkVersion() --check if an update is needed.</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient update check$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient save script names</name>
+				<script>--Intended for developers.
+tecUpdate.saveScriptNames() --Saves script names</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient save script names$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient save versions</name>
+				<script>--Intended for developers.
+tecUpdate.saveVersions() --Saves versions table to file.</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient save versions$</regex>
 			</Alias>
 			<AliasGroup isActive="yes" isFolder="yes">
 				<name>colors</name>
@@ -454,12 +484,27 @@ Mostly these will be used to manually run a check for dev testing.
 			<packageName></packageName>
 			<regex></regex>
 			<Alias isActive="yes" isFolder="no">
-				<name>Room Object Check</name>
+				<name>Room Check</name>
 				<script>--Check room for characters and fill the room character window.
 runTECRoomObjectCheck()</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^room check$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>ac .</name>
+				<script>runTECRoomObjectCheck(true) --check room for characters display all to screen</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^ac \.$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>room refresh</name>
+				<script>--checks if a refresh notification is already in window displays it if needed
+tecRoomCharRefreshNotification()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^room refresh$</regex>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
@@ -480,13 +525,6 @@ tecPasswordEntry = true --used to prevent the password entry from beind sent to 
 				<regex>^Username: (.+)$</regex>
 			</Alias>
 		</AliasGroup>
-		<Alias isActive="no" isFolder="no">
-			<name>Control Command Echo</name>
-			<script>--send(matches[2])</script>
-			<command></command>
-			<packageName></packageName>
-			<regex>^(.*)123</regex>
-		</Alias>
 	</AliasPackage>
 	<ActionPackage />
 	<ScriptPackage />

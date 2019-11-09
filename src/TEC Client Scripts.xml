@@ -3251,118 +3251,6 @@ end --end tecMapIconAdjustment</script>
 				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>Auto Checks</name>
-				<packageName></packageName>
-				<script>--[[
-Some times you will want to run a command but not display the output of that command 
-to the user.
-The functions here I untended to work with the triggers that are involved with that.
-]]--</script>
-				<eventHandlerList />
-				<ScriptGroup isActive="yes" isFolder="yes">
-					<name>Room Characters</name>
-					<packageName></packageName>
-					<script>--[[
-Scripts for working with filtering the approach check command 
-]]--</script>
-					<eventHandlerList />
-					<Script isActive="yes" isFolder="no">
-						<name>getTECRoomCheckActive()</name>
-						<packageName></packageName>
-						<script>function getTECRoomCheckActive()
-	return tecRoomObjects.checkActive
-end --end function getRoomCharactersActive</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>setTECRoomCheckActive(boolean)</name>
-						<packageName></packageName>
-						<script>function setTECRoomCheckActive(tecRoomCheckActive)
-	tecRoomObjects.checkActive = tecRoomCheckActive
-end --end function setRoomCharactersActive</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="no" isFolder="no">
-						<name>clearTECRoomObjects()</name>
-						<packageName></packageName>
-						<script>--Moved to variables Data Themese - Variables script</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>runTECRoomObjectCheck()</name>
-						<packageName></packageName>
-						<script>--used for functions that track objects in the current room.
-function runTECRoomObjectCheck()
-
-	--clear room data before running check 
-	clearTECRoomObjects()
-
-	--clear the character window.
-	clearWindow("roomCharacters.console")
-	
-	--set a room check to true.
-	setTECRoomCheckActive(true)
-
-	--send an ac . command to list characters in the room.
-	send("ac .", false)
-
-end --function runRoomCharacterCheck()</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>setRoomCharacterCheck(boolean)</name>
-						<packageName></packageName>
-						<script>--Used to tell a Room Character Check timer if a check for characters
---in the room should be run 
-
-function setRoomCharacterCheck(booleanRoomCheck)
-	doRoomCharacterCheck = booleanRoomCheck
-end --function setRoomCheck</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>getRoomCharacterCheck()</name>
-						<packageName></packageName>
-						<script>--Used to tell a Room Character Check timer if a check for characters
---in the room should be run 
-
-function getRoomCharacterCheck()
-	return doRoomCharacterCheck
-end --end function getRoomCharacterCheck</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>clearRoomCharacterWindow()</name>
-						<packageName></packageName>
-						<script>function clearRoomCharacterWindow()
-	clearWindow("roomCharacters.console")
-end --clearRoomCharacterWindow</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>stopRoomCharacterCheck()</name>
-						<packageName></packageName>
-						<script>--disables the once a second check if a roomCharacterCheck is needed
-function stopRoomCharacterCheck()
-disableTimer("Room Character Check")
-end --stopRoomCharacterCheck()
-
-stopRoomCharacterCheck() --run it now. As system starts.
---so the timmer doesn't run at login.</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>startRoomCharacterCheck()</name>
-						<packageName></packageName>
-						<script>--enables the once a second check if a roomCharacterCheck is needed
-function startRoomCharacterCheck()
-	enableTimer("Room Character Check")
-end --startRoomCharacterCheck()</script>
-						<eventHandlerList />
-					</Script>
-				</ScriptGroup>
-			</ScriptGroup>
-			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>Settings Window</name>
 				<packageName></packageName>
 				<script>-------------------------------------------------
@@ -3386,6 +3274,10 @@ end --startRoomCharacterCheck()</script>
   cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Load\n", 
   [[tecFileLoadSettings(true)]],
   "Load client settings from last save", true)
+  
+  cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Update\n", 
+  [[tecUpdate.checkVersion()]],
+  "Check for updates", true)
 	
   cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Font Size\n", 
   [[printCmdLine("tecclient font size ")]],
@@ -3602,6 +3494,192 @@ end --tecOpenDirectory</script>
 end</script>
 					<eventHandlerList />
 				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tec Auto Updates</name>
+					<packageName></packageName>
+					<script>--Script to handle downloading updates.
+
+tecUpdate = {}
+
+function tecUpdate.config() --Create variables used for updates
+  tecUpdate.versionsFile = "tecClientVersions.lua" --name of file containing versions
+  tecUpdate.scriptNamesFile = "tecClientScriptNames.lua" --name of file containing script names
+  tecUpdate.versionsRespitory = getMudletHomeDir().."/settings/" --local folder save files in
+  if not io.exists(tecUpdate.versionsRespitory) then --if folder does not exists
+    lfs.mkdir(tecUpdate.versionsRespitory) --create the folder
+  end --if tecUpdate.versionsRespitory not exist
+  tecUpdate.version = ".01" --current client version
+  tecUpdate.versions = {".01",".02"} --List of all versions, old and current
+  tecUpdate.download_path = "https://github.com/TheEternalCitizens/mudlet-integration/releases/download/tecLatest/"
+  tecUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
+  
+  --The script that contains the update function must be at the end of this table!
+  tecUpdate.scriptNames = {[[TEC_Client_Aliases.xml]], [[TEC_Client_KeyBindings.xml]]
+    ,[[imgs.mpackage]], [[TEC_Client_Timers.xml]], [[TEC_Client_Triggers.xml]]
+    ,[[TEC_Client_Scripts.xml]]}
+end --function tecUpdate.config
+tecUpdate.config() --run it on startup so data is configured.
+
+--From this point until function tecUpdate.eventHandler the functions are in the 
+--same logical order they will be processed in. The only reason for this is to 
+--make it more simple to understand.
+--As you are following this, keep in mind that we do not know how long a file will
+--take to download. So we have to use tecUpdate.eventHandler to run the next function
+--after a download has completed.
+
+--Download file used to check version. Called on automatically on startup
+--or by clicking update in settings box.
+function tecUpdate.checkVersion()
+  if tecUpdate.update_timer then --if the timer exists
+    killTimer(tecUpdate.update_timer) --stop the timer
+    tecUpdate.update_timer = nil --set the timer to nil
+  end -- if tecUpdate.update_timer exists
+  debugToDisplay(
+    "\nUpdate: Version file Downloading from: "
+      ..tecUpdate.download_path .. tecUpdate.versionsFile
+      .."\nUpdate: downloading version file to: "..tecUpdate.versionsRespitory
+      ..tecUpdate.versionsFile
+  ) --end debugToDisplay
+  downloading = true --Used during sysDownloadDone event handler in this script
+  --download the latest version file to the users profile
+  downloadFile(tecUpdate.versionsRespitory .. tecUpdate.versionsFile, 
+    tecUpdate.download_path .. tecUpdate.versionsFile) --second half of downloadFile
+end --tecUpdate.checkVersion
+
+--Called when downloadDone event finds version file downloaded.
+--This function checks it latest version is installed. Prompts the user to update if it is.
+local function check_version()
+  downloading = false --Used during sysDownloadDone event handler in this script
+  local path = tecUpdate.versionsRespitory .. tecUpdate.versionsFile --folder and file names
+  debugToDisplay("Update: Loading version file: "..path)
+  tecUpdate.versions = {} --will hold the versions table that contains current list of versions.
+  table.load(path, tecUpdate.versions) --load the versions file.
+  --Find the currently used version's position in the versions master file.
+  local pos = table.index_of(tecUpdate.versions, tecUpdate.version) or 0
+  debugToDisplay("Update: Current client version: "..tecUpdate.version
+    .."\n\tfound in versions file at position: "..tostring(pos))
+  if pos ~= #tecUpdate.versions then --if the current version is the not last in the version file.
+    debugToDisplay("Update: An update is available")
+    enableAlias(tecUpdate.aliasName) --enable alias so user can run update with command
+    cecho(string.format("&lt;:maroon&gt;TEC Client is currently %s versions behind.\n",#tecUpdate.versions - pos))
+    cecho("&lt;:maroon&gt;To update now, please run: ")
+    cechoLink("&lt;:blue&gt;tecclient update", --link text to display
+      [[tecUpdate.downloadScriptsNames()]], --link command to run
+      "Update game client", true) --link tool tip for mouse hover
+    echo("\n") --cechoLinks don't cause the window to autoscroll.
+  else --if an update is not needed.
+    cecho("You are using the latest TEC Client.\n")
+    --restart the check timer that forces the version check in an hour.
+    tecUpdate.update_timer = tempTimer(3600, [[tecUpdate.checkVersion()]])
+  end --if current version is latest
+end --function check_version
+
+--At this point the user has a prompt on screen asking to update.
+
+--Run when user clicks tecclient update, on update prompt from end of check_version
+--or when user runs command tecclient update after check_version found an update was needed.
+--Downloads a file that contains a table listing all script files used in this project.
+--Doing this via downloaded file so scripts can be added in the future.
+function tecUpdate.downloadScriptsNames()
+  disableAlias(tecUpdate.aliasName) --so user does not start symotanious downloads
+  downloading = true --Used during sysDownloadDone event handler in this script
+  debugToDisplay("Update: Downloading "..tecUpdate.download_path..tecUpdate.scriptNamesFile
+    .."\n\t To folder: "..tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile)
+  downloadFile(tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile, tecUpdate.download_path..tecUpdate.scriptNamesFile)
+end --function tecUpdate.downloadScriptNames
+
+--Called when downloadDone event finds scriptsNames file downloaded.
+--loads scripts file into tecUpdates.scriptNames table.
+--Than runs the update.
+local function loadScriptsNames()
+  downloading = false --Used during sysDownloadDone event handler in this script
+  tecUpdate.scriptNames = {} --clear out script names
+  debugToDisplay("Update: Loading "..tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile
+    .."\n\tTo table: tecUpdate.scriptNames")
+  --Load script names from file to tec
+  table.load(tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile, tecUpdate.scriptNames)
+  --Run updates now that we have a full list of script names.
+  tecUpdate.updateVersion()
+end --function tecUpdate.loadScripts
+
+--runs once loadScripsName completes. These are two functions due to formating only.
+--Downloads the packages needed for the update.
+function tecUpdate.updateVersion() --Download the new client
+  for index, scriptName in ipairs(tecUpdate.scriptNames) do --Loop through all scripts
+    local path, file = tecUpdate.versionsRespitory , scriptName
+    downloading = true --Used during sysDownloadDone event handler in this script
+    debugToDisplay(
+      "Update Downloading from: "..tecUpdate.download_path..file
+      .."\nUpdate: downloading file to: "..path..file
+      ) --end debugToDisplay
+    downloadFile(path..file, tecUpdate.download_path..file) --download the new client scripts
+  end --for tecUpdate.scriptNames
+end --functyion tecUpdate.updateVersion()
+
+--Runs when sysDownloadDone event finds the LAST file in tecUpdate.scriptNames has downloaded
+local function update_version() --install the new client after download was completed
+  downloading = false --Used during sysDownloadDone event handler in this script
+  debugToDisplay("Update: Disabling alias: "..tecUpdate.aliasName)
+  for index, scriptName in ipairs(tecUpdate.scriptNames) do --loop through scripts, and install them
+    debugToDisplay("Update: Uninstalling package: "..scriptName:match("(.*)%."))
+    uninstallPackage(scriptName:match("(.*)%.")) --remove old package
+    debugToDisplay("Update: Installing package: "..tecUpdate.versionsRespitory..scriptName)
+    installPackage(tecUpdate.versionsRespitory..scriptName) --install new package
+  end --for tecUpdate.scriptNames
+  cecho("Updates completed.\n")
+end --function update_version
+
+--Make it easy for devs to create and manage scriptNames files.
+function tecUpdate.saveScriptNames()
+  tecUpdate.config() --Creates the script names table
+  --Save the script names table to file.
+  table.save(tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile, tecUpdate.scriptNames) 
+  cecho("Save script to: "..tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile.."\n")
+  cechoLink("&lt;:blue&gt;Open Directory", 
+  [[tecOpenDirectory(tecUpdate.versionsRespitory)]],
+  "Open folder "..tecUpdate.scriptNamesFile.." is in", true)
+  cecho(" "..tecUpdate.scriptNamesFile.." is in.\n")
+end --function tecUpdate.saveScriptNames
+
+--Make it easy for devs to create and manage versions files.
+function tecUpdate.saveVersions()
+  tecUpdate.config() --Creates the versions table
+  --Save the versions table to file.
+  table.save(tecUpdate.versionsRespitory..tecUpdate.versionsFile, tecUpdate.versions)
+  cecho("Save script to: "..tecUpdate.versionsRespitory..tecUpdate.versionsFile.."\n")
+  cechoLink("&lt;:blue&gt;Open Directory", 
+  [[tecOpenDirectory(tecUpdate.versionsRespitory)]],
+  "Open folder "..tecUpdate.versionsFile.." is in", true)
+  cecho(" "..tecUpdate.versionsFile.." is in.\n")
+end --function tecUpdate.saveScriptNames
+
+function tecUpdate.eventHandler(event, ...)
+  if event == "sysDownloadDone" and downloading then
+    local file = arg[1] -- in this case name of file downloaded
+    if string.ends(file,tecUpdate.versionsFile) then --download is version check  file
+      debugToDisplay("Update sysDownloadDone Event: Download: "..file
+        .."\n\tdownloaded, check_version() called.")
+      check_version() --Use downloaded version file to check if latest version is installed
+    elseif string.ends(file,tecUpdate.scriptNames[(#tecUpdate.scriptNames)]) then --if download is LAST downloaded script
+      debugToDisplay("Update sysDownloadDone Event: Download: "..file
+        .."\n\tdownloaded, update_version() called.")
+      update_version() --install the new client after download was completed
+    --elseif string.ends(file,tecUpdate.scriptNamesFile) then
+    elseif file == tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile then
+      debugToDisplay("Update sysDownloadDone Event: Download: "..file
+        .."\n\tdownloaded, loadScriptsNames() called.")
+      loadScriptsNames() --loads scripts names into table tecUpdate.scriptNames
+    else
+      debugToDisplay("Update sysDownloadDone Event: Downloaded file: "..file
+        .."\n\tWas NOT caught by event handler.")
+    end --elseif file downloaded is new script
+  end --if event == elseif
+end --function tecUpdate.eventHandler()
+
+registerAnonymousEventHandler("sysDownloadDone", "tecUpdate.eventHandler")
+</script>
+					<eventHandlerList />
+				</Script>
 				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>Colors</name>
 					<packageName></packageName>
@@ -3693,6 +3771,112 @@ end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
+			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>Room Characters</name>
+				<packageName></packageName>
+				<script>--[[
+Scripts for working with filtering the approach check command 
+]]--</script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>getTECRoomCheckActive()</name>
+					<packageName></packageName>
+					<script>function getTECRoomCheckActive()
+	return tecRoomObjects.checkActive
+end --end function getRoomCharactersActive</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>setTECRoomCheckActive(tecRoomCheckActive, displayToScreen)</name>
+					<packageName></packageName>
+					<script>function setTECRoomCheckActive(tecRoomCheckActive, displayToScreen)
+  displayToScreen = displayToScreen or false
+	tecRoomObjects.checkActive = tecRoomCheckActive
+  tecRoomObjects.displayToScreen = displayToScreen --will ac . display to main
+end --end function setRoomCharactersActive</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="no" isFolder="no">
+					<name>clearTECRoomObjects()</name>
+					<packageName></packageName>
+					<script>--Moved to variables Data Themese - Variables script</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>runTECRoomObjectCheck(displayToScreen)</name>
+					<packageName></packageName>
+					<script>--used for functions that track objects in the current room.
+function runTECRoomObjectCheck(displayToScreen)
+
+  displayToScreen = displayToScreen or false --if not declared default is false
+
+	--clear room data before running check 
+	clearTECRoomObjects()
+
+	--clear the character window.
+	clearWindow("roomCharacters.console")
+	
+	--set a room check to true.
+	setTECRoomCheckActive(true,displayToScreen)
+
+	--send an ac . command to list characters in the room.
+  send("ac .", false)
+
+end --function runRoomCharacterCheck()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>clearRoomCharacterWindow()</name>
+					<packageName></packageName>
+					<script>function clearRoomCharacterWindow()
+	clearWindow("roomCharacters.console")
+  tecRoomObjects.refreshMessageDisplayed =false
+end --clearRoomCharacterWindow</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecRoomCharRefreshNotification()</name>
+					<packageName></packageName>
+					<script>local function tecRoomCharRefreshMessage()
+  cecho("roomCharacters.console", "Refresh Room Characters by:\n")
+  cecho("roomCharacters.console", "Runing command, ")
+  cechoLink("roomCharacters.console","&lt;:maroon&gt;room check", 
+    [[runTECRoomObjectCheck()]],
+    "Populate Room Character window.", true)
+  cecho("roomCharacters.console", ".\n")
+  cecho("roomCharacters.console", "Pressing ctrl+R.\n")
+  cecho("roomCharacters.console", "Refresh Recommended")
+end --function tecRoomCharRefreshMessage()
+
+function tecRoomCharRefreshNotification()
+
+  if not tecRoomObjects.refreshMessageDisplayed then
+    tecRoomCharRefreshMessage()
+    tecRoomObjects.refreshMessageDisplayed = true --tell client no further refreshes needed
+  end --if tecRefreshNotification is needed
+  
+end --function recRoomCharRefreshNotification()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>New scripttecResetRoomCharacterWindow()</name>
+					<packageName></packageName>
+					<script>function tecResetRoomCharacterWindow()
+  clearRoomCharacterWindow() --Room characters window no longer accurate, clear it.
+  cecho("roomCharacters.console", "Populate the Room Characters window by:\n")
+  cecho("roomCharacters.console", "Runing command, ")
+  cechoLink("roomCharacters.console","&lt;:maroon&gt;room check", 
+    [[runTECRoomObjectCheck()]],
+    "Populate Room Character window.", true)
+  cecho("roomCharacters.console", ".\n")
+  cecho("roomCharacters.console", "Pressing ctrl+R.\n")
+  cecho("roomCharacters.console", "\nCurrently this is not automated because TEC can only receive "
+    .."one command per second.\nWe will be automating this in future releases.\n")
+  tecRoomObjects.refreshMessageDisplayed = true --tell client no further refreshes needed
+end --function tecResetRoomCharacterWindow</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
@@ -4176,7 +4360,8 @@ function tecCRWindowResize()
 
 end --tecCRWindowResize()
 
-tecCRWindowResize() --resize the Room Character window now</script>
+tecCRWindowResize() --resize the Room Character window now
+tecResetRoomCharacterWindow()</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
@@ -4526,17 +4711,29 @@ registerAnonymousEventHandler("sysWindowResizeEvent", "guiChange")</script>
 				<script>--use bool checks to control user input.
 --Use this when you do not know what will be entered but DO know a trigger that will
 --occur before the command that will be sent.
-function controlInput(_, command) 
+function controlInput(_, tecPassword) 
   if tecPasswordEntry then --if password entry is set, we expect a password.
   	tecPasswordEntry = false --set this if check to false to it doesn't occur every input.
     --Log into the game. md5.sumhexa converts user ID and password to md5 hash.
     sendAll("USER " .. tecUsername .. "\n", "SECRET NONE", "HASH "
-  	 .. md5.sumhexa(tecUsername .. command .. "NONE") .. "\n", false)
+  	 .. md5.sumhexa(tecUsername .. tecPassword .. "NONE") .. "\n", false)
     tecUsername = nil --Clear out the username.
     clearCmdLine() --clear password from command input bar.
     denyCurrentSend() --Deny the origional command, in this case the password.
+    
+    --clear the password off the screen.
+    local tecMainLastLine = (getLastLineNumber("main") - 1)
+    moveCursor(1,tecMainLastLine) --Move cursor to second from the newest line in main console
+    selectString(tecPassword,1) --Select the password in main.
+    replace("Password Entered\n") --Replaced the selected password with.
+    deselect() --Don't forget your deselects!
+    
+    tecPassword = nil --Just in case, lets make certain the password is cleared out.
+    command = nil --
 	end --tecPasswordEntry
 end --function tecPasswordPrompt
+
+--https://wiki.mudlet.org/w/Manual:Event_Engine#sysDataSendRequest
 registerAnonymousEventHandler("sysDataSendRequest", "controlInput")</script>
 				<eventHandlerList />
 			</Script>

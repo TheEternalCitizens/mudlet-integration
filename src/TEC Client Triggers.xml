@@ -597,7 +597,7 @@ end --if vote skoot appears else just delete</script>
 			</Trigger>
 		</TriggerGroup>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-			<name>Auto Checks</name>
+			<name>Room Checks</name>
 			<script>--[[
 For automated checks the client runs.
 ]]--</script>
@@ -620,27 +620,21 @@ We have to use a lua function because we do not know how many lines we need to r
 If you know how many lines your function needs, set fire length (top right) instead of a lua function.
 
 Room check when:
-you retreat DONE
-You enter a room DONE Works poorly
-You are approached DONE
-Something arrives ONE
-Something enters the room DONE
-Something exits the room. DONE
-If character window is empty, run it during filter so it happens with every trigger.
-No more than once a second.
+user runs "room check" presses ctrl+r or runs "ac ."
 
-First user request is to make the command list on right click custamizale.
- 
+Reference for this trigger 
+https://www.lua.org/pil/20.2.html has explanation on lua string patterns
+
+First user request was to make the command list on right click custamizale.
+
 ]]--
 
 --Remove these to items if they are found.
 if line == "&lt;/pre&gt;&lt;pre&gt;&lt;font size=+1&gt;&lt;b&gt;Checking the approach status of &amp;quot;.&amp;quot;&lt;/b&gt;&lt;/font&gt;&lt;/font&gt;"
 	or line == "&lt;hr&gt;" then
-  --Delete main's line
-  --selectCurrentLine() --proper code for when hinsert is fixed.
-  --replace("")
-  --deselect()
-  deleteLine()
+  --Delete main's line if we are not displaying it to screen
+  if not tecRoomObjects.displayToScreen then deleteLine() end
+
 	
 --pull character name from output.
 elseif line:match("^%d+:") then --if line starts with "#: "
@@ -653,22 +647,22 @@ elseif line:match("^%d+:") then --if line starts with "#: "
 	local tecNameMatches = 1
 	
 	--pulls the match text from the line using a string match
-	tecRoomObjects.characters[tecRoomObjects.lc], characterEngaged = line:match("^%d+:([ %a+]+)([%s%(]?)")
+	tecRoomObjects.characters[tecRoomObjects.lc], characterEngaged = line:match("^%d+:([ %a+%-?%a?,?]+)([%s%(]?)")
 	
 	--remove the space at the start of the character name. We need those other spaces...
 	tecRoomObjects.characters[tecRoomObjects.lc] = tecRoomObjects.characters[tecRoomObjects.lc]:sub(2)
-	
+
 	--If there are any leading a's or an's use the second word for targeting
 	--tec has an odd system where you can look at "a man" but you can not attack "a man"
-	tecCharacterShort = tecRoomObjects.characters[tecRoomObjects.lc]:match("^[a ]?[an ]?(%a+)")
-	
+	tecCharacterShort = tecRoomObjects.characters[tecRoomObjects.lc]:match("^[a ]?[an ]?(%a+%-?%a?)")
+
 		--Loop through all previous character names, looking for previous shortname matches.
 	for i = (tecRoomObjects.lc - 1), 1, -1 do
 		debugToDisplay("Loop Count: "..tostring(i))
-		
+
 		--Collect short name of previous characters
-		local tmpCharacterShort = tecRoomObjects.characters[i]:match("^[a ]?[an ]?(%a+)")
-		
+		local tmpCharacterShort = tecRoomObjects.characters[i]:match("^[a ]?[an ]?(%a+%-?%a?)")
+
 		--if the current short name matches a previous one keep track of the count.
 		if tecCharacterShort == tmpCharacterShort then
 			tecNameMatches = tecNameMatches + 1
@@ -686,8 +680,10 @@ elseif line:match("^%d+:") then --if line starts with "#: "
 
 	--This ( only occurs if your character is approached. If your character is approached.
 	if characterEngaged == "(" then
+    --Last character of an engaged name will be a space, this removes it.
+    tecRoomObjects.characters[tecRoomObjects.lc] = tecRoomObjects.characters[tecRoomObjects.lc]:sub(1,-2)
 		--create a right clickable list with the characters full name.
-		cechoPopup("roomCharacters.console","&lt;red&gt;"..tecRoomObjects.characters[tecRoomObjects.lc].."\n",
+		cechoPopup("roomCharacters.console","&lt;red&gt;_"..tecRoomObjects.characters[tecRoomObjects.lc].."_\n",
 		{
 		--apprachedCommandList is list of commands for characters that have approached yours
 		--tecNameMatches is now many times something with the same short name was previously found
@@ -708,7 +704,7 @@ elseif line:match("^%d+:") then --if line starts with "#: "
 		tecSettings.approachedCommandHelp[6]}, true)
 	else
 		--characters that are not approached to the players
-		cechoPopup("roomCharacters.console","&lt;green&gt;"..tecRoomObjects.characters[tecRoomObjects.lc].."\n",
+		cechoPopup("roomCharacters.console","&lt;green&gt;_"..tecRoomObjects.characters[tecRoomObjects.lc].."_\n",
 		{
 		--list of commands for characters not approached to yours.
 		--refer to approached logic explination above for reference.
@@ -728,21 +724,37 @@ elseif line:match("^%d+:") then --if line starts with "#: "
 		tecSettings.commandHelp[6]}, true)
 	end --end if else characterEnaged == "("
 	
-		--Delete main's line
-  --selectCurrentLine() --proper code for when hinsert is fixed.
-  --replace("")
-  --deselect()
-  deleteLine()
+  --Attempting to resolve issue with window not filling
+  echo("roomCharacters.console","")
+  
+	--Delete main's line if we are not displaying it to screen
+  if not tecRoomObjects.displayToScreen then deleteLine() end
 	
 	--iterate our loop counter
 	tecRoomObjects.lc = tecRoomObjects.lc + 1
 	
-elseif line == "&lt;/pre&gt;" then --end of command found.
-
-	--disable room check for characters. This is the end of the check.
-	setTECRoomCheckActive(false)
-
-  deleteLine() --Make is so line does not appear in main console.
+  elseif line == "&lt;/pre&gt;" then --end of ac . command found.
+  	--disable room check for characters. This is the end of the check.
+  	setTECRoomCheckActive(false)
+    deleteLine() --Make is so line does not appear in main console.
+    
+  --if it is dark set RoomCheck to false so it does not remain active.
+  elseif line == "It is too dark to see anything." then
+    setTECRoomCheckActive(false) --disable room check for characters.
+    clearRoomCharacterWindow()
+    cecho("roomCharacters.console", "It is too dark to see anything.")
+    
+  --if it is dark set RoomCheck to false so it does not remain active.
+  elseif line == "You cannot do that while stunned" then
+    setTECRoomCheckActive(false) --disable room check for characters.
+    clearRoomCharacterWindow()
+    cecho("roomCharacters.console", "You cannot do that while stunned")
+    
+  --if it is dark set RoomCheck to false so it does not remain active.
+  elseif line == "You cannot do that while unconcious." then
+    setTECRoomCheckActive(false) --disable room check for characters.
+    clearRoomCharacterWindow()
+    cecho("roomCharacters.console", "You cannot do that while unconcious.")
 
 end --if line has a ac . character in it.
 
@@ -1138,8 +1150,6 @@ hecho("Communication", filteredLine.."\n")
 
 deleteLine() --remove line from main console. line variable remains unchanged.
 
-stopRoomCharacterCheck() --This stops the login timmer.
-
 --This trigger function does the client handshake for the user.
 send("SKOTOS Zealous 0.7.12.2", false) --sending the zealous handshake
 
@@ -1301,12 +1311,13 @@ We would like to avoid repeated trigger checks so include them all within one ch
 			<regexCodePropertyList />
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Player retreats</name>
-				<script>--Check room for characters and fill the room character window.
-setRoomCharacterCheck(true)
+				<script>--[[
+triggers when the player retreats from combat.
+triggers when the player falls back from combat.
+]]--
 
-if getTECTimerDebugMode() then --if timer debug is on
-	debugToDisplay("Room check requested by player retreating from target.")
-end--timer debug</script>
+--checks if a refresh notification is already in window displays it if needed
+tecRoomCharRefreshNotification()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1326,12 +1337,10 @@ end--timer debug</script>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Player is approached</name>
-				<script>--Check room for characters and fill the room character window.
-setRoomCharacterCheck(true)
+				<script>--triggers when the player is approached.
 
-if getTECTimerDebugMode() then --if timer debug is on
-	debugToDisplay("Room check requested by player being approached.")
-end--timer debug</script>
+--checks if a refresh notification is already in window displays it if needed
+tecRoomCharRefreshNotification()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1343,20 +1352,18 @@ end--timer debug</script>
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>stops next to you.$</string>
+					<string>stops next to you.</string>
 				</regexCodeList>
 				<regexCodePropertyList>
-					<integer>1</integer>
+					<integer>0</integer>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>character walks into players room</name>
-				<script>--Check room for characters and fill the room character window.
-setRoomCharacterCheck(true)
+				<script>--triggers when a character enters the players room.
 
-if getTECTimerDebugMode() then --if timer debug is on
-	debugToDisplay("Room check requested by character moving into players room.")
-end--timer debug</script>
+--checks if a refresh notification is already in window displays it if needed
+tecRoomCharRefreshNotification()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1380,12 +1387,10 @@ end--timer debug</script>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>character leave players room</name>
-				<script>--Check room for characters and fill the room character window.
-setRoomCharacterCheck(true)
+				<script>--triggers when a character leaves the players room.
 
-if getTECTimerDebugMode() then --if timer debug is on
-	debugToDisplay("Room check requested by character leaving players room.")
-end--timer debug</script>
+--checks if a refresh notification is already in window displays it if needed
+tecRoomCharRefreshNotification()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1409,12 +1414,10 @@ end--timer debug</script>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Character Arrives</name>
-				<script>--Check room for characters and fill the room character window.
-setRoomCharacterCheck(true)
+				<script>--triggers when an NPC is spawned.
 
-if getTECTimerDebugMode() then --if timer debug is on
-	debugToDisplay("Room check requested by a character arrival.")
-end--timer debug</script>
+--checks if a refresh notification is already in window displays it if needed
+tecRoomCharRefreshNotification()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1426,20 +1429,18 @@ end--timer debug</script>
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>arrives.$</string>
+					<string>arrives.</string>
 				</regexCodeList>
 				<regexCodePropertyList>
-					<integer>1</integer>
+					<integer>0</integer>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Player enters a room</name>
-				<script>--Check room for characters and fill the room character window.
-setRoomCharacterCheck(true)
+				<script>--triggers when the player enters a new room.
 
-if getTECTimerDebugMode() then --if timer debug is on
-	debugToDisplay("Room check requested by entering a room.")
-end--timer debug</script>
+--Set default text in room characters window
+tecResetRoomCharacterWindow()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1458,19 +1459,38 @@ end--timer debug</script>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Player approaches a character</name>
+				<script>--triggers when the player approaches something.
+
+--checks if a refresh notification is already in window displays it if needed
+tecRoomCharRefreshNotification()</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You stop next to </string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>0</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Successful login</name>
-				<script>--[[
-Occurs after a successful login
-]]--
+				<script>--triggers after a successful login
 
---checking for characters in the room
-startRoomCharacterCheck()
+--Sort delay before processing update check. Without this the update request may be barried
+--under login text.
+tecUpdate.update_timer = tempTimer(1, [[tecUpdate.checkVersion()]])
 
---Check room for characters and fill the room character window.
-setRoomCharacterCheck(true)
-if getTECTimerDebugMode() then --if timer debug is on
-	debugToDisplay("Room check requested by successful login.")
-end--timer debug</script>
+--Set default text in room characters window
+tecResetRoomCharacterWindow()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1489,16 +1509,12 @@ end--timer debug</script>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>Player approaches a character</name>
-				<script>--[[
-triggers when the player approaches something.
-]]--
+				<name>Vision loss</name>
+				<script>--Triggers when the player can not see.
 
---Check room for characters and fill the room character window.
-setRoomCharacterCheck(true)
-if getTECTimerDebugMode() then --if timer debug is on
-	debugToDisplay("Room check requested by successful login.")
-end--timer debug</script>
+--Notify user that room characters can not be populated.
+clearRoomCharacterWindow()
+cecho("roomCharacters.console", "It is too dark to see anything.")</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1510,10 +1526,10 @@ end--timer debug</script>
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>You stop next to </string>
+					<string>It is too dark to see anything.</string>
 				</regexCodeList>
 				<regexCodePropertyList>
-					<integer>0</integer>
+					<integer>3</integer>
 				</regexCodePropertyList>
 			</Trigger>
 		</TriggerGroup>
