@@ -4694,15 +4694,14 @@ function tecComWindowResize()
 	local tecResizedFooterHeight = tecComWindows.container:get_height() - GUIframe.defaults.resizeHeight 
 	local tecResizedFooterWidth = tecComWindows.container:get_width() - 2 --6 the width 2 borders
 	tecComWindows.footer:resize(tecResizedFooterWidth, tecResizedFooterHeight) --resize the footer
-	tecComWindows.footer:move(1,(tabsHeight + 1))
+	tecComWindows.footer:move(0,(tabsHeight + 1))
 	
 	--reflect changes in tecSettings so there is a chance to save the size.
 	tecSettings.comTextWindowHeight = tecResizedFooterHeight
 	
-	
 	--resize all of the miniconsoles so we have the 3px border on the bottom.
 	for k,v in pairs(tecComWindows.tabs) do 
-  	tecComWindows[v]:move(1, 1)
+  	tecComWindows[v]:move(2, 0)
   	tecComWindows[v]:resize(tecResizedFooterWidth - 2, tecResizedFooterHeight - 2)
 	end --for tecComWindows.tabs
 	
