@@ -4007,6 +4007,20 @@ end --function tecColorWindow()</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
+				<Script isActive="yes" isFolder="no">
+					<name>tecScrollBarCheck</name>
+					<packageName></packageName>
+					<script>function tecScrollBarCheck(tecConsoleName)
+  tecConsoleName = tecConsoleName or "main"
+  local tecSettingsRowCount = getRowCount(tecConsoleName)
+  if tecSettingsRowCount &lt; getLastLineNumber(tecConsoleName) then
+    enableScrollBar(tecConsoleName)
+  else
+    disableScrollBar(tecConsoleName)
+  end --if tecSettingsRowCount less than text rows in that window.
+end --function tecScrollBarCheck</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>Room Characters</name>
@@ -4440,12 +4454,7 @@ function tecSettingsWindowResize()
 		, tostring(tecSettingsBack:get_height() - 0))
 	tecSettingsConsole:move (0, 0) --left and top borders
   
-  local tecSettingsRowCount = getRowCount("tecSettingsConsole")
-  if tecSettingsRowCount &lt; getLastLineNumber("tecSettingsConsole") then
-    enableScrollBar("tecSettingsConsole")
-  else
-    disableScrollBar("tecSettingsConsole")
-  end --if tecSettingsRowCount less than text rows in that window.
+  tecScrollBarCheck("tecSettingsConsole") --Checks if a scroll bar is needed.
 	
 	if getTECDisplayDebugMode() then --if display debug mode is on
 		debugToDisplay("Room Character Window,"
@@ -4592,15 +4601,16 @@ GUIframe.addWindow(roomCharacters,"Room Characters","topright")
 
 function tecCRWindowResize()
 	
-	--Resize the back label by 6. We want a 3px border around the entire window
+	--Resize the back label by keeping it square.
 	roomCharacters.back:resize(tostring(roomCharacters:get_width())
 		, tostring(roomCharacters:get_height()))
 	roomCharacters.back:move (0, 0) --left and top borders
 	
-	--Resize the room character window by 6. We want a 3px border around the entire window
+	--Resize the back label by keeping it square.
 	roomCharacters.console:resize(tostring(roomCharacters.back:get_width() - 0)
 		, tostring(roomCharacters.back:get_height() - 0))
 	roomCharacters.console:move (0, 0) --left and top borders
+  tecScrollBarCheck("roomCharacters.console") --check if a scroll bar is needed.
 	
 	if getTECDisplayDebugMode() then --if display debug mode is on
 		debugToDisplay("Room Character Window,"

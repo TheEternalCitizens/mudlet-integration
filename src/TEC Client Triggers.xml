@@ -729,6 +729,8 @@ elseif line:match("^%d+:") then --if line starts with "#: "
   --Attempting to resolve issue with window not filling
   echo("roomCharacters.console","")
   
+  tecScrollBarCheck("roomCharacters.console") --check if a scroll bar is needed.
+  
 	--Delete main's line if we are not displaying it to screen
   if not tecRoomObjects.displayToScreen then deleteLine() end
 	
