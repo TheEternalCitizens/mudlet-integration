@@ -261,7 +261,7 @@ tabsStyle = [[
     border-top-right-radius: 15px;
     margin-right: 0px;
     margin-left: 0px;
-		font-size: 50px;
+		font-size: 32px;
     qproperty-alignment: 'AlignCenter | AlignCenter';
   }
 	QLabel::hover{
@@ -4518,7 +4518,8 @@ function tecMapdrawKeepSquare()
     tecMap_back:move(centerAdjustment,0) --Move the map to the center of the map box
 	end --en if width is less than height.
 	
-	echo("tecMap_back","Exits may be slightly\noff until you walk.")
+	echo("tecMap_back","Please walk to redraw map.")
+  tecMap_back:raise()
 	
 end --end function keep square.
 
