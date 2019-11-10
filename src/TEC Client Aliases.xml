@@ -373,7 +373,7 @@ tecUpdate.saveVersions() --Saves versions table to file.</script>
 					<script>tecSettecApproachedCharacter(matches[2])</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^tecclient tecclient approached character color (.*)</regex>
+					<regex>^tecclient approached character color (.*)</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>tecclient not approached character color</name>
