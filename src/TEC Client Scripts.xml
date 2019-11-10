@@ -259,8 +259,8 @@ tabsStyle = [[
     border-color: lightgray;
     border-top-left-radius: 15px;
     border-top-right-radius: 15px;
-    margin-right: 1px;
-    margin-left: 1px;
+    margin-right: 0px;
+    margin-left: 0px;
 		font-size: 50px;
     qproperty-alignment: 'AlignCenter | AlignCenter';
   }
@@ -271,8 +271,8 @@ tabsStyle = [[
     border-color: gray;
     border-top-left-radius: 15px;
     border-top-right-radius: 15px;
-    margin-right: 1px;
-    margin-left: 1px;
+    margin-right: 0px;
+    margin-left: 0px;
 		font-size: 50px;
     qproperty-alignment: 'AlignCenter | AlignCenter';
   }
@@ -287,8 +287,8 @@ labelsStyle = [[
     border-width: 1px;
     border-style: outset;
     border-color: lightgray;
-    margin-right: 1px;
-    margin-left: 1px;
+    margin-right: 0px;
+    margin-left: 0px;
 		font-size: 50px;
     qproperty-alignment: 'AlignCenter | AlignCenter';
   }
@@ -297,8 +297,8 @@ labelsStyle = [[
     border-width: 1px;
     border-style: outset;
     border-color: gray;
-    margin-right: 1px;
-    margin-left: 1px;
+    margin-right: 0px;
+    margin-left: 0px;
 		font-size: 50px;
     qproperty-alignment: 'AlignCenter | AlignCenter';
   }
@@ -3029,20 +3029,45 @@ end --end function tecDebugHelp</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>tecDisplayHelp()</name>
+					<name>tecResizeDisplayHelp()</name>
 					<packageName></packageName>
 					<script>function tecResizeDisplayHelp() --explains how to resize display
-	cecho("\n&lt;black:"..tecSettings.helpHighlightColor.."&gt;\\\/\\\/All windows can be resized! Read Below.\\\/\\\/&lt;reset&gt;\n"
+	cecho("&lt;black:"..tecSettings.helpHighlightColor.."&gt;\\\/\\\/All windows can be resized! Read Below.\\\/\\\/&lt;reset&gt;\n"
 		.."Version one allows this by RIGHT "
 		.."clicking one of the four faint blue arrows and dragging it. "
 		.."These arrows are on the top, bottom, left and right outer edges "
 		.."of the main text window that this text appears in. "
 		.."When you move your mouse over the arrows they will "
-		.."become bold blue arrows."
-		.."\n&lt;black:"..tecSettings.helpHighlightColor.."&gt;\/\\\/\\All windows can be resized! Read Above.\/\\\/\\&lt;reset&gt;\n")
-end --function tecResizeDisplayHelp
-
-function tecDisplayHelp()
+		.."become bold blue arrows.\n"
+    .."After changing don't forget to ")
+    cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Save\n", 
+      [[tecClientSaveAll(true)]],
+      "Save all client settings", true)
+		cecho("&lt;black:"..tecSettings.helpHighlightColor.."&gt;\/\\\/\\All windows can be resized! Read Above.\/\\\/\\&lt;reset&gt;\n")
+end --function tecResizeDisplayHelp</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecMoveTabsHelp()</name>
+					<packageName></packageName>
+					<script>function tecMoveTabsHelp() --explains how to move tabs on display
+	cecho("&lt;black:"..tecSettings.helpHighlightColor
+    .."&gt;\\\/\\\/Non communication tabs can be moved! Read Below.\\\/\\\/&lt;reset&gt;\n"
+		.."To move a tab you can right click it. Than drag it to the position of a different tab."
+    .."It may take a few tries because it requires the position to be nearly exact.\n"
+    .."After changing don't forget to ")
+    cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Save\n", 
+      [[tecClientSaveAll(true)]],
+      "Save all client settings", true)
+		cecho("&lt;black:"..tecSettings.helpHighlightColor
+      .."&gt;\/\\\/\\Non communication tabs can be moved! Read Above.\/\\\/\\&lt;reset&gt;\n")
+end --function tecResizeDisplayHelp</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecDisplayHelp()</name>
+					<packageName></packageName>
+					<script>function tecDisplayHelp()
   
   echo("\nDisplay commands:\n")
 	
@@ -3069,10 +3094,12 @@ function tecDisplayHelp()
 		
 	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display refresh settings", 
   [[tecClientDisplayReset()]], 
-  "Refresh text in settings", true)
-	echo(", clears and reloads text in settings window. ")
+  "Refresh text in settings window", true)
+	echo(", clears and reloads text in settings window.\n")
 			
 	tecResizeDisplayHelp() --explains how to resize display
+  
+  tecMoveTabsHelp() --Explains how to move tabs
 	
 end --end tecDisplayHelp()</script>
 					<eventHandlerList />
@@ -3304,17 +3331,21 @@ end --end tecMapIconAdjustment</script>
 	
   cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Resize Windows\n", 
   [[tecResizeDisplayHelp()]],
-  "Change client font size", true)
+  "Tutorial on how to resize windows", true)
+  
+  cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Move tabs\n", 
+  [[tecMoveTabsHelp()]],
+  "Tutorial on how to move display tabs", true)
 
-  cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Change Colors\n", 
+  cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Change Colors\n", 
   [[tecClientChangeColors()]],
   "Change client colors", true)
 
-  cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
+  cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Report Issues\n", 
   [[tecReportIssues()]],
   "Report issues or bugs", true)
   
-  cechoLink("tecSettingsConsole", "\n&lt;black:SkyBlue&gt;Reset\n", 
+  cechoLink("tecSettingsConsole", "\n&lt;:"..tecSettings.helpHighlightColor.."&gt;Reset\n", 
   [[tecClientResetAll()]],
   "Reset all changes to default", true)
   
@@ -4334,6 +4365,8 @@ end --end loop through tecCompass.dirs
 --keeps the tecCompass square as the windows are adjusted.
 function tecCompass.drawKeepSquare()
 
+  --tecCompass.window:move(0,2) --small black break at top.
+
 	--if the width of the parent label is less than the height.
 	--Resize the background label itself keeping the width and height equal.
 	if tecCompass.window:get_width() &lt; tecCompass.window:get_height() then
@@ -4396,14 +4429,14 @@ GUIframe.addWindow(tecSettingsBar,"Settings","bottomleft")
 function tecSettingsWindowResize()
 	
 	--Resize the back label by 6. We want a 3px border around the entire window
-	tecSettingsBack:resize(tostring(tecSettingsBar:get_width() - 6)
-		, tostring(tecSettingsBar:get_height() - 6))
-	tecSettingsBack:move (3, 3) --left and top borders
+	tecSettingsBack:resize(tostring(tecSettingsBar:get_width() - 0)
+		, tostring(tecSettingsBar:get_height() - 0))
+	tecSettingsBack:move (0, 0) --left and top borders
 	
 	--Resize the room character window by 6. We want a 3px border around the entire window
-	tecSettingsConsole:resize(tostring(tecSettingsBack:get_width() - 6)
-		, tostring(tecSettingsBack:get_height() - 6))
-	tecSettingsConsole:move (3, 3) --left and top borders
+	tecSettingsConsole:resize(tostring(tecSettingsBack:get_width() - 0)
+		, tostring(tecSettingsBack:get_height() - 0))
+	tecSettingsConsole:move (0, 0) --left and top borders
 	
 	if getTECDisplayDebugMode() then --if display debug mode is on
 		debugToDisplay("Room Character Window,"
@@ -4466,16 +4499,23 @@ end --end loop create tabs and consoles
 
 function tecMapdrawKeepSquare()
 
+  tecMap:move(0,0) --move the map down so there is a border on the top.
+  --tecMap:resize(tecMap:get_width(), (tecMap:get_height() - 2))
+
 	--if the width of the parent label is less than the height.
 	--Resize the background label itself keeping the width and height the equal.
 	if tecMap:get_width() &lt; tecMap:get_height() then
   	tecMap_back:resize(tecMap:get_width(), tecMap:get_width())
+    --local centerAdjustment = ((tecMap:get_height() - tecMap_back:get_width()) * .5)
+    tecMap_back:move(0,0) --Move the map to the center of the map box
 	end --en if width is less than height.
 	
 	--if the height of the parent label is less than the width.
 	--Resize the background label itself keeping the width and height equal.
 	if tecMap:get_height() &lt; tecMap:get_width() then
   	tecMap_back:resize(tecMap:get_height(), tecMap:get_height())
+    local centerAdjustment = ((tecMap:get_width() - tecMap_back:get_height()) * .5)
+    tecMap_back:move(centerAdjustment,0) --Move the map to the center of the map box
 	end --en if width is less than height.
 	
 	echo("tecMap_back","Exits may be slightly\noff until you walk.")
@@ -4543,14 +4583,14 @@ GUIframe.addWindow(roomCharacters,"Room Characters","topright")
 function tecCRWindowResize()
 	
 	--Resize the back label by 6. We want a 3px border around the entire window
-	roomCharacters.back:resize(tostring(roomCharacters:get_width() - 6)
-		, tostring(roomCharacters:get_height() - 6))
-	roomCharacters.back:move (3, 3) --left and top borders
+	roomCharacters.back:resize(tostring(roomCharacters:get_width())
+		, tostring(roomCharacters:get_height()))
+	roomCharacters.back:move (0, 0) --left and top borders
 	
 	--Resize the room character window by 6. We want a 3px border around the entire window
-	roomCharacters.console:resize(tostring(roomCharacters.back:get_width() - 6)
-		, tostring(roomCharacters.back:get_height() - 6))
-	roomCharacters.console:move (3, 3) --left and top borders
+	roomCharacters.console:resize(tostring(roomCharacters.back:get_width() - 0)
+		, tostring(roomCharacters.back:get_height() - 0))
+	roomCharacters.console:move (0, 0) --left and top borders
 	
 	if getTECDisplayDebugMode() then --if display debug mode is on
 		debugToDisplay("Room Character Window,"
@@ -4663,16 +4703,15 @@ function tecComWindowResize()
 	local tecResizedFooterHeight = tecComWindows.container:get_height() - GUIframe.defaults.resizeHeight 
 	local tecResizedFooterWidth = tecComWindows.container:get_width() - 2 --6 the width 2 borders
 	tecComWindows.footer:resize(tecResizedFooterWidth, tecResizedFooterHeight) --resize the footer
-	tecComWindows.footer:move(1,(tabsHeight + 1))
+	tecComWindows.footer:move(0,(tabsHeight + 1))
 	
 	--reflect changes in tecSettings so there is a chance to save the size.
 	tecSettings.comTextWindowHeight = tecResizedFooterHeight
 	
-	
 	--resize all of the miniconsoles so we have the 3px border on the bottom.
 	for k,v in pairs(tecComWindows.tabs) do 
-  	tecComWindows[v]:move(1, 1)
-  	tecComWindows[v]:resize(tecResizedFooterWidth - 2, tecResizedFooterHeight - 2)
+  	tecComWindows[v]:move(1, 0)
+  	tecComWindows[v]:resize(tecResizedFooterWidth - 2, tecResizedFooterHeight - 1)
 	end --for tecComWindows.tabs
 	
 	if getTECDisplayDebugMode() then --if display debug mode is on
@@ -4868,6 +4907,11 @@ end
 --Add the macro menu to the top left of the screen
 GUIframe.addWindow(macroMenu.container, "Macros", "bottomleft")
 
+function tecMacroMenuResize()
+  --macroMenu.back:move(0,0)
+end --function tecMacroMenuResize
+tecMacroMenuResize()
+
 GUIframe.activate("Macros") --Make the macros bar the active bar on bottom left.</script>
 				<eventHandlerList />
 			</Script>
@@ -4938,6 +4982,18 @@ end --function tecPasswordPrompt
 
 --https://wiki.mudlet.org/w/Manual:Event_Engine#sysDataSendRequest
 registerAnonymousEventHandler("sysDataSendRequest", "controlInput")</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>tecExitHandler()</name>
+				<packageName></packageName>
+				<script>--runs when mudlet profile closes.
+function tecExitHandler()
+  send("logout") --Forces a complete logout of TEC
+end --function tecExitHandler
+
+--https://wiki.mudlet.org/w/Manual:Event_Engine#sysExitEvent
+registerAnonymousEventHandler("sysExitEvent", "tecExitHandler")</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
