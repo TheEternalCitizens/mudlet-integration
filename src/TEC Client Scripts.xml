@@ -289,7 +289,7 @@ labelsStyle = [[
     border-color: lightgray;
     margin-right: 0px;
     margin-left: 0px;
-		font-size: 50px;
+		font-size: 20px;
     qproperty-alignment: 'AlignCenter | AlignCenter';
   }
 	QLabel::hover{
@@ -299,7 +299,7 @@ labelsStyle = [[
     border-color: gray;
     margin-right: 0px;
     margin-left: 0px;
-		font-size: 50px;
+		font-size: 20px;
     qproperty-alignment: 'AlignCenter | AlignCenter';
   }
 ]]
@@ -3345,15 +3345,17 @@ end --end tecMapIconAdjustment</script>
   [[tecReportIssues()]],
   "Report issues or bugs", true)
   
-  cechoLink("tecSettingsConsole", "\n&lt;:"..tecSettings.helpHighlightColor.."&gt;Reset\n", 
+  cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Client Help\n", 
+  [[tecClientFullHelp(false, "main")]],
+  "Report issues or bugs", true)
+  
+  cechoLink("tecSettingsConsole", "\n&lt;:maroon&gt;Reset\n", 
   [[tecClientResetAll()]],
   "Reset all changes to default", true)
-  
-	echo("tecSettingsConsole","\nFull Lists:\n")
-	--run the client help command. It is a function so it can be clicked.
-	tecClientFullHelp(true, "tecSettingsConsole")
 
-end --function tecRefreshSettingsWindow</script>
+end --function tecRefreshSettingsWindow
+
+tecRefreshSettingsWindow()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -3618,9 +3620,9 @@ local function check_version()
       "Update game client", true) --link tool tip for mouse hover
     echo("\n") --cechoLinks don't cause the window to autoscroll.
   else --if an update is not needed.
-    cecho("You are using the latest TEC Client.\n")
+    cecho("You are using the latest version of TEC Client, Parthia.\n")
     --restart the check timer that forces the version check in an hour.
-    tecUpdate.update_timer = tempTimer(3600, [[tecUpdate.checkVersion()]])
+    --tecUpdate.update_timer = tempTimer(3600, [[tecUpdate.checkVersion()]])
   end --if current version is latest
 end --function check_version
 
@@ -4437,6 +4439,13 @@ function tecSettingsWindowResize()
 	tecSettingsConsole:resize(tostring(tecSettingsBack:get_width() - 0)
 		, tostring(tecSettingsBack:get_height() - 0))
 	tecSettingsConsole:move (0, 0) --left and top borders
+  
+  local tecSettingsRowCount = getRowCount("tecSettingsConsole")
+  if tecSettingsRowCount &lt; getLastLineNumber("tecSettingsConsole") then
+    enableScrollBar("tecSettingsConsole")
+  else
+    disableScrollBar("tecSettingsConsole")
+  end --if tecSettingsRowCount less than text rows in that window.
 	
 	if getTECDisplayDebugMode() then --if display debug mode is on
 		debugToDisplay("Room Character Window,"
@@ -4518,7 +4527,7 @@ function tecMapdrawKeepSquare()
     tecMap_back:move(centerAdjustment,0) --Move the map to the center of the map box
 	end --en if width is less than height.
 	
-	echo("tecMap_back","Please walk to redraw map.")
+	echo("tecMap_back","Please walk to draw map.")
   tecMap_back:raise()
 	
 end --end function keep square.
