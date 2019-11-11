@@ -294,7 +294,7 @@ tecUpdate.saveVersions() --Saves versions table to file.</script>
 				<regex></regex>
 				<Alias isActive="yes" isFolder="no">
 					<name>tecclient colors</name>
-					<script>tecColorWindow()</script>
+					<script>tecColorWindow() --Open floating window to choose colors with.</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^tecclient colors$</regex>
@@ -305,6 +305,13 @@ tecUpdate.saveVersions() --Saves versions table to file.</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^tecclient change colors$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>tecclient change colors commands</name>
+					<script>tecClientChangeColorsList() --List commands to change display colors.</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^tecclient change colors commands$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>tecclient windows background color</name>
@@ -371,7 +378,10 @@ tecUpdate.saveVersions() --Saves versions table to file.</script>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>tecclient background color</name>
-					<script>tecSetBackgroundColor(matches[2])</script>
+					<script>tecSetBackgroundColor(matches[2])
+tecResetRoomCharacterWindow()
+cecho("Text box background color changes are saved by mudlet immediately.\n"
+  .."You will need to restart for text background colors to change")</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^tecclient background (.*)</regex>

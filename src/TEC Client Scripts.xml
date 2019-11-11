@@ -3156,9 +3156,9 @@ end --function tecClientHelp</script>
 				<Script isActive="yes" isFolder="no">
 					<name>tecClientChangeColors()</name>
 					<packageName></packageName>
-					<script>function tecClientChangeColors()
-  
-  cecho("Change background color of windows that do not have text with: ")
+					<script>--lists commands that directly change colors
+function tecClientChangeColorsList()
+cecho("Change background color of windows that do not have text with: ")
   cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient windows background color colorname", 
   [[printCmdLine("tecclient windows background color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
@@ -3222,7 +3222,17 @@ end --function tecClientHelp</script>
   [[printCmdLine("tecclient not approached character color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change color not approached characters in Room Character Window", true)
-  
+end --function tecClientChnageColorsList
+
+--General help for changing colors.
+function tecClientChangeColors()
+
+  cecho("List all commands that change colors with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor
+    .."&gt;tecclient change colors commands\n", 
+  [[tecClientChangeColorsList()]],
+  "Save client settings", true)
+   
   cecho("Don't forget to save your changes with: ")
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
   [[tecFileSaveSettings(true)]],
@@ -3230,7 +3240,8 @@ end --function tecClientHelp</script>
   
   cecho("List colornames in main window: ")
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;lua showColors(3)\n", 
-  [[showColors(3);cecho("Click a color to add it to the end of the command bar")]],
+  [[showColors(3);
+    cecho("Click a color to add it to the end of the command bar")]],
   "List color names", true)
   
   cecho("Open colorname chooser window: ")
@@ -3411,7 +3422,7 @@ end</script>
 
 function tecClientSetFontSize(numbertemp)--set font settings with this function
 
-	echo("\nSetting font to: "..numbertemp.."\n")
+	cecho("\nSetting font to: "..numbertemp.."\n")
 
 	--if somethings is attempting to set the font below 8, tell them no.
 	--It sets the font size for main and the editor window. very frustrating
@@ -3422,17 +3433,23 @@ function tecClientSetFontSize(numbertemp)--set font settings with this function
 	end --end if numbertemp is below 8
 	
 	tecSettings.tecFontSize = numbertemp or tecDefaultFontSize --set it to size passed OR default on fail
-	setFontSize(tecSettings.tecFontSize) --Set main window font size &amp; creates a resize event
-	setFontSize("Communication", tecSettings.tecFontSize) --resize font in communication window &amp; creates a resize event
-	setFontSize("Thoughts", tecSettings.tecFontSize) --resize font in Thoughts window &amp; creates a resize event
-	setFontSize("Speech", tecSettings.tecFontSize) --resize font in Speech window &amp; creates a resize event
-	--Each font adjustment WILL trigger a screen resize event.
-	
-	if getTECDebugMode() then --if debug mode is enabled
-  	debugToDisplay("tecClientSetFontSize was sent: "..tostring(numbertemp)..
-  		". tecSettings.tecFontSize is currently: "..tostring(tecSettings.tecFontSize)..
-  		". Communication console font size: "..tostring(getFontSize(Communication)))		
-	end --end if debug mode is on
+  
+  --Run change for all text windows.
+  for index, windowName in ipairs(tecTextWindowNames) do 
+    setFontSize(windowName, tecSettings.tecFontSize)
+    debugToDisplay("Font Change: Window: "..windowName.." font is now: "
+      ..tecSettings.tecFontSize)
+  end --for windowName in table tecTextWindowNames
+  
+  tecRefreshSettingsWindow() --Redraw text in setttings window.
+  tecResetRoomCharacterWindow() --Redraw text in room characters window.
+  
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
+
 end --end tecClientSetFontSize</script>
 						<eventHandlerList />
 					</Script>
@@ -3771,6 +3788,7 @@ end --function tecLabelBackgroundColor</script>
 						<packageName></packageName>
 						<script>function tecSetHelpHighlightColor(tecColor)
   tecSettings.helpHighlightColor = tecColor
+  tecRefreshSettingsWindow() --refresh settings window text
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -3797,27 +3815,36 @@ end --function tecLabelBackgroundColor</script>
 					<Script isActive="yes" isFolder="no">
 						<name>tecSetTextColor(tecColor)</name>
 						<packageName></packageName>
-						<script>--set the color that tec will use for green text.
+						<script>--set the color that tec will use for main text.
 function tecSetTextColor(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.tecTextColor = Geyser.Color.hex(tecColor)
+  
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>tecSetBackgroundColor(tecColor)</name>
 						<packageName></packageName>
-						<script>--set the color that tec will use for green text.
+						<script>--set the color that tec will use for console background colors.
 function tecSetBackgroundColor(tecColor)
   --reference: https://wiki.mudlet.org/w/Manual:Lua_Functions#setBackgroundColor
   --https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   --https://wiki.mudlet.org/w/Manual:Lua_Functions#setBgColor
-  
   for index, windowName in ipairs(tecTextWindowNames) do
-    cecho(index..". "..windowName.."\n")
-    setBackgroundColor(windowName, Geyser.Color.parse(tecColor)) --change background color
-    --setBgColor(windowName, Geyser.Color.parse(tecColor)) --change background color
-    --bg(windowName, tecColor) --change background color
+    local rb, gb, bb = Geyser.Color.parse(tecColor)
+    local hexColor = Geyser.Color.hhex(rb, gb, bb)
+    hexColor = hexColor:sub(2,7)
+    debugToDisplay("Color Change: "..windowName.." background to "
+      ..rb..","..gb..","..bb.." hex value: "..hexColor.."\n")
+    setBackgroundColor(windowName, rb, gb, bb) --change background color
+    setBgColor(windowName, rb, gb, bb) --change background color for cechos
+    setHexBgColor(windowName, hexColor)
   end
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
@@ -4001,6 +4028,11 @@ end</script>
   clearUserWindow("Color_Selector")
   enableScrollBar("Color_Selector")
   tecShowColors(4)
+  cecho("If the color choice window opened in an odd location "
+  .."it can be moved by left clicking its title bar and dragging it.\n"
+  .."It does not need to be docked at any location, it can free float anywhere "
+  .."in your monitor.\nIt is also fully resizable by clicking and dragging "
+  .."its outer edges.\n")
   cecho("Color_Selector",
     "\nClick a color to add it to the end of the command bar.")
 end --function tecColorWindow()</script>
@@ -4110,7 +4142,7 @@ end --function recRoomCharRefreshNotification()</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>New scripttecResetRoomCharacterWindow()</name>
+					<name>tecResetRoomCharacterWindow()</name>
 					<packageName></packageName>
 					<script>function tecResetRoomCharacterWindow()
   clearRoomCharacterWindow() --Room characters window no longer accurate, clear it.

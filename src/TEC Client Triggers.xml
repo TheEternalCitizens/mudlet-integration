@@ -967,8 +967,9 @@ else --text that does not need to be centered.
  
 	selectCurrentLine() --select current line in main.
 	replace("") --Erase text from main. Otherwise variable line will apear on console.
-	hinsertText(filteredLine) --insert text into console. Replacing hex color codes with colored text.
+	--hinsertText(filteredLine) --insert text into console. Replacing hex color codes with colored text.
 	deselect() --Don't forget your deselects!
+  hecho(filteredLine)
 end --if &lt;center&gt; in line else hreplace.
 
 --displays unfiltered line to debug screen.
