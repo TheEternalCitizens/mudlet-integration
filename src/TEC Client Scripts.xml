@@ -252,6 +252,9 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   --adjustable font size
   tecSettings.tecFontSize = 14
   
+  --Text size applied to tabs.
+  tecSettings.tecTabsFontSize = 18
+  
   --enable or disable debug mode.
   --Currently display red background main line to screen.
   --The code for this is at the bottom of
@@ -323,6 +326,12 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   tecTextWindowNames = {"main", "tecSettingsConsole"
     ,"roomCharacters.console" , "Communication"
     ,"Thoughts", "Speech"}
+    
+  --Holds list of labels that use default lable stylesheet 
+  tecWindowLabels = {} --normally configured with tecGetWindowLabelList
+    
+  tecGUIFrameTabNames = { "Compass", "Settings", "Macros", 
+    "Room Characters", "TEC Map" }
 
 	tecDebugSaveDir = getMudletHomeDir().."\/DebugingFiles\/"
 
@@ -435,43 +444,42 @@ end --fuctoin clearTecRoomObjects</script>
 --Upgrade options.
 --add these variables to tecSettings so they can be saved and loaded.
 
---Font size for tab labels
-tabsFontSize = 18
 
---Default tab height
-tabsHeight = 30
-
---QLabels are QTs label system
---Used here for easy hover affects
-tabsStyle = [[
-	QLabel{
-		background-color: ]]..tecSettings.tabsBackgroundColor..[[;
-    border-width: 1px;
-    border-style: outset;
-    border-color: lightgray;
-    border-top-left-radius: 15px;
-    border-top-right-radius: 15px;
-    margin-right: 0px;
-    margin-left: 0px;
-		font-size: 32px;
-    qproperty-alignment: 'AlignCenter | AlignCenter';
-  }
-	QLabel::hover{
-		background-color: ]]..tecSettings.hoverColor..[[;
-    border-width: 1px;
-    border-style: outset;
-    border-color: gray;
-    border-top-left-radius: 15px;
-    border-top-right-radius: 15px;
-    margin-right: 0px;
-    margin-left: 0px;
-		font-size: 50px;
-    qproperty-alignment: 'AlignCenter | AlignCenter';
-  }
-]]
-
---This is now tabs text looks
-tabsFontStyle = '&lt;center&gt;&lt;p style="font-size:18px; color:lightgray"&gt;'
+function tecConfigThemes() --configure and initalize settings for tabs.
+  --Default tab height
+  tabsHeight = 30
+  
+  --QLabels are QTs label system
+  --Used here for easy hover affects
+  tabsStyle = [[
+  	QLabel{
+  		background-color: ]]..tecSettings.tabsBackgroundColor..[[;
+      border-width: 1px;
+      border-style: outset;
+      border-color: lightgray;
+      border-top-left-radius: 15px;
+      border-top-right-radius: 15px;
+      margin-right: 0px;
+      margin-left: 0px;
+  		font-size: ]]..tecSettings.tecTabsFontSize..[[px;
+      qproperty-alignment: 'AlignCenter | AlignCenter';
+    }
+  	QLabel::hover{
+  		background-color: ]]..tecSettings.hoverColor..[[;
+      border-width: 1px;
+      border-style: outset;
+      border-color: gray;
+      border-top-left-radius: 15px;
+      border-top-right-radius: 15px;
+      margin-right: 0px;
+      margin-left: 0px;
+  		font-size: ]]..tecSettings.tecTabsFontSize..[[px;
+      qproperty-alignment: 'AlignCenter | AlignCenter';
+    }
+  ]]
+  
+  --This is now tabs text looks
+  tabsFontStyle = [[&lt;center&gt;&lt;p style="font-size:]]..tecSettings.tecTabsFontSize..[[px; color:lightgray"&gt;]]
 
 labelsStyle = [[
 	QLabel{
@@ -606,7 +614,9 @@ tecExit["nw"]["0"] = { tecExitStyleSheet = [[border-image: url("]]..getMudletHom
 tecExit["nw"]["1"] = { tecExitStyleSheet = [[border-image: url("]]..getMudletHomeDir()
 	..[[/]].."imgs"..[[/]].."exits"..[[/nw_open.png");]]}
 tecExit["nw"].width = nenwExitIconSize
-tecExit["nw"].height = nenwExitIconSize</script>
+tecExit["nw"].height = nenwExitIconSize
+end --function tecConfigThemes
+tecConfigThemes() --configure tabs now.</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
@@ -2995,40 +3005,6 @@ end --end function setMainWindowAutowrap</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>calcMenuFonts</name>
-					<packageName></packageName>
-					<script>--This is needed because low resolutions screens even remotely large text will bleed
---off the edges.
---Where high resolution screens small text or even large text like 14 may not be legable.
---Not needed until after 1.0. We can use font size 14 for now
-
---Calculate tab and other gui fonts base on main screen size.
---Could set variables directly
---Could return a single font while passing a string to determine
---what is being mesured calcMenuFont("tabs") calcMenuFont("menus")
---could also just calculate them all and just return them all always.</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>setMenuFonts</name>
-					<packageName></packageName>
-					<script>--This is needed because low resolutions screens even remotely large text will bleed
---off the edges.
---Where high resolution screens small text or even large text like 14 may not be legable.
---Not needed until after 1.0. We can use font size 14 for now
-
---Sets the font sizes for menus and tabs.
---Need to echo into all the tabs and labels
---will need to be in guiChange event
---will need to call calcMenuFonts to get sizes. (Scripts-TEC Scripts-GUI)
---Will need to be called in variables to set 
---tabsFontStyle
---Probably just set it to trigger at known screen widths.
---Keep in mind that getMainConsoleWidth is buggy as of v4.03
---4.1.1 theres a new function to get windows of miniconsole in text coloums.</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
 					<name>tecClearDisplay()</name>
 					<packageName></packageName>
 					<script>--There is either a bug or clear working as intended.
@@ -3103,6 +3079,114 @@ end --function setInventoryFormater</script>
 					<script>function getInventoryFormater()
   return tecFormatInventory
 end --function getInventoryFormater</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>Geyser.Container:objectQuery()</name>
+					<packageName></packageName>
+					<script>function Geyser.Container:objectQuery(objectTable)
+  --We are addding data to this table each loop.
+  --We assume first run if a table is not passed. So we created the table.
+  objectTable = objectTable or
+    {name={}, type={}, parentName={}, xPos={}, yPos={}
+    ,width={}, height={}}
+  
+  --windowList reference: https://www.mudlet.org/geyser/files/geyser/GeyserContainer.html
+  --Loop through all children of this container.
+  for k,v in pairs(self.windowList) do
+      if k ~= self then --if the key is not this geyser object
+    		  objectTable = v:objectQuery(objectTable) --query that object.
+      end --end if k not = self check
+  end --end for loop pair(self.windowlist)
+  
+--[[this.object logic can SEEM confusing. It's not.
+At this point we have reach the 'bottom' of ourcontainer query.
+So the last child with the last alphabetical name.
+We insert our object data. Than return it. Meaning this now occurs for the second to
+the last geyser object, and so on until we reach the parent that called the query.]]--
+  
+  --https://wiki.mudlet.org/w/Manual:Lua_Functions#debugc
+  --debugc("Geyser.Container:objectQuery: Inserting Object data for: "..self.name)
+  
+  --Collect this object data.
+  --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserContainer.html
+  table.insert(objectTable.name, tostring(self.name))
+  table.insert(objectTable.type, tostring(self.type))
+  table.insert(objectTable.parentName, tostring(self.parent.name))
+  table.insert(objectTable.xPos, tostring(self:get_x()))
+  table.insert(objectTable.yPos, tostring(self:get_y()))
+  table.insert(objectTable.width, tostring(self:get_width()))
+  table.insert(objectTable.height, tostring(self:get_height()))
+
+  return objectTable --return the table to the object that called this object
+  
+end --Geyser.Container:objectQuery(objectTable)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecRedrawLabels()</name>
+					<packageName></packageName>
+					<script>--Tracks down the labels in this project, and reapplies the default stylesheet
+function tecRedrawLabels()
+
+  debugToDisplay("Labels redraw started.")
+
+  tecConfigThemes() --redo themes data. something likely changed
+
+  --Create table to store all geyser objects within GUIframe
+  ContainerDataTable = { 
+    GUIframe.bottomRightContainer:objectQuery(),
+    GUIframe.topLeftContainer:objectQuery(),
+    GUIframe.bottomLeftContainer:objectQuery(),
+    GUIframe.bottomContainer:objectQuery(),
+    GUIframe.bottomRightContainer:objectQuery(),
+    GUIframe.topRightContainer:objectQuery(),
+    GUIframe.topContainer:objectQuery(),
+    GUIframe.topLeftTabs:objectQuery(),
+    GUIframe.topRightTabs:objectQuery(),
+    GUIframe.bottomLeftTabs:objectQuery(),
+    GUIframe.bottomRightTabs:objectQuery() }
+    
+  --Go through all the table we created above
+  for key,cdt in pairs(ContainerDataTable) do
+    for k,v in pairs(cdt.type) do --Check the types of containers
+      if v == "label" then --To see if it is a label
+        if "map" == cdt.name[k]:match("map") then --if map label is found, skip
+          --debugc("\t"..cdt.name[k].." is a map label no redraw logic in this client release.")
+          debugToDisplay("\t"..cdt.name[k].." is a map label no redraw logic in this client release.")
+          
+        elseif "Compass." == cdt.name[k]:match("Compass.") then
+          --debugc("\t"..cdt.name[k].." is a Compass label no redraw logic in this client release.")
+          debugToDisplay("\t"..cdt.name[k].." is a Compass label no redraw logic in this client release.")
+          if cdt.name[k] == "tecCompass.back" then --if the label is the background of the compass
+            setLabelStyleSheet(cdt.name[k], labelsStyle)
+            --debugc("\t"..cdt.name[k].." back of Compass applying standard label.")
+            debugToDisplay("\t"..cdt.name[k].." back of Compass applying standard label.")
+          end --if cdt.name[k] is tecCompass.back
+          
+        elseif "tab" == cdt.name[k]:match("tab") or "Tab" == cdt.name[k]:match("Tab") then
+          setLabelStyleSheet(cdt.name[k],tabsStyle)
+          local tmpTabName= cdt.name[k]:gsub("Tab", "") --remove Tab from name
+          local tmpTabName= tmpTabName:gsub("tab", "") --remove tab from name
+          local tmpTabName= tmpTabName:gsub("tecComWindows.", "") --remove tecComWindows from name
+          echo(cdt.name[k], tabsFontStyle..tmpTabName) --echo name onto the tab
+          --debugc("\t"..cdt.name[k].." is a tab or Tab label. Setting tabsStyle style sheet.")
+          debugToDisplay("\t"..cdt.name[k].." is a tab or Tab label. Setting tabsStyle style sheet.")
+          
+        else --Reapply default style sheets to all other labels.
+          setLabelStyleSheet(cdt.name[k], labelsStyle)
+          --debugc("\t"..cdt.name[k].." standard label, setting labelsStyle style sheet.")
+          debugToDisplay("\t"..cdt.name[k].." standard label, setting labelsStyle style sheet.")
+          
+        end --if check label types.
+        --debugc("\tTable type: "..v.." key: "..k)
+      end --if cdt.type is label
+    end --for cdt
+  end --for ContainerDataTable
+  
+  debugToDisplay("Labels redraw completed.")
+  
+end --function tecRedrawLabels()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -3351,33 +3435,30 @@ end --function tecClientHelp</script>
 					<script>--lists commands that directly change colors
 function tecClientChangeColorsList()
 cecho("Change background color of windows that do not have text with: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient windows background color colorname", 
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient windows background color colorname\n", 
   [[printCmdLine("tecclient windows background color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change background color nontext windows", true)
-  cecho("&lt;-Restart required.\n")
 
   cecho("Change background color of windows that have text in them with: ")
   cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient background colorname ", 
   [[printCmdLine("tecclient background ");
     cecho("You will need to restart for text background to change")]],
   "Change background color of text windows", true)
-  cecho("&lt;-Restart required.\n")
-  cecho("Command echos must be changed in Options -&gt; Preferences -&gt; Color View -&gt; Command Background.\n")
+  cecho("&lt;-Restart required on Windows OS.\n")
+  cecho("Command echo background must be changed in Options -&gt; Preferences -&gt; Color View -&gt; Command Background.\n")
   
   cecho("Change background color of the client's tabs with: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient tabs background color colorname ", 
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient tabs background color colorname\n", 
   [[printCmdLine("tecclient tabs background color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change background color clients tabs", true)
-  cecho("&lt;-Restart required.\n")
   
   cecho("Change the color of windows and tabs as your mouse hovers over them: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient hover color colorname ", 
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient hover color colorname\n", 
   [[printCmdLine("tecclient hover color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change mouse hover color", true)
-  cecho("&lt;-Restart required.\n")
   
   cecho("Change the color help commands are highlighted in: ")
   cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient helphighlight color colorname\n", 
@@ -3645,6 +3726,43 @@ function tecClientSetFontSize(numbertemp)--set font settings with this function
 end --end tecClientSetFontSize</script>
 						<eventHandlerList />
 					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>tecClientSetTabFontSize</name>
+						<packageName></packageName>
+						<script>--sets the font for all console displays.
+--A different function should be made for geyser labels.
+
+function tecClientSetTabFontSize(tecTmpTabFont)--set font settings with this function
+  tecTmpTabFont = tecTmpTabFont or tecSettings.tecTabsFontSize
+  
+	--if somethings is attempting to set the font below 8, tell them no.
+	--It sets the font size for main and the editor window. very frustrating
+	--when font is 1...
+	if tecTmpTabFont &lt; 8 then
+		tecTmpTabFont = 8
+		cecho("\nFonts below 8 are not supported, setting font to 8.\n")
+	end --end if numbertemp is below 8
+  
+  cecho("Setting tab font to: "..tecTmpTabFont.."\n")
+	
+	tecSettings.tecTabsFontSize = tostring(tecTmpTabFont) or tostring(tecDefaultFontSize) --set it to size passed OR default on fail
+  
+  --Now that the setting changed, reconfig tab settings
+  tecConfigThemes()
+  GUIframe.configs.tabEchoStyle = tabsFontStyle
+  
+  --Redraw all tabs, this includes labels.  
+  tecRedrawLabels()
+  
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
+
+end --end tecClientSetTabFontSize(numbertemp)</script>
+						<eventHandlerList />
+					</Script>
 				</ScriptGroup>
 				<Script isActive="yes" isFolder="no">
 					<name>tecSaveWindowText(tecWindow, tecDirectory)</name>
@@ -3770,6 +3888,8 @@ end</script>
 						<packageName></packageName>
 						<script>function tecLabelBackgroundColor(tecColor)
   tecSettings.labelBackgroundColor = tecColor
+  
+  tecRedrawLabels() --redraw labels appling change
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -3778,6 +3898,9 @@ end --function tecLabelBackgroundColor</script>
 						<packageName></packageName>
 						<script>function tecTabsBackgroundColor(tecColor)
   tecSettings.tabsBackgroundColor = tecColor
+  
+  tecRedrawLabels() --redraw labels appling change
+  
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -3786,6 +3909,9 @@ end --function tecLabelBackgroundColor</script>
 						<packageName></packageName>
 						<script>function tecSetMouseHoverColor(tecColor)
   tecSettings.hoverColor = tecColor
+  
+  tecRedrawLabels() --redraw labels appling change
+  
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -3862,6 +3988,9 @@ end --function tecLabelBackgroundColor</script>
 function tecSettecNotApproachedCharacter(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.notApproachedCharacter = Geyser.Color.hex(tecColor)
+  
+  cecho("Refresh Room Characters window with ctrl+r or command room check "
+    .."to see color change.\n")
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -3872,6 +4001,9 @@ end --function tecLabelBackgroundColor</script>
 function tecSettecApproachedCharacter(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.ApproachedCharacters = Geyser.Color.hex(tecColor)
+  
+  cecho("Refresh Room Characters window with ctrl+r or command room check "
+    .."to see color change.\n")
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -4580,7 +4712,7 @@ function tecMapdrawKeepSquare()
     tecMap_back:move(centerAdjustment,0) --Move the map to the center of the map box
 	end --en if width is less than height.
 	
-	echo("tecMap_back","Please walk to draw map.")
+	echo("tecMap_back","Please walk\nto draw map.")
   tecMap_back:raise()
 	
 end --end function keep square.
@@ -4660,7 +4792,7 @@ function tecCRWindowResize()
 		debugToDisplay("Room Character Window,"
 			.." roomCharacters.back width: "..roomCharacters.back:get_width()
 			.." roomCharacters.back Height: "..roomCharacters.back:get_height()
-			.." roomCharacters.console Width: "..tecResizedCRHeight:get_width()
+			.." roomCharacters.console Width: "..roomCharacters.console:get_width()
 			.." roomCharacters.console Height: "..roomCharacters.console:get_height()
 			)--end debugToDisplay
 	end --end if display debug is enabled.

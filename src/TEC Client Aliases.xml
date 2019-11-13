@@ -232,7 +232,15 @@ tecClientReset(true)</script>
 --matches[2] is the word in () in the pattern</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^font (.*)</regex>
+					<regex>^font (\d+)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>font tab #</name>
+					<script>tecClientSetTabFontSize(tonumber(matches[2]))
+--matches[2] is the word in () in the pattern</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^font tab (.*)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>font</name>
