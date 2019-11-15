@@ -319,6 +319,9 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   --used for if timer debug is or is not wanted.
   tecSettings.tecTimerDebugMode = false
   
+  --controls if scroll bars are of are now viewd.
+  tecSettings.showScrollBars = true
+  
   --Spaces inventory list 
   tecInventorySpacer = ""
   
@@ -1643,7 +1646,11 @@ local function config()
         GUIframe[name]:setMoveCallback("GUIframe.buttonMove", name)
     end
     setBorderLeft(configs.leftStartWidth + configs.borderOffset)
-    setBorderRight(configs.rightStartWidth + configs.borderOffset)
+    if tecSettings.showScrollBars then --if tecSettings.showScrollBars is false
+      setBorderRight(configs.rightStartWidth + configs.borderOffset)
+    else
+      setBorderRight(-16) --hide the scroll bar off the screen.      
+    end --if tecSettings.ShowScrollBars
     setBorderTop(configs.topStartHeight + configs.borderOffset)
     setBorderBottom(configs.bottomStartHeight + configs.borderOffset)
     GUIframe.initialized = true
@@ -2108,6 +2115,10 @@ function GUIframe.buttonRelease(name, event)
 	    end
 	    adjustTabs(tabs)
 	end
+  if not tecSettings.showScrollBars then --hides scroll bar when right click button is released.
+    setBorderRight(-16) --Moves the scroll bar off the screen
+    debugToDisplay("GUIframe.buttonRelease: setBorderRight to -16.")
+  end --DaveWithTheNiceHat
 	raiseEvent("GUIframe.buttonRelease",name,event)
 end
 
@@ -2600,6 +2611,42 @@ function md5.sumhexa(s)
 end</script>
 				<eventHandlerList />
 			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>fuzzyBoolean(bool)</name>
+				<packageName></packageName>
+				<script>-- Provided by demonnic
+--- Expands boolean definitions to be more flexible.
+-- &lt;br&gt;True values are "true", "yes", "0", 0, and true
+-- &lt;br&gt;False values are "false", "no", "1", 1, false, and nil
+-- @param bool item to test for truthiness
+function fuzzyBoolean(bool)
+  if type(bool) == "boolean" or bool == nil then
+    return bool
+  elseif tostring(bool) then
+    local truth = {
+      "yes",
+      "true",
+      "0"
+    }
+    local untruth = {
+      "no",
+      "false",
+      "1"
+    }
+    local boolstr = tostring(bool)
+    if table.contains(truth, boolstr) then
+      return true
+    elseif table.contains(untruth, boolstr) then
+      return false
+    else
+      return nil
+    end
+  else
+    return nil
+  end
+end</script>
+				<eventHandlerList />
+			</Script>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
 			<name>TECFunctions</name>
@@ -2974,33 +3021,47 @@ GUI like functions
 					<name>setMainWindowAutoWrap()</name>
 					<packageName></packageName>
 					<script>--set main window word wrap size.
---Function is called via an alias and in compass.resize
 --It is currently in the guiChange event function to be called when gui changes occur
 function setMainWindowAutoWrap()
 
-  --get how many characters should appear on a line before word wrapping.
-	local wrapAt = getColumnCount()
+  local wrapAt = 0
+    
+  if tecSettings.showScrollBars then --if tecSettings.showScrollBars is true
 
-  --Set updated word wrap for main.
-  setWindowWrap("main", wrapAt)
-	
-	if getTECDebugMode() then --if debug mode is enabled
-	
-  	--how many pixels thick is our font?
+    --get how many characters should appear on a line before word wrapping.
+  	wrapAt = getColumnCount()
+    
+    debugToDisplay("setMainWindowAutoWrap: Wrap at: "..tostring(wrapAt) )
+
+  else --if tecSettings.showScrollBar is false 
+  
+    --get average pilxelwidth of font used on main console.
+    local fontWidth, fontHeight = calcFontSize(getFontSize())
+  	--Get size of the entire window.
     local mainWidth, mainHeight = getMainWindowSize()
     
     --Get the width of left and right gui bars.
     local leftSideWidth = GUIframe.topLeftContainer:get_width()
     local rightSideWidth = GUIframe.topRightContainer:get_width()
-	
+    
+    --Calculate how many characters can fit into main on average taking left and 
+    --right GUI objects into consideration. Rounding down with math.floor
+    wrapAt = math.floor(((mainWidth - leftSideWidth - rightSideWidth) / fontWidth) - 1)
+    
   	--displays actual sizes to screen.
   	--display with setTECDebugMode(true)
   	--or command line debug on
-  	debugToDisplay("setMainWindowAutoWrap: Font Width: "..tostring(fontWidth).." Left side width: "..tostring(leftSideWidth)
-  	.." Right side width: "..tostring(leftSideWidth).." Main screen width: "..tostring(mainWidth)
-  	.." Line wrap: "..tostring(wrapAt).." Mains font sie: "..tostring(getFontSize())..".")
-	
-	end --end if debug is enabled
+  	debugToDisplay("setMainWindowAutoWrap: Font Width: "..tostring(fontWidth)
+      .." Left side width: "..tostring(leftSideWidth).." Right side width: "..tostring(leftSideWidth)
+      .." Main screen width: "..tostring(mainWidth)
+      .." line wrap: "..tostring(wrapAt)
+      .." Mains font sie: "..tostring(getFontSize())..".")
+  
+  end --if not tecSettings.showScrollBars
+  
+  --Set updated word wrap for main.
+  setWindowWrap("main", tonumber(wrapAt))
+  
 end --end function setMainWindowAutowrap</script>
 					<eventHandlerList />
 				</Script>
@@ -3189,6 +3250,83 @@ function tecRedrawLabels()
 end --function tecRedrawLabels()</script>
 					<eventHandlerList />
 				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecSetScrollBars(mode)</name>
+					<packageName></packageName>
+					<script>--Enables or disables scrollbars throughout the project.
+--Providing an option to save so scroll bars will not appear automatically
+function tecSetScrollBars(mode, displayToScreen)
+  mode = fuzzyBoolean(mode) --verifies mode.
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  mode = mode == nil and true or mode
+  displayToScreen = displayToScreen == nil and true or displayToScreen
+  tecComWindows = tecComWindows or {tabs = {"Communication","Thoughts","Speech"},}
+  
+  debugToDisplay("Setting Scrollbars: ")
+  
+  if mode then
+    --if enabling, com windows only. Settings &amp; Room Character use tecScrollBarCheck
+    for index, windowName in ipairs(tecComWindows.tabs) do
+      enableScrollBar(windowName)
+      debugToDisplay("\tEnabling scroll bar for: "..windowName)
+      --debugc("Enabling scroll bar for: "..windowName)
+    end --for tecTextWindowNames
+    tecSettings.showScrollBars = true --tell further gui changes to show scrollbars
+    setBorderRight(GUIframe.topRightContainer:get_width() + 2)
+    if displayToScreen then
+      cecho("Enabled scrollbars. "
+        .."Some windows will not show their scrollbars until there is enough text "
+        .."to need to scroll the window.\n")
+    end --if displayToScreen
+  else
+      --disable scrollbars for all windows.
+      for index, windowName in ipairs(tecTextWindowNames) do
+        disableScrollBar(windowName)
+        debugToDisplay("\tDisabling scroll bar for: "..windowName)
+        --debugc("Disabling scroll bar for: "..windowName)
+      end --for tecTextWindowNames
+      tecSettings.showScrollBars = false --tell further gui changes to hide scrollbars
+      setBorderRight(-16) --hide the scroll bar off the screen
+      setMainWindowAutoWrap() --Adjust mains autowrap now that main has changed.
+      if displayToScreen then
+        cecho("Disabled scrollbars. "
+          .."Main console scrollbar will reappear while moving windows.\n")
+      end --if displayToScreen
+
+  end --if mode
+  
+  debugToDisplay("Completed setting scroll bars.")
+  
+  if displayToScreen then
+    cecho("Don't forget to save your changes with: ")
+    cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+    [[tecFileSaveSettings(true)]],
+    "Save client settings", true)
+    cecho("") --cechoLink will not \n on its own.
+  end --if displayToScreen
+  
+end --tecSetScrollBar</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecScrollBarCheck(tecConsoleName)</name>
+					<packageName></packageName>
+					<script>--automatically enable a console scroll bar if it can not fit the text in it
+--This works best if it is in a "sysWindowResizeEvent" function to controll the 
+--drawing of a gui object.
+function tecScrollBarCheck(tecConsoleName)
+  tecConsoleName = tecConsoleName or "main"
+  local tecSettingsRowCount = getRowCount(tecConsoleName)
+  --if the window can not contain the rows of text.
+  if tecSettingsRowCount &lt; getLastLineNumber(tecConsoleName) then
+    --if user is allowing scroll bars, enable the scroll bar.
+    if tecSettings.showScrollBars then enableScrollBar(tecConsoleName) end
+  else --The window can contain the text.
+    disableScrollBar(tecConsoleName)
+  end --if tecSettingsRowCount less than text rows in that window.
+end --function tecScrollBarCheck</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>help</name>
@@ -3351,6 +3489,16 @@ end --function tecResizeDisplayHelp</script>
   [[tecClearDisplay()]], 
   "Remove text from main screen", true)
 	echo(", clear text from main text console.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display enable scrollbars", 
+  [[tecSetScrollBars(true)]], 
+  "Enable scroll bars", true)
+	echo(", enable scrollbars in Parthia.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display disable scrollbars", 
+  [[tecSetScrollBars(false)]], 
+  "Hide scroll bars", true)
+	echo(", hide scrollbars in Parthia.\n")
 	
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display save", 
   [[tecClientDisplaySave(true)]], 
@@ -3366,7 +3514,7 @@ end --function tecResizeDisplayHelp</script>
   [[tecClientDisplayReset()]], 
   "Reset window positions", true)
 	echo(", reset window positions to default. "
-		.."This WILL require you to restart mudlet.\n")
+		.."This WILL FORCE you to restart mudlet.\n")
 		
 	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display refresh settings", 
   [[tecClientDisplayReset()]], 
@@ -4177,20 +4325,6 @@ end --function tecColorWindow()</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
-				<Script isActive="yes" isFolder="no">
-					<name>tecScrollBarCheck</name>
-					<packageName></packageName>
-					<script>function tecScrollBarCheck(tecConsoleName)
-  tecConsoleName = tecConsoleName or "main"
-  local tecSettingsRowCount = getRowCount(tecConsoleName)
-  if tecSettingsRowCount &lt; getLastLineNumber(tecConsoleName) then
-    enableScrollBar(tecConsoleName)
-  else
-    disableScrollBar(tecConsoleName)
-  end --if tecSettingsRowCount less than text rows in that window.
-end --function tecScrollBarCheck</script>
-					<eventHandlerList />
-				</Script>
 				<Script isActive="no" isFolder="no">
 					<name>tec Auto Updates</name>
 					<packageName></packageName>
@@ -4873,11 +5007,10 @@ for k,v in pairs(tecComWindows.tabs) do
   	x = 3, --%horizontally position in parent
   	y = 0, --%vertical position in parent
   	width = "100%", --% of parent
-  	height = tecSettings.comTextWindowHeight -3, --% of parent
+  	height = tecSettings.comTextWindowHeight -3, 
 		autoWrap = true, --allows text to wrap if too long
 		fontSize = getTECFont(), --in variables
 		font = getFont(), --get font type from main
-		scrollBar = true,
   },tecComWindows.footer) --attach to footer show they show below tabs
 	tecComWindows[v]:setColor(getBgColor()) --set miniconsoles to main consol BG color 
   tecComWindows[v]:hide() --Hide the tab so they don't layer
@@ -4897,7 +5030,7 @@ function tecComWindowResize()
 	
 	--subtract GUIframe.defaults.resizeHeight from tecComWindows.footer.height 
 	local tecResizedFooterHeight = tecComWindows.container:get_height() - GUIframe.defaults.resizeHeight 
-	local tecResizedFooterWidth = tecComWindows.container:get_width() - 2 --6 the width 2 borders
+	local tecResizedFooterWidth = tecComWindows.container:get_width() - 2 --2 is the width 2 borders
 	tecComWindows.footer:resize(tecResizedFooterWidth, tecResizedFooterHeight) --resize the footer
 	tecComWindows.footer:move(0,(tabsHeight + 1))
 	
@@ -5190,6 +5323,15 @@ end --function tecExitHandler
 
 --https://wiki.mudlet.org/w/Manual:Event_Engine#sysExitEvent
 registerAnonymousEventHandler("sysExitEvent", "tecExitHandler")</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>Post Initilization</name>
+				<packageName></packageName>
+				<script>--For changing default settings that would be time consuming to change during 
+
+--Enable or disable scroll bars. Dependant on user preference.
+tecSetScrollBars(tecSettings.showScrollBars, false)</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>

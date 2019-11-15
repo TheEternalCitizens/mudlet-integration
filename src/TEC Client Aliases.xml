@@ -160,6 +160,20 @@ clearRoomCharacterWindow()
 				<packageName></packageName>
 				<regex>^display refresh settings$</regex>
 			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display enable scrollbars</name>
+				<script>tecSetScrollBars(true) --enables scroll bars throughout this project.</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display enable scrollbars$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display disable scrollbars</name>
+				<script>tecSetScrollBars(false) --Disable scroll bars throughout this project.</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display disable scrollbars$</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>tecclient</name>
