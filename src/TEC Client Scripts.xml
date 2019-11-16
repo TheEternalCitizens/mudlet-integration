@@ -1489,7 +1489,7 @@ GUIframe.defaults = {
     resizeWidth = 30,
     resizeHoverImage = "/imgs/blue_arrows.png",
     resizeRestImage = "/imgs/blue_arrows_30t.png",
-    borderOffset = 2,
+    borderOffset = 0,
 }
 
 GUIframe.windows = GUIframe.windows or {}
@@ -2679,12 +2679,14 @@ function setTECDebugMode(tectmpSetDebug)
 		--saveWindowLayout() --save floating miniconsole locations
 		--loadWindowLayout() --load previously save miniconsole position.
 		--tecDebugWindow:addScrollbars(parent, "Vertical")
+    if tecSettings.showScrollBars then enableScrollBar("tecDebugWindow") end
 		echo("Debug mode enabled.\n")
 	else --else disabling debug
 		echo("Debug mode disabled.\n")
 		setTECDisplayDebugMode(tectmpSetDebug)
 		setTECMapDebugMode(tectmpSetDebug)
 		setTECTimerDebugMode(tectmpSetDebug)
+    closeUserWindow("tecDebugWindow")
 	end -- if tectmpSetDebug
 	
 end --end function setTecDebugMode</script>
@@ -3272,7 +3274,7 @@ function tecSetScrollBars(mode, displayToScreen)
       --debugc("Enabling scroll bar for: "..windowName)
     end --for tecTextWindowNames
     tecSettings.showScrollBars = true --tell further gui changes to show scrollbars
-    setBorderRight(GUIframe.topRightContainer:get_width() + 2)
+    setBorderRight(GUIframe.topRightContainer:get_width())
     if displayToScreen then
       cecho("Enabled scrollbars. "
         .."Some windows will not show their scrollbars until there is enough text "
@@ -3290,6 +3292,7 @@ function tecSetScrollBars(mode, displayToScreen)
       setMainWindowAutoWrap() --Adjust mains autowrap now that main has changed.
       if displayToScreen then
         cecho("Disabled scrollbars. "
+          .."You will need to scroll with your mouse wheel or page up page down keys. "
           .."Main console scrollbar will reappear while moving windows.\n")
       end --if displayToScreen
 
@@ -4024,30 +4027,41 @@ end</script>
 				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>Colors</name>
 					<packageName></packageName>
-					<script>-------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external scripts --
--------------------------------------------------
-</script>
+					<script>--[[
+functions for changing colors on the client.
+]]--</script>
 					<eventHandlerList />
 					<Script isActive="yes" isFolder="no">
 						<name>tecLabelBackgroundColor(tecColor)</name>
 						<packageName></packageName>
-						<script>function tecLabelBackgroundColor(tecColor)
-  tecSettings.labelBackgroundColor = tecColor
+						<script>--sets the background for labels that are not tabs.
+function tecLabelBackgroundColor(tecColor)
+  tecSettings.labelBackgroundColor = Geyser.Color.hex(tecColor)
   
   tecRedrawLabels() --redraw labels appling change
+  
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>tecTabsBackgroundColor(tecColor)</name>
 						<packageName></packageName>
-						<script>function tecTabsBackgroundColor(tecColor)
-  tecSettings.tabsBackgroundColor = tecColor
+						<script>--sets the color for tab labels
+function tecTabsBackgroundColor(tecColor)
+  tecSettings.tabsBackgroundColor = Geyser.Color.hex(tecColor)
   
   tecRedrawLabels() --redraw labels appling change
+  
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
   
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
@@ -4055,10 +4069,17 @@ end --function tecLabelBackgroundColor</script>
 					<Script isActive="yes" isFolder="no">
 						<name>tecSetMouseHoverColor(tecColor)</name>
 						<packageName></packageName>
-						<script>function tecSetMouseHoverColor(tecColor)
-  tecSettings.hoverColor = tecColor
+						<script>--sets the color a label changes to when a mouse hovers over it.
+function tecSetMouseHoverColor(tecColor)
+  tecSettings.hoverColor = Geyser.Color.hex(tecColor)
   
   tecRedrawLabels() --redraw labels appling change
+  
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
   
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
@@ -4066,9 +4087,16 @@ end --function tecLabelBackgroundColor</script>
 					<Script isActive="yes" isFolder="no">
 						<name>tecSetHelpHighlightColor(tecColor)</name>
 						<packageName></packageName>
-						<script>function tecSetHelpHighlightColor(tecColor)
+						<script>--sets the color commands are highlighted in help menus.
+function tecSetHelpHighlightColor(tecColor)
   tecSettings.helpHighlightColor = tecColor
   tecRefreshSettingsWindow() --refresh settings window text
+  
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -4079,16 +4107,28 @@ end --function tecLabelBackgroundColor</script>
 function tecSetGreenTextColor(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.GreenTextColor = Geyser.Color.hex(tecColor)
+  
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>tecSetBlueTextColor(tecColor)</name>
 						<packageName></packageName>
-						<script>--set the color that tec will use for green text.
+						<script>--set the color that tec will use for default blue text.
 function tecSetBlueTextColor(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.BlueTextColor = Geyser.Color.hex(tecColor)
+  
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -4126,6 +4166,12 @@ function tecSetBackgroundColor(tecColor)
     setBgColor(windowName, rb, gb, bb) --change background color for cechos
     setHexBgColor(windowName, hexColor)
   end
+  
+  runTECRoomObjectCheck(false)
+  cecho("Text box background color changes are saved by mudlet immediately.\n"
+    .."If using windows you will need to restart for text background "
+    .."colors to change")
+  
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -4136,9 +4182,12 @@ end --function tecLabelBackgroundColor</script>
 function tecSettecNotApproachedCharacter(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.notApproachedCharacter = Geyser.Color.hex(tecColor)
-  
-  cecho("Refresh Room Characters window with ctrl+r or command room check "
-    .."to see color change.\n")
+  runTECRoomObjectCheck(displayToScreen) --refresh room characters window.
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -4149,16 +4198,21 @@ end --function tecLabelBackgroundColor</script>
 function tecSettecApproachedCharacter(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.ApproachedCharacters = Geyser.Color.hex(tecColor)
-  
-  cecho("Refresh Room Characters window with ctrl+r or command room check "
-    .."to see color change.\n")
+  runTECRoomObjectCheck(displayToScreen) --refresh room characters window.
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
-						<name>tecShowColors()</name>
+						<name>tecColorWindow()</name>
 						<packageName></packageName>
-						<script>-- internal sorting function, sorts first by hue, then luminosity, then value
+						<script>--Creates a window for users to easily select text.
+
+-- internal sorting function, sorts first by hue, then luminosity, then value
 local sortColorsByHue = function(lhs,rhs)
   local lh,ll,lv = unpack(lhs.sort)
   local rh,rl,rv = unpack(rhs.sort)
@@ -4303,13 +4357,9 @@ function tecShowColors(...)
     end
   end
   if i ~= 1 then echo("\n") end
-end</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>tecColorWindow()</name>
-						<packageName></packageName>
-						<script>function tecColorWindow()
+end
+
+function tecColorWindow()
   openUserWindow("Color_Selector")
   clearUserWindow("Color_Selector")
   enableScrollBar("Color_Selector")
@@ -4981,7 +5031,7 @@ tecComWindows.footer = Geyser.Label:new({
   x = 0, --horizontal position
 	y = tabsHeight, --adjusted for tabs
   width = "100%",
-	height = tecSettings.comTextWindowHeight - 3
+	height = tecSettings.comTextWindowHeight
 },tecComWindows.container)
 tecComWindows.footer:setStyleSheet(labelsStyle) --set to default label style
 
@@ -4989,7 +5039,7 @@ tecComWindows.footer:setStyleSheet(labelsStyle) --set to default label style
 for k,v in pairs(tecComWindows.tabs) do
   tecComWindows[v.."tab"] = Geyser.Label:new({
     name = "tecComWindows."..v.."tab",
-		x = 3, --horizontal position 
+		x = 0, --horizontal position 
 		y = 0, --vertical position
 		width = "100%",
 		height = tabsHeight,
@@ -5004,16 +5054,17 @@ for k,v in pairs(tecComWindows.tabs) do
 	--These are the miniconsoles that will hold the text
   tecComWindows[v] = Geyser.MiniConsole:new({ --tecComWindows v will be a tab name.
     name = v, --Issues experienced if I attempt to name them v.."Console"
-  	x = 3, --%horizontally position in parent
+  	x = 0, --%horizontally position in parent
   	y = 0, --%vertical position in parent
   	width = "100%", --% of parent
-  	height = tecSettings.comTextWindowHeight -3, 
+  	height = tecSettings.comTextWindowHeight - 1, 
 		autoWrap = true, --allows text to wrap if too long
 		fontSize = getTECFont(), --in variables
 		font = getFont(), --get font type from main
   },tecComWindows.footer) --attach to footer show they show below tabs
 	tecComWindows[v]:setColor(getBgColor()) --set miniconsoles to main consol BG color 
   tecComWindows[v]:hide() --Hide the tab so they don't layer
+  if tecSettings.showScrollBars then tecComWindows[v]:enableScrollBar() end
 end --end loop create tabs and consoles
 
 function tecComWindows.click(tab) --Choose what happens when a tab is clicked.
@@ -5029,25 +5080,25 @@ tecComWindows[tecComWindows.current]:show()
 function tecComWindowResize()
 	
 	--subtract GUIframe.defaults.resizeHeight from tecComWindows.footer.height 
-	local tecResizedFooterHeight = tecComWindows.container:get_height() - GUIframe.defaults.resizeHeight 
-	local tecResizedFooterWidth = tecComWindows.container:get_width() - 2 --2 is the width 2 borders
+	local tecResizedFooterHeight = tecComWindows.container:get_height() - GUIframe.defaults.resizeHeight
+	local tecResizedFooterWidth = tecComWindows.container:get_width()
 	tecComWindows.footer:resize(tecResizedFooterWidth, tecResizedFooterHeight) --resize the footer
-	tecComWindows.footer:move(0,(tabsHeight + 1))
+	tecComWindows.footer:move(0,(tabsHeight))
 	
 	--reflect changes in tecSettings so there is a chance to save the size.
 	tecSettings.comTextWindowHeight = tecResizedFooterHeight
 	
-	--resize all of the miniconsoles so we have the 3px border on the bottom.
+	--resize all of the miniconsoles
 	for k,v in pairs(tecComWindows.tabs) do 
-  	tecComWindows[v]:move(1, 0)
-  	tecComWindows[v]:resize(tecResizedFooterWidth - 2, tecResizedFooterHeight - 1)
+  	tecComWindows[v]:move(0, 0)
+  	tecComWindows[v]:resize(tecResizedFooterWidth, tecResizedFooterHeight - 1)
 	end --for tecComWindows.tabs
 	
 	if getTECDisplayDebugMode() then --if display debug mode is on
 		debugToDisplay("Communication Window, tecComWindows.footer Height: "..tecComWindows.footer:get_height()
 			.." tecComWindows.ctainer Height: "..tecComWindows.container:get_height()
 			.." New tecComWindows.footer Height: "..tecResizedFooterHeight
-			.." mini consoles width: "..(tecResizedFooterWidth - 2).."%"
+			.." mini consoles width: "..(tecResizedFooterWidth - 0).."%"
 			)--end debugToDisplay
 	end --end if display debug is enabled.
 
@@ -5331,7 +5382,10 @@ registerAnonymousEventHandler("sysExitEvent", "tecExitHandler")</script>
 				<script>--For changing default settings that would be time consuming to change during 
 
 --Enable or disable scroll bars. Dependant on user preference.
-tecSetScrollBars(tecSettings.showScrollBars, false)</script>
+tecSetScrollBars(tecSettings.showScrollBars, false)
+
+--redraw windows 
+guiChange()</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>

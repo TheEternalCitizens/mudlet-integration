@@ -400,10 +400,7 @@ tecUpdate.saveVersions() --Saves versions table to file.</script>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>tecclient background color</name>
-					<script>tecSetBackgroundColor(matches[2])
-tecResetRoomCharacterWindow()
-cecho("Text box background color changes are saved by mudlet immediately.\n"
-  .."You will need to restart for text background colors to change")</script>
+					<script>tecSetBackgroundColor(matches[2])</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^tecclient background (.*)</regex>
