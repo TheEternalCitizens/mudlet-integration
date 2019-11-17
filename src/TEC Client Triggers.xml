@@ -486,9 +486,11 @@ deleteLine() --remove line from main console. line variable remains unchanged.</
 					<colorTriggerBgColor>#000000</colorTriggerBgColor>
 					<regexCodeList>
 						<string>SKOOT 8 Fatigue,</string>
+						<string>SKOOT 8 Fatigue,100</string>
 					</regexCodeList>
 					<regexCodePropertyList>
 						<integer>2</integer>
+						<integer>3</integer>
 					</regexCodePropertyList>
 				</Trigger>
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
@@ -729,6 +731,8 @@ elseif line:match("^%d+:") then --if line starts with "#: "
   --Attempting to resolve issue with window not filling
   echo("roomCharacters.console","")
   
+  tecScrollBarCheck("roomCharacters.console") --check if a scroll bar is needed.
+  
 	--Delete main's line if we are not displaying it to screen
   if not tecRoomObjects.displayToScreen then deleteLine() end
 	
@@ -965,8 +969,9 @@ else --text that does not need to be centered.
  
 	selectCurrentLine() --select current line in main.
 	replace("") --Erase text from main. Otherwise variable line will apear on console.
-	hinsertText(filteredLine) --insert text into console. Replacing hex color codes with colored text.
+	--hinsertText(filteredLine) --insert text into console. Replacing hex color codes with colored text.
 	deselect() --Don't forget your deselects!
+  hecho(filteredLine)
 end --if &lt;center&gt; in line else hreplace.
 
 --displays unfiltered line to debug screen.

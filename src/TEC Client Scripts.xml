@@ -17,6 +17,192 @@
 </script>
 			<eventHandlerList />
 			<Script isActive="yes" isFolder="no">
+				<name>tec Auto Updates</name>
+				<packageName></packageName>
+				<script>--Script to handle downloading updates.
+
+tecUpdate = {}
+
+function tecUpdate.config() --Create variables used for updates
+  tecUpdate.versionsFile = "tecClientVersions.lua" --name of file containing versions
+  tecUpdate.scriptNamesFile = "tecClientScriptNames.lua" --name of file containing script names
+  tecUpdate.versionsRespitory = getMudletHomeDir().."/settings/" --local folder save files in
+  if not io.exists(tecUpdate.versionsRespitory) then --if folder does not exists
+    lfs.mkdir(tecUpdate.versionsRespitory) --create the folder
+  end --if tecUpdate.versionsRespitory not exist
+  tecUpdate.version = "beta.0.01" --current client version
+  tecUpdate.versions = {tecUpdate.version} --List of all versions, old and current
+  tecUpdate.download_path = "https://github.com/TheEternalCitizens/mudlet-integration/releases/download/tecLatest/"
+  tecUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
+  
+  --The script that contains the update function must be at the end of this table!
+  tecUpdate.scriptNames = {[[TEC_Client_Aliases.xml]], [[TEC_Client_KeyBindings.xml]]
+    ,[[imgs.mpackage]], [[TEC_Client_Timers.xml]], [[TEC_Client_Triggers.xml]]
+    ,[[TEC_Client_Scripts.xml]]}
+end --function tecUpdate.config
+tecUpdate.config() --run it on startup so data is configured.
+
+--From this point until function tecUpdate.eventHandler the functions are in the 
+--same logical order they will be processed in. The only reason for this is to 
+--make it more simple to understand.
+--As you are following this, keep in mind that we do not know how long a file will
+--take to download. So we have to use tecUpdate.eventHandler to run the next function
+--after a download has completed.
+
+--Download file used to check version. Called on automatically on startup
+--or by clicking update in settings box.
+function tecUpdate.checkVersion()
+  if tecUpdate.update_timer then --if the timer exists
+    killTimer(tecUpdate.update_timer) --stop the timer
+    tecUpdate.update_timer = nil --set the timer to nil
+  end -- if tecUpdate.update_timer exists
+  debugToDisplay(
+    "\nUpdate: Version file Downloading from: "
+      ..tecUpdate.download_path .. tecUpdate.versionsFile
+      .."\nUpdate: downloading version file to: "..tecUpdate.versionsRespitory
+      ..tecUpdate.versionsFile
+  ) --end debugToDisplay
+  downloading = true --Used during sysDownloadDone event handler in this script
+  --download the latest version file to the users profile
+  downloadFile(tecUpdate.versionsRespitory .. tecUpdate.versionsFile, 
+    tecUpdate.download_path .. tecUpdate.versionsFile) --second half of downloadFile
+end --tecUpdate.checkVersion
+
+--Called when downloadDone event finds version file downloaded.
+--This function checks it latest version is installed. Prompts the user to update if it is.
+local function check_version()
+  downloading = false --Used during sysDownloadDone event handler in this script
+  local path = tecUpdate.versionsRespitory .. tecUpdate.versionsFile --folder and file names
+  debugToDisplay("Update: Loading version file: "..path)
+  tecUpdate.versions = {} --will hold the versions table that contains current list of versions.
+  table.load(path, tecUpdate.versions) --load the versions file.
+  --Find the currently used version's position in the versions master file.
+  local pos = table.index_of(tecUpdate.versions, tecUpdate.version) or 0
+  debugToDisplay("Update: Current client version: "..tecUpdate.version
+    .."\n\tfound in versions file at position: "..tostring(pos))
+  if pos ~= #tecUpdate.versions then --if the current version is the not last in the version file.
+    debugToDisplay("Update: An update is available")
+    enableAlias(tecUpdate.aliasName) --enable alias so user can run update with command
+    cecho(string.format("&lt;:maroon&gt;TEC Client is currently %s versions behind.\n",#tecUpdate.versions - pos))
+    cecho("&lt;:maroon&gt;To update now, please run: ")
+    cechoLink("&lt;:blue&gt;tecclient update", --link text to display
+      [[tecUpdate.downloadScriptsNames()]], --link command to run
+      "Update game client", true) --link tool tip for mouse hover
+    echo("\n") --cechoLinks don't cause the window to autoscroll.
+  else --if an update is not needed.
+    cecho("You are using the latest version of TEC Client, Parthia.\n")
+    --restart the check timer that forces the version check in an hour.
+    --tecUpdate.update_timer = tempTimer(3600, [[tecUpdate.checkVersion()]])
+  end --if current version is latest
+end --function check_version
+
+--At this point the user has a prompt on screen asking to update.
+
+--Run when user clicks tecclient update, on update prompt from end of check_version
+--or when user runs command tecclient update after check_version found an update was needed.
+--Downloads a file that contains a table listing all script files used in this project.
+--Doing this via downloaded file so scripts can be added in the future.
+function tecUpdate.downloadScriptsNames()
+  disableAlias(tecUpdate.aliasName) --so user does not start symotanious downloads
+  downloading = true --Used during sysDownloadDone event handler in this script
+  debugToDisplay("Update: Downloading "..tecUpdate.download_path..tecUpdate.scriptNamesFile
+    .."\n\t To folder: "..tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile)
+  downloadFile(tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile, tecUpdate.download_path..tecUpdate.scriptNamesFile)
+end --function tecUpdate.downloadScriptNames
+
+--Called when downloadDone event finds scriptsNames file downloaded.
+--loads scripts file into tecUpdates.scriptNames table.
+--Than runs the update.
+local function loadScriptsNames()
+  downloading = false --Used during sysDownloadDone event handler in this script
+  tecUpdate.scriptNames = {} --clear out script names
+  debugToDisplay("Update: Loading "..tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile
+    .."\n\tTo table: tecUpdate.scriptNames")
+  --Load script names from file to tec
+  table.load(tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile, tecUpdate.scriptNames)
+  --Run updates now that we have a full list of script names.
+  tecUpdate.updateVersion()
+end --function tecUpdate.loadScripts
+
+--runs once loadScripsName completes. These are two functions due to formating only.
+--Downloads the packages needed for the update.
+function tecUpdate.updateVersion() --Download the new client
+  for index, scriptName in ipairs(tecUpdate.scriptNames) do --Loop through all scripts
+    local path, file = tecUpdate.versionsRespitory , scriptName
+    downloading = true --Used during sysDownloadDone event handler in this script
+    debugToDisplay(
+      "Update Downloading from: "..tecUpdate.download_path..file
+      .."\nUpdate: downloading file to: "..path..file
+      ) --end debugToDisplay
+    downloadFile(path..file, tecUpdate.download_path..file) --download the new client scripts
+  end --for tecUpdate.scriptNames
+end --functyion tecUpdate.updateVersion()
+
+--Runs when sysDownloadDone event finds the LAST file in tecUpdate.scriptNames has downloaded
+local function update_version() --install the new client after download was completed
+  downloading = false --Used during sysDownloadDone event handler in this script
+  debugToDisplay("Update: Disabling alias: "..tecUpdate.aliasName)
+  for index, scriptName in ipairs(tecUpdate.scriptNames) do --loop through scripts, and install them
+    debugToDisplay("Update: Uninstalling package: "..scriptName:match("(.*)%."))
+    uninstallPackage(scriptName:match("(.*)%.")) --remove old package
+    debugToDisplay("Update: Installing package: "..tecUpdate.versionsRespitory..scriptName)
+    installPackage(tecUpdate.versionsRespitory..scriptName) --install new package
+  end --for tecUpdate.scriptNames
+  cecho("Updates completed.\n")
+end --function update_version
+
+--Make it easy for devs to create and manage scriptNames files.
+function tecUpdate.saveScriptNames()
+  tecUpdate.config() --Creates the script names table
+  --Save the script names table to file.
+  table.save(tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile, tecUpdate.scriptNames) 
+  cecho("Save script to: "..tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile.."\n")
+  cechoLink("&lt;:blue&gt;Open Directory", 
+  [[tecOpenDirectory(tecUpdate.versionsRespitory)]],
+  "Open folder "..tecUpdate.scriptNamesFile.." is in", true)
+  cecho(" "..tecUpdate.scriptNamesFile.." is in.\n")
+end --function tecUpdate.saveScriptNames
+
+--Make it easy for devs to create and manage versions files.
+function tecUpdate.saveVersions()
+  tecUpdate.config() --Creates the versions table
+  --Save the versions table to file.
+  table.save(tecUpdate.versionsRespitory..tecUpdate.versionsFile, tecUpdate.versions)
+  cecho("Save script to: "..tecUpdate.versionsRespitory..tecUpdate.versionsFile.."\n")
+  cechoLink("&lt;:blue&gt;Open Directory", 
+  [[tecOpenDirectory(tecUpdate.versionsRespitory)]],
+  "Open folder "..tecUpdate.versionsFile.." is in", true)
+  cecho(" "..tecUpdate.versionsFile.." is in.\n")
+end --function tecUpdate.saveScriptNames
+
+function tecUpdate.eventHandler(event, ...)
+  if event == "sysDownloadDone" and downloading then
+    local file = arg[1] -- in this case name of file downloaded
+    if string.ends(file,tecUpdate.versionsFile) then --download is version check  file
+      debugToDisplay("Update sysDownloadDone Event: Download: "..file
+        .."\n\tdownloaded, check_version() called.")
+      check_version() --Use downloaded version file to check if latest version is installed
+    elseif string.ends(file,tecUpdate.scriptNames[(#tecUpdate.scriptNames)]) then --if download is LAST downloaded script
+      debugToDisplay("Update sysDownloadDone Event: Download: "..file
+        .."\n\tdownloaded, update_version() called.")
+      update_version() --install the new client after download was completed
+    --elseif string.ends(file,tecUpdate.scriptNamesFile) then
+    elseif file == tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile then
+      debugToDisplay("Update sysDownloadDone Event: Download: "..file
+        .."\n\tdownloaded, loadScriptsNames() called.")
+      loadScriptsNames() --loads scripts names into table tecUpdate.scriptNames
+    else
+      debugToDisplay("Update sysDownloadDone Event: Downloaded file: "..file
+        .."\n\tWas NOT caught by event handler.")
+    end --elseif file downloaded is new script
+  end --if event == elseif
+end --function tecUpdate.eventHandler()
+
+registerAnonymousEventHandler("sysDownloadDone", "tecUpdate.eventHandler")
+</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
 				<name>Variables</name>
 				<packageName></packageName>
 				<script>--[[
@@ -30,6 +216,10 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   --Variables to file. So NOT putting tec.Settings. before
   --a variable will mean that it does not get saved to file.
   tecSettings = {}
+  
+  --folder where settings are kept. 
+  --tecUpdate.versionsRespitory is in tec Auto Updates script
+  tecSettingsFolder = tecUpdate.versionsRespitory
   
   --set primary text color in game
   --needs to be a hex number WITH # before it.
@@ -61,6 +251,9 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   
   --adjustable font size
   tecSettings.tecFontSize = 14
+  
+  --Text size applied to tabs.
+  tecSettings.tecTabsFontSize = 18
   
   --enable or disable debug mode.
   --Currently display red background main line to screen.
@@ -126,6 +319,9 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   --used for if timer debug is or is not wanted.
   tecSettings.tecTimerDebugMode = false
   
+  --controls if scroll bars are of are now viewd.
+  tecSettings.showScrollBars = true
+  
   --Spaces inventory list 
   tecInventorySpacer = ""
   
@@ -133,6 +329,12 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   tecTextWindowNames = {"main", "tecSettingsConsole"
     ,"roomCharacters.console" , "Communication"
     ,"Thoughts", "Speech"}
+    
+  --Holds list of labels that use default lable stylesheet 
+  tecWindowLabels = {} --normally configured with tecGetWindowLabelList
+    
+  tecGUIFrameTabNames = { "Compass", "Settings", "Macros", 
+    "Room Characters", "TEC Map" }
 
 	tecDebugSaveDir = getMudletHomeDir().."\/DebugingFiles\/"
 
@@ -160,7 +362,7 @@ function tecFileSaveSettings(displayToScreen)
 --rather than loads the data into a global settings table
 
   --Save the table to file.
-  table.save(getMudletHomeDir() .. "/TECClientData.lua", tecSettings)
+  table.save(tecSettingsFolder.."TECClientData.lua", tecSettings)
 	
 	--display save to screen
 	if displayToScreen then echo("Client settings saved.") end
@@ -181,7 +383,7 @@ end</script>
 function tecFileLoadSettings(displayToScreen)
 
 	--Set the location and name of file.	
-	local path = getMudletHomeDir() .. "/TECClientData.lua"
+	local path = tecSettingsFolder.."TECClientData.lua"
 	path = path:gsub("\\","/")
 	--If the file does not exist let the user know.
   if not io.exists(path) then 
@@ -190,8 +392,10 @@ function tecFileLoadSettings(displayToScreen)
 		echo("settings did not load from file\n")
 	return --kill the function before real errors occur
 	else
-  table.load(path, tecSettings) --Load the settings in from file
-	if displayToScreen then echo("Settings successfully loaded from file\n") end
+    table.load(path, tecSettings) --Load the settings in from file
+    if displayToScreen then 
+    cecho("[  OK  ]  - Parthia settings successfully loaded from file.\n") 
+    end --if displayToScreen
 	end --end if file exists else
 end --function tecFileLoadSettings
 
@@ -243,43 +447,43 @@ end --fuctoin clearTecRoomObjects</script>
 --Upgrade options.
 --add these variables to tecSettings so they can be saved and loaded.
 
---Font size for tab labels
-tabsFontSize = 18
 
---Default tab height
-tabsHeight = 30
-
---QLabels are QTs label system
---Used here for easy hover affects
-tabsStyle = [[
-	QLabel{
-		background-color: ]]..tecSettings.tabsBackgroundColor..[[;
-    border-width: 1px;
-    border-style: outset;
-    border-color: lightgray;
-    border-top-left-radius: 15px;
-    border-top-right-radius: 15px;
-    margin-right: 0px;
-    margin-left: 0px;
-		font-size: 50px;
-    qproperty-alignment: 'AlignCenter | AlignCenter';
-  }
-	QLabel::hover{
-		background-color: ]]..tecSettings.hoverColor..[[;
-    border-width: 1px;
-    border-style: outset;
-    border-color: gray;
-    border-top-left-radius: 15px;
-    border-top-right-radius: 15px;
-    margin-right: 0px;
-    margin-left: 0px;
-		font-size: 50px;
-    qproperty-alignment: 'AlignCenter | AlignCenter';
-  }
-]]
-
---This is now tabs text looks
-tabsFontStyle = '&lt;center&gt;&lt;p style="font-size:18px; color:lightgray"&gt;'
+function tecConfigThemes() --configure and initalize settings for tabs.
+  --Default tab height
+  tabsHeight = 30
+  
+  --QLabels are QTs label system
+  --Used here for easy hover affects
+  tabsStyle = [[
+  	QLabel{
+  		background-color: ]]..tecSettings.tabsBackgroundColor..[[;
+      border-width: 1px;
+      border-style: outset;
+      border-color: lightgray;
+      border-top-left-radius: 15px;
+      border-top-right-radius: 15px;
+      margin-right: 0px;
+      margin-left: 0px;
+  		font-size: ]]..tecSettings.tecTabsFontSize..[[px;
+      qproperty-alignment: 'AlignCenter | AlignCenter';
+    }
+  	QLabel::hover{
+  		background-color: ]]..tecSettings.hoverColor..[[;
+      border-width: 1px;
+      border-style: outset;
+      border-color: gray;
+      border-top-left-radius: 15px;
+      border-top-right-radius: 15px;
+      margin-right: 0px;
+      margin-left: 0px;
+  		font-size: ]]..tecSettings.tecTabsFontSize..[[px;
+      qproperty-alignment: 'AlignCenter | AlignCenter';
+    }
+  ]]
+  
+  --This is now tabs text looks
+  tabsFontStyle = [[&lt;center&gt;&lt;p style="font-size:]]
+    ..tecSettings.tecTabsFontSize..[[px; color:lightgray"&gt;]]
 
 labelsStyle = [[
 	QLabel{
@@ -289,7 +493,7 @@ labelsStyle = [[
     border-color: lightgray;
     margin-right: 0px;
     margin-left: 0px;
-		font-size: 50px;
+		font-size: 20px;
     qproperty-alignment: 'AlignCenter | AlignCenter';
   }
 	QLabel::hover{
@@ -299,7 +503,7 @@ labelsStyle = [[
     border-color: gray;
     margin-right: 0px;
     margin-left: 0px;
-		font-size: 50px;
+		font-size: 20px;
     qproperty-alignment: 'AlignCenter | AlignCenter';
   }
 ]]
@@ -414,7 +618,9 @@ tecExit["nw"]["0"] = { tecExitStyleSheet = [[border-image: url("]]..getMudletHom
 tecExit["nw"]["1"] = { tecExitStyleSheet = [[border-image: url("]]..getMudletHomeDir()
 	..[[/]].."imgs"..[[/]].."exits"..[[/nw_open.png");]]}
 tecExit["nw"].width = nenwExitIconSize
-tecExit["nw"].height = nenwExitIconSize</script>
+tecExit["nw"].height = nenwExitIconSize
+end --function tecConfigThemes
+tecConfigThemes() --configure tabs now.</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
@@ -1284,7 +1490,7 @@ GUIframe.defaults = {
     resizeWidth = 30,
     resizeHoverImage = "/imgs/blue_arrows.png",
     resizeRestImage = "/imgs/blue_arrows_30t.png",
-    borderOffset = 2,
+    borderOffset = 0,
 }
 
 GUIframe.windows = GUIframe.windows or {}
@@ -1441,7 +1647,11 @@ local function config()
         GUIframe[name]:setMoveCallback("GUIframe.buttonMove", name)
     end
     setBorderLeft(configs.leftStartWidth + configs.borderOffset)
-    setBorderRight(configs.rightStartWidth + configs.borderOffset)
+    if tecSettings.showScrollBars then --if tecSettings.showScrollBars is false
+      setBorderRight(configs.rightStartWidth + configs.borderOffset)
+    else
+      setBorderRight(-16) --hide the scroll bar off the screen.      
+    end --if tecSettings.ShowScrollBars
     setBorderTop(configs.topStartHeight + configs.borderOffset)
     setBorderBottom(configs.bottomStartHeight + configs.borderOffset)
     GUIframe.initialized = true
@@ -1766,14 +1976,14 @@ function GUIframe.saveSettings()
     end
     saveTbl.windows = windows
     saveTbl.sides = GUIframe.sides
-    table.save(getMudletHomeDir() .. "/GUIframeSave.lua", saveTbl)
+    table.save(tecSettingsFolder .. "GUIframeSave.lua", saveTbl)
 end
 
 -- loads GUI setup from a previous save
 function GUIframe.loadSettings(redraw)
     if not GUIframe.initialized then error("GUIframe not initialized",2) end
     local saveTbl = {}
-    local path = getMudletHomeDir() .. "/GUIframeSave.lua"
+    local path = tecSettingsFolder .. "GUIframeSave.lua"
     path = path:gsub("\\","/")
     mainW, mainH = getMainWindowSize()
     if not io.exists(path) then debugc("GUIframe.loadSettings: save file doesn't exist.") return end
@@ -1906,6 +2116,10 @@ function GUIframe.buttonRelease(name, event)
 	    end
 	    adjustTabs(tabs)
 	end
+  if not tecSettings.showScrollBars then --hides scroll bar when right click button is released.
+    setBorderRight(-16) --Moves the scroll bar off the screen
+    debugToDisplay("GUIframe.buttonRelease: setBorderRight to -16.")
+  end --DaveWithTheNiceHat
 	raiseEvent("GUIframe.buttonRelease",name,event)
 end
 
@@ -2398,6 +2612,42 @@ function md5.sumhexa(s)
 end</script>
 				<eventHandlerList />
 			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>fuzzyBoolean(bool)</name>
+				<packageName></packageName>
+				<script>-- Provided by demonnic
+--- Expands boolean definitions to be more flexible.
+-- &lt;br&gt;True values are "true", "yes", "0", 0, and true
+-- &lt;br&gt;False values are "false", "no", "1", 1, false, and nil
+-- @param bool item to test for truthiness
+function fuzzyBoolean(bool)
+  if type(bool) == "boolean" or bool == nil then
+    return bool
+  elseif tostring(bool) then
+    local truth = {
+      "yes",
+      "true",
+      "0"
+    }
+    local untruth = {
+      "no",
+      "false",
+      "1"
+    }
+    local boolstr = tostring(bool)
+    if table.contains(truth, boolstr) then
+      return true
+    elseif table.contains(untruth, boolstr) then
+      return false
+    else
+      return nil
+    end
+  else
+    return nil
+  end
+end</script>
+				<eventHandlerList />
+			</Script>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
 			<name>TECFunctions</name>
@@ -2430,12 +2680,14 @@ function setTECDebugMode(tectmpSetDebug)
 		--saveWindowLayout() --save floating miniconsole locations
 		--loadWindowLayout() --load previously save miniconsole position.
 		--tecDebugWindow:addScrollbars(parent, "Vertical")
+    if tecSettings.showScrollBars then enableScrollBar("tecDebugWindow") end
 		echo("Debug mode enabled.\n")
 	else --else disabling debug
 		echo("Debug mode disabled.\n")
 		setTECDisplayDebugMode(tectmpSetDebug)
 		setTECMapDebugMode(tectmpSetDebug)
 		setTECTimerDebugMode(tectmpSetDebug)
+    closeUserWindow("tecDebugWindow")
 	end -- if tectmpSetDebug
 	
 end --end function setTecDebugMode</script>
@@ -2772,68 +3024,48 @@ GUI like functions
 					<name>setMainWindowAutoWrap()</name>
 					<packageName></packageName>
 					<script>--set main window word wrap size.
---Function is called via an alias and in compass.resize
 --It is currently in the guiChange event function to be called when gui changes occur
 function setMainWindowAutoWrap()
 
-  --get how many characters should appear on a line before word wrapping.
-	local wrapAt = getColumnCount()
+  local wrapAt = 0
+    
+  if tecSettings.showScrollBars then --if tecSettings.showScrollBars is true
 
-  --Set updated word wrap for main.
-  setWindowWrap("main", wrapAt)
-	
-	if getTECDebugMode() then --if debug mode is enabled
-	
-  	--how many pixels thick is our font?
+    --get how many characters should appear on a line before word wrapping.
+  	wrapAt = getColumnCount()
+    
+    debugToDisplay("setMainWindowAutoWrap: Wrap at: "..tostring(wrapAt) )
+
+  else --if tecSettings.showScrollBar is false 
+  
+    --get average pilxelwidth of font used on main console.
+    local fontWidth, fontHeight = calcFontSize(getFontSize())
+  	--Get size of the entire window.
     local mainWidth, mainHeight = getMainWindowSize()
     
     --Get the width of left and right gui bars.
     local leftSideWidth = GUIframe.topLeftContainer:get_width()
     local rightSideWidth = GUIframe.topRightContainer:get_width()
-	
+    
+    --Calculate how many characters can fit into main on average taking left and 
+    --right GUI objects into consideration. Rounding down with math.floor
+    wrapAt = math.floor(((mainWidth - leftSideWidth - rightSideWidth) / fontWidth) - 1)
+    
   	--displays actual sizes to screen.
   	--display with setTECDebugMode(true)
   	--or command line debug on
-  	debugToDisplay("setMainWindowAutoWrap: Font Width: "..tostring(fontWidth).." Left side width: "..tostring(leftSideWidth)
-  	.." Right side width: "..tostring(leftSideWidth).." Main screen width: "..tostring(mainWidth)
-  	.." Line wrap: "..tostring(wrapAt).." Mains font sie: "..tostring(getFontSize())..".")
-	
-	end --end if debug is enabled
+  	debugToDisplay("setMainWindowAutoWrap: Font Width: "..tostring(fontWidth)
+      .." Left side width: "..tostring(leftSideWidth).." Right side width: "..tostring(leftSideWidth)
+      .." Main screen width: "..tostring(mainWidth)
+      .." line wrap: "..tostring(wrapAt)
+      .." Mains font sie: "..tostring(getFontSize())..".")
+  
+  end --if not tecSettings.showScrollBars
+  
+  --Set updated word wrap for main.
+  setWindowWrap("main", tonumber(wrapAt))
+  
 end --end function setMainWindowAutowrap</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>calcMenuFonts</name>
-					<packageName></packageName>
-					<script>--This is needed because low resolutions screens even remotely large text will bleed
---off the edges.
---Where high resolution screens small text or even large text like 14 may not be legable.
---Not needed until after 1.0. We can use font size 14 for now
-
---Calculate tab and other gui fonts base on main screen size.
---Could set variables directly
---Could return a single font while passing a string to determine
---what is being mesured calcMenuFont("tabs") calcMenuFont("menus")
---could also just calculate them all and just return them all always.</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>setMenuFonts</name>
-					<packageName></packageName>
-					<script>--This is needed because low resolutions screens even remotely large text will bleed
---off the edges.
---Where high resolution screens small text or even large text like 14 may not be legable.
---Not needed until after 1.0. We can use font size 14 for now
-
---Sets the font sizes for menus and tabs.
---Need to echo into all the tabs and labels
---will need to be in guiChange event
---will need to call calcMenuFonts to get sizes. (Scripts-TEC Scripts-GUI)
---Will need to be called in variables to set 
---tabsFontStyle
---Probably just set it to trigger at known screen widths.
---Keep in mind that getMainConsoleWidth is buggy as of v4.03
---4.1.1 theres a new function to get windows of miniconsole in text coloums.</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
@@ -2911,6 +3143,192 @@ end --function setInventoryFormater</script>
 					<script>function getInventoryFormater()
   return tecFormatInventory
 end --function getInventoryFormater</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>Geyser.Container:objectQuery()</name>
+					<packageName></packageName>
+					<script>function Geyser.Container:objectQuery(objectTable)
+  --We are addding data to this table each loop.
+  --We assume first run if a table is not passed. So we created the table.
+  objectTable = objectTable or
+    {name={}, type={}, parentName={}, xPos={}, yPos={}
+    ,width={}, height={}}
+  
+  --windowList reference: https://www.mudlet.org/geyser/files/geyser/GeyserContainer.html
+  --Loop through all children of this container.
+  for k,v in pairs(self.windowList) do
+      if k ~= self then --if the key is not this geyser object
+    		  objectTable = v:objectQuery(objectTable) --query that object.
+      end --end if k not = self check
+  end --end for loop pair(self.windowlist)
+  
+--[[this.object logic can SEEM confusing. It's not.
+At this point we have reach the 'bottom' of ourcontainer query.
+So the last child with the last alphabetical name.
+We insert our object data. Than return it. Meaning this now occurs for the second to
+the last geyser object, and so on until we reach the parent that called the query.]]--
+  
+  --https://wiki.mudlet.org/w/Manual:Lua_Functions#debugc
+  --debugc("Geyser.Container:objectQuery: Inserting Object data for: "..self.name)
+  
+  --Collect this object data.
+  --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserContainer.html
+  table.insert(objectTable.name, tostring(self.name))
+  table.insert(objectTable.type, tostring(self.type))
+  table.insert(objectTable.parentName, tostring(self.parent.name))
+  table.insert(objectTable.xPos, tostring(self:get_x()))
+  table.insert(objectTable.yPos, tostring(self:get_y()))
+  table.insert(objectTable.width, tostring(self:get_width()))
+  table.insert(objectTable.height, tostring(self:get_height()))
+
+  return objectTable --return the table to the object that called this object
+  
+end --Geyser.Container:objectQuery(objectTable)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecRedrawLabels()</name>
+					<packageName></packageName>
+					<script>--Tracks down the labels in this project, and reapplies the default stylesheet
+function tecRedrawLabels()
+
+  debugToDisplay("Labels redraw started.")
+
+  tecConfigThemes() --redo themes data. something likely changed
+
+  --Create table to store all geyser objects within GUIframe
+  ContainerDataTable = { 
+    GUIframe.bottomRightContainer:objectQuery(),
+    GUIframe.topLeftContainer:objectQuery(),
+    GUIframe.bottomLeftContainer:objectQuery(),
+    GUIframe.bottomContainer:objectQuery(),
+    GUIframe.bottomRightContainer:objectQuery(),
+    GUIframe.topRightContainer:objectQuery(),
+    GUIframe.topContainer:objectQuery(),
+    GUIframe.topLeftTabs:objectQuery(),
+    GUIframe.topRightTabs:objectQuery(),
+    GUIframe.bottomLeftTabs:objectQuery(),
+    GUIframe.bottomRightTabs:objectQuery() }
+    
+  --Go through all the table we created above
+  for key,cdt in pairs(ContainerDataTable) do
+    for k,v in pairs(cdt.type) do --Check the types of containers
+      if v == "label" then --To see if it is a label
+        if "map" == cdt.name[k]:match("map") then --if map label is found, skip
+          --debugc("\t"..cdt.name[k].." is a map label no redraw logic in this client release.")
+          debugToDisplay("\t"..cdt.name[k].." is a map label no redraw logic in this client release.")
+          
+        elseif "Compass." == cdt.name[k]:match("Compass.") then
+          --debugc("\t"..cdt.name[k].." is a Compass label no redraw logic in this client release.")
+          debugToDisplay("\t"..cdt.name[k].." is a Compass label no redraw logic in this client release.")
+          if cdt.name[k] == "tecCompass.back" then --if the label is the background of the compass
+            setLabelStyleSheet(cdt.name[k], labelsStyle)
+            --debugc("\t"..cdt.name[k].." back of Compass applying standard label.")
+            debugToDisplay("\t"..cdt.name[k].." back of Compass applying standard label.")
+          end --if cdt.name[k] is tecCompass.back
+          
+        elseif "tab" == cdt.name[k]:match("tab") or "Tab" == cdt.name[k]:match("Tab") then
+          setLabelStyleSheet(cdt.name[k],tabsStyle)
+          local tmpTabName= cdt.name[k]:gsub("Tab", "") --remove Tab from name
+          local tmpTabName= tmpTabName:gsub("tab", "") --remove tab from name
+          local tmpTabName= tmpTabName:gsub("tecComWindows.", "") --remove tecComWindows from name
+          echo(cdt.name[k], tabsFontStyle..tmpTabName) --echo name onto the tab
+          --debugc("\t"..cdt.name[k].." is a tab or Tab label. Setting tabsStyle style sheet.")
+          debugToDisplay("\t"..cdt.name[k].." is a tab or Tab label. Setting tabsStyle style sheet.")
+          
+        else --Reapply default style sheets to all other labels.
+          setLabelStyleSheet(cdt.name[k], labelsStyle)
+          --debugc("\t"..cdt.name[k].." standard label, setting labelsStyle style sheet.")
+          debugToDisplay("\t"..cdt.name[k].." standard label, setting labelsStyle style sheet.")
+          
+        end --if check label types.
+        --debugc("\tTable type: "..v.." key: "..k)
+      end --if cdt.type is label
+    end --for cdt
+  end --for ContainerDataTable
+  
+  debugToDisplay("Labels redraw completed.")
+  
+end --function tecRedrawLabels()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecSetScrollBars(mode)</name>
+					<packageName></packageName>
+					<script>--Enables or disables scrollbars throughout the project.
+--Providing an option to save so scroll bars will not appear automatically
+function tecSetScrollBars(mode, displayToScreen)
+  mode = fuzzyBoolean(mode) --verifies mode.
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  mode = mode == nil and true or mode
+  displayToScreen = displayToScreen == nil and true or displayToScreen
+  tecComWindows = tecComWindows or {tabs = {"Communication","Thoughts","Speech"},}
+  
+  debugToDisplay("Setting Scrollbars: ")
+  
+  if mode then
+    --if enabling, com windows only. Settings &amp; Room Character use tecScrollBarCheck
+    for index, windowName in ipairs(tecComWindows.tabs) do
+      enableScrollBar(windowName)
+      debugToDisplay("\tEnabling scroll bar for: "..windowName)
+      --debugc("Enabling scroll bar for: "..windowName)
+    end --for tecTextWindowNames
+    tecSettings.showScrollBars = true --tell further gui changes to show scrollbars
+    setBorderRight(GUIframe.topRightContainer:get_width())
+    if displayToScreen then
+      cecho("Enabled scrollbars. "
+        .."Some windows will not show their scrollbars until there is enough text "
+        .."to need to scroll the window.\n")
+    end --if displayToScreen
+  else
+      --disable scrollbars for all windows.
+      for index, windowName in ipairs(tecTextWindowNames) do
+        disableScrollBar(windowName)
+        debugToDisplay("\tDisabling scroll bar for: "..windowName)
+        --debugc("Disabling scroll bar for: "..windowName)
+      end --for tecTextWindowNames
+      tecSettings.showScrollBars = false --tell further gui changes to hide scrollbars
+      setBorderRight(-16) --hide the scroll bar off the screen
+      setMainWindowAutoWrap() --Adjust mains autowrap now that main has changed.
+      if displayToScreen then
+        cecho("Disabled scrollbars. "
+          .."You will need to scroll with your mouse wheel or page up page down keys. "
+          .."Main console scrollbar will reappear while moving windows.\n")
+      end --if displayToScreen
+
+  end --if mode
+  
+  debugToDisplay("Completed setting scroll bars.")
+  
+  if displayToScreen then
+    cecho("Don't forget to save your changes with: ")
+    cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+    [[tecFileSaveSettings(true)]],
+    "Save client settings", true)
+    cecho("") --cechoLink will not \n on its own.
+  end --if displayToScreen
+  
+end --tecSetScrollBar</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecScrollBarCheck(tecConsoleName)</name>
+					<packageName></packageName>
+					<script>--automatically enable a console scroll bar if it can not fit the text in it
+--This works best if it is in a "sysWindowResizeEvent" function to controll the 
+--drawing of a gui object.
+function tecScrollBarCheck(tecConsoleName)
+  tecConsoleName = tecConsoleName or "main"
+  local tecSettingsRowCount = getRowCount(tecConsoleName)
+  --if the window can not contain the rows of text.
+  if tecSettingsRowCount &lt; getLastLineNumber(tecConsoleName) then
+    --if user is allowing scroll bars, enable the scroll bar.
+    if tecSettings.showScrollBars then enableScrollBar(tecConsoleName) end
+  else --The window can contain the text.
+    disableScrollBar(tecConsoleName)
+  end --if tecSettingsRowCount less than text rows in that window.
+end --function tecScrollBarCheck</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -3075,6 +3493,16 @@ end --function tecResizeDisplayHelp</script>
   [[tecClearDisplay()]], 
   "Remove text from main screen", true)
 	echo(", clear text from main text console.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display enable scrollbars", 
+  [[tecSetScrollBars(true)]], 
+  "Enable scroll bars", true)
+	echo(", enable scrollbars in Parthia.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display disable scrollbars", 
+  [[tecSetScrollBars(false)]], 
+  "Hide scroll bars", true)
+	echo(", hide scrollbars in Parthia.\n")
 	
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display save", 
   [[tecClientDisplaySave(true)]], 
@@ -3090,7 +3518,7 @@ end --function tecResizeDisplayHelp</script>
   [[tecClientDisplayReset()]], 
   "Reset window positions", true)
 	echo(", reset window positions to default. "
-		.."This WILL require you to restart mudlet.\n")
+		.."This WILL FORCE you to restart mudlet.\n")
 		
 	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display refresh settings", 
   [[tecClientDisplayReset()]], 
@@ -3156,36 +3584,33 @@ end --function tecClientHelp</script>
 				<Script isActive="yes" isFolder="no">
 					<name>tecClientChangeColors()</name>
 					<packageName></packageName>
-					<script>function tecClientChangeColors()
-  
-  cecho("Change background color of windows that do not have text with: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient windows background color colorname", 
+					<script>--lists commands that directly change colors
+function tecClientChangeColorsList()
+cecho("Change background color of windows that do not have text with: ")
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient windows background color colorname\n", 
   [[printCmdLine("tecclient windows background color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change background color nontext windows", true)
-  cecho("&lt;-Restart required.\n")
 
   cecho("Change background color of windows that have text in them with: ")
   cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient background colorname ", 
   [[printCmdLine("tecclient background ");
     cecho("You will need to restart for text background to change")]],
   "Change background color of text windows", true)
-  cecho("&lt;-Restart required.\n")
-  cecho("Command echos must be changed in Options -&gt; Preferences -&gt; Color View -&gt; Command Background.\n")
+  cecho("&lt;-Restart required on Windows OS.\n")
+  cecho("Command echo background must be changed in Options -&gt; Preferences -&gt; Color View -&gt; Command Background.\n")
   
   cecho("Change background color of the client's tabs with: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient tabs background color colorname ", 
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient tabs background color colorname\n", 
   [[printCmdLine("tecclient tabs background color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change background color clients tabs", true)
-  cecho("&lt;-Restart required.\n")
   
   cecho("Change the color of windows and tabs as your mouse hovers over them: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient hover color colorname ", 
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient hover color colorname\n", 
   [[printCmdLine("tecclient hover color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change mouse hover color", true)
-  cecho("&lt;-Restart required.\n")
   
   cecho("Change the color help commands are highlighted in: ")
   cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient helphighlight color colorname\n", 
@@ -3222,7 +3647,17 @@ end --function tecClientHelp</script>
   [[printCmdLine("tecclient not approached character color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change color not approached characters in Room Character Window", true)
-  
+end --function tecClientChnageColorsList
+
+--General help for changing colors.
+function tecClientChangeColors()
+
+  cecho("List all commands that change colors with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor
+    .."&gt;tecclient change colors commands\n", 
+  [[tecClientChangeColorsList()]],
+  "Save client settings", true)
+   
   cecho("Don't forget to save your changes with: ")
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
   [[tecFileSaveSettings(true)]],
@@ -3230,7 +3665,8 @@ end --function tecClientHelp</script>
   
   cecho("List colornames in main window: ")
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;lua showColors(3)\n", 
-  [[showColors(3);cecho("Click a color to add it to the end of the command bar")]],
+  [[showColors(3);
+    cecho("Click a color to add it to the end of the command bar")]],
   "List color names", true)
   
   cecho("Open colorname chooser window: ")
@@ -3345,15 +3781,17 @@ end --end tecMapIconAdjustment</script>
   [[tecReportIssues()]],
   "Report issues or bugs", true)
   
-  cechoLink("tecSettingsConsole", "\n&lt;:"..tecSettings.helpHighlightColor.."&gt;Reset\n", 
+  cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Client Help\n", 
+  [[tecClientFullHelp(false, "main")]],
+  "Report issues or bugs", true)
+  
+  cechoLink("tecSettingsConsole", "\n&lt;:maroon&gt;Reset\n", 
   [[tecClientResetAll()]],
   "Reset all changes to default", true)
-  
-	echo("tecSettingsConsole","\nFull Lists:\n")
-	--run the client help command. It is a function so it can be clicked.
-	tecClientFullHelp(true, "tecSettingsConsole")
 
-end --function tecRefreshSettingsWindow</script>
+end --function tecRefreshSettingsWindow
+
+tecRefreshSettingsWindow()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -3409,7 +3847,7 @@ end</script>
 
 function tecClientSetFontSize(numbertemp)--set font settings with this function
 
-	echo("\nSetting font to: "..numbertemp.."\n")
+	cecho("\nSetting font to: "..numbertemp.."\n")
 
 	--if somethings is attempting to set the font below 8, tell them no.
 	--It sets the font size for main and the editor window. very frustrating
@@ -3420,18 +3858,61 @@ function tecClientSetFontSize(numbertemp)--set font settings with this function
 	end --end if numbertemp is below 8
 	
 	tecSettings.tecFontSize = numbertemp or tecDefaultFontSize --set it to size passed OR default on fail
-	setFontSize(tecSettings.tecFontSize) --Set main window font size &amp; creates a resize event
-	setFontSize("Communication", tecSettings.tecFontSize) --resize font in communication window &amp; creates a resize event
-	setFontSize("Thoughts", tecSettings.tecFontSize) --resize font in Thoughts window &amp; creates a resize event
-	setFontSize("Speech", tecSettings.tecFontSize) --resize font in Speech window &amp; creates a resize event
-	--Each font adjustment WILL trigger a screen resize event.
-	
-	if getTECDebugMode() then --if debug mode is enabled
-  	debugToDisplay("tecClientSetFontSize was sent: "..tostring(numbertemp)..
-  		". tecSettings.tecFontSize is currently: "..tostring(tecSettings.tecFontSize)..
-  		". Communication console font size: "..tostring(getFontSize(Communication)))		
-	end --end if debug mode is on
+  
+  --Run change for all text windows.
+  for index, windowName in ipairs(tecTextWindowNames) do 
+    setFontSize(windowName, tecSettings.tecFontSize)
+    debugToDisplay("Font Change: Window: "..windowName.." font is now: "
+      ..tecSettings.tecFontSize)
+  end --for windowName in table tecTextWindowNames
+  
+  tecRefreshSettingsWindow() --Redraw text in setttings window.
+  tecResetRoomCharacterWindow() --Redraw text in room characters window.
+  
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
+
 end --end tecClientSetFontSize</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>tecClientSetTabFontSize</name>
+						<packageName></packageName>
+						<script>--sets the font for all console displays.
+--A different function should be made for geyser labels.
+
+function tecClientSetTabFontSize(tecTmpTabFont)--set font settings with this function
+  tecTmpTabFont = tecTmpTabFont or tecSettings.tecTabsFontSize
+  
+	--if somethings is attempting to set the font below 8, tell them no.
+	--It sets the font size for main and the editor window. very frustrating
+	--when font is 1...
+	if tecTmpTabFont &lt; 8 then
+		tecTmpTabFont = 8
+		cecho("\nFonts below 8 are not supported, setting font to 8.\n")
+	end --end if numbertemp is below 8
+  
+  cecho("Setting tab font to: "..tecTmpTabFont.."\n")
+	
+	tecSettings.tecTabsFontSize = tostring(tecTmpTabFont) or tostring(tecDefaultFontSize) --set it to size passed OR default on fail
+  
+  --Now that the setting changed, reconfig tab settings
+  tecConfigThemes()
+  GUIframe.configs.tabEchoStyle = tabsFontStyle
+  
+  --Redraw all tabs, this includes labels.  
+  tecRedrawLabels()
+  
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
+
+end --end tecClientSetTabFontSize(numbertemp)</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
@@ -3544,231 +4025,79 @@ end --tecOpenDirectory</script>
 end</script>
 					<eventHandlerList />
 				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>tec Auto Updates</name>
-					<packageName></packageName>
-					<script>--Script to handle downloading updates.
-
-tecUpdate = {}
-
-function tecUpdate.config() --Create variables used for updates
-  tecUpdate.versionsFile = "tecClientVersions.lua" --name of file containing versions
-  tecUpdate.scriptNamesFile = "tecClientScriptNames.lua" --name of file containing script names
-  tecUpdate.versionsRespitory = getMudletHomeDir().."/settings/" --local folder save files in
-  if not io.exists(tecUpdate.versionsRespitory) then --if folder does not exists
-    lfs.mkdir(tecUpdate.versionsRespitory) --create the folder
-  end --if tecUpdate.versionsRespitory not exist
-  tecUpdate.version = ".01" --current client version
-  tecUpdate.versions = {".01"} --List of all versions, old and current
-  tecUpdate.download_path = "https://github.com/TheEternalCitizens/mudlet-integration/releases/download/tecLatest/"
-  tecUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
-  
-  --The script that contains the update function must be at the end of this table!
-  tecUpdate.scriptNames = {[[TEC_Client_Aliases.xml]], [[TEC_Client_KeyBindings.xml]]
-    ,[[imgs.mpackage]], [[TEC_Client_Timers.xml]], [[TEC_Client_Triggers.xml]]
-    ,[[TEC_Client_Scripts.xml]]}
-end --function tecUpdate.config
-tecUpdate.config() --run it on startup so data is configured.
-
---From this point until function tecUpdate.eventHandler the functions are in the 
---same logical order they will be processed in. The only reason for this is to 
---make it more simple to understand.
---As you are following this, keep in mind that we do not know how long a file will
---take to download. So we have to use tecUpdate.eventHandler to run the next function
---after a download has completed.
-
---Download file used to check version. Called on automatically on startup
---or by clicking update in settings box.
-function tecUpdate.checkVersion()
-  if tecUpdate.update_timer then --if the timer exists
-    killTimer(tecUpdate.update_timer) --stop the timer
-    tecUpdate.update_timer = nil --set the timer to nil
-  end -- if tecUpdate.update_timer exists
-  debugToDisplay(
-    "\nUpdate: Version file Downloading from: "
-      ..tecUpdate.download_path .. tecUpdate.versionsFile
-      .."\nUpdate: downloading version file to: "..tecUpdate.versionsRespitory
-      ..tecUpdate.versionsFile
-  ) --end debugToDisplay
-  downloading = true --Used during sysDownloadDone event handler in this script
-  --download the latest version file to the users profile
-  downloadFile(tecUpdate.versionsRespitory .. tecUpdate.versionsFile, 
-    tecUpdate.download_path .. tecUpdate.versionsFile) --second half of downloadFile
-end --tecUpdate.checkVersion
-
---Called when downloadDone event finds version file downloaded.
---This function checks it latest version is installed. Prompts the user to update if it is.
-local function check_version()
-  downloading = false --Used during sysDownloadDone event handler in this script
-  local path = tecUpdate.versionsRespitory .. tecUpdate.versionsFile --folder and file names
-  debugToDisplay("Update: Loading version file: "..path)
-  tecUpdate.versions = {} --will hold the versions table that contains current list of versions.
-  table.load(path, tecUpdate.versions) --load the versions file.
-  --Find the currently used version's position in the versions master file.
-  local pos = table.index_of(tecUpdate.versions, tecUpdate.version) or 0
-  debugToDisplay("Update: Current client version: "..tecUpdate.version
-    .."\n\tfound in versions file at position: "..tostring(pos))
-  if pos ~= #tecUpdate.versions then --if the current version is the not last in the version file.
-    debugToDisplay("Update: An update is available")
-    enableAlias(tecUpdate.aliasName) --enable alias so user can run update with command
-    cecho(string.format("&lt;:maroon&gt;TEC Client is currently %s versions behind.\n",#tecUpdate.versions - pos))
-    cecho("&lt;:maroon&gt;To update now, please run: ")
-    cechoLink("&lt;:blue&gt;tecclient update", --link text to display
-      [[tecUpdate.downloadScriptsNames()]], --link command to run
-      "Update game client", true) --link tool tip for mouse hover
-    echo("\n") --cechoLinks don't cause the window to autoscroll.
-  else --if an update is not needed.
-    cecho("You are using the latest TEC Client.\n")
-    --restart the check timer that forces the version check in an hour.
-    tecUpdate.update_timer = tempTimer(3600, [[tecUpdate.checkVersion()]])
-  end --if current version is latest
-end --function check_version
-
---At this point the user has a prompt on screen asking to update.
-
---Run when user clicks tecclient update, on update prompt from end of check_version
---or when user runs command tecclient update after check_version found an update was needed.
---Downloads a file that contains a table listing all script files used in this project.
---Doing this via downloaded file so scripts can be added in the future.
-function tecUpdate.downloadScriptsNames()
-  disableAlias(tecUpdate.aliasName) --so user does not start symotanious downloads
-  downloading = true --Used during sysDownloadDone event handler in this script
-  debugToDisplay("Update: Downloading "..tecUpdate.download_path..tecUpdate.scriptNamesFile
-    .."\n\t To folder: "..tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile)
-  downloadFile(tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile, tecUpdate.download_path..tecUpdate.scriptNamesFile)
-end --function tecUpdate.downloadScriptNames
-
---Called when downloadDone event finds scriptsNames file downloaded.
---loads scripts file into tecUpdates.scriptNames table.
---Than runs the update.
-local function loadScriptsNames()
-  downloading = false --Used during sysDownloadDone event handler in this script
-  tecUpdate.scriptNames = {} --clear out script names
-  debugToDisplay("Update: Loading "..tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile
-    .."\n\tTo table: tecUpdate.scriptNames")
-  --Load script names from file to tec
-  table.load(tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile, tecUpdate.scriptNames)
-  --Run updates now that we have a full list of script names.
-  tecUpdate.updateVersion()
-end --function tecUpdate.loadScripts
-
---runs once loadScripsName completes. These are two functions due to formating only.
---Downloads the packages needed for the update.
-function tecUpdate.updateVersion() --Download the new client
-  for index, scriptName in ipairs(tecUpdate.scriptNames) do --Loop through all scripts
-    local path, file = tecUpdate.versionsRespitory , scriptName
-    downloading = true --Used during sysDownloadDone event handler in this script
-    debugToDisplay(
-      "Update Downloading from: "..tecUpdate.download_path..file
-      .."\nUpdate: downloading file to: "..path..file
-      ) --end debugToDisplay
-    downloadFile(path..file, tecUpdate.download_path..file) --download the new client scripts
-  end --for tecUpdate.scriptNames
-end --functyion tecUpdate.updateVersion()
-
---Runs when sysDownloadDone event finds the LAST file in tecUpdate.scriptNames has downloaded
-local function update_version() --install the new client after download was completed
-  downloading = false --Used during sysDownloadDone event handler in this script
-  debugToDisplay("Update: Disabling alias: "..tecUpdate.aliasName)
-  for index, scriptName in ipairs(tecUpdate.scriptNames) do --loop through scripts, and install them
-    debugToDisplay("Update: Uninstalling package: "..scriptName:match("(.*)%."))
-    uninstallPackage(scriptName:match("(.*)%.")) --remove old package
-    debugToDisplay("Update: Installing package: "..tecUpdate.versionsRespitory..scriptName)
-    installPackage(tecUpdate.versionsRespitory..scriptName) --install new package
-  end --for tecUpdate.scriptNames
-  cecho("Updates completed.\n")
-end --function update_version
-
---Make it easy for devs to create and manage scriptNames files.
-function tecUpdate.saveScriptNames()
-  tecUpdate.config() --Creates the script names table
-  --Save the script names table to file.
-  table.save(tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile, tecUpdate.scriptNames) 
-  cecho("Save script to: "..tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile.."\n")
-  cechoLink("&lt;:blue&gt;Open Directory", 
-  [[tecOpenDirectory(tecUpdate.versionsRespitory)]],
-  "Open folder "..tecUpdate.scriptNamesFile.." is in", true)
-  cecho(" "..tecUpdate.scriptNamesFile.." is in.\n")
-end --function tecUpdate.saveScriptNames
-
---Make it easy for devs to create and manage versions files.
-function tecUpdate.saveVersions()
-  tecUpdate.config() --Creates the versions table
-  --Save the versions table to file.
-  table.save(tecUpdate.versionsRespitory..tecUpdate.versionsFile, tecUpdate.versions)
-  cecho("Save script to: "..tecUpdate.versionsRespitory..tecUpdate.versionsFile.."\n")
-  cechoLink("&lt;:blue&gt;Open Directory", 
-  [[tecOpenDirectory(tecUpdate.versionsRespitory)]],
-  "Open folder "..tecUpdate.versionsFile.." is in", true)
-  cecho(" "..tecUpdate.versionsFile.." is in.\n")
-end --function tecUpdate.saveScriptNames
-
-function tecUpdate.eventHandler(event, ...)
-  if event == "sysDownloadDone" and downloading then
-    local file = arg[1] -- in this case name of file downloaded
-    if string.ends(file,tecUpdate.versionsFile) then --download is version check  file
-      debugToDisplay("Update sysDownloadDone Event: Download: "..file
-        .."\n\tdownloaded, check_version() called.")
-      check_version() --Use downloaded version file to check if latest version is installed
-    elseif string.ends(file,tecUpdate.scriptNames[(#tecUpdate.scriptNames)]) then --if download is LAST downloaded script
-      debugToDisplay("Update sysDownloadDone Event: Download: "..file
-        .."\n\tdownloaded, update_version() called.")
-      update_version() --install the new client after download was completed
-    --elseif string.ends(file,tecUpdate.scriptNamesFile) then
-    elseif file == tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile then
-      debugToDisplay("Update sysDownloadDone Event: Download: "..file
-        .."\n\tdownloaded, loadScriptsNames() called.")
-      loadScriptsNames() --loads scripts names into table tecUpdate.scriptNames
-    else
-      debugToDisplay("Update sysDownloadDone Event: Downloaded file: "..file
-        .."\n\tWas NOT caught by event handler.")
-    end --elseif file downloaded is new script
-  end --if event == elseif
-end --function tecUpdate.eventHandler()
-
-registerAnonymousEventHandler("sysDownloadDone", "tecUpdate.eventHandler")
-</script>
-					<eventHandlerList />
-				</Script>
 				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>Colors</name>
 					<packageName></packageName>
-					<script>-------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external scripts --
--------------------------------------------------
-</script>
+					<script>--[[
+functions for changing colors on the client.
+]]--</script>
 					<eventHandlerList />
 					<Script isActive="yes" isFolder="no">
 						<name>tecLabelBackgroundColor(tecColor)</name>
 						<packageName></packageName>
-						<script>function tecLabelBackgroundColor(tecColor)
-  tecSettings.labelBackgroundColor = tecColor
+						<script>--sets the background for labels that are not tabs.
+function tecLabelBackgroundColor(tecColor)
+  tecSettings.labelBackgroundColor = Geyser.Color.hex(tecColor)
+  
+  tecRedrawLabels() --redraw labels appling change
+  
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>tecTabsBackgroundColor(tecColor)</name>
 						<packageName></packageName>
-						<script>function tecTabsBackgroundColor(tecColor)
-  tecSettings.tabsBackgroundColor = tecColor
+						<script>--sets the color for tab labels
+function tecTabsBackgroundColor(tecColor)
+  tecSettings.tabsBackgroundColor = Geyser.Color.hex(tecColor)
+  
+  tecRedrawLabels() --redraw labels appling change
+  
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
+  
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>tecSetMouseHoverColor(tecColor)</name>
 						<packageName></packageName>
-						<script>function tecSetMouseHoverColor(tecColor)
-  tecSettings.hoverColor = tecColor
+						<script>--sets the color a label changes to when a mouse hovers over it.
+function tecSetMouseHoverColor(tecColor)
+  tecSettings.hoverColor = Geyser.Color.hex(tecColor)
+  
+  tecRedrawLabels() --redraw labels appling change
+  
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
+  
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>tecSetHelpHighlightColor(tecColor)</name>
 						<packageName></packageName>
-						<script>function tecSetHelpHighlightColor(tecColor)
+						<script>--sets the color commands are highlighted in help menus.
+function tecSetHelpHighlightColor(tecColor)
   tecSettings.helpHighlightColor = tecColor
+  tecRefreshSettingsWindow() --refresh settings window text
+  
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -3779,44 +4108,71 @@ end --function tecLabelBackgroundColor</script>
 function tecSetGreenTextColor(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.GreenTextColor = Geyser.Color.hex(tecColor)
+  
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>tecSetBlueTextColor(tecColor)</name>
 						<packageName></packageName>
-						<script>--set the color that tec will use for green text.
+						<script>--set the color that tec will use for default blue text.
 function tecSetBlueTextColor(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.BlueTextColor = Geyser.Color.hex(tecColor)
+  
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>tecSetTextColor(tecColor)</name>
 						<packageName></packageName>
-						<script>--set the color that tec will use for green text.
+						<script>--set the color that tec will use for main text.
 function tecSetTextColor(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.tecTextColor = Geyser.Color.hex(tecColor)
+  
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>tecSetBackgroundColor(tecColor)</name>
 						<packageName></packageName>
-						<script>--set the color that tec will use for green text.
+						<script>--set the color that tec will use for console background colors.
 function tecSetBackgroundColor(tecColor)
   --reference: https://wiki.mudlet.org/w/Manual:Lua_Functions#setBackgroundColor
   --https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   --https://wiki.mudlet.org/w/Manual:Lua_Functions#setBgColor
-  
   for index, windowName in ipairs(tecTextWindowNames) do
-    cecho(index..". "..windowName.."\n")
-    setBackgroundColor(windowName, Geyser.Color.parse(tecColor)) --change background color
-    --setBgColor(windowName, Geyser.Color.parse(tecColor)) --change background color
-    --bg(windowName, tecColor) --change background color
+    local rb, gb, bb = Geyser.Color.parse(tecColor)
+    local hexColor = Geyser.Color.hhex(rb, gb, bb)
+    hexColor = hexColor:sub(2,7)
+    debugToDisplay("Color Change: "..windowName.." background to "
+      ..rb..","..gb..","..bb.." hex value: "..hexColor.."\n")
+    setBackgroundColor(windowName, rb, gb, bb) --change background color
+    setBgColor(windowName, rb, gb, bb) --change background color for cechos
+    setHexBgColor(windowName, hexColor)
   end
+  
+  runTECRoomObjectCheck(false)
+  cecho("Text box background color changes are saved by mudlet immediately.\n"
+    .."If using windows you will need to restart for text background "
+    .."colors to change")
+  
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -3827,6 +4183,12 @@ end --function tecLabelBackgroundColor</script>
 function tecSettecNotApproachedCharacter(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.notApproachedCharacter = Geyser.Color.hex(tecColor)
+  runTECRoomObjectCheck(displayToScreen) --refresh room characters window.
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -3837,13 +4199,21 @@ end --function tecLabelBackgroundColor</script>
 function tecSettecApproachedCharacter(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.ApproachedCharacters = Geyser.Color.hex(tecColor)
+  runTECRoomObjectCheck(displayToScreen) --refresh room characters window.
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink does not new line itself.
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
-						<name>tecShowColors()</name>
+						<name>tecColorWindow()</name>
 						<packageName></packageName>
-						<script>-- internal sorting function, sorts first by hue, then luminosity, then value
+						<script>--Creates a window for users to easily select text.
+
+-- internal sorting function, sorts first by hue, then luminosity, then value
 local sortColorsByHue = function(lhs,rhs)
   local lh,ll,lv = unpack(lhs.sort)
   local rh,rl,rv = unpack(rhs.sort)
@@ -3988,23 +4358,30 @@ function tecShowColors(...)
     end
   end
   if i ~= 1 then echo("\n") end
-end</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>tecColorWindow()</name>
-						<packageName></packageName>
-						<script>function tecColorWindow()
+end
+
+function tecColorWindow()
   openUserWindow("Color_Selector")
   clearUserWindow("Color_Selector")
   enableScrollBar("Color_Selector")
   tecShowColors(4)
+  cecho("If the color choice window opened in an odd location "
+  .."it can be moved by left clicking its title bar and dragging it.\n"
+  .."It does not need to be docked at any location, it can free float anywhere "
+  .."in your monitor.\nIt is also fully resizable by clicking and dragging "
+  .."its outer edges.\n")
   cecho("Color_Selector",
     "\nClick a color to add it to the end of the command bar.")
 end --function tecColorWindow()</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
+				<Script isActive="no" isFolder="no">
+					<name>tec Auto Updates</name>
+					<packageName></packageName>
+					<script>--In Data Functions folder.</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>Room Characters</name>
@@ -4094,7 +4471,7 @@ end --function recRoomCharRefreshNotification()</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>New scripttecResetRoomCharacterWindow()</name>
+					<name>tecResetRoomCharacterWindow()</name>
 					<packageName></packageName>
 					<script>function tecResetRoomCharacterWindow()
   clearRoomCharacterWindow() --Room characters window no longer accurate, clear it.
@@ -4437,6 +4814,8 @@ function tecSettingsWindowResize()
 	tecSettingsConsole:resize(tostring(tecSettingsBack:get_width() - 0)
 		, tostring(tecSettingsBack:get_height() - 0))
 	tecSettingsConsole:move (0, 0) --left and top borders
+  
+  tecScrollBarCheck("tecSettingsConsole") --Checks if a scroll bar is needed.
 	
 	if getTECDisplayDebugMode() then --if display debug mode is on
 		debugToDisplay("Room Character Window,"
@@ -4518,7 +4897,8 @@ function tecMapdrawKeepSquare()
     tecMap_back:move(centerAdjustment,0) --Move the map to the center of the map box
 	end --en if width is less than height.
 	
-	echo("tecMap_back","Exits may be slightly\noff until you walk.")
+	echo("tecMap_back","Please walk\nto draw map.")
+  tecMap_back:raise()
 	
 end --end function keep square.
 
@@ -4582,21 +4962,22 @@ GUIframe.addWindow(roomCharacters,"Room Characters","topright")
 
 function tecCRWindowResize()
 	
-	--Resize the back label by 6. We want a 3px border around the entire window
+	--Resize the back label by keeping it square.
 	roomCharacters.back:resize(tostring(roomCharacters:get_width())
 		, tostring(roomCharacters:get_height()))
 	roomCharacters.back:move (0, 0) --left and top borders
 	
-	--Resize the room character window by 6. We want a 3px border around the entire window
+	--Resize the back label by keeping it square.
 	roomCharacters.console:resize(tostring(roomCharacters.back:get_width() - 0)
 		, tostring(roomCharacters.back:get_height() - 0))
 	roomCharacters.console:move (0, 0) --left and top borders
+  tecScrollBarCheck("roomCharacters.console") --check if a scroll bar is needed.
 	
 	if getTECDisplayDebugMode() then --if display debug mode is on
 		debugToDisplay("Room Character Window,"
 			.." roomCharacters.back width: "..roomCharacters.back:get_width()
 			.." roomCharacters.back Height: "..roomCharacters.back:get_height()
-			.." roomCharacters.console Width: "..tecResizedCRHeight:get_width()
+			.." roomCharacters.console Width: "..roomCharacters.console:get_width()
 			.." roomCharacters.console Height: "..roomCharacters.console:get_height()
 			)--end debugToDisplay
 	end --end if display debug is enabled.
@@ -4651,7 +5032,7 @@ tecComWindows.footer = Geyser.Label:new({
   x = 0, --horizontal position
 	y = tabsHeight, --adjusted for tabs
   width = "100%",
-	height = tecSettings.comTextWindowHeight - 3
+	height = tecSettings.comTextWindowHeight
 },tecComWindows.container)
 tecComWindows.footer:setStyleSheet(labelsStyle) --set to default label style
 
@@ -4659,7 +5040,7 @@ tecComWindows.footer:setStyleSheet(labelsStyle) --set to default label style
 for k,v in pairs(tecComWindows.tabs) do
   tecComWindows[v.."tab"] = Geyser.Label:new({
     name = "tecComWindows."..v.."tab",
-		x = 3, --horizontal position 
+		x = 0, --horizontal position 
 		y = 0, --vertical position
 		width = "100%",
 		height = tabsHeight,
@@ -4674,17 +5055,17 @@ for k,v in pairs(tecComWindows.tabs) do
 	--These are the miniconsoles that will hold the text
   tecComWindows[v] = Geyser.MiniConsole:new({ --tecComWindows v will be a tab name.
     name = v, --Issues experienced if I attempt to name them v.."Console"
-  	x = 3, --%horizontally position in parent
+  	x = 0, --%horizontally position in parent
   	y = 0, --%vertical position in parent
   	width = "100%", --% of parent
-  	height = tecSettings.comTextWindowHeight -3, --% of parent
+  	height = tecSettings.comTextWindowHeight - 1, 
 		autoWrap = true, --allows text to wrap if too long
 		fontSize = getTECFont(), --in variables
 		font = getFont(), --get font type from main
-		scrollBar = true,
   },tecComWindows.footer) --attach to footer show they show below tabs
 	tecComWindows[v]:setColor(getBgColor()) --set miniconsoles to main consol BG color 
   tecComWindows[v]:hide() --Hide the tab so they don't layer
+  if tecSettings.showScrollBars then tecComWindows[v]:enableScrollBar() end
 end --end loop create tabs and consoles
 
 function tecComWindows.click(tab) --Choose what happens when a tab is clicked.
@@ -4700,25 +5081,25 @@ tecComWindows[tecComWindows.current]:show()
 function tecComWindowResize()
 	
 	--subtract GUIframe.defaults.resizeHeight from tecComWindows.footer.height 
-	local tecResizedFooterHeight = tecComWindows.container:get_height() - GUIframe.defaults.resizeHeight 
-	local tecResizedFooterWidth = tecComWindows.container:get_width() - 2 --6 the width 2 borders
+	local tecResizedFooterHeight = tecComWindows.container:get_height() - GUIframe.defaults.resizeHeight
+	local tecResizedFooterWidth = tecComWindows.container:get_width()
 	tecComWindows.footer:resize(tecResizedFooterWidth, tecResizedFooterHeight) --resize the footer
-	tecComWindows.footer:move(0,(tabsHeight + 1))
+	tecComWindows.footer:move(0,(tabsHeight))
 	
 	--reflect changes in tecSettings so there is a chance to save the size.
 	tecSettings.comTextWindowHeight = tecResizedFooterHeight
 	
-	--resize all of the miniconsoles so we have the 3px border on the bottom.
+	--resize all of the miniconsoles
 	for k,v in pairs(tecComWindows.tabs) do 
-  	tecComWindows[v]:move(1, 0)
-  	tecComWindows[v]:resize(tecResizedFooterWidth - 2, tecResizedFooterHeight - 1)
+  	tecComWindows[v]:move(0, 0)
+  	tecComWindows[v]:resize(tecResizedFooterWidth, tecResizedFooterHeight - 1)
 	end --for tecComWindows.tabs
 	
 	if getTECDisplayDebugMode() then --if display debug mode is on
 		debugToDisplay("Communication Window, tecComWindows.footer Height: "..tecComWindows.footer:get_height()
 			.." tecComWindows.ctainer Height: "..tecComWindows.container:get_height()
 			.." New tecComWindows.footer Height: "..tecResizedFooterHeight
-			.." mini consoles width: "..(tecResizedFooterWidth - 2).."%"
+			.." mini consoles width: "..(tecResizedFooterWidth - 0).."%"
 			)--end debugToDisplay
 	end --end if display debug is enabled.
 
@@ -4994,6 +5375,18 @@ end --function tecExitHandler
 
 --https://wiki.mudlet.org/w/Manual:Event_Engine#sysExitEvent
 registerAnonymousEventHandler("sysExitEvent", "tecExitHandler")</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>Post Initilization</name>
+				<packageName></packageName>
+				<script>--For changing default settings that would be time consuming to change during 
+
+--Enable or disable scroll bars. Dependant on user preference.
+tecSetScrollBars(tecSettings.showScrollBars, false)
+
+--redraw windows 
+guiChange()</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>

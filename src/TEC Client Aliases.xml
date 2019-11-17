@@ -160,6 +160,20 @@ clearRoomCharacterWindow()
 				<packageName></packageName>
 				<regex>^display refresh settings$</regex>
 			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display enable scrollbars</name>
+				<script>tecSetScrollBars(true) --enables scroll bars throughout this project.</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display enable scrollbars$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display disable scrollbars</name>
+				<script>tecSetScrollBars(false) --Disable scroll bars throughout this project.</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display disable scrollbars$</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>tecclient</name>
@@ -232,7 +246,15 @@ tecClientReset(true)</script>
 --matches[2] is the word in () in the pattern</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^font (.*)</regex>
+					<regex>^font (\d+)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>font tab #</name>
+					<script>tecClientSetTabFontSize(tonumber(matches[2]))
+--matches[2] is the word in () in the pattern</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^font tab (.*)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>font</name>
@@ -294,7 +316,7 @@ tecUpdate.saveVersions() --Saves versions table to file.</script>
 				<regex></regex>
 				<Alias isActive="yes" isFolder="no">
 					<name>tecclient colors</name>
-					<script>tecColorWindow()</script>
+					<script>tecColorWindow() --Open floating window to choose colors with.</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^tecclient colors$</regex>
@@ -305,6 +327,13 @@ tecUpdate.saveVersions() --Saves versions table to file.</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^tecclient change colors$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>tecclient change colors commands</name>
+					<script>tecClientChangeColorsList() --List commands to change display colors.</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^tecclient change colors commands$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>tecclient windows background color</name>
