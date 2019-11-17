@@ -5,7 +5,7 @@
 $binpath = $env:TEMP + "\TECMudletInstallation"
 $TECClientURL = "https://github.com/TheEternalCitizens/mudlet-integration/releases/download/tecLatest/The.Eternal.City.zip"
 $TECClientZIP = $binpath + "\The.Eternal.City.zip"
-$mudletInstallerURL = "https://www.mudlet.org/download/Mudlet-4.2.1-windows-installer.exe"
+$mudletInstallerURL = "https://www.mudlet.org/download/Mudlet-4.3.0-windows-installer.exe"
 $mudletInstaller = "$binpath\mudletInstaller.msi"
 $mudletProfilePath = $env:USERPROFILE + "\.config\mudlet\profiles"
 $TECProfileVerificationPath = $mudletProfilePath + "\The Eternal City\settings"
