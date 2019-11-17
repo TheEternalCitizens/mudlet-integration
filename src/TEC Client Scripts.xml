@@ -30,8 +30,8 @@ function tecUpdate.config() --Create variables used for updates
   if not io.exists(tecUpdate.versionsRespitory) then --if folder does not exists
     lfs.mkdir(tecUpdate.versionsRespitory) --create the folder
   end --if tecUpdate.versionsRespitory not exist
-  tecUpdate.version = ".01" --current client version
-  tecUpdate.versions = {".01"} --List of all versions, old and current
+  tecUpdate.version = "beta.0.01" --current client version
+  tecUpdate.versions = {tecUpdate.version} --List of all versions, old and current
   tecUpdate.download_path = "https://github.com/TheEternalCitizens/mudlet-integration/releases/download/tecLatest/"
   tecUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
   
@@ -482,7 +482,8 @@ function tecConfigThemes() --configure and initalize settings for tabs.
   ]]
   
   --This is now tabs text looks
-  tabsFontStyle = [[&lt;center&gt;&lt;p style="font-size:]]..tecSettings.tecTabsFontSize..[[px; color:lightgray"&gt;]]
+  tabsFontStyle = [[&lt;center&gt;&lt;p style="font-size:]]
+    ..tecSettings.tecTabsFontSize..[[px; color:lightgray"&gt;]]
 
 labelsStyle = [[
 	QLabel{

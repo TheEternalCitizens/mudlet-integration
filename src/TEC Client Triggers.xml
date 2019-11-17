@@ -486,9 +486,11 @@ deleteLine() --remove line from main console. line variable remains unchanged.</
 					<colorTriggerBgColor>#000000</colorTriggerBgColor>
 					<regexCodeList>
 						<string>SKOOT 8 Fatigue,</string>
+						<string>SKOOT 8 Fatigue,100</string>
 					</regexCodeList>
 					<regexCodePropertyList>
 						<integer>2</integer>
+						<integer>3</integer>
 					</regexCodePropertyList>
 				</Trigger>
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
