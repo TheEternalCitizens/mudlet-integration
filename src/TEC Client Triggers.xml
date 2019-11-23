@@ -636,21 +636,23 @@ if line == "&lt;/pre&gt;&lt;pre&gt;&lt;font size=+1&gt;&lt;b&gt;Checking the app
 	or line == "&lt;hr&gt;" then
   --Delete main's line if we are not displaying it to screen
   if not tecRoomObjects.displayToScreen then deleteLine() end
-
 	
 --pull character name from output.
 elseif line:match("^%d+:") then --if line starts with "#: "
 	
 	--holds check if characting being checked is engaging our players character
-	local characterEngaged = nil
+	local characterStatus = nil
 	local tecCharacterShort = nil
 	--Keep track of how many times a simular target has been found. Needed to accurately interact
 	--with targets that have the same shortname. Starts at 1 because 1 is the current short name
 	local tecNameMatches = 1
 	
 	--pulls the match text from the line using a string match
-	tecRoomObjects.characters[tecRoomObjects.lc], characterEngaged = line:match("^%d+:([ %a+%-?%a?,?]+)([%s%(]?)")
-	
+	--tecRoomObjects.characters[tecRoomObjects.lc], characterStatus = line:match("^%d+:([ %a+%-?%a?,?]+)([%s%(]?)")
+	tecRoomObjects.characters[tecRoomObjects.lc], characterStatus
+  --= line:match("^%d+:([ %a+%-?%a?,?]+)([%(%a+%)]?)")
+  = line:match("^%d+:([ %a+%-?%a?,?]+)%s?([%s?%(%a%)]*)")
+  
 	--remove the space at the start of the character name. We need those other spaces...
 	tecRoomObjects.characters[tecRoomObjects.lc] = tecRoomObjects.characters[tecRoomObjects.lc]:sub(2)
 
@@ -675,18 +677,26 @@ elseif line:match("^%d+:") then --if line starts with "#: "
   	debugToDisplay("Room Objects, Character: "
   		..tecRoomObjects.characters[tecRoomObjects.lc]
   		.." Loop Count: "..tecRoomObjects.lc
-  		.." Engaged: "..characterEngaged
-  		.." Character Short Name: "..tecCharacterShort
+  		.." Status: "..characterStatus
+  		.." Short Name: "..tecCharacterShort
   	) --end displayToDebug
   end --end if debug is on.
 
 	--This ( only occurs if your character is approached. If your character is approached.
-	if characterEngaged == "(" then
+	if characterStatus:match("%(engaging%)") then
     --Last character of an engaged name will be a space, this removes it.
     tecRoomObjects.characters[tecRoomObjects.lc] = tecRoomObjects.characters[tecRoomObjects.lc]:sub(1,-2)
+    
+    --check if the character is (unconscious)
+    if characterStatus:match("unconscious") then 
+      hecho("roomCharacters.console",tecSettings.ApproachedCharactersColor.."KO: ")
+    else --if they are not unonscious prefice with a _ instead
+      hecho("roomCharacters.console",tecSettings.ApproachedCharactersColor.."_")
+    end
+    
 		--create a right clickable list with the characters full name.
-		hechoPopup("roomCharacters.console",tecSettings.ApproachedCharacters
-      .."_"..tecRoomObjects.characters[tecRoomObjects.lc].."_\n",
+		hechoPopup("roomCharacters.console",tecSettings.ApproachedCharactersColor
+      ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
 		{
 		--apprachedCommandList is list of commands for characters that have approached yours
 		--tecNameMatches is now many times something with the same short name was previously found
@@ -706,9 +716,16 @@ elseif line:match("^%d+:") then --if line starts with "#: "
 		tecSettings.approachedCommandHelp[5],
 		tecSettings.approachedCommandHelp[6]}, true)
 	else
+    --check if the character is (unconscious), prefice with KO:
+    if characterStatus:match("unconscious") then 
+      hecho("roomCharacters.console",tecSettings.ApproachedCharactersColor.."KO: ")
+    else --if they are not unonscious prefice with a _ instead
+      hecho("roomCharacters.console",tecSettings.notApproachedCharacterColor.."_")
+    end
+    
 		--characters that are not approached to the players
-		hechoPopup("roomCharacters.console",tecSettings.notApproachedCharacter
-      .."_"..tecRoomObjects.characters[tecRoomObjects.lc].."_\n",
+		hechoPopup("roomCharacters.console",tecSettings.notApproachedCharacterColor
+      ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
 		{
 		--list of commands for characters not approached to yours.
 		--refer to approached logic explination above for reference.
@@ -727,9 +744,9 @@ elseif line:match("^%d+:") then --if line starts with "#: "
 		tecSettings.commandHelp[5],
 		tecSettings.commandHelp[6]}, true)
 	end --end if else characterEnaged == "("
-	
+  
   --Attempting to resolve issue with window not filling
-  echo("roomCharacters.console","")
+  hecho("roomCharacters.console","\n")
   
   tecScrollBarCheck("roomCharacters.console") --check if a scroll bar is needed.
   
@@ -739,28 +756,28 @@ elseif line:match("^%d+:") then --if line starts with "#: "
 	--iterate our loop counter
 	tecRoomObjects.lc = tecRoomObjects.lc + 1
 	
-  elseif line == "&lt;/pre&gt;" then --end of ac . command found.
-  	--disable room check for characters. This is the end of the check.
-  	setTECRoomCheckActive(false)
-    deleteLine() --Make is so line does not appear in main console.
-    
-  --if it is dark set RoomCheck to false so it does not remain active.
-  elseif line == "It is too dark to see anything." then
-    setTECRoomCheckActive(false) --disable room check for characters.
-    clearRoomCharacterWindow()
-    cecho("roomCharacters.console", "It is too dark to see anything.")
-    
-  --if it is dark set RoomCheck to false so it does not remain active.
-  elseif line == "You cannot do that while stunned" then
-    setTECRoomCheckActive(false) --disable room check for characters.
-    clearRoomCharacterWindow()
-    cecho("roomCharacters.console", "You cannot do that while stunned")
-    
-  --if it is dark set RoomCheck to false so it does not remain active.
-  elseif line == "You cannot do that while unconcious." then
-    setTECRoomCheckActive(false) --disable room check for characters.
-    clearRoomCharacterWindow()
-    cecho("roomCharacters.console", "You cannot do that while unconcious.")
+elseif line == "&lt;/pre&gt;" then --end of ac . command found.
+	--disable room check for characters. This is the end of the check.
+	setTECRoomCheckActive(false)
+  deleteLine() --Make is so line does not appear in main console.
+  
+--if it is dark set RoomCheck to false so it does not remain active.
+elseif line == "It is too dark to see anything." then
+  setTECRoomCheckActive(false) --disable room check for characters.
+  clearRoomCharacterWindow()
+  cecho("roomCharacters.console", "It is too dark to see anything.")
+  
+--if player is stunned set RoomCheck to false so it does not remain active.
+elseif line == "You can't do that while stunned." then
+  setTECRoomCheckActive(false) --disable room check for characters.
+  clearRoomCharacterWindow()
+  cecho("roomCharacters.console", "You can't do that while stunned.")
+  
+--if player is unconcious RoomCheck to false so it does not remain active.
+elseif line == "You can't do that while unconcious." then
+  setTECRoomCheckActive(false) --disable room check for characters.
+  clearRoomCharacterWindow()
+  cecho("roomCharacters.console", "You can't do that while unconcious.")
 
 end --if line has a ac . character in it.
 
