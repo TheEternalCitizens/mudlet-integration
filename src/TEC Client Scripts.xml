@@ -4382,6 +4382,28 @@ end --function tecColorWindow()</script>
 					<script>--In Data Functions folder.</script>
 					<eventHandlerList />
 				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecVersionCheck()</name>
+					<packageName></packageName>
+					<script>--Reference: https://www.tutorialspoint.com/lua/lua_file_io.htm
+
+function tecVersionCheck()
+
+  downloadFile(tecSettingsFolder.."/latest.lua", 
+    [[https://api.github.com/repos/TheEternalCitizens/mudlet-integration/releases/latest]])
+    
+  tecVersionFile = io.open(tecSettingsFolder.."/latest.lua", "r") --open the file in read only mode
+  tecVersionURLString = tecVersionFile:read("*a") --read the entire file
+  tecVersionFile:close() --close the file read.
+  
+  tecVersionURLTable = yajl.to_value(tecVersionURLString) --copy the versions URL into a table
+  
+
+end --function tecVersionCheck
+
+tecVersionCheck()</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>Room Characters</name>
