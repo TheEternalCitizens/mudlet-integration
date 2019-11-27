@@ -10,7 +10,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 This is step by step series of examples that tell you how to get a development environment running.
 
-Follow the git and github steps outlined [here](./CONTRIBUTING.md#How-to-use-git-and-github).
+Follow the git and github steps outlined [here](./CONTRIBUTING.md#how-to-use-git-and-github).
 
 Install [mudlet](https://www.mudlet.org/download/). Open it up, and add a new profile with `tec.skotos.net` as the host and `6730` as the port. Do not enter a character name and password.
 
