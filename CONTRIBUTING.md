@@ -5,7 +5,7 @@ email, or any other method with the owners of this repository before making a ch
 
 Please note we have a code of conduct, please follow it in all your interactions with the project.
 
-## How use git and github
+## How to use git and github
 
 We use [git](https://hackernoon.com/understanding-git-fcffd87c15a3) to track our file changes when developing. If you are new to git, consider familiarizing yourself with some git basics by reading [this](https://hackernoon.com/understanding-git-fcffd87c15a3) and [this](https://hackernoon.com/understanding-git-2-81feb12b8b26).
 
