@@ -10,7 +10,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 This is step by step series of examples that tell you how to get a development environment running.
 
-We use [git](https://hackernoon.com/understanding-git-fcffd87c15a3) to track our file changes when developing. If you are new to git, consider downloading [github desktop](https://desktop.github.com/), and familiarize yourself with some git basics [here](https://hackernoon.com/understanding-git-fcffd87c15a3) and [here](https://hackernoon.com/understanding-git-2-81feb12b8b26). Once you're set up, clone this project to your machine.
+Follow the git and github steps outlined [here](./CONTRIBUTING.md#How-to-use-git-and-github).
 
 Install [mudlet](https://www.mudlet.org/download/). Open it up, and add a new profile with `tec.skotos.net` as the host and `6730` as the port. Do not enter a character name and password.
 

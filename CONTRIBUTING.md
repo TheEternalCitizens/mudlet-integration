@@ -5,6 +5,21 @@ email, or any other method with the owners of this repository before making a ch
 
 Please note we have a code of conduct, please follow it in all your interactions with the project.
 
+## How use git and github
+
+We use [git](https://hackernoon.com/understanding-git-fcffd87c15a3) to track our file changes when developing. If you are new to git, consider familiarizing yourself with some git basics by reading [this](https://hackernoon.com/understanding-git-fcffd87c15a3) and [this](https://hackernoon.com/understanding-git-2-81feb12b8b26).
+
+1. Make [an account with github](https://github.com/join) and [login](https://github.com/login)
+1. Once you're logged in, fork the repository by pressing this button:
+![image](https://user-images.githubusercontent.com/3466499/69755084-71dd1d80-1125-11ea-8b35-df38f48deec2.png)
+1. Download and install [github desktop](https://desktop.github.com/)
+1. [Clone your fork](https://help.github.com/en/desktop/contributing-to-projects/cloning-a-repository-from-github-desktop)
+1. Do not work on `master`, instead [make a new branch](https://help.github.com/en/desktop/contributing-to-projects/creating-a-branch-for-your-work)
+1. Make your changes. Keep them small and focused. Make them only do **one thing**. If you have many things you want to do, do each of them on a separate branch. If you need some stuff from one branch on another, **wait** and do these changes after we merge your initial changes to `master`.
+1. [Commit your changes](https://help.github.com/en/desktop/contributing-to-projects/committing-and-reviewing-changes-to-your-project). Commit early, commit often. Make lots of little commits with clear messages explaining why you did something.
+1. [Create a pull request](https://help.github.com/en/desktop/contributing-to-projects/creating-a-pull-request) from your fork to the main repository. In the pull request description, write an explanation of what you're trying to accomplish.
+
+
 ## Pull Request Process
 
 1. Ensure any install or build dependencies are removed before the end of the layer when doing a
