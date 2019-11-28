@@ -30,7 +30,7 @@ function tecUpdate.config() --Create variables used for updates
   if not io.exists(tecUpdate.versionsRespitory) then --if folder does not exists
     lfs.mkdir(tecUpdate.versionsRespitory) --create the folder
   end --if tecUpdate.versionsRespitory not exist
-  tecUpdate.version = "beta.0.01" --current client version
+  tecUpdate.version = "beta0.1.01" --current client version
   tecUpdate.versions = {tecUpdate.version} --List of all versions, old and current
   tecUpdate.download_path = "https://github.com/TheEternalCitizens/mudlet-integration/releases/download/tecLatest/"
   tecUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
@@ -51,6 +51,23 @@ tecUpdate.config() --run it on startup so data is configured.
 
 --Download file used to check version. Called on automatically on startup
 --or by clicking update in settings box.
+function tecUpdate.checkVersion()
+  if tecUpdate.update_timer then --if the timer exists
+    killTimer(tecUpdate.update_timer) --stop the timer
+    tecUpdate.update_timer = nil --set the timer to nil
+  end -- if tecUpdate.update_timer exists
+  debugToDisplay(
+    "\nUpdate: Version file Downloading from: "
+      ..tecUpdate.download_path .. tecUpdate.versionsFile
+      .."\nUpdate: downloading version file to: "..tecUpdate.versionsRespitory
+      ..tecUpdate.versionsFile
+  ) --end debugToDisplay
+  downloading = true --Used during sysDownloadDone event handler in this script
+  --download the latest version file to the users profile
+  downloadFile(tecUpdate.versionsRespitory .. tecUpdate.versionsFile, 
+    tecUpdate.download_path .. tecUpdate.versionsFile) --second half of downloadFile
+end --tecUpdate.checkVersion
+
 function tecUpdate.checkVersion()
   if tecUpdate.update_timer then --if the timer exists
     killTimer(tecUpdate.update_timer) --stop the timer
@@ -152,28 +169,28 @@ local function update_version() --install the new client after download was comp
 end --function update_version
 
 --Make it easy for devs to create and manage scriptNames files.
-function tecUpdate.saveScriptNames()
-  tecUpdate.config() --Creates the script names table
+--function tecUpdate.saveScriptNames()
+--  tecUpdate.config() --Creates the script names table
   --Save the script names table to file.
-  table.save(tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile, tecUpdate.scriptNames) 
-  cecho("Save script to: "..tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile.."\n")
-  cechoLink("&lt;:blue&gt;Open Directory", 
-  [[tecOpenDirectory(tecUpdate.versionsRespitory)]],
-  "Open folder "..tecUpdate.scriptNamesFile.." is in", true)
-  cecho(" "..tecUpdate.scriptNamesFile.." is in.\n")
-end --function tecUpdate.saveScriptNames
+--  table.save(tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile, tecUpdate.scriptNames) 
+--  cecho("Save script to: "..tecUpdate.versionsRespitory..tecUpdate.scriptNamesFile.."\n")
+--  cechoLink("&lt;:blue&gt;Open Directory", 
+--  [[tecOpenDirectory(tecUpdate.versionsRespitory)]],
+--  "Open folder "..tecUpdate.scriptNamesFile.." is in", true)
+--  cecho(" "..tecUpdate.scriptNamesFile.." is in.\n")
+--end --function tecUpdate.saveScriptNames
 
 --Make it easy for devs to create and manage versions files.
-function tecUpdate.saveVersions()
-  tecUpdate.config() --Creates the versions table
+--function tecUpdate.saveVersions()
+--  tecUpdate.config() --Creates the versions table
   --Save the versions table to file.
-  table.save(tecUpdate.versionsRespitory..tecUpdate.versionsFile, tecUpdate.versions)
-  cecho("Save script to: "..tecUpdate.versionsRespitory..tecUpdate.versionsFile.."\n")
-  cechoLink("&lt;:blue&gt;Open Directory", 
-  [[tecOpenDirectory(tecUpdate.versionsRespitory)]],
-  "Open folder "..tecUpdate.versionsFile.." is in", true)
-  cecho(" "..tecUpdate.versionsFile.." is in.\n")
-end --function tecUpdate.saveScriptNames
+--  table.save(tecUpdate.versionsRespitory..tecUpdate.versionsFile, tecUpdate.versions)
+--  cecho("Save script to: "..tecUpdate.versionsRespitory..tecUpdate.versionsFile.."\n")
+--  cechoLink("&lt;:blue&gt;Open Directory", 
+--  [[tecOpenDirectory(tecUpdate.versionsRespitory)]],
+--  "Open folder "..tecUpdate.versionsFile.." is in", true)
+--  cecho(" "..tecUpdate.versionsFile.." is in.\n")
+--end --function tecUpdate.saveScriptNames
 
 function tecUpdate.eventHandler(event, ...)
   if event == "sysDownloadDone" and downloading then
@@ -219,7 +236,7 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   
   --folder where settings are kept. 
   --tecUpdate.versionsRespitory is in tec Auto Updates script
-  tecSettingsFolder = tecUpdate.versionsRespitory
+  tecSettingsFolder = getMudletHomeDir().."/settings/"
   
   --set primary text color in game
   --needs to be a hex number WITH # before it.
@@ -621,6 +638,71 @@ tecExit["nw"].width = nenwExitIconSize
 tecExit["nw"].height = nenwExitIconSize
 end --function tecConfigThemes
 tecConfigThemes() --configure tabs now.</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>Tec Git AutoUpdates</name>
+				<packageName></packageName>
+				<script>tecGitUpdate = {}
+
+function tecGitUpdate.config() --Create variables used for updates
+  --github latest release URL
+  tecGitUpdate.latestJSONURL = [[https://api.github.com/repos/TheEternalCitizens/mudlet-integration/releases/latest]]
+  tecGitUpdate.localRespitory = getMudletHomeDir().."/settings/" --local directory for source files
+  if not io.exists(tecGitUpdate.localRespitory) then --if folder does not exists
+    lfs.mkdir(tecGitUpdate.localRespitory) --create the folder
+    debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
+  end --if tecGitUpdate.localRespitory not exist
+  tecGitUpdate.latestJSONFileName = "ParthiaLatest.json" --local file name REST API latest JSON
+  tecGitUpdate.localVersion = "0.1.0" --Parthia version player is currently using
+  debugToDisplay("Update: Config ran.\n\tlatestJSONURL: "..tecGitUpdate.latestJSONURL
+    .."\n\tlocalRespitory: "..tecGitUpdate.localRespitory
+    .."\n\tlatestJSONFileName: "..tecGitUpdate.latestJSONFileName
+    .."\n\tLocal Parthia version: "..tecGitUpdate.localVersion)
+end --function tecUpdate.config()
+tecGitUpdate.config() --run the config on startup.
+
+--downloads the github JSON REST API JSON file
+function tecGitUpdate.downloadLatestJSON()
+    debugToDisplay("Update: Downloading "..tecGitUpdate.latestJSONURL
+    .."\n\tTo: "..tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName)
+  downloadFile(tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName,
+    tecGitUpdate.latestJSONURL) --download the projects latest release JSON info file.
+end --function tecVersionCheck
+--after the JSON files is downloaded tecGitUpdate.eventHandler will run compareVersions
+
+tecGitUpdate.downloadLatestJSON() --don't forget to remove.
+
+--Check if the local Parthia version matches the latest releease.
+local function compareVersions()
+  --open the local github latest release JSON file in read only mode
+  local latestJSONFile = 
+    io.open(tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName, "r")
+  local latestJSONString = latestJSONFile:read("*a") --read the entire file to a string
+  latestJSONFile:close() --close the file
+  debugToDisplay("Update: Opened file: "..tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName
+    .."\n\tIt contained: "..latestJSONString)
+  
+  --Convert github release JSON into a table
+  tecGitUpdate.latestJSONTable = yajl.to_value(latestJSONString)
+end --function compareVersions
+
+function tecGitUpdate.eventHandler(event, ...)
+  if event == "sysDownloadDone" then
+    local file = arg[1] -- in this case name of file downloaded
+    if string.ends(file,tecGitUpdate.latestJSONFileName) then --download is version check  file
+      debugToDisplay("Update sysDownloadDone Event: Download: "..file
+        .."\n\tdownloaded, check_version() called.")
+      compareVersions() --Use downloaded JSON file to check if latest version is installed
+    else
+      debugToDisplay("Update sysDownloadDone Event: Downloaded file: "..file
+        .."\n\tWas NOT caught by event handler.")
+    end --elseif file downloaded is new script
+  end --if event == elseif
+end --function tecUpdate.eventHandler()
+
+registerAnonymousEventHandler("sysDownloadDone", "tecGitUpdate.eventHandler")
+</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
@@ -4380,28 +4462,6 @@ end --function tecColorWindow()</script>
 					<name>tec Auto Updates</name>
 					<packageName></packageName>
 					<script>--In Data Functions folder.</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>tecVersionCheck()</name>
-					<packageName></packageName>
-					<script>--Reference: https://www.tutorialspoint.com/lua/lua_file_io.htm
-
-function tecVersionCheck()
-
-  downloadFile(tecSettingsFolder.."/latest.lua", 
-    [[https://api.github.com/repos/TheEternalCitizens/mudlet-integration/releases/latest]])
-    
-  tecVersionFile = io.open(tecSettingsFolder.."/latest.lua", "r") --open the file in read only mode
-  tecVersionURLString = tecVersionFile:read("*a") --read the entire file
-  tecVersionFile:close() --close the file read.
-  
-  tecVersionURLTable = yajl.to_value(tecVersionURLString) --copy the versions URL into a table
-  
-
-end --function tecVersionCheck
-
-tecVersionCheck()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
