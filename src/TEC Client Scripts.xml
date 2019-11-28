@@ -354,6 +354,8 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
     "Room Characters", "TEC Map" }
 
 	tecDebugSaveDir = getMudletHomeDir().."\/DebugingFiles\/"
+  
+  tecSettings.betaTester = false
 
 	if displayToScreen then echo("Client settings set to default.\n") end
 
@@ -638,71 +640,6 @@ tecExit["nw"].width = nenwExitIconSize
 tecExit["nw"].height = nenwExitIconSize
 end --function tecConfigThemes
 tecConfigThemes() --configure tabs now.</script>
-				<eventHandlerList />
-			</Script>
-			<Script isActive="yes" isFolder="no">
-				<name>Tec Git AutoUpdates</name>
-				<packageName></packageName>
-				<script>tecGitUpdate = {}
-
-function tecGitUpdate.config() --Create variables used for updates
-  --github latest release URL
-  tecGitUpdate.latestJSONURL = [[https://api.github.com/repos/TheEternalCitizens/mudlet-integration/releases/latest]]
-  tecGitUpdate.localRespitory = getMudletHomeDir().."/settings/" --local directory for source files
-  if not io.exists(tecGitUpdate.localRespitory) then --if folder does not exists
-    lfs.mkdir(tecGitUpdate.localRespitory) --create the folder
-    debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
-  end --if tecGitUpdate.localRespitory not exist
-  tecGitUpdate.latestJSONFileName = "ParthiaLatest.json" --local file name REST API latest JSON
-  tecGitUpdate.localVersion = "0.1.0" --Parthia version player is currently using
-  debugToDisplay("Update: Config ran.\n\tlatestJSONURL: "..tecGitUpdate.latestJSONURL
-    .."\n\tlocalRespitory: "..tecGitUpdate.localRespitory
-    .."\n\tlatestJSONFileName: "..tecGitUpdate.latestJSONFileName
-    .."\n\tLocal Parthia version: "..tecGitUpdate.localVersion)
-end --function tecUpdate.config()
-tecGitUpdate.config() --run the config on startup.
-
---downloads the github JSON REST API JSON file
-function tecGitUpdate.downloadLatestJSON()
-    debugToDisplay("Update: Downloading "..tecGitUpdate.latestJSONURL
-    .."\n\tTo: "..tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName)
-  downloadFile(tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName,
-    tecGitUpdate.latestJSONURL) --download the projects latest release JSON info file.
-end --function tecVersionCheck
---after the JSON files is downloaded tecGitUpdate.eventHandler will run compareVersions
-
-tecGitUpdate.downloadLatestJSON() --don't forget to remove.
-
---Check if the local Parthia version matches the latest releease.
-local function compareVersions()
-  --open the local github latest release JSON file in read only mode
-  local latestJSONFile = 
-    io.open(tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName, "r")
-  local latestJSONString = latestJSONFile:read("*a") --read the entire file to a string
-  latestJSONFile:close() --close the file
-  debugToDisplay("Update: Opened file: "..tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName
-    .."\n\tIt contained: "..latestJSONString)
-  
-  --Convert github release JSON into a table
-  tecGitUpdate.latestJSONTable = yajl.to_value(latestJSONString)
-end --function compareVersions
-
-function tecGitUpdate.eventHandler(event, ...)
-  if event == "sysDownloadDone" then
-    local file = arg[1] -- in this case name of file downloaded
-    if string.ends(file,tecGitUpdate.latestJSONFileName) then --download is version check  file
-      debugToDisplay("Update sysDownloadDone Event: Download: "..file
-        .."\n\tdownloaded, check_version() called.")
-      compareVersions() --Use downloaded JSON file to check if latest version is installed
-    else
-      debugToDisplay("Update sysDownloadDone Event: Downloaded file: "..file
-        .."\n\tWas NOT caught by event handler.")
-    end --elseif file downloaded is new script
-  end --if event == elseif
-end --function tecUpdate.eventHandler()
-
-registerAnonymousEventHandler("sysDownloadDone", "tecGitUpdate.eventHandler")
-</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
@@ -4462,6 +4399,156 @@ end --function tecColorWindow()</script>
 					<name>tec Auto Updates</name>
 					<packageName></packageName>
 					<script>--In Data Functions folder.</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>Tec Git AutoUpdates</name>
+					<packageName></packageName>
+					<script>tecGitUpdate = {}
+
+--start of section dedicated for functions used by update process.
+--To understand the flow of updates you will need to scroll past these.
+--There will be a comment stating when update flow starts.
+
+function tecGitUpdate.config() --Create variables used for updates
+  --github latest release URL
+  --tecGitUpdate.latestJSONURL = [[https://api.github.com/repos/TheEternalCitizens/mudlet-integration/releases/latest]]
+  tecGitUpdate.latestJSONURL = [[https://api.github.com/repos/TheEternalCitizens/mudlet-integration/releases]]
+  tecGitUpdate.localRespitory = getMudletHomeDir().."/settings/" --local directory for source files
+  if not io.exists(tecGitUpdate.localRespitory) then --if folder does not exists
+    lfs.mkdir(tecGitUpdate.localRespitory) --create the folder
+    debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
+  end --if tecGitUpdate.localRespitory not exist
+  tecGitUpdate.latestJSONFileName = "ParthiaLatest.json" --local file name REST API latest JSON
+  tecGitUpdate.localVersion = "0.1.1" --Parthia version player is currently using
+  --tecGitUpdate.betaTester = tecSettings.betaTester --notifies update if player is beta tester.
+  --used to notify update process what release will be update, here for reference only
+  tecGitUpdate.releaseIndex = 0
+  
+  debugToDisplay("Update: Config ran.\n\tlatestJSONURL: "..tecGitUpdate.latestJSONURL
+    .."\n\tlocalRespitory: "..tecGitUpdate.localRespitory
+    .."\n\tlatestJSONFileName: "..tecGitUpdate.latestJSONFileName
+    .."\n\tLocal Parthia version: "..tecGitUpdate.localVersion)
+end --function tecUpdate.config()
+tecGitUpdate.config() --run the config on startup.
+
+--Used to easily change update notification. There are multiple instances where
+--Parthia notifies player an update is available.
+local function updateAvailable(updateBody)
+  cecho("An update is available. The new features it offers are: \n\t")
+  cecho(updateBody)
+  cecho("\n&lt;:maroon&gt;To update now, please run: ")
+  cechoLink("&lt;:blue&gt;tecclient update", --link text to display
+    [[tecUpdate.downloadScriptsNames()]], --link command to run
+    "Update game client", true) --link tool tip for mouse hover
+  echo("\n") --cechoLinks don't cause the window to autoscroll.
+end --function updateAvailable
+
+--Search for latest nonbeta release or release that is NOT a prerelease
+--function is here to reduce complexity of function that calls it.
+local function releaseSearch()
+  if tecGitUpdate.latestJSONTable[1].name then --if the table exists
+    --debugc("gitUpdate release search, JSON table exists.")
+    
+    --loop through the JSON table
+    for index, releaseData in ipairs(tecGitUpdate.latestJSONTable) do
+      --debugc("gitUpdate release search, searching index: "..tostring(index))
+      debugToDisplay("gitUpdate release search, searching index: "..tostring(index))
+      --Find the latest release that is NOT a prerelease.
+      if not releaseData.prerelease then --if the release is not a prerelease
+        --debugc("gitUpdate release search, found latest release at: "..tostring(index))
+        debugToDisplay("gitUpdate release search, found latest release at: "..tostring(index)
+          .."\n\tRelease tab_name: "..releaseData.tag_name
+          .."\n\tLocal release: "..tecGitUpdate.localVersion)
+        if releaseData.tag_name ~= tecGitUpdate.localVersion then
+          updateAvailable(releaseData.body) --notify player an update is available
+          return index --Notify update what release to update also stop the check.
+        end --if releaseData.prerelease.tag_name ~= tecGitUpdate.localVersion
+      end --if releaseData.prerelease == "false"
+    end --for
+  else --if the JSON table does NOT exist.
+    debugToDisplay("Update: Error, JSON to table not found during release search.")
+    echo("Unable to detect new releases. Please contact a developer with: ")
+    cechoLink("tecSettingsConsole",
+      "&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
+      [[tecReportIssues()]],
+      "Report issues or bugs", true)
+    return --error found stop update.
+  end --if tecGitUpdate.latestJSONTable[1].name exists
+end --function releaseSearch
+
+--Here moving forward if you would like to understand the flow of updates
+--it starts here.
+
+--downloads the github JSON REST API JSON file
+function tecGitUpdate.downloadLatestJSON()
+    debugToDisplay("Update: Downloading "..tecGitUpdate.latestJSONURL
+    .."\n\tTo: "..tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName)
+  downloadFile(tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName,
+    tecGitUpdate.latestJSONURL) --download the projects latest release JSON info file.
+end --function tecVersionCheck
+--after the JSON files is downloaded tecGitUpdate.eventHandler will run compareVersions
+
+tecGitUpdate.downloadLatestJSON() --don't forget to remove.
+
+--check if version in use is the latest released
+--If player is beta test we compare the latest release both prerelease and release 
+--If standard player we look for latest release not prerelease
+local function compareVersions()
+  --open the local github latest release JSON file in read only mode
+  local latestJSONFile = 
+    io.open(tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName, "r")
+  local latestJSONString = latestJSONFile:read("*a") --read the entire file to a string
+  latestJSONFile:close() --close the file
+  --Convert github release JSON into a table
+  tecGitUpdate.latestJSONTable = yajl.to_value(latestJSONString)
+  if tecGitUpdate.latestJSONTable[1].name then --if the table was made.
+    debugToDisplay("Update: Opened file: "..tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName
+      .."\n\tIt contained: "..latestJSONString
+      .."\n\tIt was successfully converted to a table.")
+  else --if the table was not successfully made we can not continue. Notify player.
+    debugToDisplay("Update: Error, JSON to table conversion unsuccessfull.\n\tOpened file: "
+      ..tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName
+      .."\n\tIt contained: "..latestJSONString)
+    echo("Unable to detect new releases. Please contact a developer with: ")
+    cechoLink("tecSettingsConsole",
+      "&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
+      [[tecReportIssues()]],
+      "Report issues or bugs", true)
+    return --error found stop update.
+  end --tecGitUpdate.latestJSONTable exists
+  
+  --Look the table for the latest non beta release.
+  if tecGitUpdate.betaTester then --if player is a beta tester install latest release   
+    --if latest release tag_name does not match local version number.
+    debugToDisplay("Update: Release installed: "..tecGitUpdate.localVersion
+      .."\n\tLatest release: tecGitUpdate.latestJSONTable[1].tag_name")
+    if tecGitUpdate.latestJSONTable[1].tag_name ~= tecGitUpdate.localVersion then
+      updateAvailable(tecGitUpdate.latestJSONTable[1].body) --notify player update is available
+      tecGitUpdate.releaseIndex = 1 --notify update which version to use
+    else
+      cecho("Thank you for beta testing!\n\tNo new releases at this time.")
+    end --if beta tester is not using latest release
+  else --The user is not a beta tester.
+    tecGitUpdate.releaseIndex = releaseSearch() --search for latest NONbeta release
+  end --if betaTester
+end --function compareVersions
+
+function tecGitUpdate.eventHandler(event, ...)
+  if event == "sysDownloadDone" then
+    local file = arg[1] -- in this case name of file downloaded
+    if string.ends(file,tecGitUpdate.latestJSONFileName) then --download is version check  file
+      debugToDisplay("Update sysDownloadDone Event: Download: "..file
+        .."\n\tdownloaded, check_version() called.")
+      compareVersions() --Use downloaded JSON file to check if latest version is installed
+    else
+      debugToDisplay("Update sysDownloadDone Event: Downloaded file: "..file
+        .."\n\tWas NOT caught by event handler.")
+    end --elseif file downloaded is new script
+  end --if event == elseif
+end --function tecUpdate.eventHandler()
+
+registerAnonymousEventHandler("sysDownloadDone", "tecGitUpdate.eventHandler")</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
