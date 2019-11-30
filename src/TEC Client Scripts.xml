@@ -4424,6 +4424,8 @@ function tecGitUpdate.config() --Create variables used for updates
   --tecGitUpdate.betaTester = tecSettings.betaTester --notifies update if player is beta tester.
   --used to notify update process what release will be update, here for reference only
   tecGitUpdate.releaseIndex = 0
+  tecGitUpdate.trackedURLs = {} --will be URLs that need to have downloads tracked
+  tecGitUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
   
   debugToDisplay("Update: Config ran.\n\tlatestJSONURL: "..tecGitUpdate.latestJSONURL
     .."\n\tlocalRespitory: "..tecGitUpdate.localRespitory
@@ -4435,6 +4437,7 @@ tecGitUpdate.config() --run the config on startup.
 --Used to easily change update notification. There are multiple instances where
 --Parthia notifies player an update is available.
 local function updateAvailable(updateBody)
+  enableAlias(tecGitUpdate.aliasName) --enable alias so user can run update with command
   cecho("An update is available. The new features it offers are: \n\t")
   cecho(updateBody)
   cecho("\n&lt;:maroon&gt;To update now, please run: ")
@@ -4443,6 +4446,26 @@ local function updateAvailable(updateBody)
     "Update game client", true) --link tool tip for mouse hover
   echo("\n") --cechoLinks don't cause the window to autoscroll.
 end --function updateAvailable
+
+--gather urls from github release that player needs to update to
+local function collectURLs()
+  --if releaseIdndex == 0 than 
+  if tecGitUpdate.releaseIndex == 0 then
+    debugc("function: collectURL, url collection releaseIndex was not initialized.")
+    return "function: compareVersions, url collection releaseIndex was not initialized."
+  elseif tecGitUpdate.latestJSONTable[tecGitUpdate.releaseIndex].assets.browser_download_url then
+    debugc("function: collectURL, url collection JSONTable lacks assets.")
+    return "function: compareVersions, url collection JSONTable lacks assets."
+  else
+    --loop through JSONTable.assets
+    for index, gitAsset in
+      ipairs(tecGitUpdate.latestJSONTable[tecGitUpdate.releaseIndex].assets) do
+        --save URL needing download to a new table.
+        --debugc("function: compareVersions tracking URL: "..gitAsset.browser_download_url)
+        tecGitUpdate.trackedURLs[index] = gitAsset.browser_download_url
+    end --for tecGitUpdate.latestJSONTable[tecGitUpdate.releaseIndex].assets  
+  end --if releaseIndex == 0
+end --collectURLS
 
 --Search for latest nonbeta release or release that is NOT a prerelease
 --function is here to reduce complexity of function that calls it.
@@ -4460,9 +4483,16 @@ local function releaseSearch()
         debugToDisplay("gitUpdate release search, found latest release at: "..tostring(index)
           .."\n\tRelease tab_name: "..releaseData.tag_name
           .."\n\tLocal release: "..tecGitUpdate.localVersion)
+        --If the installed Parthia is different that latest release
         if releaseData.tag_name ~= tecGitUpdate.localVersion then
-          updateAvailable(releaseData.body) --notify player an update is available
-          return index --Notify update what release to update also stop the check.
+          tecGitUpdate.releaseIndex = index --collect the release index
+          local errorFound collectURLs() --gather URLs into trackedURLs table
+          if errorFound then --collectURLs returns a string if error occured.
+            return errorFound
+          else
+            updateAvailable(releaseData.body) --notify player an update is available
+            return
+          end --if errorFound else
         end --if releaseData.prerelease.tag_name ~= tecGitUpdate.localVersion
       end --if releaseData.prerelease == "false"
     end --for
@@ -4477,12 +4507,60 @@ local function releaseSearch()
   end --if tecGitUpdate.latestJSONTable[1].name exists
 end --function releaseSearch
 
+--Tracks downloads so updates do not start until all downloads have completed.
+--This has been created to allow it to be module.
+--downloadURL is a table containing a urls that need to be downloaded.
+--!!!trackDownloads(downloadURLs) HAS to be ran BEFORE the downloads are initiated!!!
+function trackDownloads(downloadURLs)
+  
+  -- if downloadURLs is table
+  if downloadURLs[1] then 
+    debugc("function: trackDownloads table passed.")
+    --Make a global table to store URL that require tracking.
+    trackedDownloads = {}
+    for index, urlToTrack in ipairs(downloadURLs) do
+      --URL needs to be tracked
+      trackedDownloads.URLs[index] = urlToTrack
+      debugc("\tURL to track: "..trackedDownloads.URLs[index])
+      --Boolean to notify client when download has completed.
+      trackedDownloads.downloaded = false
+    end --for downloadURLs
+    
+  --if the variable passed is a string
+  elseif type(downloadURLs) == "string" then
+    debugc("function: trackDownloads string passed.")
+    --make certaain the trackedDownloads exists
+    if trackedDownloads then
+      --Look through trackedDownloads table to see if this is one of the tracked URLs
+      for index, trackedDwonload in pairs(trackedDownloads) do
+        --if the string 'download that has completed' matches one in our table
+        debugc("trackedDownload is : "..trostring(trackedDwonload))
+        debugc("inex is: "..index)
+        --if trackedURL == downloadURLs then
+        --end --if trackedURL == downloadURLs
+      end --for trackedDownloads
+    else
+      debugc("function: trackDownloads was not initialized with a table of URLs.")
+      debugToDisplay("trackDownloads: was not initialized with a table of URLs.")
+    end --if downloadURLs
+  --search the trackedDownloads for a match. If it is found
+  --mark the corrisonding boolean for that URL in the trackedDownloads table.
+  
+  --Now loop through trackedDownloads if all bools are true
+  --nil trackedDownloads and return true.
+  
+  --otherwise return false. Do not return false by default. So it does not need to be
+  --caught during trackedDownloads creation.
+  
+  end --if downloadURLs type check
+end --function trackDownloads
+
 --Here moving forward if you would like to understand the flow of updates
 --it starts here.
 
 --downloads the github JSON REST API JSON file
 function tecGitUpdate.downloadLatestJSON()
-    debugToDisplay("Update: Downloading "..tecGitUpdate.latestJSONURL
+  debugToDisplay("Update: Downloading "..tecGitUpdate.latestJSONURL
     .."\n\tTo: "..tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName)
   downloadFile(tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName,
     tecGitUpdate.latestJSONURL) --download the projects latest release JSON info file.
@@ -4526,13 +4604,37 @@ local function compareVersions()
     if tecGitUpdate.latestJSONTable[1].tag_name ~= tecGitUpdate.localVersion then
       updateAvailable(tecGitUpdate.latestJSONTable[1].body) --notify player update is available
       tecGitUpdate.releaseIndex = 1 --notify update which version to use
+      local errorFound collectURLs() --gather URLs into trackedURLs table
+      if errorFound then
+        debugToDisplay(errorFound)
+        debugc(errorFound)
+        echo(errorFound)
+        return
+      end --if error found
     else
       cecho("Thank you for beta testing!\n\tNo new releases at this time.")
     end --if beta tester is not using latest release
   else --The user is not a beta tester.
-    tecGitUpdate.releaseIndex = releaseSearch() --search for latest NONbeta release
+    local errorFound = releaseSearch() --search for latest NONbeta release
+    if errorFound then
+      debugToDisplay(errorFound)
+      debugc(errorFound)
+      echo(errorFound)
+      return
+    end --if error found
   end --if betaTester
+
+  --We do not know how large the git release JSON is we will trash it just incase
+  tecGitUpdate.latestJSONTable = nil
+  
 end --function compareVersions
+
+--The user has now run the command tecclient update to continue forward.
+
+--Download the scripts in the latest release 
+function tecGitUpdate.downloadScripts()
+
+end --function tecGitUpdate.downloadScripts()
 
 function tecGitUpdate.eventHandler(event, ...)
   if event == "sysDownloadDone" then
