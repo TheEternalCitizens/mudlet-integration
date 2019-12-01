@@ -4395,6 +4395,20 @@ end --function tecColorWindow()</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
+				<Script isActive="yes" isFolder="no">
+					<name>tecErrorNotification(errorFound)</name>
+					<packageName></packageName>
+					<script>--fully notifies user when an error is found.
+function tecErrorNotification(errorFound)
+  errorc("Error: "..errorFound)
+  debugToDisplay("Error: "..errorFound)
+  echo("Error: "..errorFound.."\n\tPlease contact a developer with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
+    [[tecReportIssues()]],
+    "Report issues or bugs", true)
+end --function tecErrorNotification</script>
+					<eventHandlerList />
+				</Script>
 				<Script isActive="no" isFolder="no">
 					<name>tec Auto Updates</name>
 					<packageName></packageName>
@@ -4412,7 +4426,6 @@ end --function tecColorWindow()</script>
 
 function tecGitUpdate.config() --Create variables used for updates
   --github latest release URL
-  --tecGitUpdate.latestJSONURL = [[https://api.github.com/repos/TheEternalCitizens/mudlet-integration/releases/latest]]
   tecGitUpdate.latestJSONURL = [[https://api.github.com/repos/TheEternalCitizens/mudlet-integration/releases]]
   tecGitUpdate.localRespitory = getMudletHomeDir().."/settings/" --local directory for source files
   if not io.exists(tecGitUpdate.localRespitory) then --if folder does not exists
@@ -4426,6 +4439,7 @@ function tecGitUpdate.config() --Create variables used for updates
   tecGitUpdate.releaseIndex = 0
   tecGitUpdate.trackedURLs = {} --will be URLs that need to have downloads tracked
   tecGitUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
+  tecGitUpdate.localFileStore = getMudletHomeDir().."/settings/"
   
   debugToDisplay("Update: Config ran.\n\tlatestJSONURL: "..tecGitUpdate.latestJSONURL
     .."\n\tlocalRespitory: "..tecGitUpdate.localRespitory
@@ -4442,7 +4456,7 @@ local function updateAvailable(updateBody)
   cecho(updateBody)
   cecho("\n&lt;:maroon&gt;To update now, please run: ")
   cechoLink("&lt;:blue&gt;tecclient update", --link text to display
-    [[tecUpdate.downloadScriptsNames()]], --link command to run
+    [[tecGitUpdate.downloadScripts()]], --link command to run
     "Update game client", true) --link tool tip for mouse hover
   echo("\n") --cechoLinks don't cause the window to autoscroll.
 end --function updateAvailable
@@ -4497,12 +4511,7 @@ local function releaseSearch()
       end --if releaseData.prerelease == "false"
     end --for
   else --if the JSON table does NOT exist.
-    debugToDisplay("Update: Error, JSON to table not found during release search.")
-    echo("Unable to detect new releases. Please contact a developer with: ")
-    cechoLink("tecSettingsConsole",
-      "&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
-      [[tecReportIssues()]],
-      "Report issues or bugs", true)
+    errorFound = "Update: Error, JSON to table not found during release search."
     return --error found stop update.
   end --if tecGitUpdate.latestJSONTable[1].name exists
 end --function releaseSearch
@@ -4515,43 +4524,62 @@ function trackDownloads(downloadURLs)
   
   -- if downloadURLs is table
   if downloadURLs[1] then 
-    debugc("function: trackDownloads table passed.")
-    --Make a global table to store URL that require tracking.
-    trackedDownloads = {}
+    debugToDisplay("function: trackDownloads table passed.")
+    --Make a global table to store URLs that require tracking.
+    trackedDownloads = {files = {}, URLs = {}, downloaded = {}, fileList = ""}
     for index, urlToTrack in ipairs(downloadURLs) do
-      --URL needs to be tracked
-      trackedDownloads.URLs[index] = urlToTrack
-      debugc("\tURL to track: "..trackedDownloads.URLs[index])
+      --Get the name of the file you need to download.
+      debugToDisplay("function: trackDownloads tracking file: "..urlToTrack:match(".*%/(.*%..*)"))
+      trackedDownloads.files[index] = urlToTrack:match(".*%/(.*%..*)")
       --Boolean to notify client when download has completed.
-      trackedDownloads.downloaded = false
+      trackedDownloads.downloaded[index] = false
+      --Get the name of the file you need to download.
+      trackedDownloads.URLs[index] = urlToTrack
+      --create a string that contains a list of files needing download.
+      --This list will be used during sysDownloadDone event to veirfy the correct download.
+      trackedDownloads.fileList = trackedDownloads.fileList..urlToTrack:match(".*%/(.*%..*)$").." "
     end --for downloadURLs
     
   --if the variable passed is a string
   elseif type(downloadURLs) == "string" then
-    debugc("function: trackDownloads string passed.")
-    --make certaain the trackedDownloads exists
-    if trackedDownloads then
+    debugToDisplay("function: trackDownloads string passed.")
+    debugToDisplay("function trackedDownloads: URL passed: "..downloadURLs)
+    
+    --make certain the trackedDownloads table exists
+    if trackedDownloads.files[1] then
       --Look through trackedDownloads table to see if this is one of the tracked URLs
-      for index, trackedDwonload in pairs(trackedDownloads) do
-        --if the string 'download that has completed' matches one in our table
-        debugc("trackedDownload is : "..trostring(trackedDwonload))
-        debugc("inex is: "..index)
-        --if trackedURL == downloadURLs then
-        --end --if trackedURL == downloadURLs
+      for index, trackedDownload in ipairs(trackedDownloads.files) do      
+        --if the string passed matches a URL in trackedDownloads
+        if trackedDownload == downloadURLs then
+          debugToDisplay("function trackedDownload: download completed and recorded for: "
+            ..trackedDownload)
+          --record that this URL downloaded successfully.
+          trackedDownloads.downloaded[index] = true
+            --find if all downloads have completed.
+            for index, urlDownloaded in ipairs(trackedDownloads.downloaded) do
+              --has the current URL affiliaed with the key been downloaded.
+              if urlDownloaded then
+                --debugToDisplay("function trackedDownloads: Verifing download completed for index "..index)
+                --check if this is the final URL that needed downloading.
+                --debugToDisplay("function trackedDownloads: index is : "..index.." table size: "
+                --  ..#trackedDownloads.downloaded)
+                if index == #trackedDownloads.downloaded then
+                  --All downloads have completed.
+                  debugToDisplay("function trackedDownloads: All files have")
+                  return true --tells parthia all downloads are complete.
+                end --if index == #trackedDownloads.downloaded
+              else --Some file in the set has not been downloaded.
+                return false --tells parthia all downloads are not complete
+              end --if urlDownloaded
+            end --for trackedDownloads.downloaded
+          break --break the for loop.
+        end --if trackedDownload == downloadURLs
       end --for trackedDownloads
     else
-      debugc("function: trackDownloads was not initialized with a table of URLs.")
-      debugToDisplay("trackDownloads: was not initialized with a table of URLs.")
+      --display error to debug, and return error message to called function
+      errorc("function: trackDownloads was not initialized with a table of URLs.")
+      return "table trackedDownloads: was not initialized with a table of URLs."
     end --if downloadURLs
-  --search the trackedDownloads for a match. If it is found
-  --mark the corrisonding boolean for that URL in the trackedDownloads table.
-  
-  --Now loop through trackedDownloads if all bools are true
-  --nil trackedDownloads and return true.
-  
-  --otherwise return false. Do not return false by default. So it does not need to be
-  --caught during trackedDownloads creation.
-  
   end --if downloadURLs type check
 end --function trackDownloads
 
@@ -4585,14 +4613,10 @@ local function compareVersions()
       .."\n\tIt contained: "..latestJSONString
       .."\n\tIt was successfully converted to a table.")
   else --if the table was not successfully made we can not continue. Notify player.
-    debugToDisplay("Update: Error, JSON to table conversion unsuccessfull.\n\tOpened file: "
+    errorFound = "Update: Error, JSON to table conversion unsuccessfull.\n\tOpened file: "
       ..tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName
-      .."\n\tIt contained: "..latestJSONString)
-    echo("Unable to detect new releases. Please contact a developer with: ")
-    cechoLink("tecSettingsConsole",
-      "&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
-      [[tecReportIssues()]],
-      "Report issues or bugs", true)
+      .."\n\tIt contained: "..latestJSONString
+    tecErrorNotification(errorFound) --Notify player provide method to report error
     return --error found stop update.
   end --tecGitUpdate.latestJSONTable exists
   
@@ -4606,9 +4630,7 @@ local function compareVersions()
       tecGitUpdate.releaseIndex = 1 --notify update which version to use
       local errorFound collectURLs() --gather URLs into trackedURLs table
       if errorFound then
-        debugToDisplay(errorFound)
-        debugc(errorFound)
-        echo(errorFound)
+        tecErrorNotification(errorFound)
         return
       end --if error found
     else
@@ -4617,14 +4639,13 @@ local function compareVersions()
   else --The user is not a beta tester.
     local errorFound = releaseSearch() --search for latest NONbeta release
     if errorFound then
-      debugToDisplay(errorFound)
-      debugc(errorFound)
-      echo(errorFound)
+      tecErrorNotification(errorFound)
       return
     end --if error found
   end --if betaTester
 
   --We do not know how large the git release JSON is we will trash it just incase
+  --doing this after error catch, if error is found this table will still exist
   tecGitUpdate.latestJSONTable = nil
   
 end --function compareVersions
@@ -4633,6 +4654,48 @@ end --function compareVersions
 
 --Download the scripts in the latest release 
 function tecGitUpdate.downloadScripts()
+  --turn off the standard update command. So user will not attempt to run it while
+  --it is running. Also leave it off so user can not process an update when one 
+  --is not required.
+  disableAlias(tecGitUpdate.aliasName)
+  
+  --if tecGitUpdate.trackedURLs has been initialized.
+  if type(tecGitUpdate.trackedURLs[1]) == "string" then 
+    trackDownloads(tecGitUpdate.trackedURLs) --initialize trackDownloads
+  else --tecGitUpdate.trackedURLs was not initialized throw error.
+    errorFound = "function: tecGitUpdate.downloadScripts() trackedURLs was not "
+      .."initialized."
+    tecErrorNotification(errorFound)
+    return --stop because we can not proceed.
+  end --if tecGitUpdate.trackedURLs is not nil.
+
+  --download the files required.
+  for index, trackedDownload in ipairs(tecGitUpdate.trackedURLs) do
+    debugToDisplay("function tecGitUpdate.downloadScripts downloading "
+      ..trackedDownload.."\n\tto "
+      ..tecGitUpdate.localFileStore..trackedDownloads.files[index])
+    --download file
+    downloadFile(tecGitUpdate.localFileStore..trackedDownloads.files[index], trackedDownload)
+  end --for tecGitUpdate.trackedURLs
+
+--[[download tester
+  --download the files required.
+  for index, trackedDownload in ipairs(tecGitUpdate.trackedURLs) do
+    debugToDisplay("function tecGitUpdate.downloadScripts downloading "
+      ..trackedDownload.."\n\tto "
+      ..tecGitUpdate.localFileStore..trackedDownloads.files[index])
+    boolOrErrorMessage = trackDownloads(trackedDownloads.files[index])
+    local tmpString = tecGitUpdate.localFileStore..trackedDownloads.files[index]
+    cecho("File name: "..tmpString:match(".*%/(.*%..*)$").."\n")
+    cecho("fileList is: "..trackedDownloads.fileList.."\n")
+    cecho("Found match in fileList for file downloaded: "..
+      trackedDownloads.fileList:match(tmpString:match(".*%/(.*%..*)$")).."\n")
+    if boolOrErrorMessage then
+      debugToDisplay("Downloads completed!!!")
+    end
+    --downloadFile(tecGitUpdate.localFileStore..trackedDownloads.files[index], trackedDownload)
+  end --for tecGitUpdate.trackedURLs
+]]--
 
 end --function tecGitUpdate.downloadScripts()
 
@@ -4641,8 +4704,22 @@ function tecGitUpdate.eventHandler(event, ...)
     local file = arg[1] -- in this case name of file downloaded
     if string.ends(file,tecGitUpdate.latestJSONFileName) then --download is version check  file
       debugToDisplay("Update sysDownloadDone Event: Download: "..file
-        .."\n\tdownloaded, check_version() called.")
+        .."\n\tdownloaded, compareVersions() called.")
       compareVersions() --Use downloaded JSON file to check if latest version is installed
+    --if the name of the file being downloaded is in 
+    elseif trackedDownloads.fileList:match(file:match(".*%/(.*%..*)$")) then
+      debugToDisplay("git Update sysDownloadDone Event downloaded: "..
+        file.."\n\tTracking this download.")
+      local boolOrErrorMessage = trackDownloads(file:match(".*%/(.*%..*)$"))
+          if boolOrErrorMessage then
+            debugToDisplay("Git Updates downloads completed. Running function "
+              .." name of function")
+          elseif type(boolOrErrorMessage) == "string" then --if error found
+            tecErrorNotification(boolOrErrorMessage) --notify player of error
+          else --all downloads are not completed.
+            debugToDiplay(file..
+              " completed downloading. Not all tracked files downloaded yet.")
+          end --if boolOrErrorMessage
     else
       debugToDisplay("Update sysDownloadDone Event: Downloaded file: "..file
         .."\n\tWas NOT caught by event handler.")
