@@ -278,7 +278,7 @@ Current font size: ]]..getTECFont())</script>
 				<packageName></packageName>
 				<regex>^tecclient font size (.*)</regex>
 			</Alias>
-			<Alias isActive="no" isFolder="no">
+			<Alias isActive="yes" isFolder="no">
 				<name>tecclient update</name>
 				<script>tecGitUpdate.downloadScripts() --Begin downloading updates</script>
 				<command></command>
