@@ -4419,6 +4419,8 @@ end --function tecErrorNotification</script>
 					<name>Tec Git AutoUpdates</name>
 					<packageName></packageName>
 					<script>tecGitUpdate = {}
+--If you save this script remember to run tecGitUpdate.config or tecGitUpdate.downloadLatestJSON()
+--before attempting to process an update IE: tecclient update
 
 --start of section dedicated for functions used by update process.
 --To understand the flow of updates you will need to scroll past these.
@@ -4467,21 +4469,20 @@ end --function updateAvailable
 
 --gather urls from github release that player needs to update to
 local function collectURLs()
-  --if releaseIdndex == 0 than 
-  if tecGitUpdate.releaseIndex == 0 then
+  if tecGitUpdate.releaseIndex == 0 then --make certain releaseIndex has been initialized
     debugc("function: collectURL, url collection releaseIndex was not initialized.")
     return "function: compareVersions, url collection releaseIndex was not initialized."
   elseif tecGitUpdate.latestJSONTable[tecGitUpdate.releaseIndex].assets.browser_download_url then
     debugc("function: collectURL, url collection JSONTable lacks assets.")
     return "function: compareVersions, url collection JSONTable lacks assets."
   else
-    --loop through JSONTable.assets
-    for index, gitAsset in
+    for index, gitAsset in --loop through git release assets.
       ipairs(tecGitUpdate.latestJSONTable[tecGitUpdate.releaseIndex].assets) do
         --save URL needing download to a new table.
         --debugc("function: compareVersions tracking URL: "..gitAsset.browser_download_url)
         tecGitUpdate.trackedURLs[index] = gitAsset.browser_download_url
-    end --for tecGitUpdate.latestJSONTable[tecGitUpdate.releaseIndex].assets  
+    end --for tecGitUpdate.latestJSONTable[tecGitUpdate.releaseIndex].assets
+    debugToDisplay("function collectURLs(): tecGitUpdate.trackedURLs initialized.") 
   end --if releaseIndex == 0
 end --collectURLS
 
@@ -4490,17 +4491,15 @@ end --collectURLS
 local function releaseSearch()
   if tecGitUpdate.latestJSONTable[1].name then --if the table exists
     --debugc("gitUpdate release search, JSON table exists.")
-    
-    --loop through the JSON table
-    for index, releaseData in ipairs(tecGitUpdate.latestJSONTable) do
+    for index, releaseData in ipairs(tecGitUpdate.latestJSONTable) do --loop through the JSON table
       --debugc("gitUpdate release search, searching index: "..tostring(index))
-      debugToDisplay("gitUpdate release search, searching index: "..tostring(index))
+      debugToDisplay("function releaseSearch, searching index: "..tostring(index))
       --Find the latest release that is NOT a prerelease.
       if not releaseData.prerelease then --if the release is not a prerelease
         --debugc("gitUpdate release search, found latest release at: "..tostring(index))
-        debugToDisplay("gitUpdate release search, found latest release at: "..tostring(index)
+        debugToDisplay("function releaseSearch, found latest release at: "..tostring(index)
           .."\n\tRelease tab_name: "..releaseData.tag_name
-          .."\n\tLocal release: "..tecGitUpdate.localVersion)
+          .." Local release: "..tecGitUpdate.localVersion)
         --If the installed Parthia is different that latest release
         if releaseData.tag_name ~= tecGitUpdate.localVersion then
           tecGitUpdate.releaseIndex = index --collect the release index
@@ -4515,8 +4514,8 @@ local function releaseSearch()
       end --if releaseData.prerelease == "false"
     end --for
   else --if the JSON table does NOT exist.
-    errorFound = "Update: Error, JSON to table not found during release search."
-    return --error found stop update.
+    errorFound = "function releaseSearch, Error, JSON table not found during release search."
+    return errorFound--error found stop update.
   end --if tecGitUpdate.latestJSONTable[1].name exists
 end --function releaseSearch
 
@@ -4524,60 +4523,61 @@ end --function releaseSearch
 --This has been created to allow it to be module.
 --downloadURL is a table containing a urls that need to be downloaded.
 --!!!trackDownloads(downloadURLs) HAS to be ran BEFORE the downloads are initiated!!!
-function trackDownloads(downloadURLs)
-
-  -- if downloadURLs is a table
-  if downloadURLs[1] then
-    debugToDisplay("function: trackDownloads table passed.")
+function trackDownloads(downloadURLs)  
+  if downloadURLs[1] then --if downloadURLs is a table
+    debugToDisplay("function trackDownloads, table passed.")
     --move the URL containing the script name to the end of the table.
     for index, urlToTrack in ipairs(downloadURLs) do
       if urlToTrack:match(tecGitUpdate.updateFileNameReference) then
-        debugToDisplay("function trackDownloads: URL containing script was found "
+        debugToDisplay("function trackDownloads, URL containing update script was found at\n\t"
           ..urlToTrack.." moving it to end of table.")
         table.remove(downloadURLs, index) --remove the URL from the table
         table.insert(downloadURLs, urlToTrack) --insert it on the end of the table
         break --Update script can only be in one file.
-      end --if
+      end --urlToTrack:match(tecGitUpdate.updateFileNameReference)
     end --for downloadURLs
     --Make a global table to store URLs that require tracking.
-    trackedDownloads = {files = {}, URLs = {}, downloaded = {}, fileList = ""}
-    for index, urlToTrack in ipairs(downloadURLs) do
+    trackedDownloads = {files = {}, URLs = {}, downloaded = {}, fileList = "", tmpFiles = {}}
+    for index, urlToTrack in ipairs(downloadURLs) do --initialize trackedDownloads table
       --Get the name of the file you need to download.
-      debugToDisplay("function: trackDownloads tracking file: "..urlToTrack:match(".*%/(.*%..*)"))
-      trackedDownloads.files[index] = urlToTrack:match(".*%/(.*%..*)")
+      local tecPackageFileName = urlToTrack:match(".*%/(.*%..*)")
+      --debugc("tecPackageFileName "..tecPackageFileName)
+      --Collect package name removing any .s periods that are in it.
+      --in git releases spaces in filenames are replaced with .s mudlets install package process
+      --is sometimes not compatible with this.
+      local tecPackageNameNoExtension = string.gsub(tecPackageFileName:match("(.*)%..*$"), "%.", "") --remove periods from filename
+      --debugc("tecPackageNameNoExtension: "..tecPackageNameNoExtension)
+      local tecPackageNameExtensionOnly = tecPackageFileName:match(".*(%..*)$")
+      --debugc("tecPackageNameExtensionOnly: "..tecPackageNameExtensionOnly)
+      --Combine the package name with file extension.
+      trackedDownloads.files[index] = tecPackageNameNoExtension..tecPackageNameExtensionOnly
+      debugToDisplay("function: trackDownloads tracking file: "..trackedDownloads.files[index])
       --Boolean to notify client when download has completed.
       trackedDownloads.downloaded[index] = false
       --Get the name of the file you need to download.
       trackedDownloads.URLs[index] = urlToTrack
       --create a string that contains a list of files needing download.
       --This list will be used during sysDownloadDone event to veirfy the correct download.
-      trackedDownloads.fileList = trackedDownloads.fileList..urlToTrack:match(".*%/(.*%..*)$").." "
+      trackedDownloads.fileList = trackedDownloads.fileList..trackedDownloads.files[index].." "
     end --for downloadURLs
-    
-  --if the variable passed is a string
-  elseif type(downloadURLs) == "string" then
+
+  elseif type(downloadURLs) == "string" then --if the variable passed is a string
     debugToDisplay("function: trackDownloads string passed.")
     debugToDisplay("function trackedDownloads: URL passed: "..downloadURLs)  
-    --make certain the trackedDownloads table exists
-    if trackedDownloads.files[1] then
+    if trackedDownloads.files[1] then --make certain the trackedDownloads table exists
       --Look through trackedDownloads table to see if this is one of the tracked URLs
       for index, trackedDownload in ipairs(trackedDownloads.files) do      
         --if the string passed matches a URL in trackedDownloads
         if trackedDownload == downloadURLs then
           debugToDisplay("function trackedDownload: download completed and recorded for: "
             ..trackedDownload)
-          --record that this URL downloaded successfully.
-          trackedDownloads.downloaded[index] = true
-            --find if all downloads have completed.
+          trackedDownloads.downloaded[index] = true --record that this URL downloaded successfully.
+            --check if all downloads have completed.
             for index, urlDownloaded in ipairs(trackedDownloads.downloaded) do
-              --has the current URL affiliaed with the key been downloaded.
-              if urlDownloaded then
-                --debugToDisplay("function trackedDownloads: Verifing download completed for index "..index)
-                --check if this is the final URL that needed downloading.
-                --debugToDisplay("function trackedDownloads: index is : "..index.." table size: "
-                --  ..#trackedDownloads.downloaded)
+              if urlDownloaded then --has the current URL affiliaed with the bool been downloaded.
+                --debugc("function trackedDownloads: Verifing download completed for index "..index)
+                --If all downloaded booleans in table are true.
                 if index == #trackedDownloads.downloaded then
-                  --All downloads have completed.
                   debugToDisplay("function trackedDownloads: downloads completed.")
                   return true --tells parthia all downloads are complete.
                 end --if index == #trackedDownloads.downloaded
@@ -4595,7 +4595,7 @@ function trackDownloads(downloadURLs)
     end --if downloadURLs
   else --argument was not a table or string.
     local errorFound = "function trackDownloads: does not accept "..type(downloadURLs)
-      .." as an argument. Only supports tables for initilization and strings for tracking."
+      .." as an argument.\n\tOnly supports tables for initilization and strings for tracking."
     errorc(errorFound)
     return errorFound
   end --if downloadURLs type check
@@ -4721,7 +4721,7 @@ local function tecInstallUpdates()
   for index, fileName in ipairs(trackedDownloads.files) do --loop through scripts, and install them
     local packageName = string.gsub(fileName:match("(.*)%."), "%.", "") --remove periods from filename
     debugToDisplay("function tecInstallUpdates: removing package "..packageName)
-    uninstallPackage(packageName) --remove old package
+    --uninstallPackage(packageName) --remove old package
     debugToDisplay("Update: Installing package: "..tecSourceDirectory..fileName)
     installPackage(tecSourceDirectory..fileName) --install new package
   end --for tecUpdate.scriptNames
