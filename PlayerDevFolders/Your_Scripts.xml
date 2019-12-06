@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MudletPackage>
+<MudletPackage version="1.001">
+	<TriggerPackage />
+	<TimerPackage />
+	<AliasPackage />
+	<ActionPackage />
+	<ScriptPackage>
+		<ScriptGroup isActive="yes" isFolder="yes">
+			<name>Script_Help</name>
+			<packageName></packageName>
+			<script>--[[
+Likely the basic answers you want on triggers are at:
+  https://wiki.mudlet.org/w/Manual:Scripting
+  
+In short scripts are a collection of code that either runs on startup or is called
+by other mudlet features like triggers or aliases
+The way Parthia is written, we create our code the the scripts section as functions.
+After that we call them with the mudlet feature needed to run the function at the correct time.
+This allows us to use one function in many situations.
+That does not mean you need to write that way. Write Your_Code they way that is best for you.
+
+Any code written in the Your_Scripts folder will never be changed by Pathia updates.
+We highly recommend backing up all the Your_ files in your `The Eternal City` mudlet profile.
+We have made an aliase to easy open the folder these files are in.
+To run it type `tecclient Your_Files`
+Also you will see that aliase in Your_Aliases folder.
+
+Parthia is intended to be a community project.
+As we wrote code we made certain to comment nearly every line.
+There will be many examples to reference scripts in TEC_Client_Scripts.
+Further more in TEC_Client_Cripts/TECFunctions there are many functions that you may be able 
+to use yourself. As time goes on the comments preceding each script will likely become more detailed.
+
+We are happy to answer questions.
+Parthia's discord server is: https://discord.gg/QGztVx
+Our github page is: https://github.com/TheEternalCitizens/mudlet-integration
+
+Another wonderful source of answers and knowledge is:
+Mudlet's discord server: https://discord.gg/FfkEx7
+mudlet manual: https://wiki.mudlet.org/w/Manual:Contents
+mudlet function reference: https://wiki.mudlet.org/w/Manual:Lua_Functions
+  ^This is not a complete list but it is a wonderful start^
+  
+Good lua references:
+https://www.lua.org/pil/contents.html
+https://docs.coronalabs.com/api/index.html --Good for if you already know the basics.
+
+As you write code you can share it at the parthia discord server on the player-scripts channel.
+]]--</script>
+			<eventHandlerList />
+		</ScriptGroup>
+	</ScriptPackage>
+	<KeyPackage />
+	<HelpPackage>
+		<helpURL></helpURL>
+	</HelpPackage>
+</MudletPackage>
