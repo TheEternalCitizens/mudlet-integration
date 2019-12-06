@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MudletPackage>
+<MudletPackage version="1.001">
+	<TriggerPackage />
+	<TimerPackage />
+	<AliasPackage />
+	<ActionPackage />
+	<ScriptPackage />
+	<KeyPackage>
+		<KeyGroup isActive="yes" isFolder="yes">
+			<name>Key_Bindings_Help</name>
+			<packageName></packageName>
+			<script>--[[
+Likely the basic answers you want on key bindings are at:
+  https://wiki.mudlet.org/w/Manual:Introduction#Keybindings
+  
+In short Key Bindings replace a key press with the code you specif.
+You will notice in the TEC_Client_KeyBindings folder there are key bindings
+to replace num pad keys with directions. ctrl+r runs a room check.
+
+Any code written in the Your_Key_Bindings folder will never be changed by Pathia updates.
+We highly recommend backing up all the Your_ files in your `The Eternal City` mudlet profile.
+We have made an aliase to easy open the folder these files are in.
+To run it type `tecclient Your_Files`
+Also you will see that aliase in Your_Aliases folder.
+
+Parthia is intended to be a community project.
+As we wrote code we made certain to comment nearly every line.
+There will be many examples to reference in TEC_Client_Aliases.
+
+We are happy to answer questions.
+Parthia's discord server is: https://discord.gg/QGztVx
+Our github page is: https://github.com/TheEternalCitizens/mudlet-integration
+
+Another wonderful source of answers and knowledge is:
+Mudlet's discord server: https://discord.gg/FfkEx7
+mudlet manual: https://wiki.mudlet.org/w/Manual:Contents
+mudlet function reference: https://wiki.mudlet.org/w/Manual:Lua_Functions
+  ^This is not a complete list but it is a wonderful start^
+  
+Good lua references:
+https://www.lua.org/pil/contents.html
+https://docs.coronalabs.com/api/index.html --Good for if you already know the basics.
+
+As you write code you can share it at the parthia discord server on the player-scripts channel.
+]]--</script>
+			<command></command>
+			<keyCode>-1</keyCode>
+			<keyModifier>-1</keyModifier>
+		</KeyGroup>
+	</KeyPackage>
+	<HelpPackage>
+		<helpURL></helpURL>
+	</HelpPackage>
+</MudletPackage>

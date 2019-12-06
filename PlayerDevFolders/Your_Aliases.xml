@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MudletPackage>
+<MudletPackage version="1.001">
+	<TriggerPackage />
+	<TimerPackage />
+	<AliasPackage>
+		<AliasGroup isActive="yes" isFolder="yes">
+			<name>Aliase_Help</name>
+			<script>--[[
+Likely the basic answers you want on triggers are at:
+  https://wiki.mudlet.org/w/Manual:Introduction#Aliases
+  
+In short an alias: replaces a command the user enters with the script of your making.
+
+Any code written in the Your_Aliases folder will never be changed by Pathia updates.
+We highly recommend backing up all the Your_ files in your `The Eternal City` mudlet profile.
+We have made an aliase to easy open the folder these files are in.
+To run it type `tecclient Your_Files`
+Also you will see that aliase in Your_Aliases folder.
+
+Parthia is intended to be a community project.
+As we wrote code we made certain to comment nearly every line.
+There will be many examples to reference in TEC_Client_Aliases.
+
+We are happy to answer questions.
+Parthia's discord server is: https://discord.gg/QGztVx
+Our github page is: https://github.com/TheEternalCitizens/mudlet-integration
+
+Another wonderful source of answers and knowledge is:
+Mudlet's discord server: https://discord.gg/FfkEx7
+mudlet manual: https://wiki.mudlet.org/w/Manual:Contents
+mudlet function reference: https://wiki.mudlet.org/w/Manual:Lua_Functions
+  ^This is not a complete list but it is a wonderful start^
+  
+Good lua references:
+https://www.lua.org/pil/contents.html
+https://docs.coronalabs.com/api/index.html --Good for if you already know the basics.
+
+As you write code you can share it at the parthia discord server on the player-scripts channel.
+]]--</script>
+			<command></command>
+			<packageName></packageName>
+			<regex></regex>
+		</AliasGroup>
+		<Alias isActive="yes" isFolder="no">
+			<name>tecclient Your_Files</name>
+			<script>tecOpenDirectory(tecSettingsFolder)</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^tecclient Your_Files$</regex>
+		</Alias>
+	</AliasPackage>
+	<ActionPackage />
+	<ScriptPackage />
+	<KeyPackage />
+	<HelpPackage>
+		<helpURL></helpURL>
+	</HelpPackage>
+</MudletPackage>
