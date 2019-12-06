@@ -3574,7 +3574,7 @@ end --end tecMapIconAdjustment</script>
   "Load client settings from last save", true)
   
   cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Update\n", 
-  [[tecGitUpdate.downloadLatestJSON()]],
+  [[tecGitUpdate.downloadGitReleaseJSON()]],
   "Check for updates", true)
 	
   cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Font Size\n", 
@@ -4229,14 +4229,14 @@ tecGitUpdate = {} --table to hold project.
 function tecGitUpdateconfig() --Create variables used for updates
 
   --github latest release URL
-  tecGitUpdate.latestJSONURL = [[https://api.github.com/repos/TheEternalCitizens/mudlet-integration/releases]]
-  --tecGitUpdate.latestJSONURL = [[https://api.github.com/repos/TheEternalCitizens/mudlet-integration/nogoodurlhere]]
+  tecGitUpdate.gitReleaseURL = [[https://api.github.com/repos/TheEternalCitizens/mudlet-integration/releases]]
+  --tecGitUpdate.gitReleaseURL = [[https://api.github.com/repos/TheEternalCitizens/mudlet-integration/nogoodurlhere]]
   tecGitUpdate.localRespitory = getMudletHomeDir().."/settings/" --local directory for source files
   if not io.exists(tecGitUpdate.localRespitory) then --if folder does not exists
     lfs.mkdir(tecGitUpdate.localRespitory) --create the folder
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if tecGitUpdate.localRespitory not exist
-  tecGitUpdate.latestJSONFileName = "ParthiaLatest.json" --local file name REST API latest JSON
+  tecGitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
   tecGitUpdate.localVersion = "0.1.1" --Parthia version player is currently using
   tecGitUpdate.releaseIndex = 0
   tecGitUpdate.trackedURLs = {} --will be URLs that need to have downloads tracked
@@ -4251,10 +4251,10 @@ function tecGitUpdateconfig() --Create variables used for updates
   trackedDownloads.fileList = "" --leave blank, needed for events. Initialized in function trackDownloads
   trackedDownloads.urlList = ""
   
-  debugToDisplay("function tecGitUpdate.config: Initialized update engine.\n\tlatestJSONURL: "..tecGitUpdate.latestJSONURL
+  debugToDisplay("function tecGitUpdate.config: Initialized update engine.\n\tgitReleaseURL: "..tecGitUpdate.gitReleaseURL
     .."\n\tScriptFileNameReference: "..tecGitUpdate.updateFileNameReference
     .."\n\tlocalRespitory: "..tecGitUpdate.localRespitory
-    .."\n\tlatestJSONFileName: "..tecGitUpdate.latestJSONFileName
+    .."\n\tgitReleaseURLJSONFile: "..tecGitUpdate.gitReleaseURLJSONFile
     .."\n\tLocal Parthia version: "..tecGitUpdate.localVersion)
 end --function tecUpdate.config()
 tecGitUpdateconfig() --initialize update engine on starup.
@@ -4277,16 +4277,16 @@ local function collectURLs()
   if tecGitUpdate.releaseIndex == 0 then --make certain releaseIndex has been initialized
     debugc("function: collectURL, url collection releaseIndex was not initialized.")
     return "function: compareVersions, url collection releaseIndex was not initialized."
-  elseif tecGitUpdate.latestJSONTable[tecGitUpdate.releaseIndex].assets.browser_download_url then
+  elseif tecGitUpdate.gitJSONTable[tecGitUpdate.releaseIndex].assets.browser_download_url then
     debugc("function: collectURL, url collection JSONTable lacks assets.")
     return "function: compareVersions, url collection JSONTable lacks assets."
   else
     for index, gitAsset in --loop through git release assets.
-      ipairs(tecGitUpdate.latestJSONTable[tecGitUpdate.releaseIndex].assets) do
+      ipairs(tecGitUpdate.gitJSONTable[tecGitUpdate.releaseIndex].assets) do
         --save URL needing download to a new table.
         --debugc("function: compareVersions tracking URL: "..gitAsset.browser_download_url)
         tecGitUpdate.trackedURLs[index] = gitAsset.browser_download_url
-    end --for tecGitUpdate.latestJSONTable[tecGitUpdate.releaseIndex].assets
+    end --for tecGitUpdate.gitJSONTable[tecGitUpdate.releaseIndex].assets
     debugToDisplay("function collectURLs(): tecGitUpdate.trackedURLs initialized.") 
   end --if releaseIndex == 0
 end --collectURLS
@@ -4294,9 +4294,9 @@ end --collectURLS
 --Search for latest nonbeta release or release that is NOT a prerelease
 --function is here to reduce complexity of function that calls it.
 local function releaseSearch()
-  if tecGitUpdate.latestJSONTable[1].name then --if the table exists
+  if tecGitUpdate.gitJSONTable[1].name then --if the table exists
     --debugc("gitUpdate release search, JSON table exists.")
-    for index, releaseData in ipairs(tecGitUpdate.latestJSONTable) do --loop through the JSON table
+    for index, releaseData in ipairs(tecGitUpdate.gitJSONTable) do --loop through the JSON table
       --debugc("gitUpdate release search, searching index: "..tostring(index))
       debugToDisplay("function releaseSearch, searching index: "..tostring(index))
       --Find the latest release that is NOT a prerelease.
@@ -4321,7 +4321,7 @@ local function releaseSearch()
   else --if the JSON table does NOT exist.
     errorFound = "function releaseSearch, Error, JSON table not found during release search."
     return errorFound--error found stop update.
-  end --if tecGitUpdate.latestJSONTable[1].name exists
+  end --if tecGitUpdate.gitJSONTable[1].name exists
 end --function releaseSearch
 
 --Tracks downloads so updates do not start until all downloads have completed.
@@ -4351,7 +4351,7 @@ function trackDownloads(downloadURLs)
       --Collect package name removing any .s periods that are in it.
       --in git releases spaces in filenames are replaced with .s mudlets install package process
       --is sometimes not compatible with this.
-      local tecPackageNameNoExtension = string.gsub(tecPackageFileName:match("(.*)%..*$"), "%.", "") --remove periods from filename
+      local tecPackageNameNoExtension = string.gsub(tecPackageFileName:match("(.*)%..*$"), "%.", "") 
       --debugc("tecPackageNameNoExtension: "..tecPackageNameNoExtension)
       local tecPackageNameExtensionOnly = tecPackageFileName:match(".*(%..*)$")
       --debugc("tecPackageNameExtensionOnly: "..tecPackageNameExtensionOnly)
@@ -4413,12 +4413,12 @@ end --function trackDownloads
 --it starts here.
 
 --downloads the github JSON REST API JSON file
-function tecGitUpdate.downloadLatestJSON()
+function tecGitUpdate.downloadGitReleaseJSON()
   tecGitUpdateconfig() --initialize update engine.
-  debugToDisplay("Update: Downloading "..tecGitUpdate.latestJSONURL
-    .."\n\tTo: "..tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName)
-  downloadFile(tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName,
-    tecGitUpdate.latestJSONURL) --download the projects latest release JSON info file.
+  debugToDisplay("Update: Downloading "..tecGitUpdate.gitReleaseURL
+    .."\n\tTo: "..tecGitUpdate.localRespitory..tecGitUpdate.gitReleaseURLJSONFile)
+  downloadFile(tecGitUpdate.localRespitory..tecGitUpdate.gitReleaseURLJSONFile,
+    tecGitUpdate.gitReleaseURL) --download the projects latest release JSON info file.
 end --function tecVersionCheck
 
 --after the JSON files is downloaded tecGitUpdate.eventHandler will run compareVersions
@@ -4428,43 +4428,43 @@ end --function tecVersionCheck
 --If standard player we look for latest release not prerelease
 local function compareVersions()
   debugToDisplay("function compareVersions, opening &amp; reading file:\n\t"
-    ..tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName)
+    ..tecGitUpdate.localRespitory..tecGitUpdate.gitReleaseURLJSONFile)
   --open the local github latest release JSON file in read only mode
-  local latestJSONFile, errorFound = 
-    io.open(tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName, "r")
-  if not latestJSONFile then --file was not created error occured.
+  local gitJSONFile, errorFound = 
+    io.open(tecGitUpdate.localRespitory..tecGitUpdate.gitReleaseURLJSONFile, "r")
+  if not gitJSONFile then --file was not created error occured.
     tecErrorNotification("function compareVersions: "..errorFound)
-    latestJSONFile:close() --incase of partial failure, close file.
-    latestJSONFile = nil
+    gitJSONFile:close() --incase of partial failure, close file.
+    gitJSONFile = nil
     return  --error found stop update.
-  end --if not latestJSONFile
-  local latestJSONString = latestJSONFile:read("*a") --read the entire file to a string
-  latestJSONFile:close() --close the file
-  latestJSONFile = nil
-  if not latestJSONString then --the file did not read correctly.
+  end --if not gitJSONFile
+  local gitJSONString = gitJSONFile:read("*a") --read the entire file to a string
+  gitJSONFile:close() --close the file
+  gitJSONFile = nil
+  if not gitJSONString then --the file did not read correctly.
     tecErrorNotification("function compareVersions, file read failure.\n\t"
-      ..tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName)
+      ..tecGitUpdate.localRespitory..tecGitUpdate.gitReleaseURLJSONFile)
     return --error found stop update.
-  end --if not latestJSONString
+  end --if not gitJSONString
   --Convert github release JSON into a table
-  tecGitUpdate.latestJSONTable = yajl.to_value(latestJSONString)
-  if tecGitUpdate.latestJSONTable[1].name then --if the table was made.
+  tecGitUpdate.gitJSONTable = yajl.to_value(gitJSONString)
+  if tecGitUpdate.gitJSONTable[1].name then --if the table was made.
     debugToDisplay("function compareVersions, file read successful.")
   else --if the table was not successfully made we can not continue. Notify player.
     errorFound = "Update: Error, JSON to table conversion unsuccessfull.\n\tOpened file: "
-      ..tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName
-      .."\n\tIt contained: "..latestJSONString
+      ..tecGitUpdate.localRespitory..tecGitUpdate.gitReleaseURLJSONFile
+      .."\n\tIt contained: "..gitJSONString
     tecErrorNotification(errorFound) --Notify player provide method to report error
     return --error found stop update.
-  end --tecGitUpdate.latestJSONTable exists
+  end --tecGitUpdate.gitJSONTable exists
   
   --Look the table for the latest non beta release.
   if tecSettings.betaTester then --if player is a beta tester install latest release   
     --if latest release tag_name does not match local version number.
     debugToDisplay("Update: Release installed: "..tecGitUpdate.localVersion
-      .."\n\tLatest release: "..tecGitUpdate.latestJSONTable[1].tag_name)
-    if tecGitUpdate.latestJSONTable[1].tag_name ~= tecGitUpdate.localVersion then
-      updateAvailable(tecGitUpdate.latestJSONTable[1].body) --notify player update is available
+      .."\n\tLatest release: "..tecGitUpdate.gitJSONTable[1].tag_name)
+    if tecGitUpdate.gitJSONTable[1].tag_name ~= tecGitUpdate.localVersion then
+      updateAvailable(tecGitUpdate.gitJSONTable[1].body) --notify player update is available
       tecGitUpdate.releaseIndex = 1 --notify update engine which version to use
       local errorFound collectURLs() --gather URLs into trackedURLs table
       if errorFound then
@@ -4484,7 +4484,7 @@ local function compareVersions()
 
   --We do not know how large the git release JSON is we will trash it just incase
   --doing this after error catch, if error is found this table will still exist
-  tecGitUpdate.latestJSONTable = nil
+  tecGitUpdate.gitJSONTable = nil
   
 end --function compareVersions
 
@@ -4569,9 +4569,9 @@ local function tecInstallUpdates()
       end --if 0 ~= exists(packageName, packageType)
     end --if packageType
     
-    installPackage(tecSourceDirectory..fileName) --install new package
+    --installPackage(tecSourceDirectory..fileName) --install new package
     --comment out installPackage and uncomment raiseEvent to test without installing package
-    --raiseEvent("sysInstallPackage", packageName, tecSourceDirectory..fileName)
+    raiseEvent("sysInstallPackage", packageName, tecSourceDirectory..fileName)
     
     if packageType then --package name contains a package type. Use it to error check.
       if 0 == exists(packageName, packageType) then --if packageName does not exist in mudlet
@@ -4597,7 +4597,7 @@ end --function tecInstallUpdates
 function tecGitUpdate.eventHandler(event, ...)
   if event == "sysDownloadDone" then --if it is a downloadDone event.
     local file = arg[1] -- in this case name of file downloaded
-    if string.ends(file,tecGitUpdate.latestJSONFileName) then --download is version check file
+    if string.ends(file,tecGitUpdate.gitReleaseURLJSONFile) then --download is version check file
       debugToDisplay("function tecGitUpdate.eventHandler, Download: "..file
         .."\n\tcompareVersions() called.")
       compareVersions() --Use downloaded JSON file to check if latest version is installed
@@ -4622,7 +4622,7 @@ function tecGitUpdate.eventHandler(event, ...)
     local erroredURL = arg[1]:match(".*(https:%/%/%S+)") --retreive URL in error message
     --debugc("Errored URL: "..erroredURL)
     --if  then error download's URL matches downloads for this update engine
-    if trackedDownloads.urlList:match(erroredURL) or tecGitUpdate.latestJSONURL == erroredURL then
+    if trackedDownloads.urlList:match(erroredURL) or tecGitUpdate.gitReleaseURL == erroredURL then
       tecErrorNotification("fuction tecGitUpdate.downloadErrorEventHandler, "..errorFound)
       tecGitUpdate.downloadError = true --notify tecInstallUpdates not to proceed.
     else --for any other download errors.
