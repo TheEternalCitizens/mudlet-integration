@@ -1,2 +1,0 @@
-return {{[1] = [[TEC_Client_Aliases.xml]],[2] = [[TEC_Client_KeyBindings.xml]],[3] = [[imgs.mpackage]],[4] = [[TEC_Client_Timers.xml]],[5] = [[TEC_Client_Triggers.xml]],[6] = [[TEC_Client_Scripts.xml]],},
-}
