@@ -2737,7 +2737,7 @@ function debugToDisplay(textMessage)
 	if getTECDebugMode() then --Is debug mode on?
 		local redBG, greenBG, blueBG = getBgColor() --keep track of current screen color
 		setBgColor( 255,50,50) --change text background to red
-		echo("tecDebugWindow","\n"..textMessage) -- print message to screen
+		cecho("tecDebugWindow","\n"..textMessage) -- print message to screen
 		setBgColor(redBG,greenBG,blueBG) --change text background back to what it was
 	end --if debug mode if check
 end --end displayToDebug function
@@ -4400,12 +4400,13 @@ end --function tecColorWindow()</script>
 					<packageName></packageName>
 					<script>--fully notifies user when an error is found.
 function tecErrorNotification(errorFound)
-  errorc("Error: "..errorFound)
-  debugToDisplay("Error: "..errorFound)
-  echo("Error: "..errorFound.."\n\tPlease contact a developer with: ")
+  debugc("Error: "..errorFound)
+  debugToDisplay("&lt;red:&gt;Error: "..errorFound)
+  cecho("&lt;red:&gt;Error: "..errorFound.."\n\tPlease contact a developer with: ")
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
     [[tecReportIssues()]],
     "Report issues or bugs", true)
+  cecho("")
 end --function tecErrorNotification</script>
 					<eventHandlerList />
 				</Script>
@@ -4418,17 +4419,27 @@ end --function tecErrorNotification</script>
 				<Script isActive="yes" isFolder="no">
 					<name>Tec Git AutoUpdates</name>
 					<packageName></packageName>
-					<script>tecGitUpdate = {}
---If you save this script remember to run tecGitUpdate.config or tecGitUpdate.downloadLatestJSON()
---before attempting to process an update IE: tecclient update
+					<script>--Installs updates from github.
+--Intended for projects that do not support protocols.
+--To allow error checking package file names must end with package type starting with a capitol
+--IE: "My Project Name Scripts.xml" or "MyPackageNameTriggers.xml". It must contain characters
+--before the package type at the end. "Scripts.xml" Will not be tested.
+--"imgs.mpackage" will not be tested.
+
+
+tecGitUpdate = {} --table to hold project.
+--While developing if you save this script, you will need to run the update check again
+--because tecGitUpdate = {} will erase the last update check.
 
 --start of section dedicated for functions used by update process.
 --To understand the flow of updates you will need to scroll past these.
 --There will be a comment stating when update flow starts.
 
-function tecGitUpdate.config() --Create variables used for updates
+function tecGitUpdateconfig() --Create variables used for updates
+
   --github latest release URL
   tecGitUpdate.latestJSONURL = [[https://api.github.com/repos/TheEternalCitizens/mudlet-integration/releases]]
+  --tecGitUpdate.latestJSONURL = [[https://api.github.com/repos/TheEternalCitizens/mudlet-integration/nogoodurlhere]]
   tecGitUpdate.localRespitory = getMudletHomeDir().."/settings/" --local directory for source files
   if not io.exists(tecGitUpdate.localRespitory) then --if folder does not exists
     lfs.mkdir(tecGitUpdate.localRespitory) --create the folder
@@ -4444,8 +4455,12 @@ function tecGitUpdate.config() --Create variables used for updates
   trackedDownloads = {} --used to track updates.
   --The full name or a word in the file that this update script is in.
   tecGitUpdate.updateFileNameReference = "Scripts"
+  tecGitUpdate.downloadError = false --Sets to true if there is a download error.
+  tecGitUpdate.installationError = false --sets to true if there is a package installation error.
   
-  registerAnonymousEventHandler("sysDownloadDone", "tecGitUpdate.eventHandler")
+  trackedDownloads = {} --leave blank, needed for events. Is initialized in function trackDownloads
+  trackedDownloads.fileList = "" --leave blank, needed for events. Initialized in function trackDownloads
+  trackedDownloads.urlList = ""
   
   debugToDisplay("function tecGitUpdate.config: Initialized update engine.\n\tlatestJSONURL: "..tecGitUpdate.latestJSONURL
     .."\n\tScriptFileNameReference: "..tecGitUpdate.updateFileNameReference
@@ -4453,6 +4468,7 @@ function tecGitUpdate.config() --Create variables used for updates
     .."\n\tlatestJSONFileName: "..tecGitUpdate.latestJSONFileName
     .."\n\tLocal Parthia version: "..tecGitUpdate.localVersion)
 end --function tecUpdate.config()
+tecGitUpdateconfig() --initialize update engine on starup.
 
 --Used to easily change update notification. There are multiple instances where
 --Parthia notifies player an update is available.
@@ -4537,7 +4553,8 @@ function trackDownloads(downloadURLs)
       end --urlToTrack:match(tecGitUpdate.updateFileNameReference)
     end --for downloadURLs
     --Make a global table to store URLs that require tracking.
-    trackedDownloads = {files = {}, URLs = {}, downloaded = {}, fileList = "", tmpFiles = {}}
+    trackedDownloads = {files = {}, URLs = {}, downloaded = {}, fileList = "", tmpFiles = {}
+                        , urlList = ""}
     for index, urlToTrack in ipairs(downloadURLs) do --initialize trackedDownloads table
       --Get the name of the file you need to download.
       local tecPackageFileName = urlToTrack:match(".*%/(.*%..*)")
@@ -4557,8 +4574,10 @@ function trackDownloads(downloadURLs)
       --Get the name of the file you need to download.
       trackedDownloads.URLs[index] = urlToTrack
       --create a string that contains a list of files needing download.
-      --This list will be used during sysDownloadDone event to veirfy the correct download.
+      --This list will be used during sysDownloadDone event to veirfy the correct download
       trackedDownloads.fileList = trackedDownloads.fileList..trackedDownloads.files[index].." "
+      --Used to catch download errors.
+      trackedDownloads.urlList = trackedDownloads.urlList..urlToTrack.." "
     end --for downloadURLs
 
   elseif type(downloadURLs) == "string" then --if the variable passed is a string
@@ -4606,29 +4625,42 @@ end --function trackDownloads
 
 --downloads the github JSON REST API JSON file
 function tecGitUpdate.downloadLatestJSON()
-  tecGitUpdate.config() --initialize update engine.
+  tecGitUpdateconfig() --initialize update engine.
   debugToDisplay("Update: Downloading "..tecGitUpdate.latestJSONURL
     .."\n\tTo: "..tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName)
   downloadFile(tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName,
     tecGitUpdate.latestJSONURL) --download the projects latest release JSON info file.
 end --function tecVersionCheck
+
 --after the JSON files is downloaded tecGitUpdate.eventHandler will run compareVersions
 
 --check if version in use is the latest released
 --If player is beta test we compare the latest release both prerelease and release 
 --If standard player we look for latest release not prerelease
 local function compareVersions()
+  debugToDisplay("function compareVersions, opening &amp; reading file:\n\t"
+    ..tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName)
   --open the local github latest release JSON file in read only mode
-  local latestJSONFile = 
+  local latestJSONFile, errorFound = 
     io.open(tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName, "r")
+  if not latestJSONFile then --file was not created error occured.
+    tecErrorNotification("function compareVersions: "..errorFound)
+    latestJSONFile:close() --incase of partial failure, close file.
+    latestJSONFile = nil
+    return  --error found stop update.
+  end --if not latestJSONFile
   local latestJSONString = latestJSONFile:read("*a") --read the entire file to a string
   latestJSONFile:close() --close the file
+  latestJSONFile = nil
+  if not latestJSONString then --the file did not read correctly.
+    tecErrorNotification("function compareVersions, file read failure.\n\t"
+      ..tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName)
+    return --error found stop update.
+  end --if not latestJSONString
   --Convert github release JSON into a table
   tecGitUpdate.latestJSONTable = yajl.to_value(latestJSONString)
   if tecGitUpdate.latestJSONTable[1].name then --if the table was made.
-    debugToDisplay("Update: Opened file: "..tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName
-      .."\n\tIt contained: "..latestJSONString
-      .."\n\tIt was successfully converted to a table.")
+    debugToDisplay("function compareVersions, file read successful.")
   else --if the table was not successfully made we can not continue. Notify player.
     errorFound = "Update: Error, JSON to table conversion unsuccessfull.\n\tOpened file: "
       ..tecGitUpdate.localRespitory..tecGitUpdate.latestJSONFileName
@@ -4644,11 +4676,11 @@ local function compareVersions()
       .."\n\tLatest release: tecGitUpdate.latestJSONTable[1].tag_name")
     if tecGitUpdate.latestJSONTable[1].tag_name ~= tecGitUpdate.localVersion then
       updateAvailable(tecGitUpdate.latestJSONTable[1].body) --notify player update is available
-      tecGitUpdate.releaseIndex = 1 --notify update which version to use
+      tecGitUpdate.releaseIndex = 1 --notify update engine which version to use
       local errorFound collectURLs() --gather URLs into trackedURLs table
       if errorFound then
         tecErrorNotification(errorFound)
-        return
+        return --error found stop update.
       end --if error found
     else
       cecho("Thank you for beta testing!\n\tNo new releases at this time.")
@@ -4657,7 +4689,7 @@ local function compareVersions()
     local errorFound = releaseSearch() --search for latest NONbeta release
     if errorFound then
       tecErrorNotification(errorFound)
-      return
+      return --error found stop update.
     end --if error found
   end --if betaTester
 
@@ -4675,28 +4707,28 @@ function tecGitUpdate.downloadScripts()
   --it is running. Also leave it off so user can not process an update when one 
   --is not required.
   disableAlias(tecGitUpdate.aliasName)
+  tecGitUpdate.downloadError = false --in case of previous download error.
   
   --if tecGitUpdate.trackedURLs has been initialized.
   if type(tecGitUpdate.trackedURLs[1]) == "string" then 
     trackDownloads(tecGitUpdate.trackedURLs) --initialize trackDownloads
   else --tecGitUpdate.trackedURLs was not initialized throw error.
-    errorFound = "function: tecGitUpdate.downloadScripts() trackedURLs was not "
-      .."initialized."
+    errorFound = "function tecGitUpdate.downloadScripts(), trackedURLs was not initialized."
     tecErrorNotification(errorFound)
     return --stop because we can not proceed.
   end --if tecGitUpdate.trackedURLs is not nil.
 
   --download the files required.
   for index, trackedDownload in ipairs(tecGitUpdate.trackedURLs) do
-    debugToDisplay("function tecGitUpdate.downloadScripts downloading "
+    debugToDisplay("function tecGitUpdate.downloadScripts, downloading "
       ..trackedDownload.."\n\tto "
       ..tecGitUpdate.localRespitory..trackedDownloads.files[index])
     --download file
     downloadFile(tecGitUpdate.localRespitory..trackedDownloads.files[index], trackedDownload)
   end --for tecGitUpdate.trackedURLs
 
---[[download tester
-  --download the files required.
+--[[
+  --this code can be used to test trackedDownloads without using sysDownloadDone function
   for index, trackedDownload in ipairs(tecGitUpdate.trackedURLs) do
     debugToDisplay("function tecGitUpdate.downloadScripts downloading "
       ..trackedDownload.."\n\tto "
@@ -4710,56 +4742,135 @@ function tecGitUpdate.downloadScripts()
     if boolOrErrorMessage then
       debugToDisplay("Downloads completed!!!")
     end
-    --downloadFile(tecGitUpdate.localFileStore..trackedDownloads.files[index], trackedDownload)
   end --for tecGitUpdate.trackedURLs
 ]]--
 
 end --function tecGitUpdate.downloadScripts()
 
+--After all files have been downloaded tecGitUpdate.eventHandler will call tecInstallUpdates
+
 local function tecInstallUpdates()
-  local tecSourceDirectory = tecGitUpdate.localRespitory
+  if tecGitUpdate.downloadError then --if a download error occured.
+    cecho("Download error occured. Update can not be processed.\n")
+    tecGitUpdate.downloadError = false --Reset now that we have caught the error.
+  end --if tecGitUpdate.downloadError
+  local tecSourceDirectory = tecGitUpdate.localRespitory --Keep required data outside of tecGitUpdate
   for index, fileName in ipairs(trackedDownloads.files) do --loop through scripts, and install them
-    local packageName = string.gsub(fileName:match("(.*)%."), "%.", "") --remove periods from filename
-    debugToDisplay("function tecInstallUpdates: removing package "..packageName)
-    --uninstallPackage(packageName) --remove old package
-    debugToDisplay("Update: Installing package: "..tecSourceDirectory..fileName)
+    local packageName = fileName:match("(.*)%.") --remove extension from filename
+    local packageTypeList = {"alias", "trigger", "timer", "keybind", "script", 
+                             "Alias", "Trigger", "Timer", "Keybind", "Script",
+                             "KeyBind"}                               
+    for index, packageTypeName in ipairs(packageTypeList) do
+      packageType = packageName:match(packageTypeName) --find packageType in the package name
+      if packageType then --package name contains a package type. Use it to error check.
+        debugToDisplay("function tecInstallUpdates: Package type found, "
+          ..packageType..". Error checking will be processed for" ..packageName)
+        break --packageType found. Contining this would would nil packageType
+      end --if packageType
+    end --for ipairs(packageTypeList)
+    
+    uninstallPackage(packageName) --remove old package
+    --comment out uninstallPackage and uncomment raiseEvent to test without uninstalling package
+    --raiseEvent("sysUninstallPackage", packageName)
+    
+    if packageType then --package name contains a package type. Use it to error check.
+      if 0 ~= exists(packageName, packageType) then --if packagename appears in mudlet
+        debugToDisplay("&lt;yellow:&gt;Warning function tecInstallUpdates: appearance of the package "
+          ..packageName.." in the "..packageType.." section unexpected.")
+      end --if 0 ~= exists(packageName, packageType)
+    end --if packageType
+    
     installPackage(tecSourceDirectory..fileName) --install new package
+    --comment out installPackage and uncomment raiseEvent to test without installing package
+    --raiseEvent("sysInstallPackage", packageName, tecSourceDirectory..fileName)
+    
+    if packageType then --package name contains a package type. Use it to error check.
+      if 0 == exists(packageName, packageType) then --if packageName does not exist in mudlet
+        local errorFound = "function tecInstallUpdates: "..packageName.." was not found in "
+          .." the "..packageType.." section. After package installation."
+        tecErrorNotification(errorFound) --display error.
+        tecGitUpdate.installationError = true --Notify tecInstallUpdates there is an error
+      end --if 0 ~= exists(packageName, packageType)
+    end --if packageType
+
   end --for tecUpdate.scriptNames
+  
+  if tecGitUpdate.installationError then --there were errors during installation.
+    cecho("Errors during installation. Please report issues using the report issues button "
+      .."in the settings window.\n")
+    return --stop update process
+  end --if tecGitUpdate.installationError
   
   debugToDisplay("Updates completed.\n")
   cecho("Updates completed.\n")
 end --function tecInstallUpdates
 
 function tecGitUpdate.eventHandler(event, ...)
-  if event == "sysDownloadDone" then
+  if event == "sysDownloadDone" then --if it is a downloadDone event.
     local file = arg[1] -- in this case name of file downloaded
-    if string.ends(file,tecGitUpdate.latestJSONFileName) then --download is version check  file
-      debugToDisplay("Update sysDownloadDone Event: Download: "..file
-        .."\n\tdownloaded, compareVersions() called.")
+    if string.ends(file,tecGitUpdate.latestJSONFileName) then --download is version check file
+      debugToDisplay("function tecGitUpdate.eventHandler, Download: "..file
+        .."\n\tcompareVersions() called.")
       compareVersions() --Use downloaded JSON file to check if latest version is installed
-    --if the name of the file being downloaded is in 
+    --if the name of the file being downloaded is in trackedDownloads.fileList
     elseif trackedDownloads.fileList:match(file:match(".*%/(.*%..*)$")) then
-      debugToDisplay("git Update sysDownloadDone Event downloaded: "..
-        file.."\n\tTracking download with function trackDownloads.")
       local boolOrErrorMessage = trackDownloads(file:match(".*%/(.*%..*)$"))
-          if boolOrErrorMessage then
-            debugToDisplay("Git Updates downloads completed. Running function "
-              .." tecInstallUpdates()")
+          if boolOrErrorMessage then --if true, all files have downloaded.
+            debugToDisplay("function tecGitUpdate.eventHandler, all downloads completed. "
+              .."Running function tecInstallUpdates()")
             tecInstallUpdates() --install the downloaded scripts
           elseif type(boolOrErrorMessage) == "string" then --if error found
             tecErrorNotification(boolOrErrorMessage) --notify player of error
           else --all downloads are not completed.
-            debugToDisplay(file..
-              " completed downloading. Not all tracked files downloaded yet.")
+            debugToDisplay(file.." completed downloading. Not all tracked files downloaded yet.")
           end --if boolOrErrorMessage
     else
-      debugToDisplay("Update sysDownloadDone Event: Downloaded file: "..file
+      debugToDisplay("function tecGitUpdate.eventHandler, Downloaded file: "..file
         .."\n\tWas NOT caught by event handler.")
     end --elseif file downloaded is new script
-  end --if event == elseif
+  elseif event == "sysDownloadError" then --if there is a download error.
+    local errorFound = arg[1] --sysDownloadError only argument is error message.
+    local erroredURL = arg[1]:match(".*(https:%/%/%S+)") --retreive URL in error message
+    --debugc("Errored URL: "..erroredURL)
+    --if  then error download's URL matches downloads for this update engine
+    if trackedDownloads.urlList:match(erroredURL) or tecGitUpdate.latestJSONURL == erroredURL then
+      tecErrorNotification("fuction tecGitUpdate.downloadErrorEventHandler, "..errorFound)
+      tecGitUpdate.downloadError = true --notify tecInstallUpdates not to proceed.
+    else --for any other download errors.
+      debugToDisplay("fuction tecGitUpdate.downloadErrorEventHandler, "..errorFound)
+    end --if trackedDownloads.urlList:match(erroredURL)
+  elseif event == "sysInstallPackage" then --after a package has installed.
+    local tecInstalledPackageName = arg[1] --notify 
+    local tecInstalledPackageFileName = arg[2]
+    debugToDisplay("function tecGitUpdate.eventHandler: "..tecInstalledPackageName.." package installed from file: "
+      ..tecInstalledPackageFileName)
+  elseif event == "sysUninstallPackage" then --after a package has installed.
+    local tecUninstalledPackage = arg[1]
+    debugToDisplay("function tecGitUpdate.eventHandler: "..tecUninstalledPackage.." package uninstalled.")
+  end --if event name
 end --function tecUpdate.eventHandler()
 
---registerAnonymousEventHandler("sysDownloadDone", "tecGitUpdate.eventHandler")</script>
+--Register event handler for downloads.
+registerAnonymousEventHandler("sysDownloadDone", "tecGitUpdate.eventHandler")
+registerAnonymousEventHandler("sysDownloadError", "tecGitUpdate.eventHandler")
+registerAnonymousEventHandler("sysInstallPackage", "tecGitUpdate.eventHandler")
+registerAnonymousEventHandler("sysUninstallPackage", "tecGitUpdate.eventHandler")</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecWarningNotification(errorFound)</name>
+					<packageName></packageName>
+					<script>--fully notifies user when an error is found.
+function tecWarningNotification(errorFound)
+  debugc("Error: "..errorFound)
+  debugToDisplay("&lt;yellow:&gt;Error: "..errorFound)
+  cecho("&lt;Yellow:&gt;Warning: "..errorFound
+    .."\n\tIf you experence issues contact a developer with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
+    [[tecReportIssues()]],
+    "Report issues or bugs", true)
+  cecho("")
+end --function tecErrorNotification</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
