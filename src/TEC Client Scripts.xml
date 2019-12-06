@@ -4558,9 +4558,9 @@ local function tecInstallUpdates()
       end --if packageType
     end --for ipairs(packageTypeList)
     
-    --uninstallPackage(packageName) --remove old package
+    uninstallPackage(packageName) --remove old package
     --comment out uninstallPackage and uncomment raiseEvent to test without uninstalling package
-    raiseEvent("sysUninstallPackage", packageName)
+    --raiseEvent("sysUninstallPackage", packageName)
     
     if packageType then --package name contains a package type. Use it to error check.
       if 0 ~= exists(packageName, packageType) then --if packagename appears in mudlet
@@ -4569,9 +4569,9 @@ local function tecInstallUpdates()
       end --if 0 ~= exists(packageName, packageType)
     end --if packageType
     
-    --installPackage(tecSourceDirectory..fileName) --install new package
+    installPackage(tecSourceDirectory..fileName) --install new package
     --comment out installPackage and uncomment raiseEvent to test without installing package
-    raiseEvent("sysInstallPackage", packageName, tecSourceDirectory..fileName)
+    --raiseEvent("sysInstallPackage", packageName, tecSourceDirectory..fileName)
     
     if packageType then --package name contains a package type. Use it to error check.
       if 0 == exists(packageName, packageType) then --if packageName does not exist in mudlet
