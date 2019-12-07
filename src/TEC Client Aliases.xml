@@ -286,6 +286,14 @@ Current font size: ]]..getTECFont())</script>
 				<regex>^tecclient update$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
+				<name>tecclient repair</name>
+				<script>--force an update installation. Intended for repair installation.
+tecGitUpdate.downloadScripts() --Begin downloading updates</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient repair$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
 				<name>tecclient update check</name>
 				<script>tecGitUpdate.downloadGitReleaseJSON() --check if an update is needed.</script>
 				<command></command>
@@ -293,20 +301,18 @@ Current font size: ]]..getTECFont())</script>
 				<regex>^tecclient update check$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>tecclient save script names</name>
-				<script>--Intended for developers.
-tecUpdate.saveScriptNames() --Saves script names</script>
+				<name>tecclient beta test yes</name>
+				<script>tecSetBetaTester(true) --inform Parthia player is a beta tester.</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^tecclient save script names$</regex>
+				<regex>^tecclient beta test yes$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>tecclient save versions</name>
-				<script>--Intended for developers.
-tecUpdate.saveVersions() --Saves versions table to file.</script>
+				<name>tecclient beta test no</name>
+				<script>tecSetBetaTester(false) --inform Parthia player is a beta tester.</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^tecclient save versions$</regex>
+				<regex>^tecclient beta test no$</regex>
 			</Alias>
 			<AliasGroup isActive="yes" isFolder="yes">
 				<name>colors</name>
