@@ -4237,7 +4237,6 @@ end --function tecErrorNotification</script>
 --before the package type at the end. "Scripts.xml" Will not be tested.
 --"imgs.mpackage" will not be tested.
 
-
 tecGitUpdate = {} --table to hold project.
 --While developing if you save this script, you will need to run the update check again
 --because tecGitUpdate = {} will erase the last update check.
@@ -4257,8 +4256,8 @@ function tecGitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if tecGitUpdate.localRespitory not exist
   tecGitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  tecGitUpdate.localVersion = "0.1.10" --Parthia version player is currently using
-  tecGitUpdate.releaseIndex = 0
+  tecGitUpdate.localVersion = "0.1.11" --Parthia version player is currently using
+  tecGitUpdate.releaseIndex = 0 --Position on proper update in gitHub JSON table
   tecGitUpdate.trackedURLs = {} --will be URLs that need to have downloads tracked
   tecGitUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
   trackedDownloads = {} --used to track updates.
@@ -4267,10 +4266,11 @@ function tecGitUpdateconfig() --Create variables used for updates
   tecGitUpdate.downloadError = false --Sets to true if there is a download error.
   tecGitUpdate.installationError = false --sets to true if there is a package installation error.
   tecGitUpdate.installationInProgress = false --notifies update engine if update is running.
+  tecGitUpdate.betaTester = tecGitUpdate.betaTester --notify update engine if player is a beta tester.
   
   trackedDownloads = {} --leave blank, needed for events. Is initialized in function trackDownloads
   trackedDownloads.fileList = "" --leave blank, needed for events. Initialized in function trackDownloads
-  trackedDownloads.urlList = ""
+  trackedDownloads.urlList = "" --leave blank, used to check for download errors.
   
   debugToDisplay("function tecGitUpdate.config: Initialized update engine.\n\tgitReleaseURL: "..tecGitUpdate.gitReleaseURL
     .."\n\tScriptFileNameReference: "..tecGitUpdate.updateFileNameReference
@@ -4336,6 +4336,9 @@ local function releaseSearch()
             updateAvailable(releaseData.body) --notify player an update is available
             return
           end --if errorFound else
+        else --if releaseData.tag_name ~= tecGitUpdate.localVersion, Parthia up to date.
+          cecho("Parthia is up to date.\n")
+          return --end releaseSearch()
         end --if releaseData.prerelease.tag_name ~= tecGitUpdate.localVersion
       end --if releaseData.prerelease == "false"
     end --for
@@ -4490,7 +4493,7 @@ local function compareVersions()
   end --tecGitUpdate.gitJSONTable exists
   
   --Look the table for the latest non beta release.
-  if tecSettings.betaTester then --if player is a beta tester install latest release   
+  if tecGitUpdate.betaTester then --if player is a beta tester install latest release   
     --if latest release tag_name does not match local version number.
     debugToDisplay("Update: Release installed: "..tecGitUpdate.localVersion
       .."\n\tLatest release: "..tecGitUpdate.gitJSONTable[1].tag_name)
@@ -4720,7 +4723,7 @@ end --function tecErrorNotification</script>
   tecSettings.betaTester = betaTester --tell Parthia player is a beta tester.
   
   if tecSettings.betaTester then
-    cecho("You will now receive beta updates.\n\tThank you this helps us a GREAET deal!\n")
+    cecho("You will now receive beta updates.\n\tThank you this helps us a GREAT deal!\n")
   else
     cecho("You will not receive beta updates.\n")
   end --if betaTester
