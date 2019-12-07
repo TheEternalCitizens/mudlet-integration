@@ -3354,6 +3354,16 @@ end --end tecDisplayHelp()</script>
 					<script>function tecClientHelp()
 
   echo("\ntecclient command:\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient beta test yes", 
+  [[tecSetBetaTester(true)]],
+  "Receive beta updates", true)
+  echo(", Receive beta updates and help us make a reliable client.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient beta test no", 
+  [[tecSetBetaTester(false)]],
+  "Stop receiving beta updates", true)
+  echo(", No longer receive beta updates.\n")
 	
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient font size", 
   [[printCmdLine("tecclient font size ")]],
@@ -3391,8 +3401,18 @@ end --end tecDisplayHelp()</script>
   [[tecClientResetAll();tecClientSaveAll("true")]],
   "Reset all client settings to default", true)
   echo(", Reset client and display to default settings. "
-  	.."Saves default settings to file and disconnects client.\n"
+  	.."Saves default settings to file and disconnects client.\n\t"
   	.."This command REQUIRES a restart of mudlet!\n")
+    
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient repair", 
+  [[tecGitUpdate.downloadScripts()]],
+  "Repair Parthia", true)
+  echo(", repairs Parthia. By replacing all developer created code.")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient update check", 
+  [[tecGitUpdate.downloadGitReleaseJSON()]],
+  "Check for updates", true)
+  echo(", check if updates are required.")
 
 end --function tecClientHelp</script>
 					<eventHandlerList />
@@ -4237,7 +4257,7 @@ function tecGitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if tecGitUpdate.localRespitory not exist
   tecGitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  tecGitUpdate.localVersion = "0.1.1" --Parthia version player is currently using
+  tecGitUpdate.localVersion = "0.1.10" --Parthia version player is currently using
   tecGitUpdate.releaseIndex = 0
   tecGitUpdate.trackedURLs = {} --will be URLs that need to have downloads tracked
   tecGitUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
@@ -4246,6 +4266,7 @@ function tecGitUpdateconfig() --Create variables used for updates
   tecGitUpdate.updateFileNameReference = "Scripts"
   tecGitUpdate.downloadError = false --Sets to true if there is a download error.
   tecGitUpdate.installationError = false --sets to true if there is a package installation error.
+  tecGitUpdate.installationInProgress = false --notifies update engine if update is running.
   
   trackedDownloads = {} --leave blank, needed for events. Is initialized in function trackDownloads
   trackedDownloads.fileList = "" --leave blank, needed for events. Initialized in function trackDownloads
@@ -4267,7 +4288,7 @@ local function updateAvailable(updateBody)
   cecho(updateBody)
   cecho("\n&lt;:maroon&gt;To update now, please run: ")
   cechoLink("&lt;:blue&gt;tecclient update", --link text to display
-    [[tecGitUpdate.downloadScripts()]], --link command to run
+    [[expandAlias(tecGitUpdate.aliasName)]], --link command to run
     "Update game client", true) --link tool tip for mouse hover
   echo("\n") --cechoLinks don't cause the window to autoscroll.
 end --function updateAvailable
@@ -4414,11 +4435,18 @@ end --function trackDownloads
 
 --downloads the github JSON REST API JSON file
 function tecGitUpdate.downloadGitReleaseJSON()
+  --check if an installation is in progress.
+  if tecGitUpdate.installationInProgress then
+    echo("An update is currently processing. Only one update can run at a time.\n")
+    return --stop updates one is processing.
+  end
   tecGitUpdateconfig() --initialize update engine.
+  tecGitUpdate.installationInProgress = true --notify Parthia an update is in progress
   debugToDisplay("Update: Downloading "..tecGitUpdate.gitReleaseURL
     .."\n\tTo: "..tecGitUpdate.localRespitory..tecGitUpdate.gitReleaseURLJSONFile)
   downloadFile(tecGitUpdate.localRespitory..tecGitUpdate.gitReleaseURLJSONFile,
     tecGitUpdate.gitReleaseURL) --download the projects latest release JSON info file.
+  tecGitUpdate.installationInProgress = false --notify Parthia installation not running.
 end --function tecVersionCheck
 
 --after the JSON files is downloaded tecGitUpdate.eventHandler will run compareVersions
@@ -4436,6 +4464,7 @@ local function compareVersions()
     tecErrorNotification("function compareVersions: "..errorFound)
     gitJSONFile:close() --incase of partial failure, close file.
     gitJSONFile = nil
+    tecGitUpdate.installationInProgress = false --notify Parthia installation not running.
     return  --error found stop update.
   end --if not gitJSONFile
   local gitJSONString = gitJSONFile:read("*a") --read the entire file to a string
@@ -4444,6 +4473,7 @@ local function compareVersions()
   if not gitJSONString then --the file did not read correctly.
     tecErrorNotification("function compareVersions, file read failure.\n\t"
       ..tecGitUpdate.localRespitory..tecGitUpdate.gitReleaseURLJSONFile)
+    tecGitUpdate.installationInProgress = false --notify Parthia installation not running.
     return --error found stop update.
   end --if not gitJSONString
   --Convert github release JSON into a table
@@ -4455,6 +4485,7 @@ local function compareVersions()
       ..tecGitUpdate.localRespitory..tecGitUpdate.gitReleaseURLJSONFile
       .."\n\tIt contained: "..gitJSONString
     tecErrorNotification(errorFound) --Notify player provide method to report error
+    tecGitUpdate.installationInProgress = false --notify Parthia installation not running.
     return --error found stop update.
   end --tecGitUpdate.gitJSONTable exists
   
@@ -4469,6 +4500,7 @@ local function compareVersions()
       local errorFound collectURLs() --gather URLs into trackedURLs table
       if errorFound then
         tecErrorNotification(errorFound)
+        tecGitUpdate.installationInProgress = false --notify Parthia installation not running.
         return --error found stop update.
       end --if error found
     else
@@ -4478,6 +4510,7 @@ local function compareVersions()
     local errorFound = releaseSearch() --search for latest NONbeta release
     if errorFound then
       tecErrorNotification(errorFound)
+      tecGitUpdate.installationInProgress = false --notify Parthia installation not running.
       return --error found stop update.
     end --if error found
   end --if betaTester
@@ -4485,6 +4518,8 @@ local function compareVersions()
   --We do not know how large the git release JSON is we will trash it just incase
   --doing this after error catch, if error is found this table will still exist
   tecGitUpdate.gitJSONTable = nil
+  
+  tecGitUpdate.installationInProgress = false --notify Parthia installation not running.
   
 end --function compareVersions
 
@@ -4497,13 +4532,26 @@ function tecGitUpdate.downloadScripts()
   --is not required.
   disableAlias(tecGitUpdate.aliasName)
   tecGitUpdate.downloadError = false --in case of previous download error.
-  
+
+  --check if an installation is in progress.
+  if tecGitUpdate.installationInProgress then
+    echo("An update is currently processing. Please wait for it to complete.\n"
+      .."Once the update is done you will need to check if an update is still "
+      .."required by running: ")
+    cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient update check", 
+      [[expandAlias(tecGitUpdate.aliasName)]],
+      "Check for updates", true)
+    return
+  end
+  tecGitUpdate.installationInProgress = true --notify Parthia an update is in progress
+
   --if tecGitUpdate.trackedURLs has been initialized.
   if type(tecGitUpdate.trackedURLs[1]) == "string" then 
     trackDownloads(tecGitUpdate.trackedURLs) --initialize trackDownloads
   else --tecGitUpdate.trackedURLs was not initialized throw error.
     errorFound = "function tecGitUpdate.downloadScripts(), trackedURLs was not initialized."
     tecErrorNotification(errorFound)
+    tecGitUpdate.installationInProgress = false --notify Parthia installation not running.
     return --stop because we can not proceed.
   end --if tecGitUpdate.trackedURLs is not nil.
 
@@ -4587,11 +4635,13 @@ local function tecInstallUpdates()
   if tecGitUpdate.installationError then --there were errors during installation.
     cecho("Errors during installation. Please report issues using the report issues button "
       .."in the settings window.\n")
+    tecGitUpdate.installationInProgress = false --notify Parthia installation not running.
     return --stop update process
   end --if tecGitUpdate.installationError
   
   debugToDisplay("Updates completed.\n")
   cecho("Updates completed.\n")
+  tecGitUpdate.installationInProgress = false --notify Parthia installation not running.
 end --function tecInstallUpdates
 
 function tecGitUpdate.eventHandler(event, ...)
@@ -4660,6 +4710,31 @@ function tecWarningNotification(errorFound)
     "Report issues or bugs", true)
   cecho("")
 end --function tecErrorNotification</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecSetBetaTester(betaTester)</name>
+					<packageName></packageName>
+					<script>function tecSetBetaTester(betaTester)
+  betaTester = fuzzyBoolean(betaTester) --make certain nothin odd gets sent.
+  tecSettings.betaTester = betaTester --tell Parthia player is a beta tester.
+  
+  if tecSettings.betaTester then
+    cecho("You will now receive beta updates.\n\tThank you this helps us a GREAET deal!\n")
+  else
+    cecho("You will not receive beta updates.\n")
+  end --if betaTester
+  
+  dontForgetToSave() --remind player to save
+end --function tecSetBetaTester(betaTester)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecGetBetaTester()</name>
+					<packageName></packageName>
+					<script>function tecGetBetaTester()
+  return tecSettings.betaTester
+end --function tecGetBetaTester</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -4766,6 +4841,29 @@ end --function recRoomCharRefreshNotification()</script>
     .."one command per second.\nWe will be automating this in future releases.\n")
   tecRoomObjects.refreshMessageDisplayed = true --tell client no further refreshes needed
 end --function tecResetRoomCharacterWindow</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>Misc</name>
+				<packageName></packageName>
+				<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external scripts --
+-------------------------------------------------
+</script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>dontForgetToSave()</name>
+					<packageName></packageName>
+					<script>function dontForgetToSave()
+  cecho("Don't forget to save your changes with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  cecho("") --cechoLink will not \n on its own.
+end --function dontForgetToSave</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
