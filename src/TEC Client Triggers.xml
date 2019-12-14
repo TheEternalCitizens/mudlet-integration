@@ -1494,7 +1494,7 @@ tecRoomCharRefreshNotification()</script>
 
 --Sort delay before processing update check. Without this the update request may be barried
 --under login text.
-tecUpdate.update_timer = tempTimer(1, [[tecGitUpdate.downloadGitReleaseJSON()]])
+local gitUpdate_timer = tempTimer(1, [[tecGitUpdate.downloadGitReleaseJSON()]])
 
 --Set default text in room characters window
 tecResetRoomCharacterWindow()</script>

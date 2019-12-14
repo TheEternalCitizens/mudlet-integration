@@ -280,7 +280,7 @@ Current font size: ]]..getTECFont())</script>
 			</Alias>
 			<Alias isActive="no" isFolder="no">
 				<name>tecclient update</name>
-				<script>tecGitUpdate.downloadScripts() --Begin downloading updates</script>
+				<script>tecDownloadScripts() --Begin downloading updates</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^tecclient update$</regex>
@@ -288,14 +288,14 @@ Current font size: ]]..getTECFont())</script>
 			<Alias isActive="yes" isFolder="no">
 				<name>tecclient repair</name>
 				<script>--force an update installation. Intended for repair installation.
-tecGitUpdate.downloadScripts() --Begin downloading updates</script>
+tecDownloadScripts() --Begin downloading updates</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^tecclient repair$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>tecclient update check</name>
-				<script>tecGitUpdate.downloadGitReleaseJSON() --check if an update is needed.</script>
+				<script>tecDownloadGitReleaseJSON() --check if an update is needed.</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^tecclient update check$</regex>
