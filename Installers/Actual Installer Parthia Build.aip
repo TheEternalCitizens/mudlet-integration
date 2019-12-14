@@ -1,0 +1,174 @@
+﻿[Setup]
+Version=7.5
+Edition=1
+GUID={143DE204-C574-4F1B-9870-B5528959BC4C}
+AppName=Parthia Installation
+AppVersion=0.1.13
+AppDescription=Mudlet Scripts for The Eternal City
+CompanyName=The Eternal Citizens
+WebSite=https://github.com/TheEternalCitizens/mudlet-integration
+SupportLink=https://github.com/TheEternalCitizens/mudlet-integration/issues
+InstallMode=0
+InstallLevel=1
+PromptUninstall=1
+PromptSilentUninstall=0
+CheckVersions=0
+CheckMinVer=1.0
+CheckMaxVer=2.0
+CheckNoUpdate=0
+Windows XP=1
+Windows Vista=1
+Windows 7=1
+Windows 8=1
+Windows 8.1=1
+Windows 10=1
+Windows Server 2003=0
+Windows Server 2008=0
+Windows Server 2008 R2=0
+Windows Server 2012=0
+Windows Server 2012 R2=0
+Windows Server 2016=0
+Windows Server 2019=0
+x64=0
+SystemType=0
+Admin=0
+Internet=0
+CloseApp=1
+CloseAppFile=mudlet.exe
+CloseAppText=Mudlet the MUD client
+CloseApp2=0
+CloseAppFile2=
+CloseAppText2=
+dotNET=0
+dotNETVersion=0
+LinkDN=https://www.microsoft.com/en-us/download/details.aspx?id=56116
+IE=0
+IEVersion=0
+LinkIE=http://www.microsoft.com/en-us/download/internet-explorer-10-details.aspx
+AR=0
+ARVersion=7
+LinkAR=http://get.adobe.com/reader/
+Java=0
+JavaVersion=0
+LinkJR=http://www.java.com/en/download/manual.jsp
+SQL=0
+SQLVersion=0
+LinkSQL=http://www.microsoft.com/en-us/download/details.aspx?id=5783
+SQLE=0
+SQLEVersion=0
+SQLExpressVersion=2005
+LinkSQLE=https://www.microsoft.com/en-us/download/details.aspx?id=55994
+VisualCpp=0
+VisualCppVersion=0
+LinkVisualCpp=https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads
+PackageType=0
+DataFileName=
+SetupFolder=C:\Users\David\.config\mudlet\profiles\The Eternal Citizens\Scripts\mudlet-integration\Installers
+SetupFileName=Install Parthia
+SetupFile=C:\Users\David\.config\mudlet\profiles\The Eternal Citizens\Scripts\mudlet-integration\Installers\Install Parthia.exe
+IconFile=Default
+SourceDir=C:\Users\David\.config\mudlet\profiles\The Eternal City Build Profile
+InstallationPath=<UserProfile>\.config\mudlet\profiles\The Eternal City
+MainExecutable=
+ProgramGroup=<AppName>
+Uninstall=1
+ShowAddRemove=1
+SilentUninstall=0
+UninstallForce=0
+UninstallRestart=0
+UninstallSettings=0
+UninstallSettingsCommand=
+VisitUninstallPage=1
+UninstallURL=https://github.com/TheEternalCitizens/mudlet-integration/issues
+UninstallCloseMainExe=1
+UninstallCloseApp=1
+UninstallCloseAppFile=mudlet.exe
+UninstallCloseAppText=Mudlet the MUD client
+Updater=0
+UpdateURL=http://www.website.com/update.txt
+CheckUpdateBefore=0
+CheckUpdaterTitle=0
+CheckUseDownloader=0
+CheckUpdateOnLaunch=0
+AutoCheckUpdate=0
+AutoSilentUpdate=0
+UpdateFrequency=2
+CheckUpdatePassParam=0
+CheckUpdaterParam=?id=<AppVersion>
+CheckSmartNotification=0
+AllowChangeUpdate=0
+LaunchOnStatup=0
+SelectFolderMode=0
+AltInstallDir=<AppData>\<AppName>
+DataExtractParam=-o"<InstallDir>" -aoa
+ImageSettings=0000
+UninstallFileName=Uninstall.exe
+WizardBitmap=C:\Program Files (x86)\Actual Installer\Bitmaps\Wizard\01.bmp
+HeaderBitmap=C:\Program Files (x86)\Actual Installer\Bitmaps\Header\01.bmp
+LogoBitmap=C:\Program Files (x86)\Actual Installer\Bitmaps\Logo\01.bmp
+SilentInstall=0
+Theme=2
+ShowPublisher=1
+HideFileNames=1
+Beep=1
+RunAsAdmin=0
+DialogWelcome=1
+DialogLicense=1
+DialogReadme=0
+DialogUserInfo=0
+DialogDestinationFolder=1
+DialogAdditionalTasks=1
+DialogReady=0
+DialogFinish=1
+DefaultLanguage=English
+AutoDetectLanguage=0
+AcceptAgreement=1
+InfoUserName=0
+InfoUserNameReq=0
+InfoCompany=0
+InfoCompanyReq=0
+InfoCustom=0
+InfoCustomReq=0
+InfoCustomName=
+InfoCustomType=0
+InfoSerial=0
+InfoSerialReq=0
+SerialsCount=0
+InfoCustomBox=0
+InfoCustomBoxReq=0
+InfoCustomBoxName=
+CustomComboBox=0
+CustomComboBoxName=
+CustomComboBoxItems=
+CustomComboDefItem=
+RestartComputer=0
+LaunchFile=0
+LaunchFileName=
+LaunchFileChecked=0
+LaunchFileAdmin=0
+CustomAction=0
+CustomActionName=Visit Web Site
+CustomActionCommand=<WebSite>
+CustomActionChecked=0
+CustomActionAdmin=0
+TotalFiles=1
+
+[Languages]
+English=
+
+[Files]
+0=C:\Program Files (x86)\Actual Installer\Uninstall.exe?<InstallDir>\Uninstall.exe?1?-1
+
+[License]
+(Default)=https://raw.githubusercontent.com/TheEternalCitizens/mudlet-integration/master/LICENSE.md
+English=
+
+[Readme]
+(Default)=
+English=
+
+[Shortcuts]
+0=<StartMenu>\Parthia*?Uninstall <AppName>*?<InstallDir>\Uninstall.exe*?Removed parthia, leaving mudlet installed.*?*?<InstallDir>*?*?0*?Normal
+1=<StartMenu>\Parthia*?Parthia - The Eternal City*?<UserProfile>\AppData\Local\Mudlet\mudlet.exe*?Play The Eternal City*?*?*?*?0*?Normal
+2=<Desktop>*?The Eternal City - Parthia*?<UserProfile>\AppData\Local\Mudlet\mudlet.exe*?Play The Eternal City*?*?*?*?0*?Normal
+
