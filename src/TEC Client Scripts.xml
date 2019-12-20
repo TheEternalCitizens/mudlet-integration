@@ -4450,7 +4450,7 @@ function tecGitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if tecGitUpdate.localRespitory not exist
   tecGitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  tecGitUpdate.localVersion = "0.1.14" --Parthia version player is currently using
+  tecGitUpdate.localVersion = "0.1.15" --Parthia version player is currently using
   tecGitUpdate.releaseIndex = 0 --Position on proper update in gitHub JSON table
   tecGitUpdate.trackedURLs = {} --will be URLs that need to have downloads tracked
   tecGitUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
