@@ -3184,23 +3184,29 @@ function configTooltips()
     tooltips = {}
     tooltips.fontSize = 10 --size of the font that will appear in the Tooltip
     tooltips.timeout = 2 --how long tip stays active after mouse leaves label
-    tooltips.height = 20 --Height of the tool tip.
     tooltips.name = "Tooltip" --name of the label
+    tooltips.fontfamily = "Arial"
     tooltips.styleSheet = [[
      background-color: "#aadddd99";
      border: 2px solid #555533;
+     font-family: ]]..tooltips.fontfamily..[[;
      ]]
+    local _, ttTextHeight = calcFontSize(tooltips.fontSize, tooltips.fontfamily) --get width of a single font character
+    tooltips.height = ttTextHeight + 8 --Height of the tool tip.
   end --if not tooltips
 end --function configTooltips()
-if tooltips then tooltips = nil end--uncomment and save to test changes made above
+if tooltips then
+  tooltips[tooltips.name] = nil
+  tooltips = nil
+end --Reset project data on save, so changes above are reflected after saving.
 
 --Apply message and resize label
 local function resizeToolTiplabel(TooltipText)
   --Write message on tooltip label
   tooltips[tooltips.name]:echo(TooltipText,"black","c"..tostring(tooltips.fontSize))
-  local ttTextWidth, ttTextHeight = calcFontSize(tooltips.fontSize) --get width of a single font character
+  local ttTextWidth, ttTextHeight = calcFontSize(tooltips.fontSize, tooltips.fontfamily) --get width of a single font character
   local toolTextLabelWidth = ttTextWidth * (utf8.len(TooltipText) + 2) --calc width of the Tooltip label
-  tooltips[tooltips.name]:resize(toolTextLabelWidth, ttTextHeight) --Resize tool tip to fit TooltipText
+  tooltips[tooltips.name]:resize(toolTextLabelWidth, tooltips.height) --Resize tool tip to fit TooltipText
   
   if getTECDisplayDebugMode then --if display debug is enabled.
     local Pos_X, Pos_Y = getMousePosition()
@@ -3209,7 +3215,8 @@ local function resizeToolTiplabel(TooltipText)
       ..(Pos_X + tooltips[tooltips.name]:get_width())
       .." main window width: "..tmpMainWidth
       .." Pos_X: "..Pos_X.." tooltip label width: "..tooltips[tooltips.name]:get_width()
-      .." Width the tooltip label should be: "..toolTextLabelWidth)
+      .." Width the tooltip label should be: "..toolTextLabelWidth
+      .."\n\tHeight of the tooltip should be: "..tooltips.height.." Height of the tooltip is: "..tooltips[tooltips.name]:get_height())
   end --if getTECDisplayDebugMode
 end --function resizeToolTipLabel
 
