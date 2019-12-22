@@ -147,8 +147,7 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   --Holds list of labels that use default lable stylesheet 
   tecWindowLabels = {} --normally configured with tecGetWindowLabelList
     
-  tecGUIFrameTabNames = { "Compass", "Settings", "Macros", 
-    "Room Characters", "TEC Map" }
+  tecTabNames = {} --contains names of tabs
 
 	tecDebugSaveDir = getMudletHomeDir().."\/DebugingFiles\/"
   
@@ -1279,6 +1278,16 @@ end</script>
 -- with the CSS to be applied. Since tabs are styled only when created or when this
 -- function is used, there should be no concern with this styling being overwritten.
 
+--stylesheet that is applied to resizeLabels
+tecResizeLabelStyleSheet = [[
+QLabel{
+	border-image: url("]]..getMudletHomeDir()..[[/imgs/resize/blue_arrows_10t.png")
+}
+QLabel::hover{ 
+	border-image: url("]]..getMudletHomeDir()..[[/imgs/resize/blue_arrows.png");
+}
+]]
+
 GUIframe = GUIframe or {}
 
 local mainW, mainH = getMainWindowSize()
@@ -1305,7 +1314,7 @@ GUIframe.defaults = {
     resizeHeight = 30,
     resizeWidth = 30,
     resizeHoverImage = "/imgs/blue_arrows.png",
-    resizeRestImage = "/imgs/blue_arrows_30t.png",
+    resizeRestImage = "/imgs/blue_arrows_20t.png",
     borderOffset = 0,
 }
 
@@ -1453,11 +1462,15 @@ local function config()
     for name, cons in pairs(resizeInfo) do
         GUIframe[name] = Geyser.Label:new(cons)
         GUIframe[name]:setColor(0,0,0,0)
-        GUIframe[name]:setStyleSheet(string.format(style, path, (no_image and "100") or configs.resizeRestImage))
-        GUIframe[name]:setOnEnter("GUIframe."..name..".setStyleSheet", GUIframe[name],
-            string.format(style, path, (no_image and "255") or configs.resizeHoverImage))
-        GUIframe[name]:setOnLeave("GUIframe."..name..".setStyleSheet", GUIframe[name],
-            string.format(style, path, (no_image and "100") or configs.resizeRestImage))
+        GUIframe[name]:setStyleSheet(tecResizeLabelStyleSheet) --DaveWithTheNiceHat
+        --Dave commented this out. Favoring qts hover setting over mudlets event engine.
+        --done while making tooltip functions. Below code was not working with tooltip system.
+        --later found the source, but left this uncommented.
+        --GUIframe[name]:setStyleSheet(string.format(style, path, (no_image and "100") or configs.resizeRestImage))
+        --GUIframe[name]:setOnEnter("GUIframe."..name..".setStyleSheet", GUIframe[name],
+        --    string.format(style, path, (no_image and "255") or configs.resizeHoverImage))
+        --GUIframe[name]:setOnLeave("GUIframe."..name..".setStyleSheet", GUIframe[name],
+        --    string.format(style, path, (no_image and "100") or configs.resizeRestImage))
         GUIframe[name]:setClickCallback("GUIframe.buttonClick", name)
         GUIframe[name]:setReleaseCallback("GUIframe.buttonRelease", name)
         GUIframe[name]:setMoveCallback("GUIframe.buttonMove", name)
@@ -1943,8 +1956,10 @@ end
 function GUIframe.buttonMove(name, event)
     if not GUIframe.initialized then error("GUIframe not initialized",2) end
 	if table.contains(resizeLabels,name) then
+    trackTooltip("Right-click &amp; drag to resize") --DaveWithTheNiceHat
 	    lbl = GUIframe[name]
 	    if lbl.isClicked then
+        hideWindow(tooltips.name) --avoid tooltip being chopped DaveWithTheNiceHat
 	        local w, h = getMousePosition()
 	        w, h = round(w - lbl.difX, 10), round(h - lbl.difY, 10)
             mainW, mainH = getMainWindowSize()
@@ -1976,6 +1991,7 @@ function GUIframe.buttonMove(name, event)
         local con, tabs = get_containers(window.container.name)
         local x, y = getMousePosition()
         local over_con, over_tab
+        if tab then trackTooltip("Right-Click &amp; drag to move tab") end --DaveWithTheNiceHat
         if tab and tab.isClicked then
             moveWindow(tab.name, x - tab.difX, y - tab.difY)
             -- check to see if mouse is over any tab containers
@@ -3043,8 +3059,16 @@ function tecRedrawLabels()
             --debugc("\t"..cdt.name[k].." back of Compass applying standard label.")
             debugToDisplay("\t"..cdt.name[k].." back of Compass applying standard label.")
           end --if cdt.name[k] is tecCompass.back
-          
+        --if label has the word tab in it, we treat it as a tab  
         elseif "tab" == cdt.name[k]:match("tab") or "Tab" == cdt.name[k]:match("Tab") then
+          local tabNameFound = false
+          --loop though table containing tab names
+          for iterator, tabName in ipairs(tecTabNames) do
+            --if the tab name was found record that it was
+            if tabName == cdt.name[k] then tabNameFound = true end 
+          end --for ipairs(tecGUIFrameTabNames)
+          --if the tab name was not found inthe tabname table, insert it.
+          if not tabNameFound then table.insert(tecTabNames, cdt.name[k]) end
           setLabelStyleSheet(cdt.name[k],tabsStyle)
           local tmpTabName= cdt.name[k]:gsub("Tab", "") --remove Tab from name
           local tmpTabName= tmpTabName:gsub("tab", "") --remove tab from name
@@ -3145,6 +3169,158 @@ function tecScrollBarCheck(tecConsoleName)
     disableScrollBar(tecConsoleName)
   end --if tecSettingsRowCount less than text rows in that window.
 end --function tecScrollBarCheck</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>Geyser Tooltip</name>
+					<packageName></packageName>
+					<script>--References for this script
+--label echo| https://www.mudlet.org/geyser/files/geyser/GeyserLabel.html
+--calculate window width| https://wiki.mudlet.org/w/Manual:Lua_Functions#string.len.2C_utf8.len
+--Timers https://wiki.mudlet.org/w/Manual:Timer_Engine
+
+function configTooltips()
+  if not tooltips then --if tooltips table has not been created
+    tooltips = {}
+    tooltips.fontSize = 10 --size of the font that will appear in the Tooltip
+    tooltips.timeout = 2 --how long tip stays active after mouse leaves label
+    tooltips.name = "Tooltip" --name of the label
+    tooltips.fontfamily = "Arial"
+    tooltips.styleSheet = [[
+     background-color: "#aadddd99";
+     border: 2px solid #555533;
+     font-family: ]]..tooltips.fontfamily..[[;
+     ]]
+    local _, ttTextHeight = calcFontSize(tooltips.fontSize, tooltips.fontfamily) --get width of a single font character
+    tooltips.height = ttTextHeight + 8 --Height of the tool tip.
+  end --if not tooltips
+end --function configTooltips()
+if tooltips then
+  tooltips[tooltips.name] = nil
+  tooltips = nil
+end --Reset project data on save, so changes above are reflected after saving.
+
+--Apply message and resize label
+local function resizeToolTiplabel(TooltipText)
+  --Write message on tooltip label
+  tooltips[tooltips.name]:echo(TooltipText,"black","c"..tostring(tooltips.fontSize))
+  local ttTextWidth, ttTextHeight = calcFontSize(tooltips.fontSize, tooltips.fontfamily) --get width of a single font character
+  local toolTextLabelWidth = ttTextWidth * (utf8.len(TooltipText) + 2) --calc width of the Tooltip label
+  tooltips[tooltips.name]:resize(toolTextLabelWidth, tooltips.height) --Resize tool tip to fit TooltipText
+  
+  if getTECDisplayDebugMode then --if display debug is enabled.
+    local Pos_X, Pos_Y = getMousePosition()
+    local tmpMainWidth, tmpMainHeight = getMainWindowSize()
+    debugToDisplay("function moveTooltip, Right side of tool tip label: "
+      ..(Pos_X + tooltips[tooltips.name]:get_width())
+      .." main window width: "..tmpMainWidth
+      .." Pos_X: "..Pos_X.." tooltip label width: "..tooltips[tooltips.name]:get_width()
+      .." Width the tooltip label should be: "..toolTextLabelWidth
+      .."\n\tHeight of the tooltip should be: "..tooltips.height.." Height of the tooltip is: "..tooltips[tooltips.name]:get_height())
+  end --if getTECDisplayDebugMode
+end --function resizeToolTipLabel
+
+local function moveTooltip(Pos_X, Pos_Y, TooltipText)
+  if not Pos_X or not Pos_Y or not TooltipText then --if data collection error occured
+    debugc("function, moveTooltip: data collection error.")
+    return --end call function will have unwanted outcome.
+  end --if not Pos_X or not Pos_Y or not TooltipText
+  local tmpMainWidth, tmpMainHeight = getMainWindowSize()
+  
+  resizeToolTiplabel(TooltipText) --Apply message and resize label
+ 
+  --move tooltip label. Preventing it from scrolling out of the mudlet window where it can not be drawn
+  if Pos_Y &gt; tooltips.height then --If the mouse is NOT at the top of the window
+    --if the tooltip would go off the screen
+    if Pos_X + tooltips[tooltips.name]:get_width() &gt; tmpMainWidth then
+      --if the tooltip would go off the right side of the screen
+      Pos_X = Pos_X - tooltips[tooltips.name]:get_width()
+    end --if Pos_X + tooltips[tooltips.name]:get_width() &gt; tmpMainWidth
+    tooltips[tooltips.name]:move(Pos_X+5, (Pos_Y-tooltips.height-5)) --position tooltip just above mouse
+  else --if the mouse is at the top of the screen
+    --if the tooltip would go off the right side of the screen
+    if Pos_X + tooltips[tooltips.name]:get_width() &gt; tmpMainWidth then
+      --Draw tooltip label to the left of the cursor
+      Pos_X = Pos_X - tooltips[tooltips.name]:get_width()
+    end --if Pos_X + tooltips[tooltips.name]:get_width() &gt; tmpMainWidth
+    tooltips[tooltips.name]:move(Pos_X+5, (Pos_Y+tooltips.height+5)) --position tooltip just below the mouse
+  end --if Pos_Y &gt; tooltips.height else
+
+  raiseWindow(tooltips.name) -- make certain Tooltip stays on top of other labels.
+  showWindow(tooltips.name) --show tool tip
+end --function moveTooltip
+
+function trackTooltip(TooltipText)
+  configTooltips() --configures tooltip table if it is not already
+  local Pos_X, Pos_Y = getMousePosition()
+  if tooltips.timer then --if the timer exists.
+    killTimer(tooltips.timer) --delete the timer to reset it at end of this function
+    tooltips.timer = nil
+  end--if tooltips.timer
+  
+  if tooltips[tooltips.name] then --if the tool tip has previously been created
+    moveTooltip(Pos_X, Pos_Y, TooltipText)
+  else --if the tool window has not been created.
+    --create tooltip label, we will reuse this same label by moving it and hiding it.
+    tooltips[tooltips.name] = Geyser.Label:new({
+      name = tooltips.name,
+      x = Pos_X + 5,
+      y = Pos_Y - tooltips.height,
+      height = tooltips.height,
+      fgColor = "#000000",
+      })
+    resizeToolTiplabel(TooltipText) --Apply message and resize label
+    setLabelStyleSheet(tooltips.name, tooltips.styleSheet)
+    enableClickthrough(tooltips.name) --Do not allow label to be clicked.
+    raiseWindow(tooltips.name) -- make certain Tooltip stays on top of other labels.
+  end --if Tooltip
+tooltips.timer = tempTimer(tooltips.timeout, [[deleteTooltip()]]) --delete tip after x+1 seconds.
+end --function createTooltip(TooltipText)
+
+function deleteTooltip()
+  hideWindow(tooltips.name) --hide the tooltip label.
+  killTimer(tooltips.timer) --delete the completed timer.
+  tooltips.timer = nil --remove the timer ID
+end
+
+--easy method to create tool tip timer.
+function SetTooltip(labelNeedingToolTip, TooltipText)
+  --labelNeedingToolTip is the name of the geyser label that needs a tooltip
+  --TooltipText is text to put on the tooltip label
+
+  --occurs when mouse hovers over geyser object that needs a tool tip.
+  setLabelOnEnter(labelNeedingToolTip, "trackTooltip", TooltipText)
+  --hide tooltip immediately after the mouse leaves label the tool tip is for.
+  --setLabelOnLeave(geyserObjectNeedingToolTip, "DeleteTooltip")
+  --track mouse movement when cursor is over label.
+  setLabelMoveCallback(labelNeedingToolTip, "trackTooltip", TooltipText)
+end</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecSetProjectToolTips()</name>
+					<packageName></packageName>
+					<script>--creates tooltips to all labels that need them.
+function setParthiaLabelsToolTips()
+
+  --We collected tab names above using those we will make tooltips telling players what tabs
+  --can be moved with a brief message.
+  for iterator, tabName in ipairs(tecTabNames) do
+    --if the tab is not a tecComWindow it can be moved. Notify with a tooltip message.
+    if not tabName:starts("tecComWindows.") then
+      SetTooltip(tabName, "Right-click to move")
+    end --if not tabName:starts("tecComWindows.")
+  end
+  
+  --resizeLabels taken from GUIframe.
+  
+  local resizeLabels = {'resizeLeft', 'resizeRight', 'resizeTop', 'resizeBottom'}
+  for iterator, resizeLabelName in ipairs(resizeLabels) do --loop through resizeLabels
+    setLabelMoveCallback(resizeLabelName, "trackTooltip", "Right-click and drag to resize")
+    --SetTooltip(resizeLabelName, "Right-click to resize") --Create tooltips for resizeLabels
+  end --for iterator, resizeLabelName in ipairs(resizeLabels) do
+  
+end --function tecSetProjectToolTips()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -4274,7 +4450,7 @@ function tecGitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if tecGitUpdate.localRespitory not exist
   tecGitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  tecGitUpdate.localVersion = "0.1.13" --Parthia version player is currently using
+  tecGitUpdate.localVersion = "0.1.15" --Parthia version player is currently using
   tecGitUpdate.releaseIndex = 0 --Position on proper update in gitHub JSON table
   tecGitUpdate.trackedURLs = {} --will be URLs that need to have downloads tracked
   tecGitUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
@@ -4721,7 +4897,7 @@ function tecGitUpdateEventHandler(event, ...)
             debugToDisplay("function tecGitUpdateEventHandler, "..file.." completed downloading. Not all tracked files downloaded yet.")
           end --if boolOrErrorMessage
     else
-      echo("function tecGitUpdateEventHandler, Downloaded file: "..file
+      debugToDisplay("function tecGitUpdateEventHandler, Downloaded file: "..file
         .."\n\tWas NOT caught by event handler. If this SHOULD be a tracked download, system "
         .."attempted to track: "..file:match(tecGitUpdate.filePattern))
     end --elseif file downloaded is new script
@@ -5835,7 +6011,14 @@ registerAnonymousEventHandler("sysExitEvent", "tecExitHandler")</script>
 tecSetScrollBars(tecSettings.showScrollBars, false)
 
 --redraw windows 
-guiChange()</script>
+guiChange()
+
+--redraw labels collect label names also
+tecRedrawLabels()
+
+--We collected tab names above using those we will make tooltips telling players what tabs
+--can be moved with a brief message.
+--setParthiaLabelsToolTips()</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
