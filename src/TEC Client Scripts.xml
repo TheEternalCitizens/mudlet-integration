@@ -151,7 +151,11 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
 
 	tecDebugSaveDir = getMudletHomeDir().."\/DebugingFiles\/"
   
+  --is the player a beta tester
   tecSettings.betaTester = false
+  
+  --Is the player using GUIframe UI manager
+  tecSettings.useGUIframe = true
 
 	if displayToScreen then echo("Client settings set to default.\n") end
 
@@ -1313,8 +1317,8 @@ GUIframe.defaults = {
     bottomStartHeight = 50,
     resizeHeight = 30,
     resizeWidth = 30,
-    resizeHoverImage = "/imgs/blue_arrows.png",
-    resizeRestImage = "/imgs/blue_arrows_20t.png",
+    resizeHoverImage = "/imgs/resize/blue_arrows.png",
+    resizeRestImage = "/imgs/resize/blue_arrows_20t.png",
     borderOffset = 0,
 }
 
@@ -3495,6 +3499,18 @@ end --function tecResizeDisplayHelp</script>
   [[tecSetScrollBars(false)]], 
   "Hide scroll bars", true)
 	echo(", hide scrollbars in Parthia.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display remove window name", 
+  [[printCmdLine("display remove ");
+    echo("Now enter a window name, all to remove all windows or list to list supported window names.")]], 
+  "Remove graphical object", true)
+	echo(", remove a window from display.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display add window name", 
+  [[printCmdLine("display add ");
+    echo("Now enter a window name, all to add all windows or list to list supported window names.")]], 
+  "Add graphical object", true)
+	echo(", add a window to display.\n")
 	
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display save", 
   [[tecClientDisplaySave(true)]], 
@@ -5130,7 +5146,7 @@ end --function tecReplaceStringMagicChar(tmpString)</script>
 })
 
 --Add the status bar to the screen. On the bottom
-GUIframe.addWindow(status_bar,"status_bar","bottom")</script>
+--GUIframe.addWindow(status_bar,"status_bar","bottom")</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
 					<name>Health Bar</name>
@@ -5384,7 +5400,7 @@ function tecCompass.drawKeepSquare()
 end --end function keep square.
 
 --Add the status bar to the screen. On the bottom
-GUIframe.addWindow(tecCompass.window,"Compass","topleft")
+--GUIframe.addWindow(tecCompass.window,"Compass","topleft")
 
 --Now that we created the window. Make certain it is drawn correctly.
 tecCompass.drawKeepSquare() --function at the bottom of this script.</script>
@@ -5426,7 +5442,7 @@ tecSettingsConsole:setColor(getBgColor()) --set miniconsoles to main consol BG c
 tecSettingsConsole:raise()
 
 --Add the status bar to the screen. On the bottom
-GUIframe.addWindow(tecSettingsBar,"Settings","bottomleft")
+--GUIframe.addWindow(tecSettingsBar,"Settings","bottomleft")
 
 function tecSettingsWindowResize()
 	
@@ -5474,7 +5490,7 @@ tecMap = Geyser.Container:new({
 })
 
 --Add the status bar to the screen. On the bottom
-GUIframe.addWindow(tecMap,"TEC Map","bottomright")
+--GUIframe.addWindow(tecMap,"TEC Map","bottomright")
 
 --Creating the background for the 2d tec map.
 tecMap_back = Geyser.Label:new({
@@ -5583,7 +5599,7 @@ roomCharacters.console:setColor(getBgColor()) --set miniconsoles to main consol 
 roomCharacters.console:raise()
 
 --Add the status bar to the screen. On the bottom
-GUIframe.addWindow(roomCharacters,"Room Characters","topright")
+--GUIframe.addWindow(roomCharacters,"Room Characters","topright")
 
 function tecCRWindowResize()
 	
@@ -5640,7 +5656,7 @@ tecComWindows.container = Geyser.Container:new({
 })
 
 --Add the status bar to the screen. On the bottom
-GUIframe.addWindow(tecComWindows.container,"tecComWindows.container","top")
+--GUIframe.addWindow(tecComWindows.container,"tecComWindows.container","top")
 
 --box that will hold the tabs
 tecComWindows.header = Geyser.HBox:new({
@@ -5911,14 +5927,205 @@ function onMacroClick(name)
 end
 
 --Add the macro menu to the top left of the screen
-GUIframe.addWindow(macroMenu.container, "Macros", "bottomleft")
+--GUIframe.addWindow(macroMenu.container, "Macros", "bottomleft")
 
 function tecMacroMenuResize()
   --macroMenu.back:move(0,0)
 end --function tecMacroMenuResize
 tecMacroMenuResize()
 
-GUIframe.activate("Macros") --Make the macros bar the active bar on bottom left.</script>
+--GUIframe.activate("Macros") --Make the macros bar the active bar on bottom left.</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>tecConfigGeyserWindows(clear)</name>
+				<packageName></packageName>
+				<script>--configures tecGeyserWindows, a table that contains geyers containers
+--will control which UI manager the player has chosen to use and is used in tecSetGeyserUIObjects
+function tecConfigGeyserWindows(clear)
+  clear = fuzzyBoolean(clear)
+  --Clear tecGeyserWindows table if tecConfigGeyserWindows is called with true as an argument
+  if clear then tecGeyserWindows = { } end
+--[[
+copy and paste text below
+replace:
+GUIframeLocation = "bottomright"| with the location you would like your window to appear in GUIframe
+yourGeyserContainer.GUIframeName = "appears on GUIframe tabs"| with a name to show on tabs
+yourGyserContainer with the full name of the geyser container you have made
+Using "all" or "All" as a GUIFrameName may cause issues.
+  
+  if tecSettings.useGUIframe then --if using GUIframe UI manager
+    --locations are: "top" "topleft" "topright" "bottom" "bottomleft" "bottomright"
+    yourGeyserContainer.GUIframeLocation = "bottomright"  --were windows should appear in GUIframe
+    yourGeyserContainer.GUIframeName = "appears on GUIframe tabs" --Will appears on tabs in GUIframe
+  end --if .useGUIframe then
+  --Create a reference of your geyser container in the tecGeyserWindows table
+  --if it does not already exist.
+  if not tecGeyserWindows.newContainerName then tecGeyserWindows.newContainerName = yourGeyserContainer end
+]]--
+
+  --locations are: "top" "topleft" "topright" "bottom" "bottomleft" "bottomright"
+  if tecSettings.useGUIframe then --if using GUIframe UI manager
+    tecCompass.window.GUIframeLocation = "topleft" --were windows should appear in GUIframe
+    tecCompass.GUIframeName = "Compass" --Will appears on tabs in GUIframe
+  end --if .useGUIframe then
+  --Create a reference of your geyser container in the tecGeyserWindows table
+  --if it does not already exist.
+  if not tecGeyserWindows.Compass then tecGeyserWindows.Compass = tecCompass.window end
+  
+  --locations are: "top" "topleft" "topright" "bottom" "bottomleft" "bottomright"
+  if tecSettings.useGUIframe then --if using GUIframe UI manager
+    tecSettingsBar.GUIframeLocation = "bottomleft" --were windows should appear in GUIframe
+    tecSettingsBar.GUIframeName = "Settings" --Will appears on tabs in GUIframe
+  end --if .useGUIframe then
+  --Create a reference of your geyser container in the tecGeyserWindows table
+  --if it does not already exist.
+  if not tecGeyserWindows.Settings then tecGeyserWindows.Settings = tecSettingsBar end
+  
+  --locations are: "top" "topleft" "topright" "bottom" "bottomleft" "bottomright"
+  if tecSettings.useGUIframe then --if using GUIframe UI manager
+    status_bar.GUIframeLocation = "bottom"  --were windows should appear in GUIframe
+    status_bar.GUIframeName = "Status" --Will appears on tabs in GUIframe
+  end --if .useGUIframe then
+  --Create a reference of your geyser container in the tecGeyserWindows table
+  --if it does not already exist.
+  if not tecGeyserWindows.StatusBar then tecGeyserWindows.StatusBar = status_bar end
+
+  --locations are: "top" "topleft" "topright" "bottom" "bottomleft" "bottomright"
+  if tecSettings.useGUIframe then --if using GUIframe UI manager
+    tecMap.GUIframeLocation = "bottomright"  --were windows should appear in GUIframe
+    tecMap.GUIframeName = "TEC Map" --Will appears on tabs in GUIframe
+  end --if .useGUIframe then
+  --Create a reference of your geyser container in the tecGeyserWindows table
+  --if it does not already exist.
+  if not tecGeyserWindows.TEC_Map then tecGeyserWindows.TEC_Map = tecMap end  
+  
+  if tecSettings.useGUIframe then --if using GUIframe UI manager
+    --locations are: "top" "topleft" "topright" "bottom" "bottomleft" "bottomright"
+    roomCharacters.GUIframeLocation = "topright"  --were windows should appear in GUIframe
+    roomCharacters.GUIframeName = "Room Characters" --Will appears on tabs in GUIframe
+  end --if .useGUIframe then
+  --Create a reference of your geyser container in the tecGeyserWindows table
+  --if it does not already exist.
+  if not tecGeyserWindows.RoomCharacters then tecGeyserWindows.RoomCharacters = roomCharacters end
+
+  if tecSettings.useGUIframe then --if using GUIframe UI manager
+    --locations are: "top" "topleft" "topright" "bottom" "bottomleft" "bottomright"
+    tecComWindows.container.GUIframeLocation = "top"  --were windows should appear in GUIframe
+    tecComWindows.container.GUIframeName = "Communications" --Will appears on tabs in GUIframe
+  end --if .useGUIframe then
+  --Create a reference of your geyser container in the tecGeyserWindows table
+  --if it does not already exist.
+  if not tecGeyserWindows.Communications then tecGeyserWindows.Communications = tecComWindows.container end
+
+  if tecSettings.useGUIframe then --if using GUIframe UI manager
+    --locations are: "top" "topleft" "topright" "bottom" "bottomleft" "bottomright"
+    macroMenu.container.GUIframeLocation = "bottomleft"  --were windows should appear in GUIframe
+    macroMenu.container.GUIframeName = "Macros" --Will appears on tabs in GUIframe
+  end --if .useGUIframe then
+  --Create a reference of your geyser container in the tecGeyserWindows table
+  --if it does not already exist.
+  if not tecGeyserWindows.Macros then tecGeyserWindows.Macros = macroMenu.container end
+  
+end --function tecConfigGUIframeObjects</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>tecSetGeyserUIObjects(objectName, mode, displayToScreen)</name>
+				<packageName></packageName>
+				<script>--[[
+control what geyesr objects show in the current UI manager.
+You must first add a geyser object to tecGeyserWindows table 
+To add a geyser object to the tecGeyserWindows table refer to: tecConfigGeyserWindows(clear)
+objectName is the name of the geyser object.
+Mode is true if you would like to add the geyser object the current UI manager
+mode is false if you would like to remove the geyser object from the current UT manager
+displayToScreen is true if you would like the player to see these additions or removals
+]]--
+function tecSetGeyserUIObjects(objectName, mode, displayToScreen)
+  
+  mode = fuzzyBoolean(mode) --true enables name specified, false disables it
+  displayToScreen = fuzzyBoolean(displayToScreen) --if true display actions to screen
+  tecConfigGeyserWindows(true) --Load any unloaded geyser containers into tecGeyserWindows table
+  local tecWindowExists = false --used to see if objectName matches a window name.
+
+  --Varify arguments are good.
+  if type(objectName) ~= "string" then --if objectName is not a string
+    tecErrorNotification("function setGUIframeObject, first argument is a : "
+    ..type(objectName).." string was expected. Use object name IE \"Compass\"") 
+  end --if type(objectName) ~= "string"
+  
+  debugToDisplay("function tecSetGeyserUIObjects, started. ObjectName is: "..objectName
+    .." mode is: "..tostring(mode).." displayToScreen is: "..tostring(displayToScreen))
+
+  local tecWindowNameList = "" --will be used to list window names
+  for windowName, window in pairs(tecGeyserWindows) do--loop through containers
+    --if GUIframeName was not specified, use the windowName in its place.
+    if not window.GUIframeName then 
+      tecWarningNotification("function tecSetGeyserUIObjects, GUIframeName was not "
+        .."specified for "..windowName.." using it's window name instead.")
+      tecGeyserWindows[windowName].GUIframeName = windowName 
+    end --if not window.GUIframeName
+    if objectName:lower() == window.GUIframeName:lower() then --if names match
+      debugToDisplay("\tFound objectName match "..window.GUIframeName:lower())
+      tecWindowExists = true --notify error catch, correct name sent
+      objectName = window.GUIframeName --Correct case sensitivity.
+    elseif objectName:lower() == "all" then
+      debugToDisplay("\tFound objectName match \"all\"")
+      tecWindowExists = true --notify error catch, correct name sent
+      objectName = "all" --Correct case sensitivity.
+    end --correct name sent
+    tecWindowNameList = tecWindowNameList..window.GUIframeName..", " --List windows in 1 string
+  end --while ipairs(tecWindowNames)tecWindowNames
+  if not tecWindowExists then --window name does not exist.
+    if displayToScreen then
+      echo("Did not find a window named "..objectName.." please run "
+        .."command again with a supported window. Supported windows: "
+        ..tecWindowNameList.."and all.\n"
+        )
+    else
+      tecErrorNotification("function setGUIframeObject, "
+        .."window name : "..objectName.." not found in tecWindowNames table. "
+        .."Please send a supported name. Supported names are: "..tecWindowNameList
+        .."and all.")
+    end --if displayToScreen
+    debugToDisplay("Exit event, failed to find GUIframe name matching: "..objectName)
+    return
+  end --if not tecWindowExists
+
+  if mode then --enable GUIframe object
+    for windowName, window in pairs(tecGeyserWindows) do--loop through containers
+      if tecSettings.useGUIframe then --if using GUIframe manager
+        --objectName == "all"| run on all windowNames
+        --window.GUIframeName == objectName| remove specific window sent as objectName argument
+        if objectName == "all" or window.GUIframeName == objectName then
+          debugToDisplay("Adding "..window.GUIframeName.." to "..window.GUIframeLocation..".\n")
+          if displayToScreen then
+            echo("Adding "..window.GUIframeName.." to "..window.GUIframeLocation..".\n")
+          end --if displayToScreen
+          GUIframe.addWindow(tecGeyserWindows[windowName], window.GUIframeName, window.GUIframeLocation)
+        end --if objectName == "all" or window.GUIframeName == objectName
+      end --if tecSettings.useGUIframe
+    end --for pairs(tecGeyserWindows)
+  else --disable GUIframe object
+    for windowName, window in pairs(tecGeyserWindows) do--loop through containers
+      if tecSettings.useGUIframe then --if using GUIframe manager
+        --objectName == "all"| run on all windowNames
+        --window.GUIframeName == objectName| remove specific window sent as objectName argument
+        if objectName == "all" or window.GUIframeName == objectName then
+          debugToDisplay("Removing "..window.GUIframeName..".\n")
+          if displayToScreen then echo("Removing "..window.GUIframeName..".\n") end
+          --if using GUIframe UI manager, remove the window.
+          if tecSettings.useGUIframe then GUIframe.removeWindow(window.GUIframeName) end
+        end --if windowName == "all" or windowName == objectName
+      end --if tecSettings.useGUIframe
+    end --for ipairs(tecWindowNames)
+  end --if mode
+  
+  if displayToScreen then dontForgetToSave() end --remind play to save
+  
+end --function setGUIframeObject
+</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
@@ -6005,20 +6212,23 @@ registerAnonymousEventHandler("sysExitEvent", "tecExitHandler")</script>
 			<Script isActive="yes" isFolder="no">
 				<name>Post Initilization</name>
 				<packageName></packageName>
-				<script>--For changing default settings that would be time consuming to change during 
+				<script>--For changing default settings that would be time consuming to change during
+--also very helpful for GUI objects that did not have a size on creation.
+
+tecSetGeyserUIObjects("all", true) --load windows into UI manager
 
 --Enable or disable scroll bars. Dependant on user preference.
 tecSetScrollBars(tecSettings.showScrollBars, false)
 
---redraw windows 
-guiChange()
+GUIframe.activate("Macros") --Make the macros bar the active bar on bottom left.
 
---redraw labels collect label names also
-tecRedrawLabels()
+tecRedrawLabels() --reapply color images and text to labels.
 
---We collected tab names above using those we will make tooltips telling players what tabs
---can be moved with a brief message.
---setParthiaLabelsToolTips()</script>
+tecResetRoomCharacterWindow() --reload text in Room Characters window
+
+tecRefreshSettingsWindow() --refresh text in settings window
+
+guiChange() --resize windows</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
