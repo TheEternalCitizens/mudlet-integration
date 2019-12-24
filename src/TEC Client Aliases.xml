@@ -191,6 +191,14 @@ tecSetGeyserUIObjects(matches[2], true, true) --add geyser object from UI manage
 				<packageName></packageName>
 				<regex>^display add (.*)$</regex>
 			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display manager name</name>
+				<script>--echo("captured: "..matches[2]..".\n")
+tecSetUIManager(matches[2], true) --set Parthia's UI Manager</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display manager (.*)$</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>tecclient</name>
