@@ -4,6 +4,8 @@
 
 ## Getting Started
 
+> ℹ️  This readme is for people looking to contribute to this project. If you're just looking to install this project on your computer so that you can use mudlet to play TEC, please stop reading this and instead go read [the installation instructions](https://github.com/TheEternalCitizens/mudlet-integration/wiki/Installation) (Windows only).
+
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project to users.
 
 ### Installing
