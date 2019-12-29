@@ -161,18 +161,18 @@ clearRoomCharacterWindow()
 				<regex>^display refresh settings$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>display enable scrollbars</name>
+				<name>display scrollbars enable</name>
 				<script>tecSetScrollBars(true) --enables scroll bars throughout this project.</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^display enable scrollbars$</regex>
+				<regex>^display scrollbars enable$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>display disable scrollbars</name>
+				<name>display scrollbars disable</name>
 				<script>tecSetScrollBars(false) --Disable scroll bars throughout this project.</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^display disable scrollbars$</regex>
+				<regex>^display scrollbars disable$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>display remove geyserObject</name>
@@ -190,6 +190,24 @@ tecSetGeyserUIObjects(matches[2], true, true) --add geyser object from UI manage
 				<command></command>
 				<packageName></packageName>
 				<regex>^display add (.*)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display enable window</name>
+				<script>--echo("captured: "..matches[2]..".\n")
+--arguments are windowname, enable, displayToScreen
+tecUIManagerPermWindowMode(matches[2], true, true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display enable (.*)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display disable window</name>
+				<script>--echo("captured: "..matches[2]..".\n")
+--arguments are windowname, enable, displayToScreen
+tecUIManagerPermWindowMode(matches[2], false, true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display disable (.*)$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>display manager name</name>
