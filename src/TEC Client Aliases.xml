@@ -102,7 +102,7 @@ tecClientFullHelp(false, "main")</script>
 			<Alias isActive="yes" isFolder="no">
 				<name>display save</name>
 				<script>--saves the gui loadWindowLayout
-tecClientDisplaySave(true)</script>
+UIManagerFileSave(true)</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^display save</regex>
@@ -110,7 +110,7 @@ tecClientDisplaySave(true)</script>
 			<Alias isActive="yes" isFolder="no">
 				<name>display load</name>
 				<script>--loads the display from file.
-tecClientDisplayLoad(true)</script>
+UIManagerFileLoad(true)</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^display load$</regex>
@@ -119,7 +119,7 @@ tecClientDisplayLoad(true)</script>
 				<name>display reset</name>
 				<script>--Sets guiframe back to default settings
 --these settings can be found in scripts - tec client scripts - community scripts - guiframe
-tecClientDisplayReset()</script>
+UIManagerReset(true)</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^display reset</regex>
@@ -177,7 +177,7 @@ clearRoomCharacterWindow()
 			<Alias isActive="yes" isFolder="no">
 				<name>display remove geyserObject</name>
 				<script>--echo("captured: "..matches[2]..".\n")
-tecSetGeyserUIObjects(matches[2], false, true) --remove geyser object from UI manager.
+UIManagerShowWindow(matches[2], false, true) --remove geyser object from UI manager.
 </script>
 				<command></command>
 				<packageName></packageName>
@@ -186,7 +186,7 @@ tecSetGeyserUIObjects(matches[2], false, true) --remove geyser object from UI ma
 			<Alias isActive="yes" isFolder="no">
 				<name>display add geyserObject</name>
 				<script>--echo("captured: "..matches[2]..".\n")
-tecSetGeyserUIObjects(matches[2], true, true) --add geyser object from UI manager.</script>
+UIManagerShowWindow(matches[2], true, true) --add geyser object from UI manager.</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^display add (.*)$</regex>
@@ -195,7 +195,7 @@ tecSetGeyserUIObjects(matches[2], true, true) --add geyser object from UI manage
 				<name>display enable window</name>
 				<script>--echo("captured: "..matches[2]..".\n")
 --arguments are windowname, enable, displayToScreen
-tecUIManagerPermWindowMode(matches[2], true, true)</script>
+UIManagerEnableWindow(matches[2], true, true)</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^display enable (.*)$</regex>
@@ -204,7 +204,7 @@ tecUIManagerPermWindowMode(matches[2], true, true)</script>
 				<name>display disable window</name>
 				<script>--echo("captured: "..matches[2]..".\n")
 --arguments are windowname, enable, displayToScreen
-tecUIManagerPermWindowMode(matches[2], false, true)</script>
+UIManagerEnableWindow(matches[2], false, true)</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^display disable (.*)$</regex>
@@ -212,10 +212,34 @@ tecUIManagerPermWindowMode(matches[2], false, true)</script>
 			<Alias isActive="yes" isFolder="no">
 				<name>display manager name</name>
 				<script>--echo("captured: "..matches[2]..".\n")
-tecSetUIManager(matches[2], true) --set Parthia's UI Manager</script>
+SetUIManager(matches[2], true) --set Parthia's UI Manager</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^display manager (.*)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display layout</name>
+				<script>--echo("captured: "..matches[2]..".\n")
+UIManagerSetTheme(matches[2], true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display layout (\w+)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display side disable name</name>
+				<script>--echo("captured: "..matches[2]..".\n")
+UIManagerEnableSide(matches[2],false,true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display side disable (.*)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display side enable name</name>
+				<script>--echo("captured: "..matches[2]..".\n")
+UIManagerEnableSide(matches[2],true,true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display side enable (.*)$</regex>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
@@ -272,7 +296,7 @@ tecClientReset(true)</script>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>tecclient reset all</name>
-				<script>tecClientResetAll() --resets all client settings</script>
+				<script>tecClientResetAll(true) --resets all client settings</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^tecclient reset all$</regex>
@@ -455,6 +479,20 @@ tecDownloadScripts() --Begin downloading updates</script>
 					<regex>^tecclient background (.*)</regex>
 				</Alias>
 			</AliasGroup>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient report</name>
+				<script>tecReportIssues()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient report$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display side top disable</name>
+				<script>GUIframe.enable("left")</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display side top disable$</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Debug</name>
