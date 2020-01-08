@@ -95,7 +95,7 @@ tecClientFullHelp(false, "main")</script>
 		</Alias>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Display</name>
-			<script>tecDisplayHelp() --help for client display</script>
+			<script>UIManagerHelp() --help for client display</script>
 			<command></command>
 			<packageName></packageName>
 			<regex>^display$</regex>
@@ -139,7 +139,7 @@ echo("\nScreen wrap adjusted\n")
 			<Alias isActive="yes" isFolder="no">
 				<name>display clear</name>
 				<script>--clears the main screen.
-tecClearDisplay()</script>
+UIManagerClearMainWindow()</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^display clear$</regex>
@@ -192,22 +192,32 @@ UIManagerShowWindow(matches[2], true, true) --add geyser object from UI manager.
 				<regex>^display add (.*)$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>display enable window</name>
+				<name>display window enable</name>
 				<script>--echo("captured: "..matches[2]..".\n")
 --arguments are windowname, enable, displayToScreen
 UIManagerEnableWindow(matches[2], true, true)</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^display enable (.*)$</regex>
+				<regex>^display window enable (.*)$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>display disable window</name>
+				<name>display window disable</name>
 				<script>--echo("captured: "..matches[2]..".\n")
 --arguments are windowname, enable, displayToScreen
 UIManagerEnableWindow(matches[2], false, true)</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^display disable (.*)$</regex>
+				<regex>^display window disable (.*)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display window list</name>
+				<script>--echo("captured: "..matches[2]..".\n")
+--arguments are windowname, enable, displayToScreen
+UIManagerEnableWindow("list", true, true)
+UIManagerEnableWindow("list", false, true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display window list$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>display manager name</name>
@@ -218,7 +228,7 @@ SetUIManager(matches[2], true) --set Parthia's UI Manager</script>
 				<regex>^display manager (.*)$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>display layout</name>
+				<name>display layout name</name>
 				<script>--echo("captured: "..matches[2]..".\n")
 UIManagerSetTheme(matches[2], true)</script>
 				<command></command>
@@ -240,6 +250,22 @@ UIManagerEnableSide(matches[2],true,true)</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^display side enable (.*)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display side list</name>
+				<script>--echo("captured: "..matches[2]..".\n")
+UIManagerEnableSide("list",true,true)
+UIManagerEnableSide("list",false,true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display side list$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display help</name>
+				<script>UIManagerHelp() --help for client display</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display help$</regex>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
@@ -331,7 +357,8 @@ Currently you can change the size of the font.
 Uses are:
 font size, changes the size of the font to the size entered.
 IE: font 12, sets the font size to 12.
-Current font size: ]]..getTECFont())</script>
+Current font size: ]]..getTECFont()
+.."\nfont tab #, changes the size of window tabs.")</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^font$</regex>
@@ -346,6 +373,14 @@ Current font size: ]]..getTECFont())</script>
 				<regex>^tecclient font size (.*)</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
+				<name>tecclient tab font size #</name>
+				<script>tecClientSetTabFontSize(tonumber(matches[2]))
+--matches[2] is the word in () in the pattern</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient tab font size (.*)$</regex>
+			</Alias>
+			<Alias isActive="no" isFolder="no">
 				<name>tecclient update</name>
 				<script>tecDownloadScripts() --Begin downloading updates</script>
 				<command></command>
