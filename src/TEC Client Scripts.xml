@@ -26,6 +26,8 @@ Meaning it WILL be loaded from file on a load.
 ]]--
 
 function tecClientReset(displayToScreen) --reset all client settings to defaults
+  if displayToScreen then echo("Please wait defaulting Parthia settings.\n") end
+
   --Creating a table that will be used to easily save these
   --Variables to file. So NOT putting tec.Settings. before
   --a variable will mean that it does not get saved to file.
@@ -151,13 +153,25 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
 
 	tecDebugSaveDir = getMudletHomeDir().."\/DebugingFiles\/"
   
+  --is the player a beta tester
   tecSettings.betaTester = false
+  
+  --Is the player using GUIframe UI manager
+  tecSettings.useGUIframe = true
+  
+  --keep track of UI manager names. Not case sensative.
+  UIManagers = { "GUIframe" , "none"}
+  
+  --holds geyser windows for UI manager
+  tecGeyserWindows = tecGeyserWindows or {}
+  
+  --Used to save settings for GUI objects.
+  UIManagerSettings = UIManagerSettings or {}
 
-	if displayToScreen then echo("Client settings set to default.\n") end
+	if displayToScreen then echo("Parthia settings set to default.\n") end
 
 end --function tecClientReset()
-
-tecClientReset(false) --Calling the function so these variables get created.</script>
+</script>
 				<eventHandlerList />
 			</Script>
 			<ScriptGroup isActive="yes" isFolder="yes">
@@ -196,29 +210,28 @@ end</script>
 --In this case it is also a to screen notification that it was 
 --successfull
 function tecFileLoadSettings(displayToScreen)
-
+  local tecTmpSettingsTable = {}
 	--Set the location and name of file.	
 	local path = tecSettingsFolder.."TECClientData.lua"
 	path = path:gsub("\\","/")
 	--If the file does not exist let the user know.
   if not io.exists(path) then 
-		debugToDisplay("tecFileLoadSettings: save file doesn't exist.") --TEC debug screen
-		debugc("tecFileLoadSettings: save file doesn't exist.") --mudlets debug screen
-		echo("settings did not load from file\n")
+		debugToDisplay("tecFileLoadSettings: "..path.." file doesn't exist.") --TEC debug screen
+		debugc("tecFileLoadSettings: "..path.." file doesn't exist.") --mudlets debug screen
+		if displayToScreen then echo("Client settings did not load from file\n") end
 	return --kill the function before real errors occur
 	else
-    table.load(path, tecSettings) --Load the settings in from file
+    table.load(path, tecTmpSettingsTable) --Load the settings in from file
+    --Load settings from file updating default settings where different.
+    tecSettings = table.update(tecSettings, tecTmpSettingsTable)
     if displayToScreen then 
-    cecho("[  OK  ]  - Parthia settings successfully loaded from file.\n") 
+      cecho("[  OK  ]  - Parthia settings successfully loaded from file.\n") 
     end --if displayToScreen
 	end --end if file exists else
+  
 end --function tecFileLoadSettings
 
---Call the function so data loads when mudlet starts.
-tecFileLoadSettings(true)
-
---Now change some settings since data has been loaded
-setFontSize(tecSettings.tecFontSize) --font size</script>
+</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
@@ -226,12 +239,9 @@ setFontSize(tecSettings.tecFontSize) --font size</script>
 					<packageName></packageName>
 					<script>function tecClientSaveAll(displayToScreen)
   --Save client data to file.
-  tecFileSaveSettings()
-  if displayToScreen then echo("Client data saved to file.\n") end
-  
-  --saves the gui loadWindowLayout
-  GUIframe.saveSettings()
-  if displayToScreen then echo("Display settings saved to file.\n") end
+  tecFileSaveSettings(displayToScreen)
+  --Save display data to file. 
+  UIManagerFileSave(displayToScreen)
 end --function tecClientSaveAll</script>
 					<eventHandlerList />
 				</Script>
@@ -300,145 +310,164 @@ function tecConfigThemes() --configure and initalize settings for tabs.
   tabsFontStyle = [[&lt;center&gt;&lt;p style="font-size:]]
     ..tecSettings.tecTabsFontSize..[[px; color:lightgray"&gt;]]
 
-labelsStyle = [[
-	QLabel{
-		background-color: ]]..tecSettings.labelBackgroundColor..[[;
-    border-width: 1px;
-    border-style: outset;
-    border-color: lightgray;
-    margin-right: 0px;
-    margin-left: 0px;
-		font-size: 20px;
+  labelsStyle = [[
+  	QLabel{
+  		background-color: ]]..tecSettings.labelBackgroundColor..[[;
+      border-width: 1px;
+      border-style: outset;
+      border-color: lightgray;
+      margin-right: 0px;
+      margin-left: 0px;
+  		font-size: 20px;
+      qproperty-alignment: 'AlignCenter | AlignCenter';
+    }
+  	QLabel::hover{
+  		background-color: ]]..tecSettings.hoverColor..[[;
+      border-width: 1px;
+      border-style: outset;
+      border-color: gray;
+      margin-right: 0px;
+      margin-left: 0px;
+  		font-size: 20px;
+      qproperty-alignment: 'AlignCenter | AlignCenter';
+    }
+  ]]
+  								
+  buttonsStyle = [[QPushButton{
+                  		background-color: gray;
+                      border-width: 1px;
+                      border-style: outset;
+                      border-color: lightgray;
+                      border-top-left-radius: 15px;
+                      border-top-right-radius: 15px;
+  										border-bottom-left-radius: 15px;
+                      border-bottom-right-radius: 15px;
+                      margin-right: 1px;
+                      margin-left: 1px;
+                  		font-size: 50px;
+                      qproperty-alignment: 'AlignCenter | AlignCenter';}
+  								 QPushButton::on{}
+  								 QPushButton::hover{}
+  ]]					
+  
+  --This is now tabs text looks
+  buttonsFontStyle = '&lt;center&gt;&lt;p style="font-size:18px; color:white"&gt;'
+  
+  --Used to shape rooms on map. Intentionally left without a } at the end.
+  mapRoomStyle = [[
+  	QLabel{
+  	border-bottom-right-radius: 3;
+  	border-bottom-left-radius: 3;
+  	border-top-right-radius: 3;
+  	border-top-left-radius: 3;
+  	margin: 2px;
     qproperty-alignment: 'AlignCenter | AlignCenter';
-  }
-	QLabel::hover{
-		background-color: ]]..tecSettings.hoverColor..[[;
-    border-width: 1px;
-    border-style: outset;
-    border-color: gray;
-    margin-right: 0px;
-    margin-left: 0px;
-		font-size: 20px;
-    qproperty-alignment: 'AlignCenter | AlignCenter';
-  }
-]]
-								
-buttonsStyle = [[QPushButton{
-                		background-color: gray;
-                    border-width: 1px;
-                    border-style: outset;
-                    border-color: lightgray;
-                    border-top-left-radius: 15px;
-                    border-top-right-radius: 15px;
-										border-bottom-left-radius: 15px;
-                    border-bottom-right-radius: 15px;
-                    margin-right: 1px;
-                    margin-left: 1px;
-                		font-size: 50px;
-                    qproperty-alignment: 'AlignCenter | AlignCenter';}
-								 QPushButton::on{}
-								 QPushButton::hover{}
-]]					
-
---This is now tabs text looks
-buttonsFontStyle = '&lt;center&gt;&lt;p style="font-size:18px; color:white"&gt;'
-
---Used to shape rooms on map. Intentionally left without a } at the end.
-mapRoomStyle = [[
-	QLabel{
-	border-bottom-right-radius: 3;
-	border-bottom-left-radius: 3;
-	border-top-right-radius: 3;
-	border-top-left-radius: 3;
-	margin: 2px;
-  qproperty-alignment: 'AlignCenter | AlignCenter';
-]]
-
---Create a red style for creating map rooms
---Done by completing the intentially unfinished mapRoomStyle
-mapRoomStyleRed = mapRoomStyle..[[
-	background-color:  #ff6666;
-  }
-]]
-
---Create a Green style for creating map rooms
---Done by completing the intentially unfinished mapRoomStyle
-mapRoomStyleGreen = mapRoomStyle..[[
-	background-color: #77dd77;
-  }
-]]
-
---Create a white style for creating map rooms
---Done by completing the intentially unfinished mapRoomStyle
-mapRoomStyleWhite = mapRoomStyle..[[
-	background-color: GhostWhite;
-  }
-]]
-
-mapStraitOpenExitStyle = [[
-	QLabel{
-	background-color: GhostWhite;
-	}
-]]
-
-mapStraitClosedExitStyle = [[
-	QLabel{
-	background-color: black;
-	}
-]]
-
---create table used for exits
-tecExit = { "hor", "ver", "ne", "nw" }
-
---set the horizontal exit table
-tecExit["hor"] = {"0", "1", width, height}
-tecExit["hor"]["0"] = { tecExitStyleSheet = [[
-	QLabel{
-	background-color: black;
-	}
-]]
-} --end tecExit["hor"][0] table declaration
-tecExit["hor"]["1"] = { tecExitStyleSheet = [[QLabel{background-color: white;}]]} 
-tecExit["hor"].width = 10
-tecExit["hor"].height = 3
-
---now set verticle table
-tecExit["ver"] = {"0", "1", width, height}
-tecExit["ver"]["0"] = { tecExitStyleSheet = [[
-	QLabel{
-	background-color: black;
-	}
-]]
-} --end tecExit["ver"][0] table declaration
-tecExit["ver"]["1"] = { tecExitStyleSheet = [[QLabel{background-color: white;}]]} 
-tecExit["ver"].width = 3
-tecExit["ver"].height = 10
-
---Use these to adjust nenw icons
-local nenwExitIconSize = 10 --square size of icon
-
---now set ne table
-tecExit["ne"] = {"0", "1", width, height}
-tecExit["ne"]["0"] = { tecExitStyleSheet = [[border-image: url("]]..getMudletHomeDir()
-	..[[/]].."imgs"..[[/]].."exits"..[[/ne_closed.png");]]}
-tecExit["ne"]["1"] = { tecExitStyleSheet = [[border-image: url("]]..getMudletHomeDir()
-	..[[/]].."imgs"..[[/]].."exits"..[[/ne_open.png");]]}
-tecExit["ne"].width = nenwExitIconSize
-tecExit["ne"].height = nenwExitIconSize
-
---now set nw table
-tecExit["nw"] = {"0", "1", width, height}
-tecExit["nw"]["0"] = { tecExitStyleSheet = [[border-image: url("]]..getMudletHomeDir()
-	..[[/]].."imgs"..[[/]].."exits"..[[/nw_closed.png");]]}
-tecExit["nw"]["1"] = { tecExitStyleSheet = [[border-image: url("]]..getMudletHomeDir()
-	..[[/]].."imgs"..[[/]].."exits"..[[/nw_open.png");]]}
-tecExit["nw"].width = nenwExitIconSize
-tecExit["nw"].height = nenwExitIconSize
-end --function tecConfigThemes
-tecConfigThemes() --configure tabs now.</script>
+  ]]
+  
+  --Create a red style for creating map rooms
+  --Done by completing the intentially unfinished mapRoomStyle
+  mapRoomStyleRed = mapRoomStyle..[[
+  	background-color:  #ff6666;
+    }
+  ]]
+  
+  --Create a Green style for creating map rooms
+  --Done by completing the intentially unfinished mapRoomStyle
+  mapRoomStyleGreen = mapRoomStyle..[[
+  	background-color: #77dd77;
+    }
+  ]]
+  
+  --Create a white style for creating map rooms
+  --Done by completing the intentially unfinished mapRoomStyle
+  mapRoomStyleWhite = mapRoomStyle..[[
+  	background-color: GhostWhite;
+    }
+  ]]
+  
+  mapStraitOpenExitStyle = [[
+  	QLabel{
+  	background-color: GhostWhite;
+  	}
+  ]]
+  
+  mapStraitClosedExitStyle = [[
+  	QLabel{
+  	background-color: black;
+  	}
+  ]]
+  
+  --create table used for exits
+  tecExit = { "hor", "ver", "ne", "nw" }
+  
+  --set the horizontal exit table
+  tecExit["hor"] = {"0", "1", width, height}
+  tecExit["hor"]["0"] = { tecExitStyleSheet = [[
+  	QLabel{
+  	background-color: black;
+  	}
+  ]]
+  } --end tecExit["hor"][0] table declaration
+  tecExit["hor"]["1"] = { tecExitStyleSheet = [[QLabel{background-color: white;}]]} 
+  tecExit["hor"].width = 10
+  tecExit["hor"].height = 3
+  
+  --now set verticle table
+  tecExit["ver"] = {"0", "1", width, height}
+  tecExit["ver"]["0"] = { tecExitStyleSheet = [[
+  	QLabel{
+  	background-color: black;
+  	}
+  ]]
+  } --end tecExit["ver"][0] table declaration
+  tecExit["ver"]["1"] = { tecExitStyleSheet = [[QLabel{background-color: white;}]]} 
+  tecExit["ver"].width = 3
+  tecExit["ver"].height = 10
+  
+  --Use these to adjust nenw icons
+  local nenwExitIconSize = 10 --square size of icon
+  
+  --now set ne table
+  tecExit["ne"] = {"0", "1", width, height}
+  tecExit["ne"]["0"] = { tecExitStyleSheet = [[border-image: url("]]..getMudletHomeDir()
+  	..[[/]].."imgs"..[[/]].."exits"..[[/ne_closed.png");]]}
+  tecExit["ne"]["1"] = { tecExitStyleSheet = [[border-image: url("]]..getMudletHomeDir()
+  	..[[/]].."imgs"..[[/]].."exits"..[[/ne_open.png");]]}
+  tecExit["ne"].width = nenwExitIconSize
+  tecExit["ne"].height = nenwExitIconSize
+  
+  --now set nw table
+  tecExit["nw"] = {"0", "1", width, height}
+  tecExit["nw"]["0"] = { tecExitStyleSheet = [[border-image: url("]]..getMudletHomeDir()
+  	..[[/]].."imgs"..[[/]].."exits"..[[/nw_closed.png");]]}
+  tecExit["nw"]["1"] = { tecExitStyleSheet = [[border-image: url("]]..getMudletHomeDir()
+  	..[[/]].."imgs"..[[/]].."exits"..[[/nw_open.png");]]}
+  tecExit["nw"].width = nenwExitIconSize
+  tecExit["nw"].height = nenwExitIconSize
+end --function tecConfigThemes</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
+		<Script isActive="yes" isFolder="no">
+			<name>Pre initialization</name>
+			<packageName></packageName>
+			<script>--[[
+Place functions here that need to run before function and window creations.
+Runs after variable creations.
+Intended for setting default settings for variables and loading settings from file.
+]]--
+
+tecClientReset(false) --create default settings.
+
+--Call the function so data loads when mudlet starts.
+tecFileLoadSettings(true)
+
+--Now change some settings since data has been loaded
+setFontSize(tecSettings.tecFontSize) --font size
+
+tecConfigThemes() --configure display themes</script>
+			<eventHandlerList />
+		</Script>
 		<ScriptGroup isActive="yes" isFolder="yes">
 			<name>mudlet Communidy Functions</name>
 			<packageName></packageName>
@@ -1278,6 +1307,9 @@ end</script>
 -- with the CSS to be applied. Since tabs are styled only when created or when this
 -- function is used, there should be no concern with this styling being overwritten.
 
+--Do not load GUIframe script if other UI manager is in use.
+if tecSettings.useGUIframe then --if using GUIframe manager
+
 --stylesheet that is applied to resizeLabels
 tecResizeLabelStyleSheet = [[
 QLabel{
@@ -1313,8 +1345,8 @@ GUIframe.defaults = {
     bottomStartHeight = 50,
     resizeHeight = 30,
     resizeWidth = 30,
-    resizeHoverImage = "/imgs/blue_arrows.png",
-    resizeRestImage = "/imgs/blue_arrows_20t.png",
+    resizeHoverImage = "/imgs/resize/blue_arrows.png",
+    resizeRestImage = "/imgs/resize/blue_arrows_20t.png",
     borderOffset = 0,
 }
 
@@ -1822,7 +1854,9 @@ function GUIframe.loadSettings(redraw)
     resizeContainers("top", saveTbl.top.w, saveTbl.top.h)
     resizeContainers("bottom", saveTbl.bottom.w, mainH - saveTbl.bottom.h)
     for con, wins in pairs(saveTbl.windows) do
+      debugToDisplay("function GUIframe.loadSettings, wins: "..tostring(wins)) --DaveWithTheNiceHat
         for _,name in ipairs(wins) do
+            debugToDisplay("function GUIframe.loadSettings, adding window: "..tostring(name)) --DaveWithTheNiceHat
             if type(name) == "string" then
                 GUIframe.addWindow(GUIframe.windows[name], name, con)
             else
@@ -2042,7 +2076,9 @@ function GUIframe.eventHandler(event,...)
 end
 
 --register the event above
-registerAnonymousEventHandler("sysWindowResizeEvent","GUIframe.eventHandler")</script>
+registerAnonymousEventHandler("sysWindowResizeEvent","GUIframe.eventHandler")
+
+end --if tecSettings.useGUIframe</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
@@ -2548,10 +2584,7 @@ end --end function getTECdebugMode</script>
 --blue errors.
 function debugToDisplay(textMessage)
 	if getTECDebugMode() then --Is debug mode on?
-		local redBG, greenBG, blueBG = getBgColor() --keep track of current screen color
-		setBgColor( 255,50,50) --change text background to red
 		cecho("tecDebugWindow","\n"..textMessage) -- print message to screen
-		setBgColor(redBG,greenBG,blueBG) --change text background back to what it was
 	end --if debug mode if check
 end --end displayToDebug function
 </script>
@@ -2603,24 +2636,30 @@ function geyserDebug() --geyserWindow needs to be a string with the name of the 
 
 	if getTECDisplayDebugMode() then --Is debug mode on?
 		local debugOut = ""
-		--Send all of the windows information to the debug display.
-		guiloop = 0
-		debugToDisplay(GUIframe.topLeftContainer:getDebug())
-		guiloop = 0
-		debugToDisplay(GUIframe.bottomLeftContainer:getDebug())
-		guiloop = 0
-		debugToDisplay(GUIframe.bottomContainer:getDebug())
-		guiloop = 0
-		debugToDisplay(GUIframe.bottomRightContainer:getDebug())
-		guiloop = 0
-		debugOut =GUIframe.topRightContainer:getDebug()
-		debugOut = debugOut:sub(1, -2)
-		debugOut = debugOut:sub(2)
-		debugToDisplay(debugOut)
-		guiloop = 0
-		debugOut = GUIframe.topContainer:getDebug()
-		debugOut = debugOut:sub(1, -2)
-		debugToDisplay(debugOut)
+    
+    --if using GUIframe manager and it is initialized
+    if GetUIManager() == "GUIframe" and GUIframe.initialized then
+  		--Send all of the windows information to the debug display.
+  		guiloop = 0
+  		debugToDisplay(GUIframe.topLeftContainer:getDebug())
+  		guiloop = 0
+  		debugToDisplay(GUIframe.bottomLeftContainer:getDebug())
+  		guiloop = 0
+  		debugToDisplay(GUIframe.bottomContainer:getDebug())
+  		guiloop = 0
+  		debugToDisplay(GUIframe.bottomRightContainer:getDebug())
+  		guiloop = 0
+  		debugOut =GUIframe.topRightContainer:getDebug()
+  		debugOut = debugOut:sub(1, -2)
+  		debugOut = debugOut:sub(2)
+  		debugToDisplay(debugOut)
+  		guiloop = 0
+  		debugOut = GUIframe.topContainer:getDebug()
+  		debugOut = debugOut:sub(1, -2)
+  		debugToDisplay(debugOut)
+    end --if if GetUIManager() == "GUIframe" and GUIframe.initialized
+    else --if unknown
+    tecWarningNotification("function getTECDisplayDebugMode, no UI manager specified.")
 	end --if tecDebugMode is true
 
 end --end geyserDebug() function</script>
@@ -2668,7 +2707,7 @@ function tecReportDebugHelp()
   	"Enable timer debugging", true)
 	echo("After enabling the debug mode or modes requested clear your main window with, ") 
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display clear\n", 
-  [[tecClearDisplay() tecReportDebugHelp()]], 
+  [[UIManagerClearMainWindow() tecReportDebugHelp()]], 
   "Remove text from main screen", true)
 	echo("Now cause the issue reported to occur. After you have disable debug mode with ")
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug off.\n", 
@@ -2715,7 +2754,7 @@ function tecReportStandardIssue()
 		.."before continuing forward.\n"
 		.."If you would like to, clear your display with: ")
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display clear\n", 
-  [[tecClearDisplay() tecReportDebugHelp()]], 
+  [[UIManagerClearMainWindow() tecReportDebugHelp()]], 
   "Remove text from main screen", true)
 	echo("Save the text in the main window to file by clicking: ")
 	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Save main window.\n", 
@@ -2774,6 +2813,17 @@ end --end setTECVideoDebugMode</script>
 function getTECDisplayDebugMode() 
 	return tecSettings.tecDisplayDebugMode
 end --end function getTECdebugMode</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>displayDebug(textMessage)</name>
+					<packageName></packageName>
+					<script>function displayDebug(textMessage)
+  if getTECDisplayDebugMode() then
+    debugToDisplay(textMessage)
+  end -- if getTECDisplayDebugMode()
+end --function displayDebug
+</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
@@ -2844,12 +2894,19 @@ end --getTECTimerDebugMode</script>
 				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>GUI or display</name>
+				<name>GUI</name>
 				<packageName></packageName>
 				<script>--[[
 for funtions that directly affect the clients GUI.
 
-GUI like functions
+GUI
+
+each window is added to tecGeyserWindows table via tecUIManagerRegisterWindow at startup.
+Than in script "post initilization" they are loaded with UIManagerShowWindow("all", true)
+to the UI manager being used.
+Need to be able to not send UI manager windows that the user has removed.
+Make table saveUIManagerSettings
+saveUIManagerSettings[windowName].enabled saves if the window should be added to the UI manager is use.
 ]]--</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
@@ -2860,13 +2917,15 @@ GUI like functions
 function setMainWindowAutoWrap()
 
   local wrapAt = 0
+  local leftSideWidth = 0
+  local rightSideWidth = 0
     
   if tecSettings.showScrollBars then --if tecSettings.showScrollBars is true
 
     --get how many characters should appear on a line before word wrapping.
   	wrapAt = getColumnCount()
     
-    debugToDisplay("setMainWindowAutoWrap: Wrap at: "..tostring(wrapAt) )
+    displayDebug("setMainWindowAutoWrap: Wrap at: "..tostring(wrapAt) )
 
   else --if tecSettings.showScrollBar is false 
   
@@ -2875,9 +2934,15 @@ function setMainWindowAutoWrap()
   	--Get size of the entire window.
     local mainWidth, mainHeight = getMainWindowSize()
     
-    --Get the width of left and right gui bars.
-    local leftSideWidth = GUIframe.topLeftContainer:get_width()
-    local rightSideWidth = GUIframe.topRightContainer:get_width()
+    --if using GUIframe manager and it is initialized
+    if GetUIManager() == "GUIframe" and GUIframe.initialized then
+      --Get the width of left and right gui bars.
+      leftSideWidth = GUIframe.topLeftContainer:get_width()
+      rightSideWidth = GUIframe.topRightContainer:get_width()
+    else
+      tecWarningNotification("function, setMainWindowAutoWrap, leftSideWidth and "
+        .."rightSideWidth are not properly initialized. UI Manager unknown.")
+    end --if GetUIManager() == "GUIframe" and GUIframe.initialized
     
     --Calculate how many characters can fit into main on average taking left and 
     --right GUI objects into consideration. Rounding down with math.floor
@@ -2886,7 +2951,7 @@ function setMainWindowAutoWrap()
   	--displays actual sizes to screen.
   	--display with setTECDebugMode(true)
   	--or command line debug on
-  	debugToDisplay("setMainWindowAutoWrap: Font Width: "..tostring(fontWidth)
+  	displayDebug("setMainWindowAutoWrap: Font Width: "..tostring(fontWidth)
       .." Left side width: "..tostring(leftSideWidth).." Right side width: "..tostring(leftSideWidth)
       .." Main screen width: "..tostring(mainWidth)
       .." line wrap: "..tostring(wrapAt)
@@ -2898,66 +2963,6 @@ function setMainWindowAutoWrap()
   setWindowWrap("main", tonumber(wrapAt))
   
 end --end function setMainWindowAutowrap</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>tecClearDisplay()</name>
-					<packageName></packageName>
-					<script>--There is either a bug or clear working as intended.
---If we clear main. geyser objects that adopt it's background color via getBgColor
---it will error out.
-
-function tecClearDisplay()
-
-  --backup background color
-	local br,bg,bb = getBgColor()
-	
-  --clear main
-  clearWindow()
-
-  --set mains background to eat it was.
-	setBgColor(br,bg,bb)
-	echo(" \n") --We need a line of text on the screen for getBgColor to copy from.
-	
-end --end function tecClearDisplay</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>tecClientDisplayReset()</name>
-					<packageName></packageName>
-					<script>function tecClientDisplayReset()
-
-echo("Display settings reset. You MUST restart mudlet.")
-
-  GUIframe.reinitialize()  --reset window positions to default
-	tecClientDisplaySave(true) --save default window positions to file
-  send("exit") --disconnect
-  send("exit")
-  disconnect()
-
-end --function tecClientDisplayReset()</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>tecClientDisplaySave(displayToScreen)</name>
-					<packageName></packageName>
-					<script>function tecClientDisplaySave(displayToScreen)
-  GUIframe.saveSettings()
-  if displayToScreen then echo("\nDisplay settings saved.\n") end
-end --function tecClientDisplaySave</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>tecClientDisplayLoad(displayToScreen)</name>
-					<packageName></packageName>
-					<script>function tecClientDisplayLoad(displayToScreen)
-
-  GUIframe.loadSettings(redraw) --loads display settings from file
-  if displayToScreen then 
-		echo("\nDisplay settings loaded from last save.\n")
-	end --if displayToScreen
-	
-end --function tecClientDisplayLoad</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
@@ -3008,7 +3013,7 @@ the last geyser object, and so on until we reach the parent that called the quer
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserContainer.html
   table.insert(objectTable.name, tostring(self.name))
   table.insert(objectTable.type, tostring(self.type))
-  table.insert(objectTable.parentName, tostring(self.parent.name))
+  table.insert(objectTable.parentName, tostring(self.parent))
   table.insert(objectTable.xPos, tostring(self:get_x()))
   table.insert(objectTable.yPos, tostring(self:get_y()))
   table.insert(objectTable.width, tostring(self:get_width()))
@@ -3029,19 +3034,25 @@ function tecRedrawLabels()
 
   tecConfigThemes() --redo themes data. something likely changed
 
-  --Create table to store all geyser objects within GUIframe
-  ContainerDataTable = { 
-    GUIframe.bottomRightContainer:objectQuery(),
-    GUIframe.topLeftContainer:objectQuery(),
-    GUIframe.bottomLeftContainer:objectQuery(),
-    GUIframe.bottomContainer:objectQuery(),
-    GUIframe.bottomRightContainer:objectQuery(),
-    GUIframe.topRightContainer:objectQuery(),
-    GUIframe.topContainer:objectQuery(),
-    GUIframe.topLeftTabs:objectQuery(),
-    GUIframe.topRightTabs:objectQuery(),
-    GUIframe.bottomLeftTabs:objectQuery(),
-    GUIframe.bottomRightTabs:objectQuery() }
+  --if using GUIframe manager and it is initialized
+  if GetUIManager() == "GUIframe" and GUIframe.initialized then
+    --Create table to store all geyser objects within GUIframe
+    ContainerDataTable = { 
+      GUIframe.bottomRightContainer:objectQuery(),
+      GUIframe.topLeftContainer:objectQuery(),
+      GUIframe.bottomLeftContainer:objectQuery(),
+      GUIframe.bottomContainer:objectQuery(),
+      GUIframe.topRightContainer:objectQuery(),
+      GUIframe.topContainer:objectQuery(),
+      GUIframe.topLeftTabs:objectQuery(),
+      GUIframe.topRightTabs:objectQuery(),
+      GUIframe.bottomLeftTabs:objectQuery(),
+      GUIframe.bottomRightTabs:objectQuery() }
+  else --no UI manager specified.
+    tecWarningNotification("function tecRedrawLabels, UI manager not specified. "
+      .."Making containerDataTable a blank table.")
+    ContainerDataTable = {}
+  end --if GetUIManager() == "GUIframe" and GUIframe.initialized
     
   --Go through all the table we created above
   for key,cdt in pairs(ContainerDataTable) do
@@ -3066,7 +3077,7 @@ function tecRedrawLabels()
           for iterator, tabName in ipairs(tecTabNames) do
             --if the tab name was found record that it was
             if tabName == cdt.name[k] then tabNameFound = true end 
-          end --for ipairs(tecGUIFrameTabNames)
+          end --for ipairs(tecTabNames)
           --if the tab name was not found inthe tabname table, insert it.
           if not tabNameFound then table.insert(tecTabNames, cdt.name[k]) end
           setLabelStyleSheet(cdt.name[k],tabsStyle)
@@ -3115,7 +3126,13 @@ function tecSetScrollBars(mode, displayToScreen)
       --debugc("Enabling scroll bar for: "..windowName)
     end --for tecTextWindowNames
     tecSettings.showScrollBars = true --tell further gui changes to show scrollbars
-    setBorderRight(GUIframe.topRightContainer:get_width())
+    --if using GUIframe manager and it is initialized
+    if GetUIManager() == "GUIframe" and GUIframe.initialized then
+      setBorderRight(GUIframe.topRightContainer:get_width())
+    else --no UI manager specified.
+      tecWarningNotification("function tecSetScrollBars, UI manager no specified. "
+        .."Right border set set.")
+    end --if GetUIManager() == "GUIframe" and GUIframe.initialized
     if displayToScreen then
       cecho("Enabled scrollbars. "
         .."Some windows will not show their scrollbars until there is enough text "
@@ -3211,7 +3228,7 @@ local function resizeToolTiplabel(TooltipText)
   if getTECDisplayDebugMode then --if display debug is enabled.
     local Pos_X, Pos_Y = getMousePosition()
     local tmpMainWidth, tmpMainHeight = getMainWindowSize()
-    debugToDisplay("function moveTooltip, Right side of tool tip label: "
+    displayDebug("function moveTooltip, Right side of tool tip label: "
       ..(Pos_X + tooltips[tooltips.name]:get_width())
       .." main window width: "..tmpMainWidth
       .." Pos_X: "..Pos_X.." tooltip label width: "..tooltips[tooltips.name]:get_width()
@@ -3298,31 +3315,1292 @@ end</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>tecSetProjectToolTips()</name>
+					<name>getPercentOfMainWindow(percent)</name>
 					<packageName></packageName>
-					<script>--creates tooltips to all labels that need them.
-function setParthiaLabelsToolTips()
-
-  --We collected tab names above using those we will make tooltips telling players what tabs
-  --can be moved with a brief message.
-  for iterator, tabName in ipairs(tecTabNames) do
-    --if the tab is not a tecComWindow it can be moved. Notify with a tooltip message.
-    if not tabName:starts("tecComWindows.") then
-      SetTooltip(tabName, "Right-click to move")
-    end --if not tabName:starts("tecComWindows.")
-  end
-  
-  --resizeLabels taken from GUIframe.
-  
-  local resizeLabels = {'resizeLeft', 'resizeRight', 'resizeTop', 'resizeBottom'}
-  for iterator, resizeLabelName in ipairs(resizeLabels) do --loop through resizeLabels
-    setLabelMoveCallback(resizeLabelName, "trackTooltip", "Right-click and drag to resize")
-    --SetTooltip(resizeLabelName, "Right-click to resize") --Create tooltips for resizeLabels
-  end --for iterator, resizeLabelName in ipairs(resizeLabels) do
-  
-end --function tecSetProjectToolTips()</script>
+					<script>--Returns the percent of width and height of the main window
+local function getPercentOfMainWindow(percent)
+	local mainWidth,mainHeight = getMainWindowSize()
+	--turn number into a percent
+	percent = tonumber(percent) * .01
+	--return window size in %
+	return (mainWidth * percent), (mainHeight * percent)
+end --function getPercentOfMainWindow</script>
 					<eventHandlerList />
 				</Script>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>UIManager</name>
+					<packageName></packageName>
+					<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external scripts --
+-------------------------------------------------
+</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>SetUIManager(UIManagerName, displayToScreen)</name>
+						<packageName></packageName>
+						<script>--[[
+Set UI manager mode.
+Usage:
+SetUIManager(UIManagerName, displayToScreen)
+UIManagerName a string, the name of the UI manager you would like to set. IE: "GUIframe". Not case sensetive.
+displayToScreen, true displays progress to screen, false does not.
+]]--
+function SetUIManager(UIManagerName, displayToScreen)
+  --add UI managers in UIManagers table in the variables script.
+  
+  --Varify arguments are good.
+  mode = fuzzyBoolean(mode) --true enables GUIFrame usage false disables it
+  displayToScreen = fuzzyBoolean(displayToScreen) --if true display actions to screen
+  local UIManagerNameCorrect = false --used later to verify correct argument sent.
+  local UIManagerNameList = "" --used later to list good names in event of an error.
+  if type(UIManagerName) ~= "string" then --if objectName is not a string
+    tecErrorNotification("function SetUIManager, first argument is a: "
+    ..type(UIManagerName).." string was expected. Use UI manager name IE: GUIframe") 
+  end --if type(objectName) ~= "string"
+  
+  --verify correct UI manager name sent.
+  for iterator, UIManager in ipairs(UIManagers) do
+    if UIManager:lower() == UIManagerName:lower() then --if names match
+      debugToDisplay("\tFound objectName match "..UIManagerName:lower())
+      UIManagerNameCorrect = true --notify error catch, correct name sent
+      UIManagerName = UIManager --Correct case sensitivity.
+    end --if UIManager:lower() == UIManagerName:lower()
+    UIManagerNameList = UIManager..", " --collect list of UI managers to display on error.
+  end --for pairs(UIManagers)
+  
+  --manager name is incorrect send supported commands to player
+  if not UIManagerNameCorrect then --if the wrong name was sent.
+    if displayToScreen then
+      cecho("User Interface managers or display manager commands are: ")
+      for iterator, UIManager in ipairs(UIManagers) do --get UI manager names to click.
+        local cmdToSend = [[SetUIManager( "]]..UIManager..[[",true)]] --make commandfor cechoLink
+        cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display manager "..UIManager, 
+          cmdToSend, --runs on click.
+          "Set UI manager.", true)
+        --add proper punctuation.
+        if iterator &lt; (#UIManagers - 1) then cecho(", ") elseif iterator == (#UIManagers - 1) then echo(" and ") end
+      end --for ipairs(UIManagers)
+      cecho(".\n")
+      return --stop process error found
+    else --if this is not being displayed to screen
+      tecErrorNotification("function SetUIManager, incorrect name sent. Please use "
+        .."supported names: "..UIManagerNameList)
+      return --stop process error found
+    end --if displayToScreen
+  end --if not UIManagerNameCorrect
+  
+  debugToDisplay("function SetUIManager, started. UIManagerName is: "..UIManagerName
+    .." displayToScreen is: "..tostring(displayToScreen))
+
+  if UIManagerName == "GUIframe" then --if true is sent enable GUIframe
+    tecSettings.useGUIframe = true
+    echo("UI manager set to GUIframe. Please restart.\n")
+    tecFileSaveSettings(displayToScreen) --force a save
+  elseif UIManagerName == "none" then
+    tecSettings.useGUIframe = false
+    setBorderSizes(0,0,0,0)
+    echo("disabled all UI managers. Please restart.\n")
+    tecFileSaveSettings(displayToScreen) --force a save.
+  else --if it was false disable GUIframe
+    tecErrorNotification("function SetUIManager, incorrect UI Manager name after "
+      .."error checking.")
+    return --stop process error found
+  end -- UIManagerName == series.
+end --function tecSetGUIFrameMode(mode)
+--SetUIManager("farts", true)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>GetUIManager()</name>
+						<packageName></packageName>
+						<script>--[[
+Returns string name of UI manager in use or "none" if no UI manager is being used.
+]]--
+function GetUIManager()
+  if tecSettings.useGUIframe then --using GUIframe UI manager
+      return "GUIframe" --using GUIframe manager
+  else 
+    return "none"
+  end --no UI manager found.
+end --function GetUIManager
+</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>UIManagerClearMainWindow()</name>
+						<packageName></packageName>
+						<script>--There is either a bug or clear working as intended.
+--If we clear main. geyser objects that adopt it's background color via getBgColor
+--it will error out.
+
+function UIManagerClearMainWindow()
+
+  --backup background color
+	local br,bg,bb = getBgColor()
+	
+  --clear main
+  clearWindow()
+
+  --set mains background to eat it was.
+	setBgColor(br,bg,bb)
+	echo(" \n") --We need a line of text on the screen for getBgColor to copy from.
+	
+end --end function UIManagerClearMainWindow</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>UIManagerTestWindow(objectName, displayToScreen)</name>
+						<packageName></packageName>
+						<script>--tests if objectName is correct. If it is it returns a correctly
+--capitalized objectName. If it is bad, it returns false.
+function UIManagerTestWindow(objectName, displayToScreen)
+
+  local tecWindowExists = false --used to see if objectName matches a window name.
+
+  --Varify arguments are good.
+  if type(objectName) ~= "string" then --if objectName is not a string
+    tecErrorNotification("\tfunction UIManagerTestWindow, first argument is a : "
+    ..type(objectName).." string was expected. Use object name IE \"Compass\"") 
+    return false --end process it can not continue.
+  end --if type(objectName) ~= "string"
+  
+  --if there are no geyser containers in tecGeyserWindows table.
+  if next(tecGeyserWindows) == nil then
+    tecWarningNotification("\tfunction UIManagerTestWindow, no geyser "
+      .."containers in the tecGeyserWindows table. No geyser containers managed "
+      .." by UI manager.")
+    return false --stop to function there are no geyser containers to add to UI manager
+  end --if #tecGeyserWindows == 0
+  
+  local tecWindowNameList = "" --will be used to list window names
+  for windowName, window in pairs(tecGeyserWindows) do--loop through containers
+    --if name was not specified, use the windowName in its place.
+    if not window.name then 
+      tecWarningNotification("function UIManagerTestWindow, name was not "
+        .."specified for "..windowName.." using it's window name instead.")
+      tecGeyserWindows[windowName].name = windowName 
+    end --if not window.name
+    if objectName:lower() == window.name:lower() then --if names match
+      debugToDisplay("\tfunction tecTestUIManager, Found objectName match "..window.name:lower())
+      tecWindowExists = true --notify error catch, correct name sent
+      objectName = window.name --Correct case sensitivity.
+    end --if objectName:lower() == window.name:lower()
+    tecWindowNameList = tecWindowNameList..window.name..", " --List windows in 1 string
+  end --while ipairs(tecWindowNames)tecWindowNames
+  
+  --check if argument passed is "all" for all windows.
+  if objectName:lower() == "all" then
+    debugToDisplay("\tfunction UIManagerTestWindow, Found objectName match \"all\"")
+    tecWindowExists = true --notify error catch, correct name sent
+    objectName = "all" --Correct case sensitivity.
+  end --if objectName:lower() == "all"
+  
+  if not tecWindowExists then --window name does not exist.
+    if displayToScreen then
+    else
+      tecErrorNotification("\tfunction UIManagerTestWindow, "
+        .."window name: "..objectName.." not found in tecWindowNames table. "
+        .."Please send a supported name. Supported names are: "..tecWindowNameList
+        .."and all.")
+    end --if displayToScreen
+    debugToDisplay("\tfunction UIManagerTestWindow, failed to find GUIframe name matching: "..objectName)
+    return  false
+  end --if not tecWindowExists
+
+  return objectName --no errors found
+end --function UIManagerTestWindow</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>UIManagerShowWindow(objectName, mode, displayToScreen)</name>
+						<packageName></packageName>
+						<script>--[[
+control what geyesr objects show in the current UI manager.
+You must first add a geyser object to tecGeyserWindows table 
+To add a geyser object to the tecGeyserWindows table refer to: tecConfigGeyserWindows(clear)
+objectName is the name of the geyser object.
+Mode is true if you would like to add the geyser object the current UI manager
+mode is false if you would like to remove the geyser object from the current UT manager
+displayToScreen is true if you would like the player to see these additions or removals
+]]--
+function UIManagerShowWindow(objectName, mode, displayToScreen)
+  
+  mode = fuzzyBoolean(mode) --true enables name specified, false disables it
+  displayToScreen = fuzzyBoolean(displayToScreen) --if true display actions to screen
+  
+  debugToDisplay("function UIManagerShowWindow, started. ObjectName is: "..tostring(objectName)
+    .." mode is: "..tostring(mode).." displayToScreen is: "..tostring(displayToScreen))
+  
+  --Returns correctly capitolized window name on success or false on input failure.
+  objectName = UIManagerTestWindow(objectName, displayToScreen)
+  if not objectName then --objectName passed was incorrect
+    if displayToScreen then
+      cecho("Incorrect window name sent. Supported commands are:\n")
+      for windowName, window in pairs(tecGeyserWindows) do--loop through containers
+        if mode then 
+          --make commandfor cechoLink
+          local cmdToSend = [[UIManagerShowWindow("]]..windowName..[[",true,true)]]
+          cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display add "..windowName, 
+            cmdToSend, --runs on click.
+            "Add window to display", true)
+          cecho(", ")
+        else
+          local cmdToSend = [[UIManagerShowWindow("]]..windowName..[[",false,true)]]
+          cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display remove "..windowName, 
+            cmdToSend, --runs on click.
+            "Remove window from display", true)
+          cecho(", ")
+        end --if mode
+      end --for pairs(tecGeyserWindows)
+      cecho("and ")
+      if mode then
+        cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display add all",
+            [[UIManagerShowWindow("all",true,true)]], --runs on click.
+            "Add all windows from display", true)
+      else --if mode
+        cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display remove all",
+            [[UIManagerShowWindow("all",false,true)]], --runs on click.
+            "remove all windows from display", true)
+      end --if mode
+    end --if displayToScreen
+    return --error found
+   end --if error found with UIManagerTestWindow
+  
+  if mode then --enable GUIframe object
+    for windowName, window in pairs(tecGeyserWindows) do--loop through containers
+        --check if objectName matches window name in loop
+        --objectName == "all"| run on all windowNames
+        --window.name == objectName| remove specific window sent as objectName argument
+        if objectName == "all" or window.name == objectName then
+          --Check if window is disabled.
+          if UIManagerSettings[window.name] then 
+            if UIManagerSettings[window.name].disabled then --if the window is disabled.
+              if displayToScreen then
+                --display a clickable command to screen
+                cecho("Window "..window.name.." is currently disabled. Enable window with: ")
+                local cmdToSend = [[tecEnableUIManagerWindow("]]..window.name..[[",true)]]
+                cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display enable "..window.name, 
+                  cmdToSend, --runs on click.
+                  "Enable window in UI Manager", true)
+              end --displayToScreen
+              debugToDisplay("function UIManagerShowWindow, window: "..window.name.." is currently disable."
+                ..[[enable with tecEnableUIManagerWindow("windowname",displayToScreen) or "display enable windowname"]])
+              return -- do not continue window is disabled.
+            end --if UIManagerSettings[window.name].disabled
+          end --if UIManagerSettings[window.name]
+          
+          --if the UI manager is GUIframe
+          if GetUIManager() == "GUIframe" then --if using GUIframe manager
+            debugToDisplay("Adding "..window.name.." to "..window.GUIframeLocation..".\n")
+            if displayToScreen then
+              cecho("Adding "..window.name.." to "..window.GUIframeLocation..".\n")
+            end --if displayToScreen
+            --Add the window to GUIframe manager
+            GUIframe.addWindow(tecGeyserWindows[windowName], window.name, window.GUIframeLocation)
+            GUIframe.activate(windowName) --Activating the window will hide windows behind it.
+          end --if GetUIManager() == "GUIframe"
+          
+        end --if objectName == "all" or window.name == objectName 
+    end --for pairs(tecGeyserWindows)
+  else --disable GUIframe object
+    --loop though windows being managed.
+    for windowName, window in pairs(tecGeyserWindows) do
+        --objectName == "all"| run on all windowNames
+        --window.name == objectName| remove specific window sent as objectName argument
+        if objectName == "all" or window.name == objectName then
+          if displayToScreen then echo("Removing "..objectName..".\n") end
+          --if using GUIframe manager and it is initialized
+          if GetUIManager() == "GUIframe" and GUIframe.initialized then 
+            debugToDisplay("function UIManagerShowWindow, Removing window: "..window.name.." from GUIframe.")
+            GUIframe.removeWindow(window.name) --stop displaying window in GUIframe
+          end --if GetUIManager() == "GUIframe" and GUIframe.initialized
+        end --if windowName == "all" or windowName == objectName
+    end --for ipairs(tecWindowNames)
+  end --if mode
+  guiChange() --redraw windows since the display has changed
+end --function setGUIframeObject</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>UIManagerRegisterWindow(geyserContainer, displayToScreen)</name>
+						<packageName></packageName>
+						<script>function UIManagerRegisterWindow(geyserContainer, displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  if not tecGeyserWindows then tecGeyserWindows = {} end --if windows table is not configured.
+  local windowIsAlreadyTracked = false
+  local guiFrameWindowLocations = "top topleft topright bottom bottomleft bottomright"
+
+  if type(geyserContainer) ~= "table" then
+    local errorFound = "function UIManagerRegisterWindow, was not passed a geyser container. "
+      .."Stopping function, UIManagerRegisterWindow only supports geyser containers."
+    tecErrorNotification(errorFound)
+    error(errorFound)
+  end --type(geyserContainer) ~= "table"
+
+  if not geyserContainer.name then --if there is no name for the container.
+    local errorFound = "function UIManagerRegisterWindow, geyser container passed does not have a name. "
+      .." Name is required. To give it a name.\n"
+      ..[[At container creation with: yourContainer = Geyser.Container:new({ name = "Name You Want"})]]
+      .."\n"..[[Post creation with: yourContainer.name = "Name You Want"]]
+    tecErrorNotification(errorFound)
+    error(errorFound)
+    return --stop function
+  end -- if not geyserContainer.name
+  
+  --make certain GUIframeLocation is present if the framework is in use.
+  if tecSettings.useGUIframe then --if using GUIframe.
+    if not geyserContainer.GUIframeLocation then --if location for container in GUIframe not declared.
+      local errorFound = "function UIManagerRegisterWindow, geyser container passed does not have a GUIframe location. "
+        .." Not required chooses where windows starts in GUIframe layout.\n"
+        ..[[After creating your geyser container add a .GUIframeLocation to the container table. ]]
+        ..[[with: yourContainer.GUIframeLocation = "location"\n Supported locations are: ]]
+        ..guiFrameWindowLocations
+        .."\nUsing default location topleft"
+      tecWarningNotification(errorFound)
+      geyserContainer.GUIframeLocation ="topleft"
+    end --if not geyserContainer.GUIframeLocation
+    --make it lower case so we can easily check it
+    geyserContainer.GUIframeLocation = geyserContainer.GUIframeLocation:lower()
+    --if wrong GUIframe window location sent.
+    if not guiFrameWindowLocations:match(geyserContainer.GUIframeLocation) then
+      local errorFound = "function UIManagerRegisterWindow, geyser contains a bad GUIframeLocation. "
+        .."Supported locations are: "..guiFrameWindowLocations
+        ..". Using default location topleft."
+        tecErrorNotification(errorFound)
+        geyserContainer.GUIframeLocation = "topleft"
+    end --if not guiFrameWindowLocations:match(geyserContainer.GUIframeLocation)
+  end --if tecSettings.useGUIframe
+  
+  debugToDisplay("function UIManagerRegisterWindow, tecGeyserWindows table contains: ")
+  --loop throgh geyser table
+  for key, window in pairs(tecGeyserWindows) do
+    debugToDisplay("\tWindow name: "..window.name)
+    --if window passed already in table
+    if window.name:lower() == geyserContainer.name:lower() then
+      debugToDisplay("\tFound "..geyserContainer.name:lower()
+        .." in tecGeyserWindows table. It is already being manged by UI manager.")
+      windowIsAlreadyTracked = true --notify function container already in table.
+    end --if window.name:lower() == geyserContainer:lower()
+  end --for pairs(tecGeyserWindows)
+  
+  if windowIsAlreadyTracked then --container already exists in table.
+    if displayToScreen then --Display to player.
+      echo(geyserContainer.name.." is already being managed by UI manager.\n")
+    else --if we do not show user.
+      tecWarningNotification("function UIManagerRegisterWindow, container "..geyserContainer.name
+        .." already in tecGeyserWindows table. Already tracked by UI Manager.")
+    end --if displayToScreen
+  else --container not already in tecGeyserWindows table.
+
+    debugToDisplay("function UIManagerRegisterWindow, adding "..geyserContainer.name.." to tecGeyserWindows table.")
+    if tecGeyserWindows[geyserContainer.name] then --container name is already in table.
+      tecErrorNotification("function UIManagerRegisterWindow, tecGeyserWindows has a table named "
+        ..geyserContainer.name)
+      return --end function
+    else -- tecGeyserWindows[geyserContainer.name] does not exist
+      tecGeyserWindows[geyserContainer.name] = geyserContainer
+      if not tecGeyserWindows[geyserContainer.name].name then --container did not add
+        local errorFound = "function UIManagerRegisterWindow, "..geyserContainer.name
+          .." was not correctly added to tecGeyserWindows table. It is not being managed "
+          .." by UI manager."
+        tecErrorNotification(errorFound)
+        error(errorFound)
+      end 
+    end --if tecGeyserWindows[geyserContainer.name]
+    if displayToScreen then --Display to player.
+      echo("Adding "..geyserContainer.name.." to interface manager "..GetUIManager()..".\n")
+    end --if displayToSreen
+    tecGeyserWindows[geyserContainer.name]:hide() --hide the window it is not in a UI yet
+  end --if windowIsAlreadyTracked
+end --function UIManagerRegisterWindow</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>UIManagerEnableWindow(objectName, mode, displayToScreen)</name>
+						<packageName></packageName>
+						<script>--enables a window after it has been disabled.
+function UIManagerEnableWindow(objectName, mode, displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen) --if true display actions to screen
+  local unchangedObjectName = objectName
+
+  debugToDisplay("function UIManagerEnableWindow, started. ObjectName is: "..tostring(objectName)
+    .." mode is "..tostring(mode).." displayToScreen is: "..tostring(displayToScreen))
+
+  --Returns correctly capitolized window name on success or false on input failure.
+  objectName = UIManagerTestWindow(objectName, displayToScreen)
+  if not objectName then --objectName passed was incorrect
+    if (unchangedObjectName:lower()):match("list") then --if the we receive a list request
+      cecho("Supported ")
+      if mode then cecho("enable ") 
+      else cecho("disable ") end
+      cecho("commands are: ")
+    else 
+      cecho(unchangedObjectName.." is not a managed window. Supported commands are: ")
+    end
+    if mode then--if enable was wanted
+      if displayToScreen then
+        for windowName, window in pairs(tecGeyserWindows) do--loop through containers
+            --make commandfor cechoLink
+            local cmdToSend = [[UIManagerEnableWindow("]]..windowName..[[",true,true)]]
+            cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display enable "..windowName, 
+              cmdToSend, --runs on click.
+              "Enable "..windowName.." window", true)
+            cecho(", ")
+        end --for pairs(tecGeyserWindows)
+        cecho("and ")
+          cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display enable all",
+              [[UIManagerEnableWindow("all",true,true)]], --runs on click.
+              "Enable all windows", true)
+      end --if displayToScreen
+    else --disable windows sent
+      if displayToScreen then
+        for windowName, window in pairs(tecGeyserWindows) do--loop through containers
+            --make commandfor cechoLink
+            local cmdToSend = [[UIManagerEnableWindow("]]..windowName..[[",false,true)]]
+            cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display disable "..windowName, 
+              cmdToSend, --runs on click.
+              "Disable "..windowName.." window", true)
+            cecho(", ")
+        end --for pairs(tecGeyserWindows)
+        cecho("and ")
+          cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display disable all",
+              [[UIManagerEnableWindow("all",false,true)]], --runs on click.
+              "Disable all windows", true)
+      end --if displayToScreen
+    end --if mode
+    cecho("\n")
+    return --error found
+   end --if error found with UIManagerTestWindow
+
+  --make certain the window is going to an enabled side.
+  --if it is not, send it to a good side.
+  --If neither left or right side is enabled show a message.
+  for windowName, window in pairs(tecGeyserWindows) do --loop through managed containers
+    if objectName == "all" or window.name == objectName then --if matches the argument passed
+      if mode then --if request is to enable.
+        local windowLocationGood = true --tell function if the GUIFrameLocation is good
+        if GetUIManager() == "GUIframe" then --if using GUIframe
+          local tmpSidesTable = {"left", "right", "top", "bottom"} --used to test sides
+          local tmpWindowLocation = window.GUIframeLocation:lower() --
+          local tmpEnabledSideFound = false --used to tell function that an enabled side was found
+          --if this window is about to  go to a side that is disabled, change the side.
+          for _, tmpSide in ipairs(tmpSidesTable) do --loop through sides
+            if not uiThemes.PlayersTheme.borders[tmpSide] then --if the side is disabled
+              if tmpWindowLocation:match(tmpSide) then--if the window is going to a disabled side
+                for _, tmpSideModeCheck in ipairs({"left", "right"}) do --loop through sides
+                  --check the left and right sides, windows added to those can be moved.
+                  --Because of lack of layering support we do not want to place a window 
+                  --on the top or bottom. Because it will cover windows already there.
+                  if uiThemes.PlayersTheme.borders[tmpSideModeCheck] then --if side is enabled
+                    local errorFound = "Window "..window.name.. " is set to go to the "
+                      ..window.GUIframeLocation.." of the screen. The "..tmpSide
+                      .." side of the screen is disabled. Sending the window to the "
+                      .."top"..tmpSideModeCheck.." of the screen."
+                    window.GUIframeLocation = "top"..tmpSideModeCheck
+                    tmpEnabledSideFound = true --tell function an enabled side was found
+                    debugToDisplay("function UIManagerEnableWindow, "..errorFound)
+                    if displayToScreen then cecho(errorFound.."\n") end
+                  end --if uiThemes.PlayersTheme.borders[tmpSide]
+                end --for _, tmpSideModeCheck in ipairs(tmpSidesTable)
+                if not tmpEnabledSideFound then --if both left and right sides are disabled.
+                  local errorFound = "Both left and right sides of display are disabled. "
+                    .."window "..window.name.." is set to go to the "..window.GUIframeLocation
+                    .." of the screen. Left or right side of the screen must be enabled for this "
+                    .."window to be added to display."
+                  tecWarningNotification("function UIManagerEnableWindow, "..errorFound)
+                  if displayToScreen then cecho(errorFound.."\n") end
+                  windowLocationGood = false --stop this window from being enabled.
+                  --tell the UI manager not to load window
+                  UIManagerSettings[window.name].disabled = true 
+                end --if not tmpEnabledSideFound
+              end --if window.GUIframelocation:match(tmpSide)
+            end --if not uiThemes.PlayersTheme.borders[tmpSide]
+          end --ipairs(tmpSidesTable)
+        end --if GetUIManager() == "GUIframe"
+      
+        if windowLocationGood then --the GUIframeLocation checked good above.
+          debugToDisplay("function UIManagerEnableWindow, Enabling window: "..window.name)
+          if displayToScreen then echo("Enabling window: "..window.name..".\n") end --if displayToScreen
+          if not UIManagerSettings[window.name] then UIManagerSettings[window.name] = {} end --if the table does not exist, create it.
+          UIManagerSettings[window.name].disabled = false --enable the window.
+          UIManagerShowWindow(window.name,mode,displayToScreen) --display the window again.
+        end --if windowLocationGood
+      else --mode is false, we are disabling the window.
+        --if window name is not in UIManagerSettings table, create a table for the window.
+        if not UIManagerSettings[window.name] then UIManagerSettings[window.name] = {} end 
+        UIManagerSettings[window.name].disabled = true --tell the UI manager not to load window
+        
+        --if using GUIframe
+        if GetUIManager() == "GUIframe" and GUIframe.initialized then --if using GUIframe
+          
+          if GUIframe.windows[window.name] then --if the window exists.
+            debugToDisplay("function UIManagerEnableWindow, removing: "..window.name
+              .." from GUIframe.windows table.")
+            UIManagerShowWindow(window.name,mode,displayToScreen) --hide the window
+            GUIframe.windows[window.name] = nil --remove window from GUIframe so it does not get saved
+          else --if the window does not exist in GUIframe already.
+            debugToDisplay("function UIManagerEnableWindow, window "..window.name
+              .." does not exist in GUIframe.windows table, nothing to remove.")
+          end --if GUIframe.windows[window.name]
+          if getTECDisplayDebugMode then --if display debug is enabled.
+            displayDebug("function UIManagerEnableWindow, GUIframe.windows now looks like: ")
+            for tmpWindowName, tmpWindow in pairs(GUIframe.windows) do
+              displayDebug("\tWindow name: "..tmpWindowName)
+            end --for pairs(GUIframe.windows)
+          end --if getTECDisplayDebugMode
+        end --if GetUIManager() == "GUIframe" and GUIframe.initialized
+        --display message to player. Window disabled.
+        if displayToScreen then echo(window.name.." disabled.\n") end --if displayToScreen
+      end --if mode
+    end --if objectName == "all" or window.name == objectName
+  end --for pairs(tecGeyserWindows)
+  
+  if displayToScreen then dontForgetToSave() end --remind play to save
+end --function tecUIManagerEnableWindow(objectName, displayToScreen)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>UIManagerGUIframeThemes(displayToScreen)</name>
+						<packageName></packageName>
+						<script>--[[
+To create a UI Layout theme copy the text in the area labeled COPY BELOW
+There will be another line labeled COPY ABOVE stop there.
+In the function there is an area labeled PASTE ABOVE and PASTE BELOW
+This will create a table within the UIThemes table.
+That table will be used to place windows where you would like them.
+Once completed if you run the `display layout name` command 
+it will load the layout or list supported layouts.
+
+COPY BELOW
+  --Start theme namehere----------------------------------------
+  uiThemes.namehere = {} --create theme table
+  
+  uiThemes.namehere.GUIframe = {
+      tabHeight = tabsHeight, --tabs height
+      tabStyle = tabsStyle, --Tabs stylesheet
+      tabEchoStyle = tabsFontStyle, --text appearence in tabs
+      leftStartWidth = eighthW, --left border width
+      leftStartHeight = halfH, --Where top and bottom windows meet
+      rightStartWidth = quarterW, --Right border window
+      rightStartHeight = halfH, --Where top and bottom windows meet
+      topStartHeight = eighthH, --width of top
+      bottomStartHeight = 50, --width of bottom
+      resizeHeight = 30, --resize icon height
+      resizeWidth = 30, --resize icon width
+      --resizeHoverImage = "/imgs/resize/blue_arrows.png", currently non functional
+      --resizeRestImage = "/imgs/resize/blue_arrows_20t.png", currently non functional
+      borderOffset = 0, --I think width between windows.
+  }
+
+  --The windows you would like to add to your UI theme.
+  --Goes in the square brackets and quotes ["name"]
+  --The location of the window in GUIframe goes in the quotes after the equal symbol.
+  --GUIframe location goes = "GUIframeLocation"
+  --an easy method to list window names is `tecclient add list`
+  uiThemes.namehere.windows = { }
+
+  uiThemes.namehere.windows["TEC Map"] = "bottomright"
+  uiThemes.namehere.windows["Settings"] = "bottomleft"
+  uiThemes.namehere.windows["Macros"] = "bottomleft"
+  uiThemes.namehere.windows["Status"] = "bottom"
+  uiThemes.namehere.windows["Compass"] = "topleft"
+  uiThemes.namehere.windows["Communications"] = "top"
+  uiThemes.namehere.windows["Room Characters"] = "topright"
+  
+  --control what sides are displayed.
+  --true means the side will be displayed.
+  --False means it will not be displayed.
+  --If a window is on a disabled side it will not appear.
+  uiThemes.namehere.borders = {
+    left = true,
+    right = true,
+    top = true,
+    bottom = true,
+  }
+  --End theme namehere----------------------------------------
+COPY ABOVE
+]]--
+
+--configure layout themes
+function UIManagerGUIframeThemes(displayToScreen)
+
+  --use these for sizing
+  local mainW, mainH = getMainWindowSize()
+  --half the width and height of main window.
+  local halfW, halfH = math.floor(mainW/2), math.floor(mainH/2)
+  --a quarter of the window of main window.
+  local quarterW, quarterH = math.floor(halfW/2), math.floor(halfH/2)
+  --an eighth the width and hieght of main window.
+  local eighthW, eighthH = math.floor(quarterW/2), math.floor(quarterH/2)
+  --one third of main window
+  local thirdW, thirdH = math.floor(mainW * .33), math.floor(mainH * .33)
+  
+  uiThemes = {} --create table to hold themes
+  
+  --Start theme NiceHat----------------------------------------
+  uiThemes.NiceHat = {} --create theme table
+  
+  uiThemes.NiceHat.GUIframe = {
+      tabHeight = tabsHeight, --tabs height
+      tabStyle = tabsStyle, --Tabs stylesheet
+      tabEchoStyle = tabsFontStyle, --text appearence in tabs
+      leftStartWidth = eighthW, --left border width
+      leftStartHeight = halfH, --Where top and bottom windows meet
+      rightStartWidth = quarterW, --Right border window
+      rightStartHeight = halfH, --Where top and bottom windows meet
+      topStartHeight = eighthH, --width of top
+      bottomStartHeight = 50, --width of bottom
+      resizeHeight = 30, --resize icon height
+      resizeWidth = 30, --resize icon width
+      --resizeHoverImage = "/imgs/resize/blue_arrows.png", currently non functional
+      --resizeRestImage = "/imgs/resize/blue_arrows_20t.png", currently non functional
+      borderOffset = 0, --I think width between windows.
+  }
+
+  --The windows you would like to add to your UI theme.
+  --Goes in the square brackets and quotes ["name"]
+  --The location of the window in GUIframe goes in the quotes after the equal symbol.
+  --GUIframe location goes = "GUIframeLocation"
+  --an easy method to list window names is `tecclient add list`
+  uiThemes.NiceHat.windows = { }
+
+  uiThemes.NiceHat.windows["TEC Map"] = "bottomright"
+  uiThemes.NiceHat.windows["Settings"] = "bottomleft"
+  uiThemes.NiceHat.windows["Macros"] = "bottomleft"
+  uiThemes.NiceHat.windows["Status"] = "bottom"
+  uiThemes.NiceHat.windows["Compass"] = "topleft"
+  uiThemes.NiceHat.windows["Communications"] = "top"
+  uiThemes.NiceHat.windows["Room Characters"] = "topright"
+  
+  --control what sides are displayed.
+  --true means the side will be displayed.
+  --False means it will not be displayed.
+  --If a window is on a disabled side it will not appear.
+  uiThemes.NiceHat.borders = {
+    left = true,
+    right = true,
+    top = true,
+    bottom = true,
+  }
+  --End theme NiceHat----------------------------------------
+  
+  --Start theme orchil----------------------------------------
+  uiThemes.orchil = {} --create theme table
+  
+  uiThemes.orchil.GUIframe = {
+      tabHeight = tabsHeight, --tabs height
+      tabStyle = tabsStyle, --Tabs stylesheet
+      tabEchoStyle = tabsFontStyle, --text appearence in tabs
+      leftStartWidth = eighthW, --left border width
+      leftStartHeight = halfH, --Where top and bottom windows meet
+      rightStartWidth = quarterW, --Right border window
+      rightStartHeight = halfH, --Where top and bottom windows meet
+      topStartHeight = eighthH, --width of top
+      bottomStartHeight = 50, --width of bottom
+      resizeHeight = 30, --resize icon height
+      resizeWidth = 30, --resize icon width
+      --resizeHoverImage = "/imgs/resize/blue_arrows.png", currently non functional
+      --resizeRestImage = "/imgs/resize/blue_arrows_20t.png", currently non functional
+      borderOffset = 0, --I think width between windows.
+  }
+  
+  --The windows you would like to add to your UI theme.
+  --Goes in the square brackets and quotes ["name"]
+  --The location of the window in GUIframe goes in the quotes after the equal symbol.
+  --GUIframe location goes = "GUIframeLocation"
+  --an easy method to list window names is `tecclient add list`
+  uiThemes.orchil.windows = { }
+
+  uiThemes.orchil.windows["TEC Map"] = "bottomright"
+  uiThemes.orchil.windows["Settings"] = "bottomright"
+  uiThemes.orchil.windows["Macros"] = "bottomright"
+  uiThemes.orchil.windows["Status"] = "bottom"
+  uiThemes.orchil.windows["Compass"] = "topright"
+  uiThemes.orchil.windows["Communications"] = "top"
+  uiThemes.orchil.windows["Room Characters"] = "topright"
+  
+  --control what sides are displayed.
+  --true means the side will be displayed.
+  --False means it will not be displayed.
+  --If a window is on a disabled side it will not appear.
+  uiThemes.orchil.borders = {
+    left = false,
+    right = true,
+    top = true,
+    bottom = true,
+  }
+  --End theme orchil----------------------------------------
+  
+--PASTE BELOW----------------------------------------
+
+--PASTE ABOVE----------------------------------------
+
+  --Set the default theme here
+  uiThemesDefaultLayout = uiThemes.orchil --set default theme here
+
+  --Load theme from save, or load a default theme if ther was no saved theme
+  if UIManagerSettings.PlayersTheme then --if there is a PlayerTheme loaded from file.
+    uiThemes.PlayersTheme = UIManagerSettings.PlayersTheme --load the saved theme into the themes table
+  else --if there is no PlayersTheme loaded from file.
+    --set the PlayersTheme to the an existing theme.
+    uiThemes.PlayersTheme = uiThemesDefaultLayout
+  end --if UIManagerSettings.PlayersTheme
+
+end --function tecUILayoutManagerConfig</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>UIManagerSetTheme()</name>
+						<packageName></packageName>
+						<script>
+
+function UIManagerSetTheme(themeName, displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen) --if true display actions to screen
+  UIManagerGUIframeThemes(displayToScreen) --configure GUIframe layout themes
+  --list of acceptable GUIframe window locations
+  local guiFrameWindowLocations = [["top" "topleft" "topright" "bottom" "bottomleft" "bottomright"]]
+
+  local tecThemeExists = false --used to see if objectName matches a window name.
+  local tecThemeNameList = "" --will be used to list window names
+
+  debugToDisplay("function UIManagerSetTheme, themeName sent is "..tostring(themeName)
+    .." displayToScreen is: "..tostring(displayToScreen))
+
+  --Varify arguments are good.
+  if type(themeName) ~= "string" then --if objectName is not a string
+    tecErrorNotification("function UIManagerSetTheme, first argument is a : "
+    ..type(themeName).." string was expected. Use object name IE \"niceHat\"") 
+    return --end process it can not continue.
+  end --if type(themeName) ~= "string"
+  
+  --if there are no geyser containers in tecGeyserWindows table.
+  if next(uiThemes) == nil then
+    tecWarningNotification("function UIManagerSetTheme, no themes in the uiLayoutThemes table.")
+    return --stop to function there are no geyser containers to add to UI manager
+  end --if #tecGeyserWindows == 0
+  
+  --Verify themeName is a correct name. Make certain themes have good data.
+  for uiThemeName, uiTheme in pairs(uiThemes) do--loop through themes
+    --if name was not specified, use the windowName in its place.
+    if not uiThemeName then 
+      tecWarningNotification("function UIManagerSetTheme, theme does not have a name.")
+    end --if not uiThemeName
+    --make certain UIManagerSetTheme was sent a correct name.
+    if themeName:lower() == uiThemeName:lower() then --if names match
+      tecThemeExists = true --notify error catch, correct name sent
+      themeName = uiThemeName --Correct case sensitivity.
+      debugToDisplay("function tecTestUIManager, Found objectName match "..themeName)
+    end --if themeName:lower() == uiThemeName:lower()
+    tecThemeNameList = tecThemeNameList..uiThemeName..", " --List windows in 1 string
+  end --while pairs(uiThemes)
+  
+  --incorrect themeName sent. Show player correct themes.
+  if not tecThemeExists then --Theme sent to function did not match any saved themes
+    if displayToScreen then --display message to screen.
+        if (themeName:lower()):match("list") then --if the we receive a list request
+          cecho("Supported window layout themes are: ")
+        else --if themeName is not "list"
+          cecho(themeName.." is not a layout theme. Supported window layout themes are: ")
+        end
+        for uiThemeName, uiTheme in pairs(uiThemes) do--loop through containers
+            --make command for cechoLink
+            local cmdToSend = [[UIManagerSetTheme("]]..uiThemeName..[[",true)]]
+            cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display layout "..uiThemeName, 
+              cmdToSend, --runs on click.
+              "Change display layout.", true)
+            if (uiThemeName:lower()):match("playerstheme") then --if it is the playertheme
+              cecho("&lt;-your saved theme") --notify the player.
+            end --if (uiThemeName:lower()):match("playerstheme")
+            cecho(" ")
+        end --for pairs(tecGeyserWindows)
+    else
+      tecErrorNotification("function UIManagerSetTheme, Incorrect theme name. Supported themes are "
+        ..tecWindowNameList)
+    end --if displayToScreen
+    debugToDisplay("function UIManagerSetTheme, failed to find theme name matching: "..themeName)
+    echo("\n")
+    return
+  end --if not tecWindowExists
+  
+  --load desired windows back into UI
+  if GetUIManager() == "GUIframe" then --is GUIframe being used
+    debugToDisplay("\tUIManagerSetTheme, starting GUIframe config")
+    
+    if displayToScreen then cecho("Removing windows, please wait.\n") end
+    
+    if GUIframe.initialized then 
+      --remove all windows from UI manager and display.
+      UIManagerEnableWindow("all", false, false)
+    end
+    --load settings from desired theme to GUIframe.
+    GUIframe.configs = table.update(GUIframe.defaults, uiThemes[themeName].GUIframe)
+
+    --Reset GUI frame
+    GUIframe.reinitialize()
+    
+    --disable all sides
+    GUIframe.disable("top", true)
+    GUIframe.disable("bottom", true)
+    GUIframe.disable("left", true)
+    GUIframe.disable("right", true)
+
+    if displayToScreen then cecho("Adding windows, please wait.\n") end
+
+    --enable or disable sides.
+    for tmpWinowSide,_ in pairs(uiThemes[themeName].borders) do
+      --make certain the theme has a good border setting. Should be true or false, but lets be sure.
+      uiThemes[themeName].borders[tmpWinowSide] = fuzzyBoolean(uiThemes[themeName].borders[tmpWinowSide])
+      debugToDisplay("function UIManagerSetTheme, border "..tmpWinowSide
+        .." set to "..tostring(uiThemes[themeName].borders[tmpWinowSide]))
+      --enable window if theme calls for it
+      if uiThemes[themeName].borders[tmpWinowSide] then GUIframe.enable(tmpWinowSide) end 
+    end --for tmpWinowSide,_ in pairs(uiThemes[themeName].borders)
+    
+    --loop through theme windows to be added for theme make certain they are correct.
+    --if they are send them to the UI manager.
+    for tmpWindowName, tmpWindowGUIframeLocation in pairs(uiThemes[themeName].windows) do
+      debugToDisplay("function UIManagerSetTheme, attempting window: "..tmpWindowName
+        .." going to GUIframe location "..tmpWindowGUIframeLocation)
+        
+      --Window name error checking.
+      local incorrectWindowName = tmpWindowName --used later if themeName sent is correct
+      --verify the window name exists.
+      tmpWindowName = UIManagerTestWindow(tmpWindowName, displayToScreen)
+      if not tmpWindowName then --if the window name was bad.
+        --create a smart error message
+        local errorFound = incorrectWindowName.." is not a window name. Supported names are: "
+        for fullListWindowName, tmpWindowTable in pairs(tecGeyserWindows) do
+            errorFound = errorFound.."\""..fullListWindowName.."\" "
+        end --for fullListWindowName,_ in pairs(tecGeyserWindows) do
+        errorFound = errorFound.."\nTheme config code needing correction looks like: "
+          ..[[uiThemes.]]..themeName..[[.windows["]]..incorrectWindowName..[["] = "]]..tmpWindowGUIframeLocation..[["]]
+          .."\n\""..incorrectWindowName.."\" needs to be replaced with a supported window name, listed above.\n"
+          .."Please correct and attempt again.\n"
+        if displayToScreen then --if we want to display to player screen
+          echo(errorFound) --display error direct to player
+        end --if displayToScreen
+        debugToDisplay("function UIManagerSetTheme, "..errorFound) --display error to debug
+        return --stop function bad window name sent.
+      end --if not tmpWindowName
+    
+      --error check GUIframeLocation    
+      if not guiFrameWindowLocations:match(tmpWindowGUIframeLocation) then
+        --find an enabled border and set the location to that border.
+        if uiThemes[themeName].borders["right"] then --if right side is enabled.
+          tmpWindowGUIframeLocation = "topright" --put the window at the top right.
+        elseif uiThemes[themeName].borders["left"] then --if left side is enabled.
+          tmpWindowGUIframeLocation = "topleft" --put the window at the top left.
+        end --if uiThemes[themeName].borders[tmpWinowSide]
+        errorFound = "GUIframe location for window: "..incorrectWindowName.." incorrect.\n"
+          .."A default location of "..tmpWindowGUIframeLocation.." has been chosen for window "..incorrectWindowName
+          .."\nTo correct this, theme config code needing correction looks like: "
+          ..[[uiThemes.]]..themeName..[[.windows["]]..incorrectWindowName..[["] = "]]..tmpWindowGUIframeLocation..[["]]
+          .."\n\""..tmpWindowGUIframeLocation.."\" needs to be a supported GUIframe location, "
+          ..guiFrameWindowLocations
+        --display to player if displayToScreen is true.
+        if displayToScreen then echo(errorFound) end --Show message to player
+        tecWarningNotification(errorFound) --display to debug system.
+      end --if not guiFrameWindowLocations:match(geyserContainer.GUIframeLocation)
+
+      --Window name and location tested good, we will add it to the display.
+      --if the window exists in the tecGeyserWindows table, set its GUIframeLocation
+      if tecGeyserWindows[tmpWindowName] then 
+        debugToDisplay("function UIManagerSetTheme, setting window "..tmpWindowName
+          .." to GUIframe location "..tmpWindowGUIframeLocation)
+        tecGeyserWindows[tmpWindowName].GUIframeLocation = tmpWindowGUIframeLocation
+      else --the window name does not exist. and error occured.
+        errorFound = "function UIManagerSetTheme, "..tmpWindowName
+          .." does not exist in tecGeyserWindows table after UIManagerSetTheme error "
+          .."checking. Please contact a developer and supply your UILayout config."
+        tecErrorNotification(errorFound)
+        return
+      end --if tecGeyserWindows[tmpWindowName]
+      debugToDisplay("\tUIManagerSetTheme, error checking passed for window "
+        ..tmpWindowName.."enabeling it and adding it to display")
+      --enable and display the window.
+      --Do not display to screen as it will run dontforgettosave() for each window.
+      UIManagerEnableWindow(tmpWindowName, true)
+    end --for tmpWinowSide, tmpEnableSide in pairs(uiThemes[themeName].windows)
+
+    --redraw GUIframe with new layout.
+    GUIframe.eventHandler("sysWindowResizeEvent")
+  end --if GetUIManager() == "GUIframe" and GUIframe.initialized
+
+  --prompt player to save after layout completion
+  --if displayToScreen then dontForgetToSave() end
+end --function UIManagerSetTheme(themeName, displayToScreen)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>UIManagerEnableSide(sideName,mode,displayToScreen)</name>
+						<packageName></packageName>
+						<script>--Enable or disable sides in UI managers
+function UIManagerEnableSide(sideName,mode,displayToScreen)
+  mode = fuzzyBoolean(mode) --Verify good boolean sent
+  displayToScreen = fuzzyBoolean(displayToScreen) --Verify good boolean sent
+  local tmpSidesTable = {"left", "right", "top", "bottom"} --used to test input
+  
+  if not type(sideName) == "string" then --make certain first argument is a string
+    local errorFound = "first argument needs to be a string."
+    tecErrorNotification("function UIManagerEnableSide, "..errorFound)
+    if displayToScreen then cecho("UIManagerEnableSide "..errorFound) end
+    return --stop function error found
+  end
+  --Make certain argument passed is a correct side name
+  if not table.contains (tmpSidesTable, sideName:lower()) then
+    --if displayToScreen is true, show a list of acceptable commands
+    if displayToScreen then 
+      if (sideName:lower()):match("list") then --if the we receive a list request
+        cecho("Supported side ")
+        if mode then cecho("enable ") 
+        else cecho("disable ") end
+        cecho("commands are: ")
+      else 
+        cecho(sideName.." is not side. Supported commands are: ")
+      end
+      if mode then --show a list of enable commands if mode is true
+        --loop through side names inserting them into command examples
+        for iterator, tmpSideName in ipairs(tmpSidesTable) do
+          --loading a command into a variable to put into a cecholink
+          local cmdToSend = [[UIManagerEnableSide("]]..tmpSideName..[[",true,true)]]
+          cechoLink("&lt;:"..tecSettings.helpHighlightColor
+            .."&gt;display side enable "..tmpSideName, 
+            cmdToSend, --runs cmdToSend string on click.
+            "Enable side "..tmpSideName, true)
+            cecho(" ")
+        end --for pairs("left", "right", "top", "bottom")
+      else --mode false so send disable examples.
+        --loop through side names inserting them into command examples
+        for iterator, tmpSideName in ipairs(tmpSidesTable) do
+          --loading a command into a variable to put into a cecholink
+          local cmdToSend = [[UIManagerEnableSide("]]..tmpSideName..[[",false,true)]]
+          cechoLink("&lt;:"..tecSettings.helpHighlightColor
+            .."&gt;display side disable "..tmpSideName, 
+            cmdToSend, --runs cmdToSend string on click.
+            "Disable side "..tmpSideName, true)
+            cecho(" ")
+        end --for pairs(tmpSidesTable)                                                                            
+      end --if mode
+      cecho("\n") --put a new line at the end of the command examples
+    end --if displayToScreen
+    debugToDisplay("function UIManagerEnableSide, incorrect side name sent")
+    return --stop function error found
+  end --if tmpCorrectSides:match(sideName:lower())
+  
+  --Use GetUIManager create an ifelse for each UI manager that supports sides
+  --is GUIframe being used
+  if GetUIManager() == "GUIframe" and GUIframe.initialized then 
+    sideName = sideName:lower() --now that we know it is a string, make it lower case
+    debugToDisplay("function UIManagerEnableSide, setting border "
+      ..sideName.." to "..tostring(mode))
+    --Change settings in playerstheme table.
+    --Now if they save display settings these changes will load on startup.
+    uiThemes.PlayersTheme.borders[sideName] = mode
+    if mode then --if mode is true, enable side.
+      GUIframe.enable(sideName)
+    else --mode is false disable side
+      GUIframe.disable(sideName, true)
+    end --if mode
+  else --UI manager does not support sides
+    local errorFound = "The User Interface manager "
+      .."in use does not support sides."
+    if displayToScreen then cecho(errorFound.."\n") end
+    tecWarningNotification("function UIManagerEnableSide, "..errorFound)
+  end --if GetUIManager() == "GUIframe" and GUIframe.initialized
+
+  guiChange() --redraw windows since the display has changed
+
+  if displayToScreen then dontForgetToSave() end
+end --function UIManagerEnableSide</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>UIManagerFileSave(displayToScreen)</name>
+						<packageName></packageName>
+						<script>function UIManagerFileSave(displayToScreen)
+  if tecSettings.useGUIframe then --if using GUIframe manager
+    GUIframe.saveSettings() --While we do not use it presently still save GUIframe settings
+    --if UIManagerSettings table does not exist make it.
+    if not UIManagerSettings then UIManagerSettings = {} end
+    --Copy currently used theme to the UIManagerSettings table, so they will be saved.
+    UIManagerSettings.PlayersTheme = uiThemes.PlayersTheme
+    --save GUIframe sizes to UIManagerSettings table, so they will load on startup
+    UIManagerSettings.PlayersTheme.GUIframe.leftStartWidth = getBorderLeft() --left border width
+    UIManagerSettings.PlayersTheme.GUIframe.leftStartHeight = GUIframe.topLeftContainer:get_height() --Where top and bottom windows meet
+    UIManagerSettings.PlayersTheme.GUIframe.rightStartWidth = getBorderRight() --Right border window
+    UIManagerSettings.PlayersTheme.GUIframe.rightStartHeight = GUIframe.topRightContainer:get_height() --Where top and bottom windows meet
+    UIManagerSettings.PlayersTheme.GUIframe.topStartHeight = getBorderTop() --width of top
+    UIManagerSettings.PlayersTheme.GUIframe.bottomStartHeight = getBorderBottom() --width of bottom
+    
+    --save managed windows locations
+    for windowName, window in pairs(tecGeyserWindows) do --loop through UI managed windows
+      --We know the managed window's parent is a GUIframe container
+      --Using the .container table of a geyser object gains access to the objects parent or container
+      --window.container.name is the name of the parent of the window being checked
+      --We know the windows are named a after a GUIframe location with the word Container at the end
+      --We remove the word container with gsub
+      --Than lower case the remaining text with ():lower 
+      --Now tmpGUIframeLocation is a string looking like "top" or "bottomright"
+      local tmpGUIframeLocation = (window.container.name:gsub("Container","")):lower()
+      debugToDisplay("function UIManagerFileSave, Window "..windowName
+            .." saving to GUIframe location "..tmpGUIframeLocation.."\n")
+      --save the windows location for startup
+      UIManagerSettings.PlayersTheme.windows[windowName] = tmpGUIframeLocation
+    end --for pairs(tecGeyserWindows)
+    
+  else --UI manager not in use.
+    tecWarningNotification("function UIManagerFileSave, UI manager not specified.")
+    if displayToScreen then echo("No User Iterface manager present.") end
+  end --if tecSettings.useGUIframe then --if using GUIframe manager
+  
+  --Save UI Manager settings if any are present.
+  if UIManagerSettings then
+    --save UI Manager settings
+    table.save(tecSettingsFolder.."TECUIManagerData.lua", UIManagerSettings)
+  else --UIManagerSettings does not exist for some reason.
+    tecErrorNotification("function UIManagerFileSave, UIManagerSettings table not present.")
+  end --if UIManagerSettings
+  
+  if displayToScreen then echo("\nDisplay settings saved.\n") end
+end --function UIManagerFileSave</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>UIManagerFileLoad(displayToScreen)</name>
+						<packageName></packageName>
+						<script>--load display settings.
+function UIManagerFileLoad(displayToScreen)
+  local tecTMPDisplayTable = {}
+  
+  local path = tecSettingsFolder.."TECUIManagerData.lua"
+	path = path:gsub("\\","/")
+	--If the file does not exist let the user know.
+  if not io.exists(path) then 
+		debugToDisplay("tecFileLoadSettings: "..path.." file doesn't exist.") --TEC debug screen
+		debugc("tecFileLoadSettings: "..path.." file doesn't exist.") --mudlets debug screen
+	return --kill the function before real errors occur
+	else
+    table.load(path, tecTMPDisplayTable) --Load the settings in from file
+    --if UIManagerSettings table does not exist make it.
+    if not UIManagerSettings then UIManagerSettings = {} end
+    --load settings into UIManagerSettings table.
+    UIManagerSettings = table.update(UIManagerSettings, tecTMPDisplayTable)
+    if displayToScreen then 
+      cecho("[  OK  ]  - Parthia UI Manager settings successfully loaded from file.\n") 
+    end --if displayToScreen
+	end --end if file exists else
+	
+end --function UIManagerFileLoad</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>UIManagerReset(displayToScreen)</name>
+						<packageName></packageName>
+						<script>--reset display layout colors are changed in tecClientReset()
+function UIManagerReset(displayToScreen)
+
+  --make certain display to screen is good
+  displayToScreen = fuzzyBoolean(displayToScreen)
+
+  if GetUIManager() == "GUIframe" then --if using GUIframe manager
+    UIManagerGUIframeThemes(displayToScreen) --create default UI layout
+    if uiThemesDefaultLayout then --if uiThemesDefaultLayout exists
+      if uiThemes then --if the uiThemes table exists
+        debugToDisplay("function UIManagerReset, setting PlayersTheme table to defaultUILayout table.")
+        UIManagerSettings = {}
+        UIManagerSettings.PlayersTheme = uiThemesDefaultLayout --erase players UI layout with default
+      else --the uiThemes table somehow does not exist.
+        tecErrorNotification("function UIManagerReset, uiThemes table missing.")
+      end --if uiThemes
+      if displayToScreen then echo("Please wait while windows reload.\n") end
+      UIManagerSetTheme("PlayersTheme", false) --load windows into display
+      if displayToScreen then echo("Display settings set to default.\n") end --if displayToScreen
+    else --the uiThemesDefaultLayout table does not exist.
+      tecErrorNotification("function UIManagerReset, uiThemesDefaultLayout table missing.")
+    end --if uiThemesDefaultLayout
+  else --No UI manager found
+    tecWarningNotification("function UIManagerReset, no UI Mananger specified.")
+    if displayToScreen then echo("No UI Manager specified.\n") end
+  end --if tecSettings.useGUIframe
+
+  if displayToScreen then dontForgetToSave() end --remind player to save.
+
+end --function UIManagerReset</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>UIManagerHelp()</name>
+						<packageName></packageName>
+						<script>--Returns list of commands UI Manager is capable of
+--Intended to be used within a help system you make.
+function UIManagerHelp()
+
+  echo("Developer display commands:\n")
+
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display add window name", 
+    [[printCmdLine("display add ");
+    echo("Now enter a window name, all to add all windows or list to list supported window names.")]], 
+    "Add graphical object", true)
+	echo(", show a registered window.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display remove window name", 
+  [[printCmdLine("display remove ");
+    echo("Now enter a window name, all to remove all windows or list to list supported window names.")]], 
+  "Remove graphical object", true)
+	echo(", hide a registered window.\n")
+	
+  
+  
+  echo("\nPlayer display commands:\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display clear", 
+  [[UIManagerClearMainWindow()]], 
+  "Remove text from main screen", true)
+	echo(", clear text from main text console.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display scrollbars enable", 
+  [[tecSetScrollBars(true)]], 
+  "Enable scroll bars", true)
+	echo(", enable scrollbars in Parthia.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display scrollbars disable", 
+  [[tecSetScrollBars(false)]], 
+  "Hide scroll bars", true)
+	echo(", hide scrollbars in Parthia.\n")
+
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display side list", 
+  [[UIManagerEnableSide("list",true,true);
+    UIManagerEnableSide("list",false,true);
+    cecho("Click a command above to enable or disable a side of the screen.\n")]], 
+  "Control what sides are displayed", true)
+	echo(", enable or disable sides of the screen that hold windows.\n")
+  
+--  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display side disable name", 
+--  [[UIManagerEnableSide("list",false,true);
+--    printCmdLine("display side disable ");
+--    cecho("Click a command above or type a side name in the command line to disable that side.\n")]], 
+--  "Remove a side from display", true)
+--	echo(", remove a side from display.\n")
+  
+--  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display side enable name", 
+--  [[UIManagerEnableSide("list",true,true);
+--    printCmdLine("display side enable ");
+--    cecho("Click a command above or type a side name in the command line to enable that side.\n")]], 
+--  "Enable a side on display", true)
+--	echo(", Enable a side to display.\n")
+
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window list", 
+  [[UIManagerEnableWindow("list",true,true);
+    UIManagerEnableWindow("list",false,true);
+    echo("Click a command above to enable or disable a window.\n")]], 
+  "List all window commands", true)
+	echo(", show all windows that can be enabled or disabled.\n")
+  
+--  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable name", 
+--  [[printCmdLine("display window enable ");
+--    UIManagerEnableWindow("list",true,true);
+--    echo("Click a command above or enter a window name in the command line to enable that window.")]], 
+--  "Enable graphical objects", true)
+--	echo(", enable a window previously removed from display.\n")
+
+--  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable name", 
+--  [[printCmdLine("display window disable ");
+--    UIManagerEnableWindow("list",true,true);
+--    echo("Click a command above or enter a window name in the command line to disables that window.")]], 
+--  "Disable graphical objects", true)
+--	echo(", remove a window from display and keep it from loading on startup.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display layout list", 
+  [[UIManagerSetTheme("list",true);
+    echo("Click a command above to switch to a different layout theme.")]], 
+  "Change windows layout", true)
+	echo(", change window's layout to a preset theme.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display manager name", 
+  [[SetUIManager("list", true)]], 
+  "Change display manager", true)
+	echo(", change display manager.\n")
+	
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display save", 
+  [[UIManagerFileSave(true)]], 
+  "Save window positions", true)
+	echo(", save window positions.\n")
+	
+	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display load", 
+  [[UIManagerFileLoad(true)]], 
+  "Load window positions", true)
+	echo(", reset window positions to last save.\n")
+	
+	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display reset", 
+  [[UIManagerReset()]], 
+  "Reset window positions", true)
+	echo(", reset window positions to default.\n")
+			
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Resize Windows tutorial", 
+  [[UIManagerResizeHelp()]], 
+  "Resize windows tutorial", true)
+	echo(", expand or shrink windows.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Move Windows tutorial", 
+  [[UIManagerMoveWindowHelp()]], 
+  "Move windows tutorial", true)
+	echo(", move windows in display.\n")
+  
+   --Explains how to move tabs
+
+end --function UIManagerHelp</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>UIManagerResizeHelp()</name>
+						<packageName></packageName>
+						<script>function UIManagerResizeHelp() --explains how to resize display
+	if GetUIManager() == "GUIframe" and GUIframe.initialized then
+    cecho("You are currently using the GUIframe display manager. "
+    .."To reize windows right "
+		.."click one of the four very faint blue arrows and drag it. "
+		.."These arrows are on the top, bottom, left and right outer edges "
+		.."of the main text window that this text appears in. "
+		.."When you move your mouse over the arrows they will "
+		.."become bold blue arrows and show a resize tip in a small gray box.\n"
+    .."Don't forget to save changes with ")
+    cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display save", 
+      [[UIManagerFileSave(true)]],
+      "Save display settings", true)
+    cecho("\n")
+  else
+    tecErrorNotification("You are not using a display manager. "
+      .."No windows should show on screen to resize.")
+  end --if GetUIManager == "GUIframe" and GUIframe.initialized
+end --function UIManagerResizeHelp</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>UIManagerMoveWindowHelp()</name>
+						<packageName></packageName>
+						<script>function UIManagerMoveWindowHelp() --explains how to move tabs on display
+  if GetUIManager() == "GUIframe" and GUIframe.initialized then
+	 cecho("You are currently using the GUIframe display manager.\n"
+		.."To move a window you can right click its name tab at the top of the window. "
+    .."Than drag it to the tab of another window. "
+    .."When it is ready to be release a black space will open in the tabs bar to fit the name tab of the window being moved.\n"
+    .."It may take a few tries because it requires the tip of the mouse's cursor to be directly over another tab. "
+    .."After releasing the mouse the window and its name tab will stay where you moved it.\n"
+    .."Don't forget to save changes with ")
+    cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display save", 
+      [[UIManagerFileSave(true)]],
+      "Save display settings", true)
+    cecho("\n")
+  else
+    tecErrorNotification("You are not using a display manager. "
+      .."No windows should show on screen to move.")
+  end --if GetUIManager() == "GUIframe" and GUIframe.initialized
+end --function tecResizeDisplayHelp</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>help</name>
@@ -3357,7 +4635,7 @@ end --function tecSetProjectToolTips()</script>
   end --end if not tecBrief
  
   cechoLink(tecWindow, "&lt;:"..tecSettings.helpHighlightColor.."&gt;display", 
-  [[tecDisplayHelp()]], 
+  [[UIManagerHelp()]], 
   "Change display settings.", true)
   if not tecBrief then --if we do not want to be brief
     echo(tecWindow, " Save or load display positions, "
@@ -3439,92 +4717,6 @@ end --end function tecDebugHelp</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>tecResizeDisplayHelp()</name>
-					<packageName></packageName>
-					<script>function tecResizeDisplayHelp() --explains how to resize display
-	cecho("&lt;black:"..tecSettings.helpHighlightColor.."&gt;\\\/\\\/All windows can be resized! Read Below.\\\/\\\/&lt;reset&gt;\n"
-		.."Version one allows this by RIGHT "
-		.."clicking one of the four faint blue arrows and dragging it. "
-		.."These arrows are on the top, bottom, left and right outer edges "
-		.."of the main text window that this text appears in. "
-		.."When you move your mouse over the arrows they will "
-		.."become bold blue arrows.\n"
-    .."After changing don't forget to ")
-    cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Save\n", 
-      [[tecClientSaveAll(true)]],
-      "Save all client settings", true)
-		cecho("&lt;black:"..tecSettings.helpHighlightColor.."&gt;\/\\\/\\All windows can be resized! Read Above.\/\\\/\\&lt;reset&gt;\n")
-end --function tecResizeDisplayHelp</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>tecMoveTabsHelp()</name>
-					<packageName></packageName>
-					<script>function tecMoveTabsHelp() --explains how to move tabs on display
-	cecho("&lt;black:"..tecSettings.helpHighlightColor
-    .."&gt;\\\/\\\/Non communication tabs can be moved! Read Below.\\\/\\\/&lt;reset&gt;\n"
-		.."To move a tab you can right click it. Than drag it to the position of a different tab."
-    .."It may take a few tries because it requires the position to be nearly exact.\n"
-    .."After changing don't forget to ")
-    cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Save\n", 
-      [[tecClientSaveAll(true)]],
-      "Save all client settings", true)
-		cecho("&lt;black:"..tecSettings.helpHighlightColor
-      .."&gt;\/\\\/\\Non communication tabs can be moved! Read Above.\/\\\/\\&lt;reset&gt;\n")
-end --function tecResizeDisplayHelp</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>tecDisplayHelp()</name>
-					<packageName></packageName>
-					<script>function tecDisplayHelp()
-  
-  echo("\nDisplay commands:\n")
-	
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display clear", 
-  [[tecClearDisplay()]], 
-  "Remove text from main screen", true)
-	echo(", clear text from main text console.\n")
-  
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display enable scrollbars", 
-  [[tecSetScrollBars(true)]], 
-  "Enable scroll bars", true)
-	echo(", enable scrollbars in Parthia.\n")
-  
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display disable scrollbars", 
-  [[tecSetScrollBars(false)]], 
-  "Hide scroll bars", true)
-	echo(", hide scrollbars in Parthia.\n")
-	
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display save", 
-  [[tecClientDisplaySave(true)]], 
-  "Save window positions", true)
-	echo(", save window positions.\n")
-	
-	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display load", 
-  [[tecClientDisplayLoad(true)]], 
-  "Load window positions", true)
-	echo(", reset window positions to last save.\n")
-	
-	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display reset", 
-  [[tecClientDisplayReset()]], 
-  "Reset window positions", true)
-	echo(", reset window positions to default. "
-		.."This WILL FORCE you to restart mudlet.\n")
-		
-	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display refresh settings", 
-  [[tecClientDisplayReset()]], 
-  "Refresh text in settings window", true)
-	echo(", clears and reloads text in settings window.\n")
-			
-	tecResizeDisplayHelp() --explains how to resize display
-  
-  tecMoveTabsHelp() --Explains how to move tabs
-	
-end --end tecDisplayHelp()</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
 					<name>tecClientHelp()</name>
 					<packageName></packageName>
 					<script>function tecClientHelp()
@@ -3545,6 +4737,11 @@ end --end tecDisplayHelp()</script>
   [[printCmdLine("tecclient font size ")]],
   "Change client font size", true)
   echo(", Change font size for all consoles.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient tab font size", 
+  [[printCmdLine("tecclient tab font size ")]],
+  "Change font size of tabs", true)
+  echo(", Change font size for window tabs.\n") 
   
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient change colors", 
   [[tecClientChangeColors()]],
@@ -3568,27 +4765,30 @@ end --end tecDisplayHelp()</script>
   	.." save- or -tecclient save all- to create a settings file.\n")
   
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient reset", 
-  [[tecClientReset(true);tecFileSaveSettings(true)]],
+  [[tecClientReset(true);dontForgetToSave(true)]],
   "Reset client to default", true)
   echo(", Reset client to default client settings.\n"
   	.."Use -display reset- or -tecclient reset all- to reset display.\n")
   	
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient reset all", 
-  [[tecClientResetAll();tecClientSaveAll("true")]],
+  [[tecClientResetAll()]],
   "Reset all client settings to default", true)
-  echo(", Reset client and display to default settings. "
-  	.."Saves default settings to file and disconnects client.\n\t"
-  	.."This command REQUIRES a restart of mudlet!\n")
+  echo(", Reset client and display to default settings.\n")
     
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient repair", 
   [[tecDownloadScripts()]],
   "Repair Parthia", true)
-  echo(", repairs Parthia. By replacing all developer created code.")
+  echo(", repairs Parthia. By replacing all developer created code.\n")
   
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient update check", 
   [[tecDownloadGitReleaseJSON()]],
   "Check for updates", true)
-  echo(", check if updates are required.")
+  echo(", check if updates are required.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient report", 
+  [[tecReportIssues()]],
+  "Report Parthia issues", true)
+  echo(", receive instruction on reporting issues.\n")
 
 end --function tecClientHelp</script>
 					<eventHandlerList />
@@ -3698,16 +4898,6 @@ end --function tecClientChangeColors()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
-			<Script isActive="yes" isFolder="no">
-				<name>Data Functions</name>
-				<packageName></packageName>
-				<script>--[[
-Due to code order requirements.
-Data Functions are in Variables Data themes
-]]-- 
-</script>
-				<eventHandlerList />
-			</Script>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>TEC Map</name>
 				<packageName></packageName>
@@ -3778,11 +4968,11 @@ end --end tecMapIconAdjustment</script>
   "Change client font size", true)
 	
   cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Resize Windows\n", 
-  [[tecResizeDisplayHelp()]],
+  [[UIManagerResizeHelp()]],
   "Tutorial on how to resize windows", true)
   
-  cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Move tabs\n", 
-  [[tecMoveTabsHelp()]],
+  cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Move windows\n", 
+  [[UIManagerMoveWindowHelp()]],
   "Tutorial on how to move display tabs", true)
 
   cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Change Colors\n", 
@@ -3803,7 +4993,7 @@ end --end tecMapIconAdjustment</script>
 
 end --function tecRefreshSettingsWindow
 
-tecRefreshSettingsWindow()</script>
+</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -3816,15 +5006,20 @@ tecRefreshSettingsWindow()</script>
 					<name>tecClientResetAll()</name>
 					<packageName></packageName>
 					<script>--Resets all client settings
-function tecClientResetAll()
+function tecClientResetAll(displayToScreen)
 
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  
   --reset client settings
   tecClientReset(true)
-  tecFileSaveSettings(true)
   
   --reset display settings
-  tecClientDisplayReset()
-  tecClientDisplaySave(true)
+  UIManagerReset(true)
+
+  if displayToScreen then 
+    cecho("All settings at default. ")
+    dontForgetToSave()
+  end
 
 end --function tecClientResetAll()</script>
 					<eventHandlerList />
@@ -3911,9 +5106,13 @@ function tecClientSetTabFontSize(tecTmpTabFont)--set font settings with this fun
 	
 	tecSettings.tecTabsFontSize = tostring(tecTmpTabFont) or tostring(tecDefaultFontSize) --set it to size passed OR default on fail
   
-  --Now that the setting changed, reconfig tab settings
+  --Now that the setting changed, reconfig themes
   tecConfigThemes()
-  GUIframe.configs.tabEchoStyle = tabsFontStyle
+  
+  --if using GUIframe manager and it is initialized
+  if GetUIManager() == "GUIframe" and GUIframe.initialized then
+    GUIframe.configs.tabEchoStyle = tabsFontStyle --reset GUIframe tabs draw style.
+  end --if GetUIManager() == "GUIframe" and GUIframe.initialized
   
   --Redraw all tabs, this includes labels.  
   tecRedrawLabels()
@@ -4019,7 +5218,11 @@ end --tecOpenDirectory</script>
 				<Script isActive="yes" isFolder="no">
 					<name>techreplace</name>
 					<packageName></packageName>
-					<script>function techreplace(window, text)
+					<script>--here purely as a reminder of the first hurdle overcome to start Parthia.
+--wound up finding hinsertText would sometimes cause issues with the 
+--main text filter trigger. Sometimes it would stop filtering.
+--Issue went away when I switched to hecho 
+function techreplace(window, text)
     if not text then text, window = window, nil end
     window = window or "main"
     local str, start, stop = getSelection(window)
@@ -4450,7 +5653,7 @@ function tecGitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if tecGitUpdate.localRespitory not exist
   tecGitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  tecGitUpdate.localVersion = "0.1.15" --Parthia version player is currently using
+  tecGitUpdate.localVersion = "0.1.17" --Parthia version player is currently using
   tecGitUpdate.releaseIndex = 0 --Position on proper update in gitHub JSON table
   tecGitUpdate.trackedURLs = {} --will be URLs that need to have downloads tracked
   tecGitUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
@@ -4929,14 +6132,14 @@ end --function tecUpdate.eventHandler()</script>
 					<packageName></packageName>
 					<script>--fully notifies user when an error is found.
 function tecWarningNotification(errorFound)
-  debugc("Error: "..errorFound)
-  debugToDisplay("&lt;yellow:&gt;Error: "..errorFound)
-  cecho("&lt;Yellow:&gt;Warning: "..errorFound
-    .."\n\tIf you experence issues contact a developer with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
-    [[tecReportIssues()]],
-    "Report issues or bugs", true)
-  cecho("")
+  debugc("Warning: "..errorFound)
+  debugToDisplay("&lt;yellow:&gt;Warning: "..errorFound)
+--  cecho("&lt;yellow:&gt;Warning: "..errorFound
+--    .."\n\tIf you experence issues contact a developer with: ")
+--  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
+--    [[tecReportIssues()]],
+--    "Report issues or bugs", true)
+--  cecho("")
 end --function tecErrorNotification</script>
 					<eventHandlerList />
 				</Script>
@@ -5086,10 +6289,11 @@ end --function tecResetRoomCharacterWindow</script>
 					<name>dontForgetToSave()</name>
 					<packageName></packageName>
 					<script>function dontForgetToSave()
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
+  cecho("Don't forget to save your changes:\n")
+  cecho("Save all settings with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save all\n", 
+  [[tecClientSaveAll(true)]],
+  "Save all settings", true)
   cecho("") --cechoLink will not \n on its own.
 end --function dontForgetToSave</script>
 					<eventHandlerList />
@@ -5116,7 +6320,7 @@ end --function tecReplaceStringMagicChar(tmpString)</script>
 			</ScriptGroup>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
-			<name>GUI</name>
+			<name>Windows</name>
 			<packageName></packageName>
 			<script></script>
 			<eventHandlerList />
@@ -5124,13 +6328,18 @@ end --function tecReplaceStringMagicChar(tmpString)</script>
 				<name>status bar</name>
 				<packageName></packageName>
 				<script>status_bar = Geyser.Container:new({
-  name = "status_bar",    -- give it a unique name here
+  name = "Status",    -- give it a unique name here
   x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
   width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
 })
 
 --Add the status bar to the screen. On the bottom
-GUIframe.addWindow(status_bar,"status_bar","bottom")</script>
+--GUIframe.addWindow(status_bar,"status_bar","bottom")
+
+--set location for container in GUIframe.
+status_bar.GUIframeLocation = "bottom"
+--add cobntainer to UI manager.
+UIManagerRegisterWindow(status_bar)</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
 					<name>Health Bar</name>
@@ -5243,7 +6452,7 @@ tecCompass = tecCompass or {
 
 --main container for tecCompass
 tecCompass.window = Geyser.Container:new({
-  name = "tecCompass",    -- give it a unique name here
+  name = "Compass",    -- give it a unique name here
   x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
   width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
 })
@@ -5384,10 +6593,15 @@ function tecCompass.drawKeepSquare()
 end --end function keep square.
 
 --Add the status bar to the screen. On the bottom
-GUIframe.addWindow(tecCompass.window,"Compass","topleft")
+--GUIframe.addWindow(tecCompass.window,"Compass","topleft")
+
+--set location for container in GUIframe.
+tecCompass.window.GUIframeLocation = "topleft"
+--add cobntainer to UI manager.
+UIManagerRegisterWindow(tecCompass.window)
 
 --Now that we created the window. Make certain it is drawn correctly.
-tecCompass.drawKeepSquare() --function at the bottom of this script.</script>
+--tecCompass.drawKeepSquare() --function at the bottom of this script.</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
@@ -5395,8 +6609,8 @@ tecCompass.drawKeepSquare() --function at the bottom of this script.</script>
 				<packageName></packageName>
 				<script>tecSettingsBar = Geyser.Container:new({
   name = "Settings",    -- give it a unique name here
-  x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
-  width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
+  x=0, y=0,                   
+  width = 0, height=0, 
 })
 
 --box that will store the miniconsoles
@@ -5425,9 +6639,6 @@ tecSettingsConsole = Geyser.MiniConsole:new({
 tecSettingsConsole:setColor(getBgColor()) --set miniconsoles to main consol BG color
 tecSettingsConsole:raise()
 
---Add the status bar to the screen. On the bottom
-GUIframe.addWindow(tecSettingsBar,"Settings","bottomleft")
-
 function tecSettingsWindowResize()
 	
 	--Resize the back label by 6. We want a 3px border around the entire window
@@ -5453,8 +6664,13 @@ function tecSettingsWindowResize()
 
 end --tecSettingsWindowResize()
 
-tecRefreshSettingsWindow() --Refreshes text in settings window.
-tecSettingsWindowResize() --resize the Room Character window now</script>
+--set location for container in GUIframe.
+tecSettingsBar.GUIframeLocation = "bottomleft"
+--add cobntainer to UI manager.
+UIManagerRegisterWindow(tecSettingsBar)
+
+--tecRefreshSettingsWindow() --Refreshes text in settings window.
+--tecSettingsWindowResize() --resize the Room Character window now</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
@@ -5469,12 +6685,10 @@ tecSettingsWindowResize() --resize the Room Character window now</script>
 
 tecMap = Geyser.Container:new({
   name = "TEC Map",    -- give it a unique name here
-  x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
-  width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
+  x=0, y=0,                   
+  width = 0, height=0, 
+  GUIframeLocation = "bottomright",
 })
-
---Add the status bar to the screen. On the bottom
-GUIframe.addWindow(tecMap,"TEC Map","bottomright")
 
 --Creating the background for the 2d tec map.
 tecMap_back = Geyser.Label:new({
@@ -5527,22 +6741,18 @@ function tecMapdrawKeepSquare()
 	
 end --end function keep square.
 
-tecMapdrawKeepSquare() --call it to size the map properly</script>
+--set location for container in GUIframe.
+--tecMap.GUIframeLocation = "bottomright"
+--add cobntainer to UI manager.
+UIManagerRegisterWindow(tecMap)
+
+--tecMapdrawKeepSquare() --call it to size the map properly</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="no" isFolder="no">
 				<name>3d map</name>
 				<packageName></packageName>
-				<script>--[[
-threed_map = Geyser.Container:new({
-  name = "3d Map",    -- give it a unique name here
-  x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
-  width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
-})
-
---Add the status bar to the screen. On the bottom
-GUIframe.addWindow(threed_map,"3d Map","bottomright")
-]]--</script>
+				<script></script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
@@ -5552,8 +6762,8 @@ GUIframe.addWindow(threed_map,"3d Map","bottomright")
 
 roomCharacters = Geyser.Container:new({
   name = "Room Characters",    -- give it a unique name here
-  x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
-  width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
+  x=0, y=0,                   
+  width = 0, height=0, 
 })
 
 --box that will store the miniconsoles
@@ -5582,9 +6792,6 @@ roomCharacters.console = Geyser.MiniConsole:new({ --menu v will be a tab name.
 roomCharacters.console:setColor(getBgColor()) --set miniconsoles to main consol BG color
 roomCharacters.console:raise()
 
---Add the status bar to the screen. On the bottom
-GUIframe.addWindow(roomCharacters,"Room Characters","topright")
-
 function tecCRWindowResize()
 	
 	--Resize the back label by keeping it square.
@@ -5609,8 +6816,13 @@ function tecCRWindowResize()
 
 end --tecCRWindowResize()
 
-tecCRWindowResize() --resize the Room Character window now
-tecResetRoomCharacterWindow()</script>
+--set location for container in GUIframe.
+roomCharacters.GUIframeLocation = "topright"
+--add cobntainer to UI manager.
+UIManagerRegisterWindow(roomCharacters)
+
+--tecCRWindowResize() --resize the Room Character window now
+--tecResetRoomCharacterWindow() --fill room characters window with text</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
@@ -5633,14 +6845,10 @@ tecComWindows = tecComWindows or {tabs = {"Communication","Thoughts","Speech"},}
 tecComWindows.current = tecComWindows.current or tecComWindows.tabs[1]
 
 --A container for everything to be in.
---No size or position because that is handled
---In GUIframe
+--No size or position because that is handled in UI manager
 tecComWindows.container = Geyser.Container:new({
-  name = "tecComWindows.container",
+  name = "Communications",
 })
-
---Add the status bar to the screen. On the bottom
-GUIframe.addWindow(tecComWindows.container,"tecComWindows.container","top")
 
 --box that will hold the tabs
 tecComWindows.header = Geyser.HBox:new({
@@ -5704,10 +6912,19 @@ end --end tecComWindows.click(tab) function
 tecComWindows[tecComWindows.current]:show()
 
 function tecComWindowResize()
-	
-	--subtract GUIframe.defaults.resizeHeight from tecComWindows.footer.height 
-	local tecResizedFooterHeight = tecComWindows.container:get_height() - GUIframe.defaults.resizeHeight
-	local tecResizedFooterWidth = tecComWindows.container:get_width()
+  local tecResizedFooterHeight = 50
+	local tecResizedFooterWidth = 300
+
+  --if using GUIframe manager and it is initialized
+  if GetUIManager() == "GUIframe" and GUIframe.initialized then  
+	 --subtract GUIframe.defaults.resizeHeight from tecComWindows.footer.height 
+	 tecResizedFooterHeight = tecComWindows.container:get_height() - GUIframe.defaults.resizeHeight
+	 tecResizedFooterWidth = tecComWindows.container:get_width()
+  else --UI manager not specified.
+	 tecResizedFooterHeight = tecComWindows.container:get_height()
+	 tecResizedFooterWidth = tecComWindows.container:get_width()
+  end --if GetUIManager() == "GUIframe" and GUIframe.initialized
+  
 	tecComWindows.footer:resize(tecResizedFooterWidth, tecResizedFooterHeight) --resize the footer
 	tecComWindows.footer:move(0,(tabsHeight))
 	
@@ -5730,13 +6947,21 @@ function tecComWindowResize()
 
 end --resizeKeepTabsStatis
 
-tecComWindowResize() --resize com window</script>
+--tecComWindowResize() --resize com window
+
+--set location for container in GUIframe.
+tecComWindows.container.GUIframeLocation = "top"
+--add cobntainer to UI manager.
+UIManagerRegisterWindow(tecComWindows.container)</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
 				<name>Macro Menu</name>
 				<packageName></packageName>
-				<script>--[[
+				<script>--If no UI mananger is in use, do not draw the window.
+--if GetUIManager() == "none" then return end
+
+--[[
 Tec uses a macro system that players can set within the game.
 The command they use is @macro.
 To avoid additional time for now we can piggy back of their system.
@@ -5745,7 +6970,6 @@ All we need to do, is when the button is clicked it sends command fe#
 so button 1 send("fe1")
 After that TECs macro system will take over.
 For formating you could set the grid style setup for labels in compasbar
-I recommend having this at GUIframe location bottom left.
 In 5 rows of 3 columns.
 Normally does 5 columns of 3 rows. Tec has a combat rotation that requires three unique moves 
 in a row or if you are attacking a person you receive a major debuff.
@@ -5765,9 +6989,9 @@ macroMenu = macroMenu or {}
 --subclass container, every window can do that. But containers do not have any visible content by
 --themselves. Our tabbed "Macros" window will need a container. This will be the bottom layer.
 --Containers are invisible, so no need to set a stylesheet. At the end of the file, we will add this
---container as a "window", which the "GUIframe" library to render for us.
+--container as a "window".
 macroMenu.container = Geyser.Container:new({
-  name = "macroMenu",
+  name = "Macros",
 })
 
 --Create the parent label
@@ -5809,10 +7033,11 @@ macroMenu.row4 = Geyser.HBox:new({
 macroMenu.row5 = Geyser.HBox:new({
   name = "macroMenu.row5",
 }, macroMenu.box)
+macroMenu.row5:hide()
 
 --Finally, we add our 15 labels. Take note that they are split up into five groups of three. Each group
 --is placed into a different "macroMenu.row" number.
-local mappings = {
+local tecMacroMappings = {
   {
     name = "fe1", --name of label that will be created. Will be passed to setClickCallBack function
     label = "I", --What will be on the label
@@ -5894,13 +7119,13 @@ local mappings = {
 --macroLabelStyle = labelsStyle.."margin: 1px\n";
 macroLabelStyle = labelsStyle
 
-for _, mapping in pairs(mappings) do --loop trough mappings table using data within
-  macroMenu[mapping.name] = Geyser.Label:new({
-    name = "macroMenu." .. mapping.name, --name label fe# so it is easy to pass
-	  message = "&lt;center&gt;" .. mapping.label .. "&lt;/center&gt;", --puts roman numerals on label
-  }, mapping.row) --parent is gettings passed via mapping table row reference
-  macroMenu[mapping.name]:setClickCallback("onMacroClick", mapping.name)
-  macroMenu[mapping.name]:setStyleSheet(macroLabelStyle) --create window layout
+for _, tecMacroMap in pairs(tecMacroMappings) do --loop trough mappings table using data within
+  macroMenu[tecMacroMap.name] = Geyser.Label:new({
+    name = "macroMenu." .. tecMacroMap.name, --name label fe# so it is easy to pass
+	  message = "&lt;center&gt;" .. tecMacroMap.label .. "&lt;/center&gt;", --puts roman numerals on label
+  }, tecMacroMap.row) --parent is gettings passed via mapping table row reference
+  macroMenu[tecMacroMap.name]:setClickCallback("onMacroClick", tecMacroMap.name)
+  macroMenu[tecMacroMap.name]:setStyleSheet(macroLabelStyle) --create window layout
 end
 
 --Create a callback function
@@ -5910,15 +7135,14 @@ function onMacroClick(name)
   send(name, false)
 end
 
---Add the macro menu to the top left of the screen
-GUIframe.addWindow(macroMenu.container, "Macros", "bottomleft")
-
 function tecMacroMenuResize()
   --macroMenu.back:move(0,0)
 end --function tecMacroMenuResize
-tecMacroMenuResize()
 
-GUIframe.activate("Macros") --Make the macros bar the active bar on bottom left.</script>
+--set location for container in GUIframe.
+macroMenu.container.GUIframeLocation = "bottomleft"
+UIManagerRegisterWindow(macroMenu.container)
+</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
@@ -6005,20 +7229,16 @@ registerAnonymousEventHandler("sysExitEvent", "tecExitHandler")</script>
 			<Script isActive="yes" isFolder="no">
 				<name>Post Initilization</name>
 				<packageName></packageName>
-				<script>--For changing default settings that would be time consuming to change during 
+				<script>--For changing default settings that would be time consuming to change during
+--also very helpful for GUI objects that did not have a size on creation.
+
+UIManagerFileLoad(true) --load display settings from file.
+UIManagerSetTheme("PlayersTheme", false) --load windows into display
+tecRefreshSettingsWindow() --Refreshes text in settings window.
+tecResetRoomCharacterWindow() --fill room characters window with text
 
 --Enable or disable scroll bars. Dependant on user preference.
-tecSetScrollBars(tecSettings.showScrollBars, false)
-
---redraw windows 
-guiChange()
-
---redraw labels collect label names also
-tecRedrawLabels()
-
---We collected tab names above using those we will make tooltips telling players what tabs
---can be moved with a brief message.
---setParthiaLabelsToolTips()</script>
+tecSetScrollBars(tecSettings.showScrollBars, false)</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>

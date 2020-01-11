@@ -95,14 +95,14 @@ tecClientFullHelp(false, "main")</script>
 		</Alias>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Display</name>
-			<script>tecDisplayHelp() --help for client display</script>
+			<script>UIManagerHelp() --help for client display</script>
 			<command></command>
 			<packageName></packageName>
 			<regex>^display$</regex>
 			<Alias isActive="yes" isFolder="no">
 				<name>display save</name>
 				<script>--saves the gui loadWindowLayout
-tecClientDisplaySave(true)</script>
+UIManagerFileSave(true)</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^display save</regex>
@@ -110,7 +110,7 @@ tecClientDisplaySave(true)</script>
 			<Alias isActive="yes" isFolder="no">
 				<name>display load</name>
 				<script>--loads the display from file.
-tecClientDisplayLoad(true)</script>
+UIManagerFileLoad(true)</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^display load$</regex>
@@ -119,7 +119,7 @@ tecClientDisplayLoad(true)</script>
 				<name>display reset</name>
 				<script>--Sets guiframe back to default settings
 --these settings can be found in scripts - tec client scripts - community scripts - guiframe
-tecClientDisplayReset()</script>
+UIManagerReset(true)</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^display reset</regex>
@@ -139,7 +139,7 @@ echo("\nScreen wrap adjusted\n")
 			<Alias isActive="yes" isFolder="no">
 				<name>display clear</name>
 				<script>--clears the main screen.
-tecClearDisplay()</script>
+UIManagerClearMainWindow()</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^display clear$</regex>
@@ -161,18 +161,111 @@ clearRoomCharacterWindow()
 				<regex>^display refresh settings$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>display enable scrollbars</name>
+				<name>display scrollbars enable</name>
 				<script>tecSetScrollBars(true) --enables scroll bars throughout this project.</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^display enable scrollbars$</regex>
+				<regex>^display scrollbars enable$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>display disable scrollbars</name>
+				<name>display scrollbars disable</name>
 				<script>tecSetScrollBars(false) --Disable scroll bars throughout this project.</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^display disable scrollbars$</regex>
+				<regex>^display scrollbars disable$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display remove geyserObject</name>
+				<script>--echo("captured: "..matches[2]..".\n")
+UIManagerShowWindow(matches[2], false, true) --remove geyser object from UI manager.
+</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display remove (.*)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display add geyserObject</name>
+				<script>--echo("captured: "..matches[2]..".\n")
+UIManagerShowWindow(matches[2], true, true) --add geyser object from UI manager.</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display add (.*)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display window enable</name>
+				<script>--echo("captured: "..matches[2]..".\n")
+--arguments are windowname, enable, displayToScreen
+UIManagerEnableWindow(matches[2], true, true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display window enable (.*)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display window disable</name>
+				<script>--echo("captured: "..matches[2]..".\n")
+--arguments are windowname, enable, displayToScreen
+UIManagerEnableWindow(matches[2], false, true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display window disable (.*)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display window list</name>
+				<script>--echo("captured: "..matches[2]..".\n")
+--arguments are windowname, enable, displayToScreen
+UIManagerEnableWindow("list", true, true)
+UIManagerEnableWindow("list", false, true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display window list$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display manager name</name>
+				<script>--echo("captured: "..matches[2]..".\n")
+SetUIManager(matches[2], true) --set Parthia's UI Manager</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display manager (.*)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display layout name</name>
+				<script>--echo("captured: "..matches[2]..".\n")
+UIManagerSetTheme(matches[2], true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display layout (\w+)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display side disable name</name>
+				<script>--echo("captured: "..matches[2]..".\n")
+UIManagerEnableSide(matches[2],false,true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display side disable (.*)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display side enable name</name>
+				<script>--echo("captured: "..matches[2]..".\n")
+UIManagerEnableSide(matches[2],true,true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display side enable (.*)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display side list</name>
+				<script>--echo("captured: "..matches[2]..".\n")
+UIManagerEnableSide("list",true,true)
+UIManagerEnableSide("list",false,true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display side list$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display help</name>
+				<script>UIManagerHelp() --help for client display</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display help$</regex>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
@@ -229,7 +322,7 @@ tecClientReset(true)</script>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>tecclient reset all</name>
-				<script>tecClientResetAll() --resets all client settings</script>
+				<script>tecClientResetAll(true) --resets all client settings</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^tecclient reset all$</regex>
@@ -264,7 +357,8 @@ Currently you can change the size of the font.
 Uses are:
 font size, changes the size of the font to the size entered.
 IE: font 12, sets the font size to 12.
-Current font size: ]]..getTECFont())</script>
+Current font size: ]]..getTECFont()
+.."\nfont tab #, changes the size of window tabs.")</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^font$</regex>
@@ -277,6 +371,14 @@ Current font size: ]]..getTECFont())</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^tecclient font size (.*)</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient tab font size #</name>
+				<script>tecClientSetTabFontSize(tonumber(matches[2]))
+--matches[2] is the word in () in the pattern</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient tab font size (.*)$</regex>
 			</Alias>
 			<Alias isActive="no" isFolder="no">
 				<name>tecclient update</name>
@@ -412,6 +514,20 @@ tecDownloadScripts() --Begin downloading updates</script>
 					<regex>^tecclient background (.*)</regex>
 				</Alias>
 			</AliasGroup>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient report</name>
+				<script>tecReportIssues()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient report$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display side top disable</name>
+				<script>GUIframe.enable("left")</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display side top disable$</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Debug</name>
