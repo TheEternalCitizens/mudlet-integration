@@ -4776,12 +4776,12 @@ end --end function tecDebugHelp</script>
   echo(", Reset client and display to default settings.\n")
     
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient repair", 
-  [[tecDownloadScripts()]],
+  [[DownloadGitScripts()]],
   "Repair Parthia", true)
   echo(", repairs Parthia. By replacing all developer created code.\n")
   
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient update check", 
-  [[tecDownloadGitReleaseJSON()]],
+  [[DownloadGitReleaseJSON()]],
   "Check for updates", true)
   echo(", check if updates are required.\n")
   
@@ -4960,7 +4960,7 @@ end --end tecMapIconAdjustment</script>
   "Load client settings from last save", true)
   
   cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Update\n", 
-  [[tecDownloadGitReleaseJSON()]],
+  [[DownloadGitReleaseJSON()]],
   "Check for updates", true)
 	
   cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Font Size\n", 
@@ -5607,119 +5607,254 @@ end --function tecErrorNotification</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>Tec Git AutoUpdates</name>
+					<name>tecWarningNotification(errorFound)</name>
+					<packageName></packageName>
+					<script>--fully notifies user when an error is found.
+function tecWarningNotification(errorFound)
+  debugc("Warning: "..errorFound)
+  debugToDisplay("&lt;yellow:&gt;Warning: "..errorFound)
+--  cecho("&lt;yellow:&gt;Warning: "..errorFound
+--    .."\n\tIf you experence issues contact a developer with: ")
+--  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
+--    [[tecReportIssues()]],
+--    "Report issues or bugs", true)
+--  cecho("")
+end --function tecErrorNotification</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecSetBetaTester(betaTester)</name>
+					<packageName></packageName>
+					<script>function tecSetBetaTester(betaTester)
+  betaTester = fuzzyBoolean(betaTester) --make certain nothin odd gets sent.
+  tecSettings.betaTester = betaTester --tell Parthia player is a beta tester.
+  
+  if tecSettings.betaTester then
+    cecho("You will now receive beta updates.\n\tThank you this helps us a GREAT deal!\n")
+  else
+    cecho("You will not receive beta updates.\n")
+  end --if betaTester
+  
+  dontForgetToSave() --remind player to save
+end --function tecSetBetaTester(betaTester)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecGetBetaTester()</name>
+					<packageName></packageName>
+					<script>function tecGetBetaTester()
+  return tecSettings.betaTester
+end --function tecGetBetaTester</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>Git Updates</name>
 					<packageName></packageName>
 					<script>--Installs updates from github.
---Intended for projects that do not support protocols.
---To allow error checking package file names must end with package type starting with a capitol
---IE: "My Project Name Scripts.xml" or "MyPackageNameTriggers.xml". It must contain characters
---before the package type at the end. "Scripts.xml" Will not be tested.
---"imgs.mpackage" will not be tested.
-
-
---While developing if you save this script, you will need to run the update check again
---because tecGitUpdate = {} will erase the last update check.
+--Intended for projects that do not support downloading over telnet
+--To allow error checking package file names must contain package type starting with a capitol
+--IE: "My Project Name Scripts.xml" or "MyPackageNameTriggers.xml".
 
 --start of section dedicated for functions used by update process.
 --To understand the flow of updates you will need to scroll past these.
 --There will be a comment stating when update flow starts.
 
-function tecGitUpdateconfig() --Create variables used for updates
+-- fuzzyBoolean Provided by demonnic
+-- Expands boolean definitions to be more flexible.
+-- True values are "true", "yes", "0", 0, and true
+-- False values are "false", "no", "1", 1, false, and nil
+-- @param bool item to test for truthiness
+if not fuzzyBoolean then
+  function fuzzyBoolean(bool)
+    if type(bool) == "boolean" or bool == nil then
+      return bool
+    elseif tostring(bool) then
+      local truth = {
+        "yes",
+        "true",
+        "0"
+      }
+      local untruth = {
+        "no",
+        "false",
+        "1"
+      }
+      local boolstr = tostring(bool)
+      if table.contains(truth, boolstr) then
+        return true
+      elseif table.contains(untruth, boolstr) then
+        return false
+      else
+        return nil
+      end
+    else
+      return nil
+    end
+  end
+end --if not fuzzyBoolean
 
-  if tecGitUpdate then 
+function GitUpdateconfig() --Create variables used for updates
+
+  if GitUpdate then 
     --if events were previously created, kill them.
-    if tecGitUpdate.downloadDoneID then
-      killAnonymousEventHandler(tecGitUpdate.downloadDoneID)
-    end --if tecGitUpdate.downloadDoneID
-    if tecGitUpdate.downloadErrorID then
-      killAnonymousEventHandler(tecGitUpdate.downloadErrorID)
-    end --if tecGitUpdate.downloadErrorID
-    if tecGitUpdate.installPackageID then
-      killAnonymousEventHandler(tecGitUpdate.installPackageID)
-    end --if tecGitUpdate.installPackageID
-    if tecGitUpdate.uninstallPackageID then
-      killAnonymousEventHandler(tecGitUpdate.uninstallPackageID) 
-    end --if tecGitUpdate.downloadDoneID
-  end --if tecGitUpdate
+    if GitUpdate.downloadDoneID then
+      killAnonymousEventHandler(GitUpdate.downloadDoneID)
+    end --if GitUpdate.downloadDoneID
+    if GitUpdate.downloadErrorID then
+      killAnonymousEventHandler(GitUpdate.downloadErrorID)
+    end --if GitUpdate.downloadErrorID
+    if GitUpdate.installPackageID then
+      killAnonymousEventHandler(GitUpdate.installPackageID)
+    end --if GitUpdate.installPackageID
+    if GitUpdate.uninstallPackageID then
+      killAnonymousEventHandler(GitUpdate.uninstallPackageID) 
+    end --if GitUpdate.downloadDoneID
+  end --if GitUpdate
 
-  tecGitUpdate = {} --table to hold project.
+  GitUpdate = GitUpdate or {} --table to hold project variables
 
-  --github latest release URL
-  tecGitUpdate.gitReleaseURL = [[https://api.github.com/repos/TheEternalCitizens/mudlet-integration/releases]]
-  --tecGitUpdate.gitReleaseURL = [[https://api.github.com/repos/TheEternalCitizens/mudlet-integration/nogoodurlhere]]
-  tecGitUpdate.localRespitory = getMudletHomeDir().."/settings/" --local directory for source files
-  if not io.exists(tecGitUpdate.localRespitory) then --if folder does not exists
-    lfs.mkdir(tecGitUpdate.localRespitory) --create the folder
+  --API URL for git hub for project
+  GitUpdate.gitReleaseURL = [[https://api.github.com/repos/TheEternalCitizens/mudlet-integration/releases]]
+  GitUpdate.localRespitory = getMudletHomeDir().."/settings/" --local directory for source files
+  if not io.exists(GitUpdate.localRespitory) then --if folder does not exists
+    lfs.mkdir(GitUpdate.localRespitory) --create the folder
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
-  end --if tecGitUpdate.localRespitory not exist
-  tecGitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  tecGitUpdate.localVersion = "0.1.20" --Parthia version player is currently using
-  tecGitUpdate.releaseIndex = 0 --Position on proper update in gitHub JSON table
-  tecGitUpdate.trackedURLs = {} --will be URLs that need to have downloads tracked
-  tecGitUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
+  end --if GitUpdate.localRespitory not exist
+  GitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
+  GitUpdate.localVersion = "0.1.21" --Must match the tag in your github release
+  GitUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
+  --Name of the alias to check if an update is available.
+  GitUpdate.updateCheckAlias = "tecclient update check" 
   --The full name or a word in the file that this update script is in.
-  tecGitUpdate.updateFileNameReference = "Scripts"
-  tecGitUpdate.downloadError = false --Sets to true if there is a download error.
-  tecGitUpdate.installationError = false --sets to true if there is a package installation error.
-  tecGitUpdate.installationInProgress = false --notifies update engine if update is running.
-  tecGitUpdate.betaTester = tecSettings.betaTester --notify update engine if player is a beta tester.
-  tecGitUpdate.filePattern = ".*%/(.*%..*)$" --string pattern to detect file name at end of url or file path string
-  
+  GitUpdate.updateFileNameReference = "Scripts"
+  --notify update engine if player is a beta tester. If the player is a beta
+  --tester they will receive update notices for pre-releases for your project
+  GitUpdate.betaTester = tecSettings.betaTester 
+  --packages that are no longer used in the project and should be removed.
+  --They can not share a name with a package that you need. Otherwise this will uninstall it.
+  GitUpdate.removePackages = {"TECClientScripts", "TECClientTriggers",
+    "TECClientAliases", "TECClientKeyBindings"}
+  GitUpdate.removeModules = {} --modules that are no longer used in the project and should be removed.
+  --Used to tell player correct installation method if they installed scripts as modules
+  GitUpdate.installationURL = "https://github.com/TheEternalCitizens/mudlet-integration/wiki/Installation"
+  --use in a repair aliase, set this variable to true if a repair install 
+  --is needed.
+  GitUpdate.repairInstall = fuzzyBoolean(GitUpdate.repairInstall)
+  --cecho compatible color, it will hightlight cecholinks in the update process
+  GitUpdate.cmdHighlight = "blue"
+
+  --No need to change variables below
+  GitUpdate.filePattern = ".*%/(.*%..*)$" --string pattern to detect file name at end of url or file path string
+  GitUpdate.downloadError = false --Sets to true if there is a download error.
+  GitUpdate.installationError = false --sets to true if there is a package installation error.
+  GitUpdate.installationInProgress = false --notifies update engine if update is running.
+  GitUpdate.releaseIndex = 0 --Position on proper update in gitHub JSON table
+  GitUpdate.trackedURLs = {} --will be URLs that need to have downloads tracked
   --create event handlers.
-  tecGitUpdate.downloadDoneID = registerAnonymousEventHandler("sysDownloadDone", "tecGitUpdateEventHandler")
-  tecGitUpdate.downloadErrorID = registerAnonymousEventHandler("sysDownloadError", "tecGitUpdateEventHandler")
-  tecGitUpdate.installPackageID = registerAnonymousEventHandler("sysInstallPackage", "tecGitUpdateEventHandler")
-  tecGitUpdate.uninstallPackageID = registerAnonymousEventHandler("sysUninstallPackage", "tecGitUpdateEventHandler")
-  
+  GitUpdate.downloadDoneID = registerAnonymousEventHandler("sysDownloadDone", "GitUpdateEventHandler")
+  GitUpdate.downloadErrorID = registerAnonymousEventHandler("sysDownloadError", "GitUpdateEventHandler")
+  GitUpdate.installPackageID = registerAnonymousEventHandler("sysInstallPackage", "GitUpdateEventHandler")
+  GitUpdate.uninstallPackageID = registerAnonymousEventHandler("sysUninstallPackage", "GitUpdateEventHandler")
   trackedDownloads = {} --leave blank, needed for events. Is initialized in function trackDownloads
   trackedDownloads.fileList = "" --leave blank, needed for events. Initialized in function trackDownloads
   trackedDownloads.urlList = "" --leave blank, used to check for download errors.
   
-  debugToDisplay("function tecGitUpdate.config: Initialized update engine.\n\tgitReleaseURL: "..tecGitUpdate.gitReleaseURL
-    .."\n\tScriptFileNameReference: "..tecGitUpdate.updateFileNameReference
-    .."\n\tlocalRespitory: "..tecGitUpdate.localRespitory
-    .."\n\tgitReleaseURLJSONFile: "..tecGitUpdate.gitReleaseURLJSONFile
-    .."\n\tLocal Parthia version: "..tecGitUpdate.localVersion)
-end --function tecUpdate.config()
+  debugToDisplay("function GitUpdate.config: Initialized update engine.\n\tgitReleaseURL: "..GitUpdate.gitReleaseURL
+    .."\n\tScriptFileNameReference: "..GitUpdate.updateFileNameReference
+    .."\n\tlocalRespitory: "..GitUpdate.localRespitory
+    .."\n\tgitReleaseURLJSONFile: "..GitUpdate.gitReleaseURLJSONFile
+    .."\n\tLocal Parthia version: "..GitUpdate.localVersion)
+end --function GitUpdateconfig()
+
+--displays messages to debugc.
+--can be changed to send to what ever console you would like with cecho
+--if not debugToDisplay then 
+  function debugToDisplay(textMessage)
+  		debugc(textMessage) -- print message to screen
+  end --end displayToDebug function
+--end --if not debugToDisplay
+
+--Displays a yellow notice to debug console
+if not tecWarningNotification then
+  --fully notifies user when an error is found.
+  function tecWarningNotification(errorFound)
+    debugc("Warning: "..errorFound)
+  end --function tecErrorNotification
+end --if not tecWarningNotification then
+
+if not ReplaceStringMagicChar then
+  --used to replace magic characters in a string with the proper escape character 
+  --sequence. Useful for replacing file names on sysDownload events.
+  function ReplaceStringMagicChar(tmpString)
+    tmpString = tmpString:gsub("%%", "%%%")
+    tmpString = tmpString:gsub("%(", "%%(")
+    tmpString = tmpString:gsub("%)", "%%)")
+    tmpString = tmpString:gsub("%.", "%%.")
+    tmpString = tmpString:gsub("%+", "%%+")
+    tmpString = tmpString:gsub("%[", "%%[")
+    tmpString = tmpString:gsub("%^", "%%^")
+    tmpString = tmpString:gsub("%$", "%%$")
+    tmpString = tmpString:gsub("%-", "%%-")
+    tmpString = tmpString:gsub("%*", "%%*")
+    tmpString = tmpString:gsub("%?", "%%?")
+  return tmpString
+  end --function ReplaceStringMagicChar(tmpString)
+end --if not ReplaceStringMagicChar
+
+--displays a message to player that an error was found, and to contact a developer
+if not tecErrorNotification then 
+  function tecErrorNotification(errorFound)
+    debugc("Error: "..errorFound)
+    cecho("&lt;red:&gt;Error: "..errorFound.."\n\tPlease contact a developer.")
+  end --function tecErrorNotification
+end --if not tecErrorNotification
 
 --Used to easily change update notification. There are multiple instances where
 --Parthia notifies player an update is available.
 local function updateAvailable(updateBody)
-  enableAlias(tecGitUpdate.aliasName) --enable alias so user can run update with command
-  cecho("An update is available. The new features it offers are: \n\t")
-  cecho(updateBody)
-  cecho("\n&lt;:maroon&gt;To update now, please run: ")
-  cechoLink("&lt;:blue&gt;tecclient update", --link text to display
-    [[expandAlias(tecGitUpdate.aliasName)]], --link command to run
-    "Update game client", true) --link tool tip for mouse hover
-  echo("\n") --cechoLinks don't cause the window to autoscroll.
+  --if this is a repair install. Download and install without prompting player.
+  if GitUpdate.repairInstall then 
+    --Start downloading scripts as a temptimer so the function that called
+    --updateAvailable can complete.
+    tempTimer(1, "DownloadGitScripts()")
+    GitUpdate.repairInstall = false --reset so it will not run if player checks for updates
+  else --this is not a repair install prompt the user if they would like to update.
+    enableAlias(GitUpdate.aliasName) --enable alias so user can run update with command
+    cecho("An update is available. The new features it offers are: \n\t")
+    cecho(updateBody)
+    cecho("\n&lt;:maroon&gt;To update now, please run: ")
+    cechoLink("&lt;:blue&gt;"..GitUpdate.aliasName, --link text to display
+      [[expandAlias(GitUpdate.aliasName)]], --link command to run
+      "Update game client", true) --link tool tip for mouse hover
+    echo("\n") --cechoLinks don't cause the window to autoscroll.
+  end --if GitUpdate.repairInstall
 end --function updateAvailable
 
 --gather urls from github release that player needs to update to
 local function collectURLs()
-  if tecGitUpdate.releaseIndex == 0 then --make certain releaseIndex has been initialized
+  if GitUpdate.releaseIndex == 0 then --make certain releaseIndex has been initialized
     debugc("function: collectURL, url collection releaseIndex was not initialized.")
     return "function: compareVersions, url collection releaseIndex was not initialized."
-  elseif tecGitUpdate.gitJSONTable[tecGitUpdate.releaseIndex].assets.browser_download_url then
+  elseif GitUpdate.gitJSONTable[GitUpdate.releaseIndex].assets.browser_download_url then
     debugc("function: collectURL, url collection JSONTable lacks assets.")
     return "function: compareVersions, url collection JSONTable lacks assets."
   else
     for index, gitAsset in --loop through git release assets.
-      ipairs(tecGitUpdate.gitJSONTable[tecGitUpdate.releaseIndex].assets) do
+      ipairs(GitUpdate.gitJSONTable[GitUpdate.releaseIndex].assets) do
         --save URL needing download to a new table.
         --debugc("function: compareVersions tracking URL: "..gitAsset.browser_download_url)
-        tecGitUpdate.trackedURLs[index] = gitAsset.browser_download_url
-    end --for tecGitUpdate.gitJSONTable[tecGitUpdate.releaseIndex].assets
-    debugToDisplay("function collectURLs(): tecGitUpdate.trackedURLs initialized.") 
+        GitUpdate.trackedURLs[index] = gitAsset.browser_download_url
+    end --for GitUpdate.gitJSONTable[GitUpdate.releaseIndex].assets
+    debugToDisplay("function collectURLs(): GitUpdate.trackedURLs initialized.") 
   end --if releaseIndex == 0
 end --collectURLS
 
 --Search for latest nonbeta release or release that is NOT a prerelease
 --function is here to reduce complexity of function that calls it.
 local function releaseSearch()
-  if tecGitUpdate.gitJSONTable[1].name then --if the table exists
+  if GitUpdate.gitJSONTable[1].name then --if the table exists
     --debugc("gitUpdate release search, JSON table exists.")
-    for index, releaseData in ipairs(tecGitUpdate.gitJSONTable) do --loop through the JSON table
+    for index, releaseData in ipairs(GitUpdate.gitJSONTable) do --loop through the JSON table
       --debugc("gitUpdate release search, searching index: "..tostring(index))
       debugToDisplay("function releaseSearch, searching index: "..tostring(index))
       --Find the latest release that is NOT a prerelease.
@@ -5727,10 +5862,10 @@ local function releaseSearch()
         --debugc("gitUpdate release search, found latest release at: "..tostring(index))
         debugToDisplay("function releaseSearch, found latest release at: "..tostring(index)
           .."\n\tRelease tab_name: "..releaseData.tag_name
-          .." Local release: "..tecGitUpdate.localVersion)
+          .." Local release: "..GitUpdate.localVersion)
         --If the installed Parthia is different that latest release
-        if releaseData.tag_name ~= tecGitUpdate.localVersion then
-          tecGitUpdate.releaseIndex = index --collect the release index
+        if releaseData.tag_name ~= GitUpdate.localVersion then
+          GitUpdate.releaseIndex = index --collect the release index
           local errorFound collectURLs() --gather URLs into trackedURLs table
           if errorFound then --collectURLs returns a string if error occured.
             return errorFound
@@ -5738,16 +5873,16 @@ local function releaseSearch()
             updateAvailable(releaseData.body) --notify player an update is available
             return
           end --if errorFound else
-        else --if releaseData.tag_name ~= tecGitUpdate.localVersion, Parthia up to date.
+        else --if releaseData.tag_name ~= GitUpdate.localVersion, Parthia up to date.
           cecho("Parthia is up to date.\n")
           return --end releaseSearch()
-        end --if releaseData.prerelease.tag_name ~= tecGitUpdate.localVersion
+        end --if releaseData.prerelease.tag_name ~= GitUpdate.localVersion
       end --if releaseData.prerelease == "false"
     end --for
   else --if the JSON table does NOT exist.
     errorFound = "function releaseSearch, Error, JSON table not found during release search."
     return errorFound--error found stop update.
-  end --if tecGitUpdate.gitJSONTable[1].name exists
+  end --if GitUpdate.gitJSONTable[1].name exists
 end --function releaseSearch
 
 --Tracks downloads so updates do not start until all downloads have completed.
@@ -5759,30 +5894,30 @@ function trackDownloads(downloadURLs)
     debugToDisplay("function trackDownloads, table passed.")
     --move the URL containing the script name to the end of the table.
     for index, urlToTrack in ipairs(downloadURLs) do
-      if urlToTrack:match(tecGitUpdate.updateFileNameReference) then
+      if urlToTrack:match(GitUpdate.updateFileNameReference) then
         debugToDisplay("function trackDownloads, URL containing update script was found at\n\t"
           ..urlToTrack.." moving it to end of table.")
         table.remove(downloadURLs, index) --remove the URL from the table
         table.insert(downloadURLs, urlToTrack) --insert it on the end of the table
         break --Update script can only be in one file.
-      end --urlToTrack:match(tecGitUpdate.updateFileNameReference)
+      end --urlToTrack:match(GitUpdate.updateFileNameReference)
     end --for downloadURLs
     --Make a global table to store URLs that require tracking.
     trackedDownloads = {files = {}, URLs = {}, downloaded = {}, fileList = "", tmpFiles = {}
                         , urlList = ""}
     for index, urlToTrack in ipairs(downloadURLs) do --initialize trackedDownloads table
       --Get the name of the file you need to download.
-      local tecPackageFileName = urlToTrack:match(tecGitUpdate.filePattern)
-      --debugc("tecPackageFileName "..tecPackageFileName)
+      local TmpPackageFileName = urlToTrack:match(GitUpdate.filePattern)
+      --debugc("TmpPackageFileName "..TmpPackageFileName)
       --Collect package name removing any .s periods that are in it.
       --in git releases spaces in filenames are replaced with .s mudlets install package process
       --is sometimes not compatible with this.
-      local tecPackageNameNoExtension = string.gsub(tecPackageFileName:match("(.*)%..*$"), "%.", "") 
-      --debugc("tecPackageNameNoExtension: "..tecPackageNameNoExtension)
-      local tecPackageNameExtensionOnly = tecPackageFileName:match(".*(%..*)$")
-      --debugc("tecPackageNameExtensionOnly: "..tecPackageNameExtensionOnly)
+      local PackageNameNoExtension = string.gsub(TmpPackageFileName:match("(.*)%..*$"), "%.", " ") 
+      --debugc("PackageNameNoExtension: "..PackageNameNoExtension)
+      local PackageNameExtensionOnly = TmpPackageFileName:match(".*(%..*)$")
+      --debugc("PackageNameExtensionOnly: "..PackageNameExtensionOnly)
       --Combine the package name with file extension.
-      trackedDownloads.files[index] = tecPackageNameNoExtension..tecPackageNameExtensionOnly
+      trackedDownloads.files[index] = PackageNameNoExtension..PackageNameExtensionOnly
       debugToDisplay("function: trackDownloads tracking file: "..trackedDownloads.files[index])
       --Boolean to notify client when download has completed.
       trackedDownloads.downloaded[index] = false
@@ -5839,37 +5974,37 @@ end --function trackDownloads
 --it starts here.
 
 --downloads the github JSON REST API JSON file
-function tecDownloadGitReleaseJSON()
+function DownloadGitReleaseJSON()
   --check if an installation is in progress.
-  if tecGitUpdate then if tecGitUpdate.installationInProgress then
+  if GitUpdate then if GitUpdate.installationInProgress then
     echo("An update is currently processing. Only one update can run at a time.\n")
     return --stop updates one is processing.
   end end
-  tecGitUpdateconfig() --initialize update engine.
-  tecGitUpdate.installationInProgress = true --notify Parthia an update is in progress
-  debugToDisplay("Update: Downloading "..tecGitUpdate.gitReleaseURL
-    .."\n\tTo: "..tecGitUpdate.localRespitory..tecGitUpdate.gitReleaseURLJSONFile)
-  downloadFile(tecGitUpdate.localRespitory..tecGitUpdate.gitReleaseURLJSONFile,
-    tecGitUpdate.gitReleaseURL) --download the projects latest release JSON info file.
-  tecGitUpdate.installationInProgress = false --notify Parthia installation not running.
-end --function tecVersionCheck
+  GitUpdateconfig() --initialize update engine.
+  GitUpdate.installationInProgress = true --notify Parthia an update is in progress
+  debugToDisplay("Update: Downloading "..GitUpdate.gitReleaseURL
+    .."\n\tTo: "..GitUpdate.localRespitory..GitUpdate.gitReleaseURLJSONFile)
+  downloadFile(GitUpdate.localRespitory..GitUpdate.gitReleaseURLJSONFile,
+    GitUpdate.gitReleaseURL) --download the projects latest release JSON info file.
+  GitUpdate.installationInProgress = false --notify Parthia installation not running.
+end --function DownloadGitReleaseJSON
 
---after the JSON files is downloaded tecGitUpdateEventHandler will run compareVersions
+--after the JSON files is downloaded GitUpdateEventHandler will run compareVersions
 
 --check if version in use is the latest released
 --If player is beta test we compare the latest release both prerelease and release 
 --If standard player we look for latest release not prerelease
 local function compareVersions()
   debugToDisplay("function compareVersions, opening &amp; reading file:\n\t"
-    ..tecGitUpdate.localRespitory..tecGitUpdate.gitReleaseURLJSONFile)
+    ..GitUpdate.localRespitory..GitUpdate.gitReleaseURLJSONFile)
   --open the local github latest release JSON file in read only mode
   local gitJSONFile, errorFound = 
-    io.open(tecGitUpdate.localRespitory..tecGitUpdate.gitReleaseURLJSONFile, "r")
+    io.open(GitUpdate.localRespitory..GitUpdate.gitReleaseURLJSONFile, "r")
   if not gitJSONFile then --file was not created error occured.
     tecErrorNotification("function compareVersions: "..errorFound)
     gitJSONFile:close() --incase of partial failure, close file.
     gitJSONFile = nil
-    tecGitUpdate.installationInProgress = false --notify Parthia installation not running.
+    GitUpdate.installationInProgress = false --notify Parthia installation not running.
     return  --error found stop update.
   end --if not gitJSONFile
   local gitJSONString = gitJSONFile:read("*a") --read the entire file to a string
@@ -5877,35 +6012,35 @@ local function compareVersions()
   gitJSONFile = nil
   if not gitJSONString then --the file did not read correctly.
     tecErrorNotification("function compareVersions, file read failure.\n\t"
-      ..tecGitUpdate.localRespitory..tecGitUpdate.gitReleaseURLJSONFile)
-    tecGitUpdate.installationInProgress = false --notify Parthia installation not running.
+      ..GitUpdate.localRespitory..GitUpdate.gitReleaseURLJSONFile)
+    GitUpdate.installationInProgress = false --notify Parthia installation not running.
     return --error found stop update.
   end --if not gitJSONString
   --Convert github release JSON into a table
-  tecGitUpdate.gitJSONTable = yajl.to_value(gitJSONString)
-  if tecGitUpdate.gitJSONTable[1].name then --if the table was made.
+  GitUpdate.gitJSONTable = yajl.to_value(gitJSONString)
+  if GitUpdate.gitJSONTable[1].name then --if the table was made.
     debugToDisplay("function compareVersions, file read successful.")
   else --if the table was not successfully made we can not continue. Notify player.
     errorFound = "Update: Error, JSON to table conversion unsuccessfull.\n\tOpened file: "
-      ..tecGitUpdate.localRespitory..tecGitUpdate.gitReleaseURLJSONFile
+      ..GitUpdate.localRespitory..GitUpdate.gitReleaseURLJSONFile
       .."\n\tIt contained: "..gitJSONString
     tecErrorNotification(errorFound) --Notify player provide method to report error
-    tecGitUpdate.installationInProgress = false --notify Parthia installation not running.
+    GitUpdate.installationInProgress = false --notify Parthia installation not running.
     return --error found stop update.
-  end --tecGitUpdate.gitJSONTable exists
+  end --GitUpdate.gitJSONTable exists
   
   --Look the table for the latest non beta release.
-  if tecGitUpdate.betaTester then --if player is a beta tester install latest release   
+  if GitUpdate.betaTester then --if player is a beta tester install latest release   
     --if latest release tag_name does not match local version number.
-    debugToDisplay("Update: Release installed: "..tecGitUpdate.localVersion
-      .."\n\tLatest release: "..tecGitUpdate.gitJSONTable[1].tag_name)
-    if tecGitUpdate.gitJSONTable[1].tag_name ~= tecGitUpdate.localVersion then
-      updateAvailable(tecGitUpdate.gitJSONTable[1].body) --notify player update is available
-      tecGitUpdate.releaseIndex = 1 --notify update engine which version to use
+    debugToDisplay("Update: Release installed: "..GitUpdate.localVersion
+      .."\n\tLatest release: "..GitUpdate.gitJSONTable[1].tag_name)
+    if GitUpdate.gitJSONTable[1].tag_name ~= GitUpdate.localVersion then
+      GitUpdate.releaseIndex = 1 --notify update engine which version to use
+      updateAvailable(GitUpdate.gitJSONTable[1].body) --notify player update is available
       local errorFound collectURLs() --gather URLs into trackedURLs table
       if errorFound then
         tecErrorNotification(errorFound)
-        tecGitUpdate.installationInProgress = false --notify Parthia installation not running.
+        GitUpdate.installationInProgress = false --notify Parthia installation not running.
         return --error found stop update.
       end --if error found
     else
@@ -5915,88 +6050,88 @@ local function compareVersions()
     local errorFound = releaseSearch() --search for latest NONbeta release
     if errorFound then
       tecErrorNotification(errorFound)
-      tecGitUpdate.installationInProgress = false --notify Parthia installation not running.
+      GitUpdate.installationInProgress = false --notify Parthia installation not running.
       return --error found stop update.
     end --if error found
   end --if betaTester
 
   --We do not know how large the git release JSON is we will trash it just incase
   --doing this after error catch, if error is found this table will still exist
-  tecGitUpdate.gitJSONTable = nil
+  GitUpdate.gitJSONTable = nil
   
-  tecGitUpdate.installationInProgress = false --notify Parthia installation not running.
+  GitUpdate.installationInProgress = false --notify Parthia installation not running.
   
 end --function compareVersions
 
---The user has now run the command tecclient update to continue forward.
+--The user has now run the aliase GitUpdate.aliasName to continue forward.
 
 --Download the scripts in the latest release 
-function tecDownloadScripts()
+function DownloadGitScripts()
   --turn off the standard update command. So user will not attempt to run it while
   --it is running. Also leave it off so user can not process an update when one 
   --is not required.
-  disableAlias(tecGitUpdate.aliasName)
-  tecGitUpdate.downloadError = false --in case of previous download error.
+  disableAlias(GitUpdate.aliasName)
+  GitUpdate.downloadError = false --in case of previous download error.
 
   --check if an installation is in progress.
-  if tecGitUpdate.installationInProgress then
+  if GitUpdate.installationInProgress then
     echo("An update is currently processing. Please wait for it to complete.\n"
       .."Once the update is done you will need to check if an update is still "
       .."required by running: ")
-    cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient update check", 
-      [[expandAlias(tecGitUpdate.aliasName)]],
+    cechoLink("&lt;:"..GitUpdate.cmdHighlight.."&gt;"..GitUpdate.updateCheckAlias, 
+      [[DownloadGitReleaseJSON()]],
       "Check for updates", true)
     return
   end
-  tecGitUpdate.installationInProgress = true --notify Parthia an update is in progress
+  GitUpdate.installationInProgress = true --notify Parthia an update is in progress
 
-  --if tecGitUpdate.trackedURLs has been initialized.
-  if type(tecGitUpdate.trackedURLs[1]) == "string" then 
-    trackDownloads(tecGitUpdate.trackedURLs) --initialize trackDownloads
-  else --tecGitUpdate.trackedURLs was not initialized throw error.
-    errorFound = "function tecGitUpdate.downloadScripts(), trackedURLs was not initialized."
+  --if GitUpdate.trackedURLs has been initialized.
+  if type(GitUpdate.trackedURLs[1]) == "string" then 
+    trackDownloads(GitUpdate.trackedURLs) --initialize trackDownloads
+  else --GitUpdate.trackedURLs was not initialized throw error.
+    errorFound = "function DownloadGitScripts, trackedURLs was not initialized."
     tecErrorNotification(errorFound)
-    tecGitUpdate.installationInProgress = false --notify Parthia installation not running.
+    GitUpdate.installationInProgress = false --notify Parthia installation not running.
     return --stop because we can not proceed.
-  end --if tecGitUpdate.trackedURLs is not nil.
+  end --if GitUpdate.trackedURLs is not nil.
 
   --download the files required.
-  for index, trackedDownload in ipairs(tecGitUpdate.trackedURLs) do
-    debugToDisplay("function tecGitUpdate.downloadScripts, downloading "
+  for index, trackedDownload in ipairs(GitUpdate.trackedURLs) do
+    debugToDisplay("function DownloadGitScripts, downloading "
       ..trackedDownload.."\n\tto "
-      ..tecGitUpdate.localRespitory..trackedDownloads.files[index])
+      ..GitUpdate.localRespitory..trackedDownloads.files[index])
     --download file
-    downloadFile(tecGitUpdate.localRespitory..trackedDownloads.files[index], trackedDownload)
-  end --for tecGitUpdate.trackedURLs
+    downloadFile(GitUpdate.localRespitory..trackedDownloads.files[index], trackedDownload)
+  end --for GitUpdate.trackedURLs
 
 --[[
   --this code can be used to test trackedDownloads without using sysDownloadDone function
-  for index, trackedDownload in ipairs(tecGitUpdate.trackedURLs) do
-    debugToDisplay("function tecGitUpdate.downloadScripts downloading "
+  for index, trackedDownload in ipairs(GitUpdate.trackedURLs) do
+    debugToDisplay("function GitUpdate.downloadScripts downloading "
       ..trackedDownload.."\n\tto "
-      ..tecGitUpdate.localFileStore..trackedDownloads.files[index])
+      ..GitUpdate.localFileStore..trackedDownloads.files[index])
     boolOrErrorMessage = trackDownloads(trackedDownloads.files[index])
-    local tmpString = tecGitUpdate.localFileStore..trackedDownloads.files[index]
-    cecho("File name: "..tmpString:match(tecGitUpdate.filePattern).."\n")
+    local tmpString = GitUpdate.localFileStore..trackedDownloads.files[index]
+    cecho("File name: "..tmpString:match(GitUpdate.filePattern).."\n")
     cecho("fileList is: "..trackedDownloads.fileList.."\n")
     cecho("Found match in fileList for file downloaded: "..
-      trackedDownloads.fileList:match(tmpString:match(tecGitUpdate.filePattern)).."\n")
+      trackedDownloads.fileList:match(tmpString:match(GitUpdate.filePattern)).."\n")
     if boolOrErrorMessage then
       debugToDisplay("Downloads completed!!!")
     end
-  end --for tecGitUpdate.trackedURLs
+  end --for GitUpdate.trackedURLs
 ]]--
 
-end --function tecGitUpdate.downloadScripts()
+end --function GitUpdate.downloadScripts()
 
---After all files have been downloaded tecGitUpdateEventHandler will call tecInstallUpdates
+--After all files have been downloaded GitUpdateEventHandler will call InstallGitUpdates
 
-local function tecInstallUpdates()
-  if tecGitUpdate.downloadError then --if a download error occured.
+local function InstallGitUpdates()
+  if GitUpdate.downloadError then --if a download error occured.
     cecho("Download error occured. Update can not be processed.\n")
-    tecGitUpdate.downloadError = false --Reset now that we have caught the error.
-  end --if tecGitUpdate.downloadError
-  local tecSourceDirectory = tecGitUpdate.localRespitory --Keep required data outside of tecGitUpdate
+    GitUpdate.downloadError = false --Reset now that we have caught the error.
+  end --if GitUpdate.downloadError
+  local localSourceDirectory = GitUpdate.localRespitory --Keep required data outside of GitUpdate
   for index, fileName in ipairs(trackedDownloads.files) do --loop through scripts, and install them
     local packageName = fileName:match("(.*)%.") --remove extension from filename
     local packageTypeList = {"alias", "trigger", "timer", "keybind", "script", 
@@ -6005,167 +6140,159 @@ local function tecInstallUpdates()
     for index, packageTypeName in ipairs(packageTypeList) do
       packageType = packageName:match(packageTypeName) --find packageType in the package name
       if packageType then --package name contains a package type. Use it to error check.
-        debugToDisplay("function tecInstallUpdates: Package type found, "
+        debugToDisplay("function InstallGitUpdates: Package type found, "
           ..packageType..". Error checking will be processed for" ..packageName)
         break --packageType found. Contining this would would nil packageType
       end --if packageType
     end --for ipairs(packageTypeList)
-    
-    uninstallPackage(packageName) --remove old package
-    --comment out uninstallPackage and uncomment raiseEvent to test without uninstalling package
-    --raiseEvent("sysUninstallPackage", packageName)
-    
-    if packageType then --package name contains a package type. Use it to error check.
-      if 0 ~= exists(packageName, packageType) then --if packagename appears in mudlet
-        debugToDisplay("&lt;yellow:&gt;Warning function tecInstallUpdates: appearance of the package "
-          ..packageName.." in the "..packageType.." section unexpected.")
-      end --if 0 ~= exists(packageName, packageType)
-    end --if packageType
-    
-    installPackage(tecSourceDirectory..fileName) --install new package
-    --comment out installPackage and uncomment raiseEvent to test without installing package
-    --raiseEvent("sysInstallPackage", packageName, tecSourceDirectory..fileName)
-    
-    if packageType then --package name contains a package type. Use it to error check.
-      if 0 == exists(packageName, packageType) then --if packageName does not exist in mudlet
-        local errorFound = "function tecInstallUpdates: "..packageName.." was not found in "
-          .." the "..packageType.." section. After package installation."
-        tecErrorNotification(errorFound) --display error.
-        tecGitUpdate.installationError = true --Notify tecInstallUpdates there is an error
-      end --if 0 ~= exists(packageName, packageType)
-    end --if packageType
 
-  end --for tecUpdate.scriptNames
+    --if this package is installed as a module. Do not install it.
+    if getModulePath(packageName) then
+      local errorFound = packageName..", is installed as a module. Having one script installed as "
+        .."both a module and a package is not supported."
+      tecWarningNotification("function InstallGitUpdates, "..errorFound)
+      cecho(errorFound.." If you are not a developer player installation instructions "
+        .."can be found ")
+      cechoLink("&lt;:"..GitUpdate.cmdHighlight.."&gt;here", 
+        [[openUrl("]]..GitUpdate.installationURL..[[")]],
+        "Player installation site", true)
+      cecho("\n")
+      
+    else --script is not installed as a module already proceed with instalation as package
+      uninstallPackage(packageName) --remove old package
+      --comment out uninstallPackage and uncomment raiseEvent to test without uninstalling package
+      --raiseEvent("sysUninstallPackage", packageName)
+      
+      if packageType then --package name contains a package type. Use it to error check.
+        if 0 ~= exists(packageName, packageType) then --if packagename appears in mudlet
+          debugToDisplay("&lt;yellow:&gt;Warning function InstallGitUpdates: appearance of the package "
+            ..packageName.." in the "..packageType.." section unexpected.")
+        end --if 0 ~= exists(packageName, packageType)
+      end --if packageType
+      
+      installPackage(localSourceDirectory..fileName) --install new package
+      --comment out installPackage and uncomment raiseEvent to test without installing package
+      --raiseEvent("sysInstallPackage", packageName, localSourceDirectory..fileName)
+      
+      if packageType then --package name contains a package type. Use it to error check.
+        if 0 == exists(packageName, packageType) then --if packageName does not exist in mudlet
+          local errorFound = "function InstallGitUpdates: "..packageName.." was not found in "
+            .." the "..packageType.." section. After package installation."
+          tecErrorNotification(errorFound) --display error.
+          GitUpdate.installationError = true --Notify InstallGitUpdates there is an error
+        end --if 0 ~= exists(packageName, packageType)
+      end --if packageType
+    end --if getModulePath(packageName)
+
+  end --for InstallGitUpdates
   
-  if tecGitUpdate.installationError then --there were errors during installation.
+  if GitUpdate.installationError then --there were errors during installation.
     cecho("Errors during installation. Please report issues using the report issues button "
       .."in the settings window.\n")
-    tecGitUpdate.installationInProgress = false --notify Parthia installation not running.
+    GitUpdate.installationInProgress = false --notify Parthia installation not running.
       --if events were previously created, kill them.
-    if tecGitUpdate.downloadDoneID then
-      killAnonymousEventHandler(tecGitUpdate.downloadDoneID)
-    end --if tecGitUpdate.downloadDoneID
-    if tecGitUpdate.downloadErrorID then
-      killAnonymousEventHandler(tecGitUpdate.downloadErrorID)
-    end --if tecGitUpdate.downloadErrorID
-    if tecGitUpdate.installPackageID then
-      killAnonymousEventHandler(tecGitUpdate.installPackageID)
-    end --if tecGitUpdate.installPackageID
-    if tecGitUpdate.uninstallPackageID then
-      killAnonymousEventHandler(tecGitUpdate.uninstallPackageID) 
-    end --if tecGitUpdate.downloadDoneID
+    if GitUpdate.downloadDoneID then
+      killAnonymousEventHandler(GitUpdate.downloadDoneID)
+    end --if GitUpdate.downloadDoneID
+    if GitUpdate.downloadErrorID then
+      killAnonymousEventHandler(GitUpdate.downloadErrorID)
+    end --if GitUpdate.downloadErrorID
+    if GitUpdate.installPackageID then
+      killAnonymousEventHandler(GitUpdate.installPackageID)
+    end --if GitUpdate.installPackageID
+    if GitUpdate.uninstallPackageID then
+      killAnonymousEventHandler(GitUpdate.uninstallPackageID) 
+    end --if GitUpdate.downloadDoneID
     return --stop update process
-  end --if tecGitUpdate.installationError
+  end --if GitUpdate.installationError
   
+  --go through list of unwanted packages and modules remove them. GitUpdate.removeModules
+  for _, removeScriptsTable in pairs({GitUpdate.removePackages, GitUpdate.removeModules}) do
+    for _, packageToRemove in ipairs(removeScriptsTable) do
+      uninstallPackage(packageToRemove) --uninstall unwanted packages.
+      --check for a folder that shares a name with an unwanted package in each section type
+      for _, packageType in ipairs( {"alias", "trigger", "timer", "keybind", "script"}) do
+        --if the a folder exists with the name of an unwanted package
+        if (exists(packageToRemove, packageType) &gt; 0) then 
+          tecWarningNotification("function InstallGitUpdates, package "
+            ..packageToRemove.." was removed but a folder for it still exits "
+            .."in the "..packageType.." section.")
+        end --if exists(packageToRemove)
+      end --for ipairs( "alias", "trigger", "timer", "keybind", "script")
+    end --for ipairs(GitUpdate.removePackages) 
+  end --for pairs(GitUpdate.removePackages, GitUpdate.removeModules)
+  
+  --resetProfile() --reset to profile so UI will properly reset.
+  cecho("Loading display please wait.\n")
+  UIManagerSetTheme("PlayersTheme", false) --reset the display
   debugToDisplay("Updates completed.\n")
   cecho("Updates completed.\n")
-  tecGitUpdate.installationInProgress = false --notify Parthia installation not running.
+  GitUpdate.installationInProgress = false --notify Parthia installation not running.
     --if events were previously created, kill them.
-  if tecGitUpdate.downloadDoneID then
-    killAnonymousEventHandler(tecGitUpdate.downloadDoneID)
-  end --if tecGitUpdate.downloadDoneID
-  if tecGitUpdate.downloadErrorID then
-    killAnonymousEventHandler(tecGitUpdate.downloadErrorID)
-  end --if tecGitUpdate.downloadErrorID
-  if tecGitUpdate.installPackageID then
-    killAnonymousEventHandler(tecGitUpdate.installPackageID)
-  end --if tecGitUpdate.installPackageID
-  if tecGitUpdate.uninstallPackageID then
-    killAnonymousEventHandler(tecGitUpdate.uninstallPackageID) 
-  end --if tecGitUpdate.downloadDoneID
-end --function tecInstallUpdates
+  if GitUpdate.downloadDoneID then
+    killAnonymousEventHandler(GitUpdate.downloadDoneID)
+  end --if GitUpdate.downloadDoneID
+  if GitUpdate.downloadErrorID then
+    killAnonymousEventHandler(GitUpdate.downloadErrorID)
+  end --if GitUpdate.downloadErrorID
+  if GitUpdate.installPackageID then
+    killAnonymousEventHandler(GitUpdate.installPackageID)
+  end --if GitUpdate.installPackageID
+  if GitUpdate.uninstallPackageID then
+    killAnonymousEventHandler(GitUpdate.uninstallPackageID) 
+  end --if GitUpdate.downloadDoneID
+end --function InstallGitUpdates
 
-function tecGitUpdateEventHandler(event, ...)
+function GitUpdateEventHandler(event, ...)
   if event == "sysDownloadDone" then --if it is a downloadDone event.
     --arg[1] is full file including directory
-    --tecReplaceStringMagicChar puts ecscape % before lua magic characters
-    local file = tecReplaceStringMagicChar(arg[1]) 
-    debugToDisplay("function tecGitUpdateEventHandler, file downloaded post magic "
+    --ReplaceStringMagicChar puts ecscape % before lua magic characters
+    local file = ReplaceStringMagicChar(arg[1]) 
+    debugToDisplay("function GitUpdateEventHandler, file downloaded post magic "
       .."character replacement it is:\n\t"..file)
     
-    if tecGitUpdate.gitReleaseURLJSONFile:match(file:match(tecGitUpdate.filePattern)) then --download is version check file
-      debugToDisplay("function tecGitUpdateEventHandler, Download: "..file
+    if GitUpdate.gitReleaseURLJSONFile:match(file:match(GitUpdate.filePattern)) then --download is version check file
+      debugToDisplay("function GitUpdateEventHandler, Download: "..file
         .."\n\tcompareVersions() called.")
       compareVersions() --Use downloaded JSON file to check if latest version is installed
     --if the name of the file being downloaded is in trackedDownloads.fileList
-    elseif trackedDownloads.fileList:match(file:match(tecGitUpdate.filePattern)) then
-      local boolOrErrorMessage = trackDownloads(file:match(tecGitUpdate.filePattern))
+    elseif trackedDownloads.fileList:match(file:match(GitUpdate.filePattern)) then
+      local boolOrErrorMessage = trackDownloads(file:match(GitUpdate.filePattern))
           if boolOrErrorMessage then --if true, all files have downloaded.
-            debugToDisplay("function tecGitUpdateEventHandler, all downloads completed. "
-              .."Running function tecInstallUpdates()")
-            tecInstallUpdates() --install the downloaded scripts
+            debugToDisplay("function GitUpdateEventHandler, all downloads completed. "
+              .."Running function InstallGitUpdates()")
+            InstallGitUpdates() --install the downloaded scripts
           elseif type(boolOrErrorMessage) == "string" then --if error found
             tecErrorNotification(boolOrErrorMessage) --notify player of error
           else --all downloads are not completed.
-            debugToDisplay("function tecGitUpdateEventHandler, "..file.." completed downloading. Not all tracked files downloaded yet.")
+            debugToDisplay("function GitUpdateEventHandler, "..file.." completed downloading. Not all tracked files downloaded yet.")
           end --if boolOrErrorMessage
     else
-      debugToDisplay("function tecGitUpdateEventHandler, Downloaded file: "..file
+      debugToDisplay("function GitUpdateEventHandler, Downloaded file: "..file
         .."\n\tWas NOT caught by event handler. If this SHOULD be a tracked download, system "
-        .."attempted to track: "..file:match(tecGitUpdate.filePattern))
+        .."attempted to track: "..file:match(GitUpdate.filePattern))
     end --elseif file downloaded is new script
   elseif event == "sysDownloadError" then --if there is a download error.
     local errorFound = arg[1] --sysDownloadError only argument is error message.
     local erroredURL = arg[1]:match(".*(https:%/%/%S+)") --retreive URL in error message
     --debugc("Errored URL: "..erroredURL)
     --if  then error download's URL matches downloads for this update engine
-    if trackedDownloads.urlList:match(erroredURL) or tecGitUpdate.gitReleaseURL == erroredURL then
-      tecErrorNotification("fuction tecGitUpdate.downloadErrorEventHandler, "..errorFound)
-      tecGitUpdate.downloadError = true --notify tecInstallUpdates not to proceed.
+    if trackedDownloads.urlList:match(erroredURL) or GitUpdate.gitReleaseURL == erroredURL then
+      tecErrorNotification("fuction GitUpdate.downloadErrorEventHandler, "..errorFound)
+      GitUpdate.downloadError = true --notify InstallGitUpdates not to proceed.
     else --for any other download errors.
-      debugToDisplay("fuction tecGitUpdate.downloadErrorEventHandler, "..errorFound)
+      debugToDisplay("fuction GitUpdate.downloadErrorEventHandler, "..errorFound)
     end --if trackedDownloads.urlList:match(erroredURL)
   elseif event == "sysInstallPackage" then --after a package has installed.
-    local tecInstalledPackageName = arg[1] --notify 
-    local tecInstalledPackageFileName = arg[2]
-    debugToDisplay("function tecGitUpdateEventHandler: "..tecInstalledPackageName.." package installed from file: "
-      ..tecInstalledPackageFileName)
+    local localInstalledPackageName = arg[1] --notify 
+    local localInstalledPackageFileName = arg[2]
+    debugToDisplay("function GitUpdateEventHandler: "..localInstalledPackageName.." package installed from file: "
+      ..localInstalledPackageFileName)
   elseif event == "sysUninstallPackage" then --after a package has installed.
     local tecUninstalledPackage = arg[1]
-    debugToDisplay("function tecGitUpdateEventHandler: "..tecUninstalledPackage.." package uninstalled.")
+    debugToDisplay("function GitUpdateEventHandler: "..tecUninstalledPackage.." package uninstalled.")
   end --if event name
 end --function tecUpdate.eventHandler()</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>tecWarningNotification(errorFound)</name>
-					<packageName></packageName>
-					<script>--fully notifies user when an error is found.
-function tecWarningNotification(errorFound)
-  debugc("Warning: "..errorFound)
-  debugToDisplay("&lt;yellow:&gt;Warning: "..errorFound)
---  cecho("&lt;yellow:&gt;Warning: "..errorFound
---    .."\n\tIf you experence issues contact a developer with: ")
---  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
---    [[tecReportIssues()]],
---    "Report issues or bugs", true)
---  cecho("")
-end --function tecErrorNotification</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>tecSetBetaTester(betaTester)</name>
-					<packageName></packageName>
-					<script>function tecSetBetaTester(betaTester)
-  betaTester = fuzzyBoolean(betaTester) --make certain nothin odd gets sent.
-  tecSettings.betaTester = betaTester --tell Parthia player is a beta tester.
-  
-  if tecSettings.betaTester then
-    cecho("You will now receive beta updates.\n\tThank you this helps us a GREAT deal!\n")
-  else
-    cecho("You will not receive beta updates.\n")
-  end --if betaTester
-  
-  dontForgetToSave() --remind player to save
-end --function tecSetBetaTester(betaTester)</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>tecGetBetaTester()</name>
-					<packageName></packageName>
-					<script>function tecGetBetaTester()
-  return tecSettings.betaTester
-end --function tecGetBetaTester</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -6299,11 +6426,11 @@ end --function dontForgetToSave</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>tecReplaceStringMagicChar(tmpString)</name>
+					<name>ReplaceStringMagicChar(tmpString)</name>
 					<packageName></packageName>
 					<script>--used to replace magic characters in a string with the proper escape character 
 --sequence. Useful for replacing file names on sysDownload events.
-function tecReplaceStringMagicChar(tmpString)
+function ReplaceStringMagicChar(tmpString)
   tmpString = tmpString:gsub("%%", "%%%")
   tmpString = tmpString:gsub("%(", "%%(")
   tmpString = tmpString:gsub("%)", "%%)")
@@ -6313,8 +6440,10 @@ function tecReplaceStringMagicChar(tmpString)
   tmpString = tmpString:gsub("%^", "%%^")
   tmpString = tmpString:gsub("%$", "%%$")
   tmpString = tmpString:gsub("%-", "%%-")
+  tmpString = tmpString:gsub("%*", "%%*")
+  tmpString = tmpString:gsub("%?", "%%?")
 return tmpString
-end --function tecReplaceStringMagicChar(tmpString)</script>
+end --function ReplaceStringMagicChar(tmpString)</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -7192,8 +7321,8 @@ function controlInput(_, tecPassword)
   if tecPasswordEntry then --if password entry is set, we expect a password.
   	tecPasswordEntry = false --set this if check to false to it doesn't occur every input.
     --Log into the game. md5.sumhexa converts user ID and password to md5 hash.
-    sendAll("USER " .. tecUsername .. "\n", "SECRET NONE", "HASH "
-  	 .. md5.sumhexa(tecUsername .. tecPassword .. "NONE") .. "\n", false)
+    sendAll("USER " .. tecUsername:lower() .. "\n", "SECRET NONE", "HASH "
+  	 .. md5.sumhexa(tecUsername:lower() .. tecPassword .. "NONE") .. "\n", false)
     tecUsername = nil --Clear out the username.
     clearCmdLine() --clear password from command input bar.
     denyCurrentSend() --Deny the origional command, in this case the password.
