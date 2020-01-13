@@ -5721,7 +5721,7 @@ function GitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if GitUpdate.localRespitory not exist
   GitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  GitUpdate.localVersion = "0.1.21" --Must match the tag in your github release
+  GitUpdate.localVersion = "0.1.22" --Must match the tag in your github release
   GitUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
   --Name of the alias to check if an update is available.
   GitUpdate.updateCheckAlias = "tecclient update check" 
@@ -5874,8 +5874,20 @@ local function releaseSearch()
             return
           end --if errorFound else
         else --if releaseData.tag_name ~= GitUpdate.localVersion, Parthia up to date.
-          cecho("Parthia is up to date.\n")
-          return --end releaseSearch()
+          --if this is a repair install. Run the update even if the versions match 
+          if GitUpdate.repairInstall then
+            GitUpdate.releaseIndex = index --collect the release index
+            local errorFound collectURLs() --gather URLs into trackedURLs table
+            if errorFound then --collectURLs returns a string if error occured.
+              return errorFound
+            else
+              updateAvailable(releaseData.body) --notify player an update is available
+              return --end releaseSearch
+            end --if errorFound
+          else --this is not a repair install. So let the player know no update is available.
+            cecho("Parthia is up to date.\n")
+            return --end releaseSearch()
+          end 
         end --if releaseData.prerelease.tag_name ~= GitUpdate.localVersion
       end --if releaseData.prerelease == "false"
     end --for
@@ -6044,7 +6056,20 @@ local function compareVersions()
         return --error found stop update.
       end --if error found
     else
-      cecho("Thank you for beta testing!\n\tNo new releases at this time.")
+      --if this is a repair install. Run the update even if the versions match 
+      if GitUpdate.repairInstall then
+        GitUpdate.releaseIndex = 1 --collect the release index
+        local errorFound collectURLs() --gather URLs into trackedURLs table
+        if errorFound then --collectURLs returns a string if error occured.
+          tecErrorNotification(errorFound)
+          GitUpdate.installationInProgress = false --notify Parthia installation not running.
+        else
+          updateAvailable(GitUpdate.gitJSONTable[1].body) --notify player an update is available
+          return --end releaseSearch
+        end --if errorFound
+      else --this is not a repair install. So let the player know no update is available.
+        cecho("Thank you for beta testing!\n\tNo new releases at this time.")
+      end --if GitUpdate.repairInstall
     end --if beta tester is not using latest release
   else --The user is not a beta tester.
     local errorFound = releaseSearch() --search for latest NONbeta release
