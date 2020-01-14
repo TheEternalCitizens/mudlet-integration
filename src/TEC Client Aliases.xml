@@ -533,6 +533,15 @@ DownloadGitReleaseJSON() --start the update process</script>
 				<packageName></packageName>
 				<regex>^display side top disable$</regex>
 			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient version</name>
+				<script>--if the update engine has not been initialized do it, to make the version number.
+if not GitUpdate then GitUpdateconfig() end
+cecho("Parthia version: "..GitUpdate.localVersion)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient version$</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Debug</name>
