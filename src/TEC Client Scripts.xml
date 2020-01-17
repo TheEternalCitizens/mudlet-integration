@@ -3681,7 +3681,7 @@ end --function setGUIframeObject</script>
     if window.name:lower() == geyserContainer.name:lower() then
       debugToDisplay("\tFound "..geyserContainer.name:lower()
         .." in tecGeyserWindows table. It is already being manged by UI manager.")
-      windowIsAlreadyTracked = true --notify function container already in table.
+--      windowIsAlreadyTracked = true --notify function container already in table.
     end --if window.name:lower() == geyserContainer:lower()
   end --for pairs(tecGeyserWindows)
   
@@ -3695,11 +3695,11 @@ end --function setGUIframeObject</script>
   else --container not already in tecGeyserWindows table.
 
     debugToDisplay("function UIManagerRegisterWindow, adding "..geyserContainer.name.." to tecGeyserWindows table.")
-    if tecGeyserWindows[geyserContainer.name] then --container name is already in table.
-      tecErrorNotification("function UIManagerRegisterWindow, tecGeyserWindows has a table named "
-        ..geyserContainer.name)
-      return --end function
-    else -- tecGeyserWindows[geyserContainer.name] does not exist
+--    if tecGeyserWindows[geyserContainer.name] then --container name is already in table.
+--      tecErrorNotification("function UIManagerRegisterWindow, tecGeyserWindows has a table named "
+--        ..geyserContainer.name)
+--      return --end function
+--    else -- tecGeyserWindows[geyserContainer.name] does not exist
       tecGeyserWindows[geyserContainer.name] = geyserContainer
       if not tecGeyserWindows[geyserContainer.name].name then --container did not add
         local errorFound = "function UIManagerRegisterWindow, "..geyserContainer.name
@@ -3708,11 +3708,12 @@ end --function setGUIframeObject</script>
         tecErrorNotification(errorFound)
         error(errorFound)
       end 
-    end --if tecGeyserWindows[geyserContainer.name]
+--    end --if tecGeyserWindows[geyserContainer.name]
     if displayToScreen then --Display to player.
       echo("Adding "..geyserContainer.name.." to interface manager "..GetUIManager()..".\n")
     end --if displayToSreen
     tecGeyserWindows[geyserContainer.name]:hide() --hide the window it is not in a UI yet
+    UIManagerShowWindow(geyserContainer.name, true, displayToScreen)
   end --if windowIsAlreadyTracked
 end --function UIManagerRegisterWindow</script>
 						<eventHandlerList />
