@@ -382,7 +382,7 @@ Current font size: ]]..getTECFont()
 			</Alias>
 			<Alias isActive="no" isFolder="no">
 				<name>tecclient update</name>
-				<script>tecDownloadScripts() --Begin downloading updates</script>
+				<script>DownloadGitScripts() --Begin downloading updates</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^tecclient update$</regex>
@@ -390,14 +390,19 @@ Current font size: ]]..getTECFont()
 			<Alias isActive="yes" isFolder="no">
 				<name>tecclient repair</name>
 				<script>--force an update installation. Intended for repair installation.
-tecDownloadScripts() --Begin downloading updates</script>
+if not tecGitUpdate then --if the update engine has not been configured.
+  GitUpdateconfig() --create default update engine config
+end
+GitUpdate.repairInstall = true --tell update engine a repair install is needed
+GitUpdate.installationInProgress = false --notifies update engine if update is running.
+DownloadGitReleaseJSON() --start the update process</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^tecclient repair$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>tecclient update check</name>
-				<script>tecDownloadGitReleaseJSON() --check if an update is needed.</script>
+				<script>DownloadGitReleaseJSON() --check if an update is needed.</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^tecclient update check$</regex>
@@ -527,6 +532,15 @@ tecDownloadScripts() --Begin downloading updates</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^display side top disable$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient version</name>
+				<script>--if the update engine has not been initialized do it, to make the version number.
+if not GitUpdate then GitUpdateconfig() end
+cecho("Parthia version: "..GitUpdate.localVersion)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient version$</regex>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
