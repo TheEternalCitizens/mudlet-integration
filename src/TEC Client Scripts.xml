@@ -159,6 +159,9 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   --Is the player using GUIframe UI manager
   tecSettings.useGUIframe = true
   
+  --Does the player want to have the player development folders managed
+  tecSettings.PlayerDevelopmentSpaceEnabled = false
+  
   --keep track of UI manager names. Not case sensative.
   UIManagers = { "GUIframe" , "none"}
   
@@ -3619,7 +3622,7 @@ function UIManagerShowWindow(objectName, mode, displayToScreen)
         end --if windowName == "all" or windowName == objectName
     end --for ipairs(tecWindowNames)
   end --if mode
-  guiChange() --redraw windows since the display has changed
+  if guiChange then guiChange() end--redraw windows since the display has changed
 end --function setGUIframeObject</script>
 						<eventHandlerList />
 					</Script>
@@ -4724,6 +4727,16 @@ end --end function tecDebugHelp</script>
 
   echo("\ntecclient command:\n")
   
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient update check", 
+  [[DownloadGitReleaseJSON()]],
+  "Check for updates", true)
+  echo(", check if Parthia updates are available.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient version", 
+  [[expandAlias("tecclient version")]],
+  "Display version of Parthia", true)
+  echo(", check installed Parthia version.\n")
+  
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient beta test yes", 
   [[tecSetBetaTester(true)]],
   "Receive beta updates", true)
@@ -4733,22 +4746,7 @@ end --end function tecDebugHelp</script>
   [[tecSetBetaTester(false)]],
   "Stop receiving beta updates", true)
   echo(", No longer receive beta updates.\n")
-	
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient font size", 
-  [[printCmdLine("tecclient font size ")]],
-  "Change client font size", true)
-  echo(", Change font size for all consoles.\n")
-  
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient tab font size", 
-  [[printCmdLine("tecclient tab font size ")]],
-  "Change font size of tabs", true)
-  echo(", Change font size for window tabs.\n") 
-  
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient change colors", 
-  [[tecClientChangeColors()]],
-  "Change client colors", true)
-  echo(", Change color scheme for client.\n")
-  
+
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save all", 
   [[tecClientSaveAll(true)]],
   "Save all client settings", true)
@@ -4762,14 +4760,14 @@ end --end function tecDebugHelp</script>
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient load", 
   [[tecFileLoadSettings(true)]],
   "Load client settings from file", true)
-  echo(", Loads client settings from file. You need to run -tecclient"
-  	.." save- or -tecclient save all- to create a settings file.\n")
+  echo(", Loads client settings from file. Run -tecclient"
+  	.." save- to create a settings file.\n")
   
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient reset", 
   [[tecClientReset(true);dontForgetToSave(true)]],
   "Reset client to default", true)
-  echo(", Reset client to default client settings.\n"
-  	.."Use -display reset- or -tecclient reset all- to reset display.\n")
+  echo(", Reset client to default client settings. "
+  	.."Run -display reset- to reset display.\n")
   	
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient reset all", 
   [[tecClientResetAll()]],
@@ -4781,20 +4779,45 @@ end --end function tecDebugHelp</script>
   "Repair Parthia", true)
   echo(", repairs Parthia. By replacing all developer created code.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient version", 
-  [[expandAlias("tecclient version")]],
-  "Display version of Parthia", true)
-  echo(", check installed Parthia version.\n")
-  
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient update check", 
-  [[DownloadGitReleaseJSON()]],
-  "Check for updates", true)
-  echo(", check if updates are required.\n")
-  
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient report", 
   [[tecReportIssues()]],
   "Report Parthia issues", true)
   echo(", receive instruction on reporting issues.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient playerdevelopment Install", 
+  [[PlayerDev.SetEnabled(true)]],
+  "Install player development folders", true)
+  echo(", install player development folders.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient playerdevelopment uninstall", 
+  [[PlayerDev.SetPackages(false)]],
+  "Uninstall player development folders", true)
+  echo(", Uninstall player development folders.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient playerdevelopment disable", 
+  [[PlayerDev.SetEnabled(false)]],
+  "Disable player development updates", true)
+  echo(", stop receiving player development code updates.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient playerdevelopment update", 
+  [[PlayerDev.Update(true)]],
+  "Check for player development updates", true)
+  echo(", check for updates to player development folders. Occurs automatically with client updates.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient tab font size", 
+  [[printCmdLine("tecclient tab font size ")]],
+  "Change font size of tabs", true)
+  echo(", Change font size for window tabs.\n") 
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient change colors", 
+  [[tecClientChangeColors()]],
+  "Change client colors", true)
+  echo(", Change color scheme for client.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient font size", 
+  [[printCmdLine("tecclient font size ")]],
+  "Change client font size", true)
+  echo(", Change font size for all consoles.\n")
 
 end --function tecClientHelp</script>
 					<eventHandlerList />
@@ -5653,6 +5676,244 @@ end --function tecSetBetaTester(betaTester)</script>
 end --function tecGetBetaTester</script>
 					<eventHandlerList />
 				</Script>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>Player Development Space</name>
+					<packageName></packageName>
+					<script>--if the player development table does not exist, create it.
+if not PlayerDev then PlayerDev = {} end</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>PlayerDev.SetPackages()</name>
+						<packageName></packageName>
+						<script>--Install or remove player development packages.
+ function PlayerDev.SetPackages(mode)
+  mode = fuzzyBoolean(mode)
+  --table contains information on packages needing installation
+  local packageTable = { trigger = { file = "Your_Triggers.xml"},
+                         alias   = { file = "Your_Aliases.xml"},
+                         script  = {file  = "Your_Scripts.xml"}, 
+                         timer   = {file  = "Your_Timmers.xml"},
+                         keybind = {file  = "Your_Keybindings.xml"},
+                       }
+  
+  --loop through the packageTable. Check if the package needs to be installed.
+  for packageType, packageToInstall in pairs(packageTable) do
+    --the folder the package makes after it is installed.
+    local packageFolder = packageToInstall.file:match("^(%a+_%a+)")
+    debugToDisplay("function PlayerDevCreateScripts, packageType is "..packageType..", packageToInstall.file is "
+      ..packageToInstall.file.." packageFolder is "..packageFolder)
+    local localPackageFile = tecSettingsFolder..packageToInstall.file --full folder and file name of package to install
+    if mode then --if the function was sent true, install needed packages.
+      if exists(packageFolder, packageType) == 0 then --check if the package's folder does not exist
+        --check if the file for the package exists, if it does install it.
+        if io.exists(localPackageFile) then --package file found
+          debugToDisplay("function PlayerDevCreateScripts, "..localPackageFile
+            .." found attempting package installation.")
+          installPackage(localPackageFile) --install the package.
+        else --the file for the package does not exist, show an error.
+          errorFound = "player package file "..localPackageFile.." does NOT exits.\n"
+          tecErrorNotification("function PlayerDevCreateScripts, "..errorFound)
+        end --if io.exists(localPackageFile)
+      end --if exists(packageFolder, packageType)
+    else --mode is false, remove the player packages
+      if exists(packageFolder, packageType) &gt; 0 then --check if the package's folder exist
+          uninstallPackage(packageFolder) --remove the package.
+          tecSettings.PlayerDevelopmentSpaceEnabled = mode
+      else --the package does not exist.
+          errorFound = "player package "..packageFolder.." does NOT exits.\n"
+          tecErrorNotification("function PlayerDevCreateScripts, "..errorFound)
+       end --if exists(packageFolder, packageType) &gt; 0
+    end --if mode
+  end --for pairs(packageTable)
+  if not mode then --if uninstalling packages
+    cecho("Packages removed. If changes are not saved, packages will reinstall with next update.\n")
+    dontForgetToSave() --tell player to save
+  end --if not mode
+end --function PlayerDev.SetPackages(mode)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>PlayerDev.Triggers()</name>
+						<packageName></packageName>
+						<script>--create triggers in the player development space.
+--reference https://wiki.mudlet.org/w/Manual:Lua_Functions
+function PlayerDev.Triggers()
+
+  --[[
+  To add a trigger to a player's development space, it needs to be in the triggersTable
+  An example of a trigger to add to the triggersTable is:
+  COPY BELOW  
+    subTableNameMustBeUnique = { 
+        name = "Trigger name, must be unique", 
+        parent = "Player Game Events",
+        triggerType = "substring",
+        patterns = {"trigger ", "patterns here"},
+        code = "--Should be a commented description.\n" }
+  COPY ABOVE
+    name, is the name that will show in the triggers section of the editor.
+    parent, is the group the trigger needs to go in. Most likely will be "Player Game Evets"
+    triggerType, can be "substring" "regex" or "beginofline"
+    patterns, is a table. It can contain one or more triggers like "You fall"
+      The patterns have to be surrounded by {}, with commas between each trigger.
+      for example {"trigger one", "trigger two", "trigger three}
+    code, is the lua code that the trigger will run. I recommend making this commented
+      code to describe when the trigger will trigger.
+  ]]--
+  
+  local triggerSuffix = " -Do not change this name-" --Will be added to the end of each trigger. To give it a unique name and tell player not to change it.
+  local playerTriggersParentGroup = "Player Game Events"..triggerSuffix
+
+  local triggersTable = {
+
+    PlayerApproaches = { 
+      name = "Player approaches a character", 
+      parent = playerTriggersParentGroup,
+      triggerType = "substring",
+      patterns = {"You stop next to "},
+      code = "--triggers when the player approaches something.\n" },
+
+    PlayerRetreat = { 
+    	name = "Player retreats", 
+    	parent = playerTriggersParentGroup,
+    	triggerType = "beginofline",
+    	patterns = {"You retreat."},
+    	code = "--triggers when a player retreats or falls back.\n" },
+
+    PlayerIsApproached = { 
+	   name = "Player is approached", 
+	   parent = playerTriggersParentGroup,
+	   triggerType = "substring",
+	   patterns = {"stops next to you."},
+	   code = "--triggers when a player's character is approached.\n" },
+
+    CharacterEntersRoom = { 
+      name = "Character walks into players room", 
+	    parent = playerTriggersParentGroup,
+      triggerType = "substring",
+      patterns = {"walks in", "runs in", "flies in"},
+      code = "--triggers when a character enters the players room.\n" },
+
+    CharacterLeavesRoom = { 
+      name = "Character leave players room", 
+      parent = playerTriggersParentGroup,
+      triggerType = "substring",
+      patterns = {"walks away", "runs away", "flies away"},
+      code = "--triggers when a character leaves the players room.\n" },
+      
+    NPCSpawns = { 
+      name = "Character Arrives", 
+      parent = playerTriggersParentGroup,
+      triggerType = "substring",
+      patterns = {"arrives."},
+      code = "--triggers when an NPC is spawned.\n" },
+      
+    PlayerRoomChange = { 
+      name = "Player enters a room", 
+      parent = playerTriggersParentGroup,
+      triggerType = "beginofline",
+      patterns = {"You arrive at "},
+      code = "--triggers when the player enters a new room.\n" },
+      
+    SuccessfulLogin = { 
+      name = "Successful login", 
+      parent = playerTriggersParentGroup,
+      triggerType = "beginofline",
+      patterns = {"&lt;center&gt;*** Login successful"},
+      code = "--triggers after a successful login.\n" },
+      
+    VisionLoss = { 
+      name = "Vision loss", 
+      parent = playerTriggersParentGroup,
+      triggerType = "beginofline",
+      patterns = {"It is too dark to see anything."},
+      code = "--Triggers when the player can not see.\n" }
+  } --substringTriggers
+
+  --loop through the triggers to install.
+  --if they do no already exist. Install them.
+  for _, triggerTable in pairs(triggersTable) do
+    local createTrigger = nil --Will be used to store a function to create desired trigger type
+    if exists(triggerTable.name..triggerSuffix, "trigger") == 0 then --the trigger does NOT exists
+      debugToDisplay("function PlayerDev.Triggers, Trigger "..triggerTable.name
+        ..triggerSuffix.." does not exist, creating it.\n")
+      --Find the type of trigger being created. 
+      --Once found make createTrigger a copy of the function needed to create the trigger
+      if triggerTable.triggerType:lower() == "substring" then --check the type of trigger needed to be made
+        createTrigger = permSubstringTrigger --createTrigger is now permSubstringTrigger, it will create a substring trigger when called
+      elseif triggerTable.triggerType:lower() == "beginofline" then --check the type of trigger needed to be made
+        createTrigger = permBeginOfLineStringTrigger --createTrigger is now permBeginOfLineStringTrigger, it will create a begin of line or start of line trigger when called
+      elseif triggerTable.triggerType:lower() == "regex" then --check the type of trigger needed to be made
+        createTrigger = permRegexTrigger --createTrigger is now permRegexTrigger, it will create a perl regex trigger when called
+      else --no good trigger type found
+        tecErrorNotification("function PlayerDev.Triggers, no good trigger type found. "
+          .."Correct trigger types are substring, beginofline and regex.")
+      end --if TriggerTable.triggerType.lower() == "substring"
+      if exists(triggerTable.parent, "trigger") == 0 then --the parent ground the trigger needs to go to does not exist
+        tecWarningNotification("function PlayerDev.Triggers, parent group "..triggerTable.parent.." does not exist.\n") 
+      else --the parent group to the trigger exists, so make the trigger.
+        createTrigger(triggerTable.name..triggerSuffix, triggerTable.parent, triggerTable.patterns, triggerTable.code)
+        disableTrigger(triggerTable.name..triggerSuffix) --disable the trigger, so it is not needlessly checked
+      end --if exists(triggerTable.parent, "trigger") == 0
+    end --if exists(TriggerName, "trigger") == 0
+  end --for pairs(triggersTable)
+
+end --function PlayDevSubstringTriggers()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>PlayerDev.GetEnabled()</name>
+						<packageName></packageName>
+						<script>--returns if the player development mode
+function PlayerDev.GetEnabled()
+  if tecSettings.PlayerDevelopmentSpaceEnabled then --if the variable exists and is true
+    return tecSettings.PlayerDevelopmentSpaceEnabled --return it
+  else --if the variable does not exist.
+    return false --We know the player has not set the enabled variable, so return false
+  end --if tecSettings.PlayerDevelopmentSpaceEnabled
+end --function PlayerDev.Get()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>PlayerDev.Update()</name>
+						<packageName></packageName>
+						<script>--Add new code to the players development folders.
+function PlayerDev.Update(displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  if PlayerDev.GetEnabled() then --if player dev space is enabled
+    if displayToScreen then cecho("Checking if player development modules need to be installed.\n") end
+    PlayerDev.SetPackages(true) --Install modules if they do not already exist.
+    if displayToScreen then cecho("Installing new player development triggers.\n") end
+    PlayerDev.Triggers() --create player triggers
+    if displayToScreen then cecho("Completed updating player development folders.\n") end
+  end --if PlayerDev.GetEnabled()
+end --function PlayerDev.runUpdate()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>PlayerDev.SetEnabled(mode)</name>
+						<packageName></packageName>
+						<script>--set and save if the player wanted their player development space created
+function PlayerDev.SetEnabled(mode)
+  mode = fuzzyBoolean(mode) --make certain correct boolean sent.
+  tecSettings.PlayerDevelopmentSpaceEnabled = mode --make certain this setting can be saved
+  if mode then --player wants the player development space created.
+    cecho("Creating folders for you in the script editor. Each section will have a folder "
+      .."starting with Your_. Save your code to these folders.\nWe will never remove "
+      .."code from these folders. With updates we may add code to these folders. "
+      .."Only if it will not replace code you have created. In mudlet\'s editor "
+      .."folders are called groups.\n")
+    PlayerDev.Update() --installed player modules and code, or updates it
+    cecho("Player development space has been created. "
+      .."Press alt\+e to open the script editor.\n")
+  else --player does not want to contine to receive updates.
+    cecho("If you save changes, you will no longer receive updates to the player "
+      .."Your_ folders in the editor. This will not remove those folders.\n")
+  end --if mode
+  dontForgetToSave()
+end --function PlayerDev.set(mode)</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
 				<Script isActive="yes" isFolder="no">
 					<name>Git Updates</name>
 					<packageName></packageName>
@@ -5727,7 +5988,7 @@ function GitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if GitUpdate.localRespitory not exist
   GitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  GitUpdate.localVersion = "0.1.23" --Must match the tag in your github release
+  GitUpdate.localVersion = "0.1.24" --Must match the tag in your github release
   GitUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
   --Name of the alias to check if an update is available.
   GitUpdate.updateCheckAlias = "tecclient update check" 
@@ -5743,11 +6004,13 @@ function GitUpdateconfig() --Create variables used for updates
   GitUpdate.removeModules = {} --modules that are no longer used in the project and should be removed.
   --Used to tell player correct installation method if they installed scripts as modules
   GitUpdate.installationURL = "https://github.com/TheEternalCitizens/mudlet-integration/wiki/Installation"
-  --use in a repair aliase, set this variable to true if a repair install 
-  --is needed.
+  --use in a repair aliase, set this variable to true if a repair install is needed.
   GitUpdate.repairInstall = fuzzyBoolean(GitUpdate.repairInstall)
   --cecho compatible color, it will hightlight cecholinks in the update process
   GitUpdate.cmdHighlight = "blue"
+  --Copy a function you would like to have run when an update is completed.
+  --Make false if you do not want it to run after the update has completed.
+  GitUpdate.postUpdateFunction = PlayerDev.Update
 
   --No need to change variables below
   GitUpdate.filePattern = ".*%/(.*%..*)$" --string pattern to detect file name at end of url or file path string
@@ -6272,6 +6535,10 @@ local function InstallGitUpdates()
   if GitUpdate.uninstallPackageID then
     killAnonymousEventHandler(GitUpdate.uninstallPackageID) 
   end --if GitUpdate.downloadDoneID
+
+  --runs a function specified in config
+  if GitUpdate.postUpdateFunction then GitUpdate.postUpdateFunction(true) end
+
 end --function InstallGitUpdates
 
 function GitUpdateEventHandler(event, ...)

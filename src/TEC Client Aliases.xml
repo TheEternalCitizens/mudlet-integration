@@ -527,20 +527,45 @@ DownloadGitReleaseJSON() --start the update process</script>
 				<regex>^tecclient report$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>display side top disable</name>
-				<script>GUIframe.enable("left")</script>
-				<command></command>
-				<packageName></packageName>
-				<regex>^display side top disable$</regex>
-			</Alias>
-			<Alias isActive="yes" isFolder="no">
 				<name>tecclient version</name>
 				<script>--if the update engine has not been initialized do it, to make the version number.
 if not GitUpdate then GitUpdateconfig() end
-cecho("Parthia version: "..GitUpdate.localVersion)</script>
+cecho("Parthia version: "..GitUpdate.localVersion.."\n")</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^tecclient version$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient playerdevelopment install</name>
+				<script>--Installed modules set aside for player development.
+--populate them with meaningfull triggers.
+PlayerDev.SetEnabled(true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient playerdevelopment install$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient playerdevelopment disable</name>
+				<script>--Tell Parthia to no longer receive player development updates.
+PlayerDev.SetEnabled(false)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient playerdevelopment disable$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient playerdevelopment update</name>
+				<script>PlayerDev.Update(true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient playerdevelopment update$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>tecclient playerdevelopment uninstall</name>
+				<script>--Tell Parthia to no longer receive player development updates.
+PlayerDev.SetPackages(false)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^tecclient playerdevelopment uninstall$</regex>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
