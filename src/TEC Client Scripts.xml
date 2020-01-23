@@ -5677,7 +5677,7 @@ end --function tecGetBetaTester</script>
 					<eventHandlerList />
 				</Script>
 				<ScriptGroup isActive="yes" isFolder="yes">
-					<name>Player Development Space</name>
+					<name>Player Development Folders</name>
 					<packageName></packageName>
 					<script>--if the player development table does not exist, create it.
 if not PlayerDev then PlayerDev = {} end</script>
@@ -5693,13 +5693,13 @@ if not PlayerDev then PlayerDev = {} end</script>
                          alias   = { file = "Your_Aliases.xml"},
                          script  = {file  = "Your_Scripts.xml"}, 
                          timer   = {file  = "Your_Timmers.xml"},
-                         keybind = {file  = "Your_Keybindings.xml"},
+                         keybind = {file  = "Your_Key_Bindings.xml"},
                        }
   
   --loop through the packageTable. Check if the package needs to be installed.
   for packageType, packageToInstall in pairs(packageTable) do
     --the folder the package makes after it is installed.
-    local packageFolder = packageToInstall.file:match("^(%a+_%a+)")
+    local packageFolder = packageToInstall.file:match("^(%a+_%a+_?%a*)")
     debugToDisplay("function PlayerDevCreateScripts, packageType is "..packageType..", packageToInstall.file is "
       ..packageToInstall.file.." packageFolder is "..packageFolder)
     local localPackageFile = tecSettingsFolder..packageToInstall.file --full folder and file name of package to install
@@ -5903,7 +5903,7 @@ function PlayerDev.SetEnabled(mode)
       .."Only if it will not replace code you have created. In mudlet\'s editor "
       .."folders are called groups.\n")
     PlayerDev.Update() --installed player modules and code, or updates it
-    cecho("Player development space has been created. "
+    cecho("Player development folders have been created. "
       .."Press alt\+e to open the script editor.\n")
   else --player does not want to contine to receive updates.
     cecho("If you save changes, you will no longer receive updates to the player "
@@ -5988,7 +5988,7 @@ function GitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if GitUpdate.localRespitory not exist
   GitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  GitUpdate.localVersion = "0.1.24" --Must match the tag in your github release
+  GitUpdate.localVersion = "0.1.25" --Must match the tag in your github release
   GitUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
   --Name of the alias to check if an update is available.
   GitUpdate.updateCheckAlias = "tecclient update check" 
