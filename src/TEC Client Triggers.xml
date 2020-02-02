@@ -288,100 +288,30 @@ deleteLine() --remove line from main console. line variable remains unchanged.
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Compass</name>
-				<script>--Because I only need to do this 11 times. I am doing it without
---a loop. Using a find command 11 times would require more processing.
---This could have also been done with string.match
---was fairly certain this required fewer cycles.
+				<script>--[[
+Use data from SKOOT 7 message to change images on the compass.
+References:
+https://wiki.mudlet.org/w/Manual:String_Functions#string.gmatch.2C_utf8.gmatch
+https://www.lua.org/pil/20.2.html
+]]--
 
---print("\nNorth is: ") --Test the count numbers
---print(string.sub(line, 11, 14)) --Test the count numbers
---north
-if  string.sub(line, 11, 14) == "show" then
-	tecCompass.lit("n")
-else
-	tecCompass.unlit("n")
-end
-
---print("\nNorth East is: ") --Test the count numbers
---print(string.sub(line, 19, 22)) --Test the count numbers
---ne
-if  string.sub(line, 19, 22) == "show" then
-	tecCompass.lit("ne")
-else
-	tecCompass.unlit("ne")
-end
-
---print("\nEast is: ") --Test the count numbers
---print(string.sub(line, 26, 29)) --Test the count numbers
---e
-if  string.sub(line, 26, 29) == "show" then
-	tecCompass.lit("e")
-else
-	tecCompass.unlit("e") 
-end
-
---print("\nSouth East is: ") --Test the count numbers
---print(string.sub(line, 34, 37)) --Test the count numbers
---se
-if  string.sub(line, 34, 37) == "show" then
-	tecCompass.lit("se")
-else
-	tecCompass.unlit("se")
-end
-
---print("\nSouth  is: ") --Test the count numbers
---print(string.sub(line, 41, 44)) --Test the count numbers
---s
-if  string.sub(line, 41, 44) == "show" then
-	tecCompass.lit("s")
-else
-	tecCompass.unlit("s")
-end
-
---print("\nSouth West  is: ") --Test the count numbers
---print(string.sub(line, 49, 52)) --Test the count numbers
---sw
-if  string.sub(line, 49, 52) == "show" then
-	tecCompass.lit("sw")
-else
-	tecCompass.unlit("sw")
-end
-
---print("\nWest  is: ") --Test the count numbers
---print(string.sub(line, 56, 59)) --Test the count numbers
---w
-if  string.sub(line, 56, 59) == "show" then
-	tecCompass.lit("w")
-else
-	tecCompass.unlit("w")
-end
-
---print("\nNorth West  is: ") --Test the count numbers
---print(string.sub(line, 64, 67)) --Test the count numbers
---nw
-if  string.sub(line, 64, 67) == "show" then
-	tecCompass.lit("nw")
-else
-	tecCompass.unlit("nw")
-end
-
---print("\nUp  is: ") --Test the count numbers
---print(string.sub(line, 71, 74)) --Test the count numbers
---up not supported YET
-if  string.sub(line, 71, 74) == "show" then
-	tecCompass.lit("up")
-else
-	tecCompass.unlit("up")
-end
-
---print("\nDown  is: ") --Test the count numbers
---print(string.sub(line, 78, 81)) --Test the count numbers
---down not supported YET
-if  string.sub(line, 78, 81) == "show" then
-	tecCompass.lit("down")
-else
-	tecCompass.unlit("down")
-end
+--get all directions and if they should be showed from the skoot 7 message
+for direction, show in string.gmatch( line, ",?(%a+),(%a+)" ) do
+  
+  displayDebug("trigger Compass, setting dirrection "..direction.." to "..show)
+  
+  --if the direction is u or d convert it into up or down.
+  if direction == "u" then direction = "up"
+  elseif direction == "d" then direction = "down" end
+  
+  if show == "show" then --if the direction should be shown.
+    MultiWindow.Compass.lit(direction) --show the direction as active in the MultiWindow compass
+    tecCompass.lit(direction) --show the direction as active in the standard tec compass
+  else --if the compass direction should be inactive
+    MultiWindow.Compass.unlit(direction) --show the direction as inactive in the MultiWindow compass
+    tecCompass.unlit(direction) --show the direction as inactive in the standard tec compass
+  end --if show == "show"
+end --for string.gmatch( line, "(%a%a?),(?%d+)" )
 
 deleteLine() --remove line from main console. line variable remains unchanged.</script>
 				<triggerType>0</triggerType>
@@ -440,6 +370,7 @@ deleteLine() --remove line from main console. line variable remains unchanged.</
 	--local health =  string.sub(line, 16, string.len(line))
 	
 	hpbar:setValue(tonumber(health),100) --set bar on screen
+  MultiWindow.hpbar:setValue(tonumber(health),100) --set bar in the MultiWindow
 	--echo("\nYour current health is: ")
 	--echo(health)
 
@@ -470,6 +401,7 @@ deleteLine() --remove line from main console. line variable remains unchanged.</
 	local fatigue = string.gsub(line,"SKOOT 8 Fatigue,","")
 
 	fatiguebar:setValue(tonumber(fatigue),100) --set bar on screen
+  MultiWindow.fatiguebar:setValue(tonumber(fatigue),100) --set bar in the MultiWindow
 	--echo("\nYour current fatigue is: ")
 	--echo(fatigue)
 	
@@ -502,6 +434,7 @@ deleteLine() --remove line from main console. line variable remains unchanged.</
 	local encumbrance = string.gsub(line,"SKOOT 8 Encumbrance,","")
 
 	encumbrancebar:setValue(tonumber(encumbrance),100) --set bar on screen
+  MultiWindow.encumbrancebar:setValue(tonumber(encumbrance),100) --set bar in MultiWindow
 	--echo("\nYour current encumbrance rate is: ")
 	--echo(encumbrance)
 	
@@ -532,6 +465,7 @@ deleteLine() --remove line from main console. line variable remains unchanged.</
 	local hunger = string.gsub(line,"SKOOT 8 Satiation,","")
 
 	hungerbar:setValue(tonumber(hunger),100) --set bar on screen
+  MultiWindow.hungerbar:setValue(tonumber(hunger),100) --set bar in MultiWindow
 	--echo("\nYour current hunger rate is: ")
 	--echo(hunger)
 	
@@ -689,15 +623,12 @@ elseif line:match("^%d+:") then --if line starts with "#: "
     
     --check if the character is (unconscious)
     if characterStatus:match("unconscious") then 
-      hecho("roomCharacters.console",tecSettings.ApproachedCharactersColor.."KO: ")
+      hechoRoomCharacterWindows(tecSettings.ApproachedCharactersColor.."KO: ")
     else --if they are not unonscious prefice with a _ instead
-      hecho("roomCharacters.console",tecSettings.ApproachedCharactersColor.."_")
+      hechoRoomCharacterWindows(tecSettings.ApproachedCharactersColor.."_")
     end
     
-		--create a right clickable list with the characters full name.
-		hechoPopup("roomCharacters.console",tecSettings.ApproachedCharactersColor
-      ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
-		{
+    local localApproachedCmdList = {
 		--apprachedCommandList is list of commands for characters that have approached yours
 		--tecNameMatches is now many times something with the same short name was previously found
 		--tecCharacterShort is the first word after a in a name. We can not target with full name.
@@ -706,27 +637,37 @@ elseif line:match("^%d+:") then --if line starts with "#: "
 		tecSettings.approachedCommandList[3]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
 		tecSettings.approachedCommandList[4]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
 		tecSettings.approachedCommandList[5]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
-		tecSettings.approachedCommandList[6]..tostring(tecNameMatches).." "..tecCharacterShort..[["]]},
-		{ 
+		tecSettings.approachedCommandList[6]..tostring(tecNameMatches).." "..tecCharacterShort..[["]]}
+    
+    local localApproachedCmdHelp = { 
 		--Tool bar tips that show on mouse over and right click.
 		tecSettings.approachedCommandHelp[1], 
 		tecSettings.approachedCommandHelp[2], 
 		tecSettings.approachedCommandHelp[3],
 		tecSettings.approachedCommandHelp[4],
 		tecSettings.approachedCommandHelp[5],
-		tecSettings.approachedCommandHelp[6]}, true)
+		tecSettings.approachedCommandHelp[6]}
+    
+		--create a right clickable list with the characters full name.
+		hechoPopup("roomCharacters.console",tecSettings.ApproachedCharactersColor
+      ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
+      localApproachedCmdList,
+      localApproachedCmdHelp, true)
+    --create right clickable list for MultiWIndow roomCharacters console
+    hechoPopup("MultiWindow.roomCharacters.console",tecSettings.ApproachedCharactersColor
+      ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
+      localApproachedCmdList,
+      localApproachedCmdHelp, true)
+    
 	else
     --check if the character is (unconscious), prefice with KO:
     if characterStatus:match("unconscious") then 
-      hecho("roomCharacters.console",tecSettings.ApproachedCharactersColor.."KO: ")
+      hechoRoomCharacterWindows(tecSettings.ApproachedCharactersColor.."KO: ")
     else --if they are not unonscious prefice with a _ instead
-      hecho("roomCharacters.console",tecSettings.notApproachedCharacterColor.."_")
+      hechoRoomCharacterWindows(tecSettings.notApproachedCharacterColor.."_")
     end
     
-		--characters that are not approached to the players
-		hechoPopup("roomCharacters.console",tecSettings.notApproachedCharacterColor
-      ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
-		{
+    local localNotApproachedCmdList = {
 		--list of commands for characters not approached to yours.
 		--refer to approached logic explination above for reference.
 		tecSettings.commandList[1]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
@@ -734,19 +675,28 @@ elseif line:match("^%d+:") then --if line starts with "#: "
 		tecSettings.commandList[3]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
 		tecSettings.commandList[4]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
 		tecSettings.commandList[5]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
-		tecSettings.commandList[6]..tostring(tecNameMatches).." "..tecCharacterShort..[["]]},
-		{ 
+		tecSettings.commandList[6]..tostring(tecNameMatches).." "..tecCharacterShort..[["]]}
+    local localNotApproachedHelpList = { 
 		--Tool bar tips that show on mouse over and right click.
 		tecSettings.commandHelp[1], 
 		tecSettings.commandHelp[2], 
 		tecSettings.commandHelp[3],
 		tecSettings.commandHelp[4],
 		tecSettings.commandHelp[5],
-		tecSettings.commandHelp[6]}, true)
+		tecSettings.commandHelp[6]}
+		--characters that are not approached to the players
+		hechoPopup("roomCharacters.console",tecSettings.notApproachedCharacterColor
+      ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
+		  localNotApproachedCmdList,
+		  localNotApproachedHelpList, true)
+    hechoPopup("MultiWindow.roomCharacters.console",tecSettings.notApproachedCharacterColor
+      ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
+		  localNotApproachedCmdList,
+		  localNotApproachedHelpList, true)
 	end --end if else characterEnaged == "("
   
   --Attempting to resolve issue with window not filling
-  hecho("roomCharacters.console","\n")
+  hechoRoomCharacterWindows("\n")
   
   tecScrollBarCheck("roomCharacters.console") --check if a scroll bar is needed.
   
@@ -765,19 +715,19 @@ elseif line == "&lt;/pre&gt;" then --end of ac . command found.
 elseif line == "It is too dark to see anything." then
   setTECRoomCheckActive(false) --disable room check for characters.
   clearRoomCharacterWindow()
-  cecho("roomCharacters.console", "It is too dark to see anything.")
+  hechoRoomCharacterWindows("It is too dark to see anything.")
   
 --if player is stunned set RoomCheck to false so it does not remain active.
 elseif line == "You can't do that while stunned." then
   setTECRoomCheckActive(false) --disable room check for characters.
   clearRoomCharacterWindow()
-  cecho("roomCharacters.console", "You can't do that while stunned.")
+  hechoRoomCharacterWindows("You can't do that while stunned.")
   
 --if player is unconcious RoomCheck to false so it does not remain active.
 elseif line == "You can't do that while unconcious." then
   setTECRoomCheckActive(false) --disable room check for characters.
   clearRoomCharacterWindow()
-  cecho("roomCharacters.console", "You can't do that while unconcious.")
+  hechoRoomCharacterWindows("You can't do that while unconcious.")
 
 end --if line has a ac . character in it.
 
