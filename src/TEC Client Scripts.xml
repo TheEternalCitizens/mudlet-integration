@@ -3797,7 +3797,20 @@ function UIManagerEnableWindow(objectName, mode, displayToScreen)
           --if this window is about to  go to a side that is disabled, change the side.
           for _, tmpSide in ipairs(tmpSidesTable) do --loop through sides
             if not UIManagerSettings.PlayersTheme.borders[tmpSide] then --if the side is disabled
-              if tmpWindowLocation == tmpSide then--if the window is going to a disabled side
+              local localGUIframeLocatioDisabled = false
+              --check if the side the window is going to is disabled
+              if table.contains({"top","bottom"}, tmpSide) then --if the disabled side is the top or bottom
+                if tmpWindowLocation == tmpSide then --if the window is going to a disabled side
+                  localGUIframeLocatioDisabled = true
+                end --if tmpWindowLocation == tmpSide
+              end --if table.contains({"top","bottom"}, tmpSide)
+              if table.contains({"right","left"}, tmpSide) then--if the disabled side is the left or right
+                if tmpWindowLocation:match(tmpSide) then --if the window is going to a disabled side
+                  localGUIframeLocatioDisabled = true
+                end --if tmpWindowLocation:match("left") or tmpWindowLocation:match("right")
+              end --table.contains({"right","left"}, tmpSide)
+              
+              if localGUIframeLocatioDisabled then --if the side the window is going to is disabled
                 for _, tmpSideModeCheck in ipairs({"left", "right"}) do --loop through sides
                   --check the left and right sides, windows added to those can be moved.
                   --Because of lack of layering support we do not want to place a window 
