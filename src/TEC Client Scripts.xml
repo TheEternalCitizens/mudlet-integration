@@ -6956,7 +6956,10 @@ tecCompass.back = Geyser.Label:new({
   height = "100%", --% of parent
 },tecCompass.window) --The parent of this label. Main is main window.
 
-tecCompass.back:setStyleSheet(labelsStyle)
+--set background image for compass
+tecCompass.back:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/compass/background.jpg");]])
+    
+    --getMudletHomeDir()..[[/imgs/compass/background.jpg]]))
 
 --Horizontal box
 tecCompass.hbox = Geyser.HBox:new({
@@ -7030,16 +7033,12 @@ end
 
 --Function that will put images to direction labels. name will be n nw so on in tecCompass under triggers
 function tecCompass.lit(name)
-  tecCompass[name]:setStyleSheet([[
-    border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"..[[/]].."compass"..[[/]]..name..[[hover.png");
-    margin: 5px;
-  ]])
+  tecCompass[name]:setStyleSheet([[background-color: "#5577dd77";]])
 end
 --when the space should be unlit change it back to white.
 function tecCompass.unlit(name)
   tecCompass[name]:setStyleSheet([[
-    border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"..[[/]].."compass"..[[/]]..name..[[.png");
-    margin: 5px;
+    background-color: "#00000000";
   ]])
 end
 
@@ -7053,11 +7052,12 @@ end
 --setLabelOnLeave are also set for each label.
 
 --loop through dirs in table tecCompass
-for k,v in pairs(tecCompass.dirs) do
+for _,v in pairs(tecCompass.dirs) do
   tecCompass[v]:setStyleSheet([[
-    border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"
-		..[[/]].."compass"..[[/]]..v..[[.png");
-    margin: 5px;]]) --apply pictures to directions on compass
+    background-color: "#000000FF";
+  ]]) --apply pictures to directions on compass
+  
+  SetTooltip(tecCompass[v].name, "Go "..v.." ") --create hover tooltip for direction
   
 	--if tecCompass is clicked, go in that direction
 	tecCompass[v]:setClickCallback("tecCompass.click",v)  
@@ -7079,6 +7079,10 @@ function tecCompass.drawKeepSquare()
 	if tecCompass.window:get_height() &lt; tecCompass.window:get_width() then
   	tecCompass.back:resize(tecCompass.window:get_height(), tecCompass.window.height)
 	end --end if height is less than width
+  
+  if tecCompass.back:get_width() &lt; tecCompass.window:get_width() then
+    tecCompass.back:move((tecCompass.window:get_width() - tecCompass.back:get_width()) * .5)
+  end
 	
 end --end function keep square.
 
@@ -7614,6 +7618,8 @@ for _, tecMacroMap in pairs(tecMacroMappings) do --loop trough mappings table us
     name = "macroMenu." .. tecMacroMap.name, --name label fe# so it is easy to pass
 	  message = "&lt;center&gt;" .. tecMacroMap.label .. "&lt;/center&gt;", --puts roman numerals on label
   }, tecMacroMap.row) --parent is gettings passed via mapping table row reference
+    local localMacroTooltip = "run macro "..tecMacroMap.name:match("(%d%d?)$").."  "
+  SetTooltip(macroMenu[tecMacroMap.name].name, localMacroTooltip) --create hover tooltip
   macroMenu[tecMacroMap.name]:setClickCallback("onMacroClick", tecMacroMap.name)
   macroMenu[tecMacroMap.name]:setStyleSheet(macroLabelStyle) --create window layout
 end
@@ -7721,6 +7727,8 @@ for _, tecMacroMap in pairs(tecMacroMappings) do --loop trough mappings table us
     name = "MultiWindow.macroMenu." .. tecMacroMap.name, --name label fe# so it is easy to pass
 	  message = "&lt;center&gt;" .. tecMacroMap.label .. "&lt;/center&gt;", --puts roman numerals on label
   }, tecMacroMap.row) --parent is gettings passed via mapping table row reference
+  local localMacroTooltip = "run macro "..tecMacroMap.name:match("(%d%d?)$").."  "
+  SetTooltip(MultiWindow.macroMenu[tecMacroMap.name].name, localMacroTooltip) --create hover tooltip
   MultiWindow.macroMenu[tecMacroMap.name]:setClickCallback("onMacroClick", tecMacroMap.name)
   MultiWindow.macroMenu[tecMacroMap.name]:setStyleSheet(macroLabelStyle) --create window layout
 end --for pairs(tecMacroMappings)
@@ -7742,7 +7750,7 @@ MultiWindow.Compass.back = Geyser.Label:new({
   name = "MultiWindow.Compass.back",
   x = "0%", y = "0%", width = "100%", height = "100%", --position and size of background
   },MultiWindow.Compass.window) --put the label into the Compass container
-MultiWindow.Compass.back:setStyleSheet(labelsStyle) --set the background label
+MultiWindow.Compass.back:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/compass/background.jpg");]]) --set the background label
 MultiWindow.Compass.hbox = Geyser.HBox:new({ --container to make columns
     name = "MultiWindow.Compass.box",
     x = 0, y = 0, width = "100%", height = "100%", --position and size of container
@@ -7766,22 +7774,15 @@ MultiWindow.Compass.se = Geyser.Label:new({ name = "MultiWindow.Compass.se", },M
 --function that occurs when a label above is clicked, 
 function MultiWindow.Compass.click(name) send(name) end --send the name of the 
 function MultiWindow.Compass.lit(name) --When a player can go in the direction, make the label an active image
-  MultiWindow.Compass[name]:setStyleSheet([[
-    border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"..[[/]].."compass"..[[/]]..name..[[hover.png");
-    margin: 5px;
-  ]])
+  MultiWindow.Compass[name]:setStyleSheet([[background-color: "#5577dd77";]])
 end --function MultiWindow.Compass.lit(name)
 --when the space should be unlit change it back to white.
 function MultiWindow.Compass.unlit(name) --When a player cannot go in the direction, make the label an active image
-  MultiWindow.Compass[name]:setStyleSheet([[
-    border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"..[[/]].."compass"..[[/]]..name..[[.png");
-    margin: 5px;]])
+  MultiWindow.Compass[name]:setStyleSheet([[background-color: "#00000000";]])
 end --function MultiWindow.Compass.unlit(name)
-for k,v in pairs(MultiWindow.Compass.dirs) do --loop through dirs table
-  --set the stylesheet for each label.
-  MultiWindow.Compass[v]:setStyleSheet([[
-    border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"..[[/]].."compass"..[[/]]..v..[[.png");
-    margin: 5px;]]) --apply pictures to directions on compass
+for _,v in pairs(MultiWindow.Compass.dirs) do --loop through dirs table
+  SetTooltip(MultiWindow.Compass[v].name, "Go "..v.." ") --create hover tool tips
+  MultiWindow.Compass[v]:setStyleSheet([[background-color: "#00000000";]]) --blank the compass directions
 	MultiWindow.Compass[v]:setClickCallback("MultiWindow.Compass.click",v) --give each label an event to run the click function above.
 end --end loop through MultiWindow.Compass.dirs
 
