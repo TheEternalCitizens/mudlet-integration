@@ -148,39 +148,7 @@ end --end gmatch room data search loop
 --We want the map zoon level, but not 100 times...
 if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
 
-deleteLine() --remove line from main console. line variable remains unchanged.
-
---[[
-in the for loop the string pattern: "(-?%d+),(-?%d+),(%d+),(#%x+),%d+[.%d*]?,?"
-Mentioning this because lpeg would be a method for avoiding the use of regex in triggers.
-could be replaced with:
-
-local pattern; do
-    local comma = lpeg.P(',')
-    local digit = lpeg.R('09')
-    local hex_char = lpeg.R('09', 'af', 'AF')
-    local number = lpeg.P('-') ^ -1 * ((digit ^ 1 * '.' * digit ^ 1) + (digit ^ 1))
-    local hex_color = '#' * hex_char * hex_char * hex_char * hex_char * hex_char * hex_char
-
-    pattern = lpeg.C(number) * comma * lpeg.C(number) * comma * lpeg.C(number) * comma * lpeg.C(hex_color) * comma * number * (comma ^ -1 + -1)
-end
-
-local function lpeg_gmatch(str, patt)
-    patt = lpeg.Ct(patt) * lpeg.Cp()
-    local ret, pos = nil, 1
-
-    return function()
-        ret, pos = lpeg.match(patt, str, pos)
-
-        if not ret then return nil end
-        return unpack(ret)
-    end
-end
-
-for xpos, ypos, size, color in lpeg_gmatch( line, pattern ) do
-    
-end
-]]--</script>
+deleteLine() --remove line from main console. line variable remains unchanged.</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -263,6 +231,8 @@ for xpos, ypos, exitDirection, exitOpen in string.gmatch( line, "(-?%d+),(-?%d+)
 end --end gmatch room data search loop
 
 tecMap_back:lower() --lower the background behind the exits.
+mapRoom[150]:hide()
+mapRoom[150]:lower()
 
 --We want the map zoon level, but not 100 times...
 if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
