@@ -3930,6 +3930,10 @@ COPY BELOW
   uiThemes.namehere.windows["Communications"] = "top"
   uiThemes.namehere.windows["Room Characters"] = "topright"
   
+  --add windowsnames to table clickWindows and they will be clicked after layout has completed
+  uiThemes.orchil.clickWindows = {}
+  uiThemes.orchil.clickWindows["TEC Map"] = true
+  
   --control what sides are displayed.
   --true means the side will be displayed.
   --False means it will not be displayed.
@@ -4033,15 +4037,14 @@ function UIManagerGUIframeThemes(displayToScreen)
   --GUIframe location goes = "GUIframeLocation"
   --an easy method to list window names is `tecclient add list`
   uiThemes.orchil.windows = { }
-
   uiThemes.orchil.windows["Settings"] = "bottomright"
-  uiThemes.orchil.windows["TEC Map"] = "bottomright"  
-  --uiThemes.orchil.windows["Macros"] = "bottomright"
-  --uiThemes.orchil.windows["Status"] = "bottom"
-  --uiThemes.orchil.windows["Compass"] = "topright"
   uiThemes.orchil.windows["Communications"] = "top"
-  --uiThemes.orchil.windows["Room Characters"] = "topright"
   uiThemes.orchil.windows["Multi Window"] = "topright"
+  uiThemes.orchil.windows["TEC Map"] = "bottomright"
+  
+  --add windowsnames to table clickWindows and they will be clicked after layout has completed
+  uiThemes.orchil.clickWindows = {}
+  uiThemes.orchil.clickWindows["TEC Map"] = true
   
   --control what sides are displayed.
   --true means the side will be displayed.
@@ -4181,7 +4184,7 @@ end --function tecUILayoutManagerConfig</script>
     --loop through theme windows to be added for theme make certain they are correct.
     --if they are send them to the UI manager.
     for tmpWindowName, tmpWindowGUIframeLocation in pairs(uiThemes[themeName].windows) do
-      debugToDisplay("function UIManagerSetTheme, attempting window: "..tmpWindowName
+      debugToDisplay("function UIManagerSetTheme, testing window name: "..tmpWindowName
         .." going to GUIframe location "..tmpWindowGUIframeLocation)
         
       --Window name error checking.
@@ -4204,7 +4207,7 @@ end --function tecUILayoutManagerConfig</script>
         debugToDisplay("function UIManagerSetTheme, "..errorFound) --display error to debug
         return --stop function bad window name sent.
       end --if not tmpWindowName
-    
+      
       --error check GUIframeLocation    
       if not guiFrameWindowLocations:match(tmpWindowGUIframeLocation) then
         --find an enabled border and set the location to that border.
@@ -4227,7 +4230,7 @@ end --function tecUILayoutManagerConfig</script>
       --Window name and location tested good, we will add it to the display.
       --if the window exists in the tecGeyserWindows table, set its GUIframeLocation
       if tecGeyserWindows[tmpWindowName] then 
-        debugToDisplay("function UIManagerSetTheme, setting window "..tmpWindowName
+        debugToDisplay("function UIManagerSetTheme, enabeling window "..tmpWindowName
           .." to GUIframe location "..tmpWindowGUIframeLocation)
         tecGeyserWindows[tmpWindowName].GUIframeLocation = tmpWindowGUIframeLocation
       else --the window name does not exist. and error occured.
@@ -4246,6 +4249,38 @@ end --function tecUILayoutManagerConfig</script>
       UIManagerEnableWindow(tmpWindowName, true)
     end --for tmpWinowSide, tmpEnableSide in pairs(uiThemes[themeName].windows)
 
+    --Loop through windows to click after enabeling windows, check if the names are good
+    --if they are send them to the UI manager.
+    if uiThemes[themeName].clickWindows then -- If there is a window to click
+      for tmpWindowName, clickWindow in pairs(uiThemes[themeName].clickWindows) do
+        debugToDisplay("function UIManagerSetTheme, testing clickWindows name: "..tmpWindowName
+          ..", clickWindow is "..tostring(clickWindow))
+        --Window name error checking.
+        local incorrectWindowName = tmpWindowName --used later if themeName sent is correct
+        --verify the window name exists.
+        tmpWindowName = UIManagerTestWindow(tmpWindowName, displayToScreen)
+        if not tmpWindowName then --if the window name was bad.
+          --create a smart error message
+          local errorFound = "clickWindows test of window "..incorrectWindowName.." is not a window name. Supported names are: "
+          for tmpThemeWindowNames, _ in pairs(uiThemes[themeName].windows) do
+              errorFound = errorFound.."\""..tmpThemeWindowNames.."\" "
+          end --for fullListWindowName,_ in pairs(tecGeyserWindows) do
+          errorFound = errorFound.."\nTheme config code needing correction looks like: "
+            ..[[uiThemes.]]..themeName..[[.clickWindows["]]..incorrectWindowName..[["] = ]]..tostring(clickWindow)
+            .."\n\""..incorrectWindowName.."\" needs to be replaced with a supported window name, listed above.\n"
+            .."Please correct and attempt again.\n"
+          if displayToScreen then --if we want to display to player screen
+            echo(errorFound) --display error direct to player
+          end --if displayToScreen
+          debugToDisplay("function UIManagerSetTheme, "..errorFound) --display error to debug
+          return --stop function bad window name sent.
+        else --the window name was good. click it.
+          debugToDisplay("function UIManagerSetTheme, clicking window "..tmpWindowName)
+          GUIframe.activate(tmpWindowName) --click the window. Hiding other windows in that space.
+        end --if not tmpWindowName
+      end --for pairs(uiThemes[themeName].clickWindows)
+    end --if uiThemes[themeName].clickWindows
+    
     --redraw GUIframe with new layout.
     --GUIframe.eventHandler("sysWindowResizeEvent")
     if guiChange then guiChange() end --Size windows to theme setting.
