@@ -3753,13 +3753,13 @@ function UIManagerEnableWindow(objectName, mode, displayToScreen)
         for windowName, window in pairs(tecGeyserWindows) do--loop through containers
             --make commandfor cechoLink
             local cmdToSend = [[UIManagerEnableWindow("]]..windowName..[[",true,true)]]
-            cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display enable "..windowName, 
+            cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable "..windowName, 
               cmdToSend, --runs on click.
               "Enable "..windowName.." window", true)
             cecho(", ")
         end --for pairs(tecGeyserWindows)
         cecho("and ")
-          cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display enable all",
+          cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable all",
               [[UIManagerEnableWindow("all",true,true)]], --runs on click.
               "Enable all windows", true)
       end --if displayToScreen
@@ -3768,13 +3768,13 @@ function UIManagerEnableWindow(objectName, mode, displayToScreen)
         for windowName, window in pairs(tecGeyserWindows) do--loop through containers
             --make commandfor cechoLink
             local cmdToSend = [[UIManagerEnableWindow("]]..windowName..[[",false,true)]]
-            cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display disable "..windowName, 
+            cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window disable "..windowName, 
               cmdToSend, --runs on click.
               "Disable "..windowName.." window", true)
             cecho(", ")
         end --for pairs(tecGeyserWindows)
         cecho("and ")
-          cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display disable all",
+          cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window disable all",
               [[UIManagerEnableWindow("all",false,true)]], --runs on click.
               "Disable all windows", true)
       end --if displayToScreen
