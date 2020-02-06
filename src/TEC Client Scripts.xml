@@ -3988,7 +3988,7 @@ function UIManagerGUIframeThemes(displayToScreen)
   --Goes in the square brackets and quotes ["name"]
   --The location of the window in GUIframe goes in the quotes after the equal symbol.
   --GUIframe location goes = "GUIframeLocation"
-  --an easy method to list window names is `tecclient add list`
+  --an easy method to list window names is `display add list`
   uiThemes.NiceHat.windows = { }
 
   uiThemes.NiceHat.windows["TEC Map"] = "bottomright"
@@ -4035,7 +4035,7 @@ function UIManagerGUIframeThemes(displayToScreen)
   --Goes in the square brackets and quotes ["name"]
   --The location of the window in GUIframe goes in the quotes after the equal symbol.
   --GUIframe location goes = "GUIframeLocation"
-  --an easy method to list window names is `tecclient add list`
+  --an easy method to list window names is `display add list`
   uiThemes.orchil.windows = { }
   uiThemes.orchil.windows["Settings"] = "bottomright"
   uiThemes.orchil.windows["Communications"] = "top"
@@ -4467,7 +4467,7 @@ end --function UIManagerFileLoad</script>
 					<Script isActive="yes" isFolder="no">
 						<name>UIManagerReset(displayToScreen)</name>
 						<packageName></packageName>
-						<script>--reset display layout colors are changed in tecClientReset()
+						<script>--reset window layout to default theme
 function UIManagerReset(displayToScreen)
 
   --make certain display to screen is good
@@ -4583,7 +4583,7 @@ function UIManagerHelp()
   
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display layout list", 
   [[UIManagerSetTheme("list",true);
-    echo("Click a command above to switch to a different layout theme.")]], 
+    echo("Click a command above to switch to a different layout theme.\n")]], 
   "Change windows layout", true)
 	echo(", change window's layout to a preset theme.\n")
   
@@ -4695,7 +4695,7 @@ end --function tecResizeDisplayHelp</script>
   		.."They are:\n")	
   end --end if not tecBrief
  
-  cechoLink(tecWindow, "&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient", 
+  cechoLink(tecWindow, "&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia", 
   [[tecClientHelp()]], 
   "Save or load client settings.", true)
   if not tecBrief then --if we do not want to be brief
@@ -4790,97 +4790,97 @@ end --end function tecDebugHelp</script>
 					<packageName></packageName>
 					<script>function tecClientHelp()
 
-  echo("\ntecclient command:\n")
+  echo("\nparthia command:\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient update check", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia update check", 
   [[DownloadGitReleaseJSON()]],
   "Check for updates", true)
   echo(", check if Parthia updates are available.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient version", 
-  [[expandAlias("tecclient version")]],
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia version", 
+  [[expandAlias("parthia version")]],
   "Display version of Parthia", true)
   echo(", check installed Parthia version.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient beta test yes", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia beta test yes", 
   [[tecSetBetaTester(true)]],
   "Receive beta updates", true)
   echo(", Receive beta updates and help us make a reliable client.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient beta test no", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia beta test no", 
   [[tecSetBetaTester(false)]],
   "Stop receiving beta updates", true)
   echo(", No longer receive beta updates.\n")
 
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save all", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save all", 
   [[tecClientSaveAll(true)]],
   "Save all client settings", true)
   echo(", Save client and display settings to file.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save", 
   [[tecFileSaveSettings(true)]],
   "Save client settings", true)
   echo(", Save basic client settings to file.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient load", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia load", 
   [[tecFileLoadSettings(true)]],
   "Load client settings from file", true)
-  echo(", Loads client settings from file. Run -tecclient"
+  echo(", Loads client settings from file. Run -parthia"
   	.." save- to create a settings file.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient reset", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia reset", 
   [[tecClientReset(true);dontForgetToSave(true)]],
   "Reset client to default", true)
   echo(", Reset client to default client settings. "
   	.."Run -display reset- to reset display.\n")
   	
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient reset all", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia reset all", 
   [[tecClientResetAll()]],
   "Reset all client settings to default", true)
   echo(", Reset client and display to default settings.\n")
     
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient repair", 
-  [[DownloadGitScripts()]],
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia repair", 
+  [[expandAlias("parthia repair")]],
   "Repair Parthia", true)
   echo(", repairs Parthia. By replacing all developer created code.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient report", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia report", 
   [[tecReportIssues()]],
   "Report Parthia issues", true)
   echo(", receive instruction on reporting issues.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient playerdevelopment Install", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment Install", 
   [[PlayerDev.SetEnabled(true)]],
   "Install player development folders", true)
   echo(", install player development folders.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient playerdevelopment uninstall", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment uninstall", 
   [[PlayerDev.SetPackages(false)]],
   "Uninstall player development folders", true)
   echo(", Uninstall player development folders.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient playerdevelopment disable", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment disable", 
   [[PlayerDev.SetEnabled(false)]],
   "Disable player development updates", true)
   echo(", stop receiving player development code updates.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient playerdevelopment update", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment update", 
   [[PlayerDev.Update(true)]],
   "Check for player development updates", true)
   echo(", check for updates to player development folders. Occurs automatically with client updates.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient tab font size", 
-  [[printCmdLine("tecclient tab font size ")]],
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia tab font size", 
+  [[printCmdLine("parthia tab font size ")]],
   "Change font size of tabs", true)
   echo(", Change font size for window tabs.\n") 
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient change colors", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia change colors", 
   [[tecClientChangeColors()]],
   "Change client colors", true)
   echo(", Change color scheme for client.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient font size", 
-  [[printCmdLine("tecclient font size ")]],
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia font size", 
+  [[printCmdLine("parthia font size ")]],
   "Change client font size", true)
   echo(", Change font size for all consoles.\n")
 
@@ -4893,64 +4893,64 @@ end --function tecClientHelp</script>
 					<script>--lists commands that directly change colors
 function tecClientChangeColorsList()
 cecho("Change background color of windows that do not have text with: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient windows background color colorname\n", 
-  [[printCmdLine("tecclient windows background color ");
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia windows background color colorname\n", 
+  [[printCmdLine("parthia windows background color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change background color nontext windows", true)
 
   cecho("Change background color of windows that have text in them with: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient background colorname ", 
-  [[printCmdLine("tecclient background ");
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia background colorname ", 
+  [[printCmdLine("parthia background ");
     cecho("You will need to restart for text background to change")]],
   "Change background color of text windows", true)
   cecho("&lt;-Restart required on Windows OS.\n")
   cecho("Command echo background must be changed in Options -&gt; Preferences -&gt; Color View -&gt; Command Background.\n")
   
   cecho("Change background color of the client's tabs with: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient tabs background color colorname\n", 
-  [[printCmdLine("tecclient tabs background color ");
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia tabs background color colorname\n", 
+  [[printCmdLine("parthia tabs background color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change background color clients tabs", true)
   
   cecho("Change the color of windows and tabs as your mouse hovers over them: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient hover color colorname\n", 
-  [[printCmdLine("tecclient hover color ");
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia hover color colorname\n", 
+  [[printCmdLine("parthia hover color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change mouse hover color", true)
   
   cecho("Change the color help commands are highlighted in: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient helphighlight color colorname\n", 
-  [[printCmdLine("tecclient helphighlight color ");
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia helphighlight color colorname\n", 
+  [[printCmdLine("parthia helphighlight color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change help command highlight color", true)
 
   cecho("Change TEC's primary text color: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient text color colorname\n", 
-  [[printCmdLine("tecclient text color ");
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia text color colorname\n", 
+  [[printCmdLine("parthia text color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change TEC's primary text color", true)
   
   cecho("Change the color of TEC's default green: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient greentext color colorname\n", 
-  [[printCmdLine("tecclient greentext color ");
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia greentext color colorname\n", 
+  [[printCmdLine("parthia greentext color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change TEC's green text color", true)
   
   cecho("Change the color of TEC's default blue: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient bluetext color colorname\n", 
-  [[printCmdLine("tecclient bluetext color ");
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia bluetext color colorname\n", 
+  [[printCmdLine("parthia bluetext color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change TEC's blue text color", true)
   
   cecho("Change the color approached characters appear in Room Characters window: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient approached character color colorname\n", 
-  [[printCmdLine("tecclient approached character color ");
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia approached character color colorname\n", 
+  [[printCmdLine("parthia approached character color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change color approached characters in Room Character Window", true)
   
   cecho("Change the color not approached characters appear in Room Characters window: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient not approached character color colorname\n", 
-  [[printCmdLine("tecclient not approached character color ");
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia not approached character color colorname\n", 
+  [[printCmdLine("parthia not approached character color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change color not approached characters in Room Character Window", true)
 end --function tecClientChnageColorsList
@@ -4960,12 +4960,12 @@ function tecClientChangeColors()
 
   cecho("List all commands that change colors with: ")
   cechoLink("&lt;:"..tecSettings.helpHighlightColor
-    .."&gt;tecclient change colors commands\n", 
+    .."&gt;parthia change colors commands\n", 
   [[tecClientChangeColorsList()]],
   "Save client settings", true)
    
   cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save\n", 
   [[tecFileSaveSettings(true)]],
   "Save client settings", true)
   
@@ -4976,7 +4976,7 @@ function tecClientChangeColors()
   "List color names", true)
   
   cecho("Open colorname chooser window: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient colors\n", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia colors\n", 
   [[tecColorWindow()]],
   "Open color chooser window", true)
   
@@ -5092,7 +5092,7 @@ end --function tecRefreshSettingsWindow
 				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>TEC Client</name>
+				<name>Parthia Commands</name>
 				<packageName></packageName>
 				<script></script>
 				<eventHandlerList />
@@ -5170,11 +5170,7 @@ function tecClientSetFontSize(numbertemp)--set font settings with this function
   tecRefreshSettingsWindow() --Redraw text in setttings window.
   tecResetRoomCharacterWindow() --Redraw text in room characters window.
   
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  cecho("") --cechoLink does not new line itself.
+  dontForgetToSave() --reminder player to save
 
 end --end tecClientSetFontSize</script>
 						<eventHandlerList />
@@ -5211,10 +5207,7 @@ function tecClientSetTabFontSize(tecTmpTabFont)--set font settings with this fun
   --Redraw all tabs, this includes labels.  
   tecRedrawLabels()
   
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
+  dontForgetToSave() --reminder player to save
   cecho("") --cechoLink does not new line itself.
 
 end --end tecClientSetTabFontSize(numbertemp)</script>
@@ -5350,11 +5343,7 @@ function tecLabelBackgroundColor(tecColor)
   
   tecRedrawLabels() --redraw labels appling change
   
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  cecho("") --cechoLink does not new line itself.
+  dontForgetToSave() --reminder player to save
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -5367,11 +5356,7 @@ function tecTabsBackgroundColor(tecColor)
   
   tecRedrawLabels() --redraw labels appling change
   
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  cecho("") --cechoLink does not new line itself.
+  dontForgetToSave() --reminder player to save
   
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
@@ -5385,11 +5370,7 @@ function tecSetMouseHoverColor(tecColor)
   
   tecRedrawLabels() --redraw labels appling change
   
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  cecho("") --cechoLink does not new line itself.
+  dontForgetToSave() --reminder player to save
   
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
@@ -5402,11 +5383,7 @@ function tecSetHelpHighlightColor(tecColor)
   tecSettings.helpHighlightColor = tecColor
   tecRefreshSettingsWindow() --refresh settings window text
   
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  cecho("") --cechoLink does not new line itself.
+  dontForgetToSave() --reminder player to save
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -5418,11 +5395,7 @@ function tecSetGreenTextColor(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.GreenTextColor = Geyser.Color.hex(tecColor)
   
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  cecho("") --cechoLink does not new line itself.
+  dontForgetToSave() --reminder player to save
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -5434,11 +5407,7 @@ function tecSetBlueTextColor(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.BlueTextColor = Geyser.Color.hex(tecColor)
   
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  cecho("") --cechoLink does not new line itself.
+  dontForgetToSave() --reminder player to save
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -5450,11 +5419,7 @@ function tecSetTextColor(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.tecTextColor = Geyser.Color.hex(tecColor)
   
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  cecho("") --cechoLink does not new line itself.
+  dontForgetToSave() --reminder player to save
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -5493,11 +5458,7 @@ function tecSettecNotApproachedCharacter(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.notApproachedCharacterColor = Geyser.Color.hex(tecColor)
   runTECRoomObjectCheck(displayToScreen) --refresh room characters window.
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  cecho("") --cechoLink does not new line itself.
+  dontForgetToSave() --reminder player to save
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -5509,11 +5470,7 @@ function tecSettecApproachedCharacter(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.ApproachedCharactersColor = Geyser.Color.hex(tecColor)
   runTECRoomObjectCheck(displayToScreen) --refresh room characters window.
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  cecho("") --cechoLink does not new line itself.
+  dontForgetToSave() --reminder player to save
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -6054,9 +6011,9 @@ function GitUpdateconfig() --Create variables used for updates
   end --if GitUpdate.localRespitory not exist
   GitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
   GitUpdate.localVersion = "0.1.27" --Must match the tag in your github release
-  GitUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
+  GitUpdate.aliasName = "parthia update" --Name of alias user runs to process update
   --Name of the alias to check if an update is available.
-  GitUpdate.updateCheckAlias = "tecclient update check" 
+  GitUpdate.updateCheckAlias = "parthia update check" 
   --The full name or a word in the file that this update script is in.
   GitUpdate.updateFileNameReference = "Scripts"
   --notify update engine if player is a beta tester. If the player is a beta
@@ -6804,7 +6761,7 @@ end --function tecResetRoomCharacterWindow</script>
 					<script>function dontForgetToSave()
   cecho("Don't forget to save your changes:\n")
   cecho("Save all settings with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save all\n", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save all\n", 
   [[tecClientSaveAll(true)]],
   "Save all settings", true)
   cecho("") --cechoLink will not \n on its own.
