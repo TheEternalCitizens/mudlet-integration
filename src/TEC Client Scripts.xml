@@ -6949,9 +6949,13 @@ tecCompass.back = Geyser.Label:new({
 },tecCompass.window) --The parent of this label. Main is main window.
 
 --set background image for compass
-tecCompass.back:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/compass/background.jpg");]])
+tecCompass.back:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/compass/background.svg");]])
     
-    --getMudletHomeDir()..[[/imgs/compass/background.jpg]]))
+tecCompass.overlay = Geyser.Label:new({
+  name = "tecCompass.overlay",
+  x = "0%", y = "0%", width = "100%", height = "100%", --position and size of background
+  },tecCompass.back) --put the label into the Compass container
+tecCompass.overlay:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/compass/CompassOverlay.svg");]]) --set the background label
 
 --Horizontal box
 tecCompass.hbox = Geyser.HBox:new({
@@ -7186,7 +7190,7 @@ tecMap_back = Geyser.Label:new({
 },tecMap) --The parent of this label.
 
 --set the appearance of what is behind the map
-tecMap_back:setStyleSheet(labelsStyle)
+tecMap_back:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/map/background.svg");]])
 
 --rgba(25, 50, 150)
 
@@ -7493,6 +7497,7 @@ macroMenu.back = Geyser.Label:new({
   y = 0,
   width = "100%",
 }, macroMenu.container)
+macroMenu.back:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/macro/background.svg");]])
 
 --Create a 3x5 grid
 --The macro menu is split into 15 sections, one for each macro. This 3x5 grid is created by 5 HBoxes
@@ -7606,8 +7611,31 @@ local tecMacroMappings = {
 }
 
 --add onto standard label. We want a small margin for this label.								
---macroLabelStyle = labelsStyle.."margin: 1px\n";
-macroLabelStyle = labelsStyle
+--macroLabelStyle = labelsStyle.."margin: 1px\n"; 537dC0
+macroLabelStyle = [[
+  	QLabel{
+  		background-color: "#55537dC0";
+      border-bottom: 1px;
+      border-right: 1px;
+      border-style: outset;
+      border-color: lightgray;
+      margin-right: 0px;
+      margin-left: 0px;
+  		font-size: 20px;
+      qproperty-alignment: 'AlignCenter | AlignCenter';
+    }
+  	QLabel::hover{
+  		background-color: "#33436db0";
+      border-bottom: 1px;
+      border-right: 1px;
+      border-style: outset;
+      border-color: gray;
+      margin-right: 0px;
+      margin-left: 0px;
+  		font-size: 20px;
+      qproperty-alignment: 'AlignCenter | AlignCenter';
+    }
+  ]]
 
 for _, tecMacroMap in pairs(tecMacroMappings) do --loop trough mappings table using data within
   macroMenu[tecMacroMap.name] = Geyser.Label:new({
@@ -7674,6 +7702,7 @@ MultiWindow.macroMenu.back = Geyser.Label:new({ --Create a label that could be u
   name = "MultiWindow.macroMenu.back",
   x = 0,y = 0, width = "100%", height = "100%" --Position and size of window
   }, MultiWindow.macroMenu.container) --end of MultiWindow.macroMenu.back
+MultiWindow.macroMenu.back:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/macro/background.svg");]])
 MultiWindow.macroMenu.box = Geyser.VBox:new({ --creates the verticle window breaks
   name = "MultiWindow.macroMenu.box",
   x = 0, y = 0, width = "100%", height = "100%"
@@ -7717,7 +7746,7 @@ local tecMacroMappings = {
   { name = "fe14", label = "XIV", row = MultiWindow.macroMenu.row5, },
   { name = "fe15", label = "XV", row = MultiWindow.macroMenu.row5, },
 } --tecMacroMappings table
-macroLabelStyle = labelsStyle --make a standard label for
+--macroLabelStyle = labelsStyle --make a standard label for
 for _, tecMacroMap in pairs(tecMacroMappings) do --loop trough mappings table using data within
   MultiWindow.macroMenu[tecMacroMap.name] = Geyser.Label:new({
     name = "MultiWindow.macroMenu." .. tecMacroMap.name, --name label fe# so it is easy to pass
@@ -7726,7 +7755,7 @@ for _, tecMacroMap in pairs(tecMacroMappings) do --loop trough mappings table us
   local localMacroTooltip = "run macro "..tecMacroMap.name:match("(%d%d?)$").."  "
   SetTooltip(MultiWindow.macroMenu[tecMacroMap.name].name, localMacroTooltip) --create hover tooltip
   MultiWindow.macroMenu[tecMacroMap.name]:setClickCallback("onMacroClick", tecMacroMap.name)
-  MultiWindow.macroMenu[tecMacroMap.name]:setStyleSheet(macroLabelStyle) --create window layout
+  MultiWindow.macroMenu[tecMacroMap.name]:setStyleSheet(macroLabelStyle)
 end --for pairs(tecMacroMappings)
 function onMacroClick(name) send(name, false) end --Create a click callback function
 
@@ -7746,7 +7775,15 @@ MultiWindow.Compass.back = Geyser.Label:new({
   name = "MultiWindow.Compass.back",
   x = "0%", y = "0%", width = "100%", height = "100%", --position and size of background
   },MultiWindow.Compass.window) --put the label into the Compass container
-MultiWindow.Compass.back:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/compass/background.jpg");]]) --set the background label
+MultiWindow.Compass.back:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/compass/background.svg");]]) --set the background label
+--MultiWindow.Compass.back:setStyleSheet(labelsStyle) --set the background label
+MultiWindow.Compass.overlay = Geyser.Label:new({
+  name = "MultiWindow.Compass.overlay",
+  x = "0%", y = "0%", width = "100%", height = "100%", --position and size of background
+  },MultiWindow.Compass.back) --put the label into the Compass container
+MultiWindow.Compass.overlay:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/compass/CompassOverlay.svg");]]) --set the background label
+--MultiWindow.Compass.overlay:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/compass/vectorcompass.svg");]]) --set the background label
+--MultiWindow.Compass.overlay:raise()
 MultiWindow.Compass.hbox = Geyser.HBox:new({ --container to make columns
     name = "MultiWindow.Compass.box",
     x = 0, y = 0, width = "100%", height = "100%", --position and size of container
