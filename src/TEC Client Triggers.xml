@@ -1157,34 +1157,6 @@ printCmdLine("Username: ") --insert into the command line.
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>Correct bad copy right</name>
-				<script>local myFormatter = demonnic.TextFormatter:new( { --use ftext function to center text.
-    width = (getColumnCount() - 1), --width of main console -1 is so autowrap no trigger
-    textColor = "&lt;gray&gt;"
-  })
-selectCurrentLine() --select current line in main.
-replace("") --Erase text from main. Otherwise variable line will apear on console.
-deselect() --Don't forget your deselects!
-echo("\n")
-cecho(myFormatter:format("  (c)1996-2019 Skotos Tech")) --echo out out ftext</script>
-				<triggerType>0</triggerType>
-				<conditonLineDelta>0</conditonLineDelta>
-				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
-				<mFgColor>#ff0000</mFgColor>
-				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
-				<colorTriggerFgColor>#000000</colorTriggerFgColor>
-				<colorTriggerBgColor>#000000</colorTriggerBgColor>
-				<regexCodeList>
-					<string>                           (c)1996-2013 Skotos Tech</string>
-				</regexCodeList>
-				<regexCodePropertyList>
-					<integer>3</integer>
-				</regexCodePropertyList>
-			</Trigger>
-			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Failed Login</name>
 				<script>connectToServer("tec.skotos.net", 6730) --reconnect if there is a disconnect at login.</script>
 				<triggerType>0</triggerType>
@@ -1204,19 +1176,9 @@ cecho(myFormatter:format("  (c)1996-2019 Skotos Tech")) --echo out out ftext</sc
 					<integer>3</integer>
 				</regexCodePropertyList>
 			</Trigger>
-			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>== replacement</name>
-				<script>myFormatter = demonnic.TextFormatter:new( {
-  width = (getColumnCount() - 1), 
-  cap = "=========",
-  capColor = "&lt;gray&gt;",
-  textColor = "&lt;gray&gt;"
-})
-selectCurrentLine() --select current line in main.
-replace("") --Erase text from main. Otherwise variable line will apear on console.
-deselect() --Don't forget your deselects!
-echo("\n")
-cecho(myFormatter:format("========="))</script>
+			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>welcome message</name>
+				<script></script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1227,13 +1189,195 @@ cecho(myFormatter:format("========="))</script>
 				<mSoundFile></mSoundFile>
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
-				<regexCodeList>
-					<string>===============================================================================</string>
-				</regexCodeList>
-				<regexCodePropertyList>
-					<integer>3</integer>
-				</regexCodePropertyList>
-			</Trigger>
+				<regexCodeList />
+				<regexCodePropertyList />
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>== replacement</name>
+					<script>myFormatter = demonnic.TextFormatter:new( {
+  width = (getColumnCount() - 1), 
+  cap = "=========",
+  capColor = "&lt;gray&gt;",
+  textColor = "&lt;gray&gt;"
+})
+selectCurrentLine() --select current line in main.
+replace("") --Erase text from main. Otherwise variable line will apear on console.
+deselect() --Don't forget your deselects!
+echo("\n")
+cecho(myFormatter:format("========="))</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>===============================================================================</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>3</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Correct bad copy right</name>
+					<script>local myFormatter = demonnic.TextFormatter:new( { --use ftext function to center text.
+    width = (getColumnCount() - 1), --width of main console -1 is so autowrap no trigger
+    textColor = "&lt;gray&gt;"
+  })
+selectCurrentLine() --select current line in main.
+replace("") --Erase text from main. Otherwise variable line will apear on console.
+deselect() --Don't forget your deselects!
+echo("\n")
+cecho(myFormatter:format("(c)1996-2020 Skotos Tech")) --echo out out ftext</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>                           (c)1996-2013 Skotos Tech</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>3</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Welcome to The Eternal City</name>
+					<script>local myFormatter = demonnic.TextFormatter:new( { --use ftext function to center text.
+    width = (getColumnCount() - 1), --width of main console -1 is so autowrap no trigger
+    textColor = "&lt;gray&gt;"
+  })
+selectCurrentLine() --select current line in main.
+replace("") --Erase text from main. Otherwise variable line will apear on console.
+deselect() --Don't forget your deselects!
+echo("\n")
+cecho(myFormatter:format("Welcome to The Eternal City")) --echo out out ftext</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>                          Welcome to The Eternal City</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>3</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Welcome to The Eternal City second</name>
+					<script>local myFormatter = demonnic.TextFormatter:new( { --use ftext function to center text.
+    width = (getColumnCount() - 1), --width of main console -1 is so autowrap no trigger
+    textColor = "&lt;gray&gt;"
+  })
+selectCurrentLine() --select current line in main.
+replace("") --Erase text from main. Otherwise variable line will apear on console.
+deselect() --Don't forget your deselects!
+echo("\n")
+cecho(myFormatter:format("Welcome to The Eternal City")) --echo out out ftext</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>                         Welcome to The Eternal City!</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>3</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>-- replacement</name>
+					<script>local myFormatter = demonnic.TextFormatter:new( { --use ftext function to center text.
+    width = (getColumnCount() - 1), --width of main console -1 is so autowrap no trigger
+    textColor = "&lt;gray&gt;"
+  })
+selectCurrentLine() --select current line in main.
+replace("") --Erase text from main. Otherwise variable line will apear on console.
+deselect() --Don't forget your deselects!
+echo("\n")
+cecho(myFormatter:format("-----")) --echo out out ftext</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>                       --------------------------------</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>3</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>password troubles</name>
+					<script>selectCurrentLine() --select current line in main.
+replace("") --Erase text from main. Otherwise variable line will apear on console.
+deselect() --Don't forget your deselects!</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>          If you are having any password or other connection troubles</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>3</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>please send mail to ce@skotos.net</name>
+					<script>selectCurrentLine() --select current line in main.
+replace("") --Erase text from main. Otherwise variable line will apear on console.
+deselect() --Don't forget your deselects!</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>                       please send mail to ce@skotos.net</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>3</integer>
+					</regexCodePropertyList>
+				</Trigger>
+			</TriggerGroup>
 		</TriggerGroup>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>Game Events</name>
