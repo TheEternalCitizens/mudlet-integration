@@ -45,49 +45,7 @@ deleteLine() --remove line from main console. line variable remains unchanged.
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>TEC Map Rooms</name>
-				<script>--[[
-SKOOT 6 lines I am nearly certain are for drawing the 2d map
-
---SKOOT 6 -10,-10,20,#ff0000,17.1111,-10,10,20,#ffffff,25.5555
---This skoot is from a map that I am certain there are two rooms.
---Both the same size. One higher up is red one directly below is white
---They are the same size.
---There are door open and closed lines on them. Those are handled with skoot 10 messages
---SKOOT 6 x, y, size, color, ?
---x horizonal position of top left corner
---y is vertical position of top left corner
---size is the size of the room 
---color is the color of the room 
---No fucking idea what the fucking number at the end is!
-
---This is going to be the games largest in drawn pixels and most common skoot message
---SKOOT 6 -40,-40,80,#ff0000,117.624,40,-40,80,#00ff00,117.624,-120,-40,80,#00ff00,117.624,
----40,-120,80,#ffffff,117.624,-40,40,80,#ffffff,117.624,-120,40,80,#ffffff,117.624,
---40,40,80,#ffffff,117.624,40,-120,80,#ffffff,117.624,-120,-120,80,#ffffff,108.576
---Now we need to get room data in %.
---We know that 80 is the max room size for a single room. By observing skoots.
---We know, only because of playing. That these rooms are normally in a 3x3 grid.
---So we know now our draw win is 240x240
---TEC numbers map to a graph, not a window. So their 0 is x120 y120 in our window.
---To get our correct position we have to do xpos + 120. 
---x and y are both -40 / 120. It would be -.33333.
---multiply that by 100 to get the number is a full percent. -33.333
---Now since tec sees x120,y120 as position 0 and the rest of the world sees x0,y0 as zero
---We need to add our number to 50, because 120 is 50% of our total draw size of 240 pixels.
---50 + -33.333 = 16.667. so 16.667% are our x and y positions.
---size is 80 that will be our width and height.
---We need to get what percent 80 is of our overall draw size 240
--- 80 / 240 = .33333. Multiply that by 100, 33.333
---The room is 33.33% of the entire draw window.
---Subtract 1% of that so we have a border between rooms.
---ff0000 is red so the room will be red.
---17.1111 can go fuck itself because I can't figure out what is is.
-]]--
-
---selectCurrentLine("tecMap_back") --proper code for when hinsert is fixed.
---replace("")
---deselect()
-echo("tecMap_back","")
+				<script>--SKOOT 6, provides room sizes and positions for map
 
 --We are about to draw a new map, so hide all the rooms.
 --We are not going to bother with setting room sizes and moving moves to off screen
@@ -99,53 +57,12 @@ for i = 1, 150 do --We know the room count because we set it in script 2dMap.
 	mapRoom[i]:hide() --Hide rooms
 end --end of hide rooms loop
 
-local lc = 1 --Just a loop counter so we can go through rooms easily.
+mapRoomsLC = 1 --Just a loop counter so we can go through rooms easily.
 
---Loop through the sckoot message. Looking for a pattern of room data.
---The patterns in () get returned on gmatch. We capture those into variables.
---Those varibles will be used to draw the room.
---Explaining: "(-?%d+),(-?%d+),(%d+),(#%x+),%d+.%d+,?"
---"-?" means there MAY be a -
---"%d+" is a decimal number that CAN be more than one digit long.
---"%x+: is a hexidecimal number that CAN be more than one digit long.
--- ",?" At the very end. There MAY be a , at the end of our pattern or there
---[.%d*]? means there may be a . followed by 0 or more numbers. Like .4555
---may not be. The last number in the skoot message does not have a ,.
---Not looking for that comma in earlier messages might cause future
---pattern searches to fail.
-for xpos, ypos, size, tecMapRoomcolor in string.gmatch( line, "(-?%d+),(-?%d+),(%d+),(#%x+),%d+[.%d*]?,?" ) do
+--collect data from global line variable and draw the map.
+parthiaDrawMapRooms()
 
-  --TEC uses grid logic for their map. xposition is up to 120 +-.
-  --240 is the total size of their draw space. What percent is our position in that space.
-  -- +.5 just gives us a border.
-  xposScaler = ((((tonumber(xpos) + 120) / 240) * 100)) * mapZoom
-  yposScaler = ((((tonumber(ypos) + 120) / 240) * 100)) * mapZoom
-
-	--Convert the size of the room to draw into % of its size on the map.
-  --size / 240 = decimalNumber like .3333. Multiply decimalNumber by 100, that is your % 
-  sizeScaler = tecMapPixelToPercent(size)
-
-	if getTECMapDebugMode() then --if Display Debug Mod is on.
-  	debugToDisplay("Map Room "..tostring(lc).." xpos: "..tostring(tonumber(xpos)+120)
-		.." xposScaler: "..tostring(xposScaler)
-    .." ypos: "..tostring(tonumber(ypos)+120).." yposScaler: "..tostring(yposScaler)
-    .." size: "..tostring(size).." sizeScaler: "..tostring(sizeScaler)
-    .." color: "..tostring(tecMapRoomcolor))
-  	cecho(mapRoom[lc].name,tostring(lc),blue,"c") --put room # on label
-	end --end if DisplayDebugMode is true
-  	
-  mapRoom[lc]:move(tostring(xposScaler).."%", tostring(yposScaler).."%") --Move the room into position.
-  mapRoom[lc]:resize(tostring(sizeScaler).."%", tostring(sizeScaler).."%") --Change the rooms size.
-	--using style sheets set the shape and color of the room
-	if tecMapRoomcolor == "#ff0000" then mapRoom[lc]:setStyleSheet(mapRoomStyleRed)
-	elseif tecMapRoomcolor == "#00ff00" then mapRoom[lc]:setStyleSheet(mapRoomStyleGreen)
-	else mapRoom[lc]:setStyleSheet(mapRoomStyleWhite) end
-	
-  mapRoom[lc]:show() --Now show the room.
-  lc = lc +1 --Iterate so we can do this again.
-end --end gmatch room data search loop
-
---We want the map zoon level, but not 100 times...
+--We want the map zoom level, but not 100 times.
 if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
 
 deleteLine() --remove line from main console. line variable remains unchanged.</script>
@@ -167,71 +84,46 @@ deleteLine() --remove line from main console. line variable remains unchanged.</
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>TEC map exits</name>
-				<script>--SKOOT 10 is Exit position on the map
---[[
-SKOOT 10 x y, dir, open?
-x is horizontal position, from center of line
-y is vertical position, from center of line.
-dir is the direction the Exit is facing, normally it is a line so
-	"hor" is horizontal, v is vertical
-	"ne" is a 45 degree angle going from left to right, so north east on a map...
-	"nw" is a 45 degree andle going from right to left. sp north west on a map...
-open if the Exit is open. 1 is open 0 is closed.
+				<name>Map Room error catch</name>
+				<script>--[[
+TEC does not have GA or Go Ahead telnet support.
+Due to this very long lines may parse if there is lag.
+This catches an unwanted parse during a SKOOT 6 or map room draw message
 ]]--
 
---data types that will be used in later loop
-local xposScaler = 0 --used to hold postion on map in % rather than pixels
-local yposScaler = 0
-local iconWidthAdjustment = 0
-local iconHeightAdjustment = 0
+if not string.starts(line, "SKOOT") then --do not run if this is a SKOOT message
+  tecWarningNotification("trigger, Map Room error catch.")
+  parthiaDrawMapRooms()--draw the rooms, use data from global line variable
+  deleteLine() --remove line from main console. line variable remains unchanged.
+end
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>return line:match("(-?%d+),(-?%d+),(%d+),(#%x+),%d+[.%d*]?,?" )</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>4</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>TEC map exits</name>
+				<script>--SKOOT 10 is Exit position on the map
 
-local lc = 1 --Just a loop counter so we can go through rooms easily.
+mapExitsLC = 1 --Just a loop counter so we can go through rooms easily.
 
---look through line for the data pattern to get exit data. Input them into variables.
-for xpos, ypos, exitDirection, exitOpen in string.gmatch( line, "(-?%d+),(-?%d+),(%w+),(%d+),?" ) do
-
-	if getTECMapDebugMode() then --if Display Debug Mode is on.
-  	debugToDisplay("Map Exit "..tostring(lc).." xpos: "
-		..tostring(tonumber(xpos)+120).." xposScaler: "..tostring(xposScaler)
-    .." ypos: "..tostring(tonumber(ypos)+120).." yposScaler: "..tostring(yposScaler)
-    .." Direction: "..exitDirection
-    .." open: "..tostring(exitOpen)
-		.."\nExit Icon: Width: "..tecExit[exitDirection].width
-		.." Height: "..tecExit[exitDirection].height
-    .." Style sheet: "..tecExit[exitDirection][exitOpen].tecExitStyleSheet)
-	end --end if DisplayDebugMode is true
-
-	--pulling sizes from the tecExit table resize the label for the icon	
-  mapExit[lc]:resize(tecExit[exitDirection].width, tecExit[exitDirection].height)
-	--Now set the style sheet for the  
-	mapExit[lc]:setStyleSheet(tecExit[exitDirection][exitOpen].tecExitStyleSheet)
-
-	--labels start at x0y0 in mudlet, but TEC is providing a center point for our exit icons
-	--convert half the size of the icons for exits into % of the total map window.
-	--Than take the overall size of the map window / that by our standard 240 window size.
-	--The resulting number is used to adjust the icon position as the map is scaled.
-	iconWidthAdjustment = tecMapIconAdjustment(tecExit[exitDirection].width, tecMap_back:get_width())
-	
-  --TEC uses grid logic for their map. xposition is 120 +-.
-  --240 is the total size of their draw space. What percent is our position in that space.
-	--halfWidth is used to center
-	xposScaler = ((((tonumber(xpos) + 120) / 240) * 100) - iconWidthAdjustment) * mapZoom
-	
-	--same logic as aboive
-	iconHeightAdjustment = tecMapIconAdjustment(tecExit[exitDirection].height, tecMap_back:get_height())
-	yposScaler = ((((tonumber(ypos) + 120) / 240) * 100) - iconHeightAdjustment) * mapZoom	
-	
-	--Move the Exit into position.
-  mapExit[lc]:move(tostring(xposScaler).."%", tostring(yposScaler).."%") 
-	mapExit[lc]:lower() --Position rooms ontop of exits.
-	mapExit[lc]:show() --Now show the exit path.
-
-  lc = lc +1 --Iterate so we can do this again on a new exit.
-end --end gmatch room data search loop
+parthiaDrawMapExits()
 
 tecMap_back:lower() --lower the background behind the exits.
-mapRoom[150]:hide()
+mapRoom[150]:hide() --mapRoom[150] is used to show exits off message on resize
 mapRoom[150]:lower()
 
 --We want the map zoon level, but not 100 times...
@@ -254,6 +146,39 @@ deleteLine() --remove line from main console. line variable remains unchanged.
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Map Exits error catch</name>
+				<script>--[[
+TEC does not have GA or Go Ahead telnet support.
+Due to this very long lines may parse if there is lag.
+This catches an unwanted parse during a SKOOT 6 or map room draw message
+]]--
+
+if not string.starts(line, "SKOOT") and 
+  (line:match("hor") or line:match("ver") ) then --do not run if this is a SKOOT message
+  tecWarningNotification("trigger, Map Exits error catch.")
+  parthiaDrawMapExits()--draw the exits, using data from global line variable
+  tecMap_back:lower() --lower the background behind the exits.
+  deleteLine() --remove line from main console. line variable remains unchanged.
+end
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>return line:match("(-?%d+),(-?%d+),(%w+),(%d+),?" )</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>4</integer>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
@@ -1372,6 +1297,28 @@ deselect() --Don't forget your deselects!</script>
 					<colorTriggerBgColor>#000000</colorTriggerBgColor>
 					<regexCodeList>
 						<string>                       please send mail to ce@skotos.net</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>3</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>&lt;xch_page clear="text" /&gt;</name>
+					<script>selectCurrentLine() --select current line in main.
+replace("") --Erase text from main. Otherwise variable line will apear on console.
+deselect() --Don't forget your deselects!</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>&lt;xch_page clear="text" /&gt;</string>
 					</regexCodeList>
 					<regexCodePropertyList>
 						<integer>3</integer>

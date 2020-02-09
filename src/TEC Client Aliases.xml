@@ -536,7 +536,7 @@ PlayerDev.SetPackages(false)</script>
 			<script>tecDebugHelp() --display help window.</script>
 			<command></command>
 			<packageName></packageName>
-			<regex>^room obect check$</regex>
+			<regex>^debug$</regex>
 			<Alias isActive="yes" isFolder="no">
 				<name>debug on</name>
 				<script>--function in scripts - variables.
