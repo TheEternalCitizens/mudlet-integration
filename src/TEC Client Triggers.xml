@@ -92,7 +92,7 @@ This catches an unwanted parse during a SKOOT 6 or map room draw message
 ]]--
 
 if not string.starts(line, "SKOOT") then --do not run if this is a SKOOT message
-  tecWarningNotification("trigger, Map Room error catch.")
+  debugToDisplay("trigger, Map Room error catch.")
   parthiaDrawMapRooms()--draw the rooms, use data from global line variable
   deleteLine() --remove line from main console. line variable remains unchanged.
 end
@@ -158,7 +158,7 @@ This catches an unwanted parse during a SKOOT 6 or map room draw message
 
 if not string.starts(line, "SKOOT") and 
   (line:match("hor") or line:match("ver") ) then --do not run if this is a SKOOT message
-  tecWarningNotification("trigger, Map Exits error catch.")
+  debugToDisplay("trigger, Map Exits error catch.")
   parthiaDrawMapExits()--draw the exits, using data from global line variable
   tecMap_back:lower() --lower the background behind the exits.
   deleteLine() --remove line from main console. line variable remains unchanged.

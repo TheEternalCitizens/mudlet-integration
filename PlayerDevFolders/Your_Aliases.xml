@@ -12,11 +12,11 @@ Likely the basic answers you want on triggers are at:
   
 In short an alias: replaces a command the user enters with the script of your making.
 
-Any code written in the Your_Aliases folder will never be changed by Pathia updates.
-We highly recommend backing up all the Your_ files in your `The Eternal City` mudlet profile.
-We have made an aliase to easy open the folder these files are in.
-To run it type `tecclient Your_Files`
-Also you will see that aliase in Your_Aliases folder.
+Any code written in the Your_Aliases folder will never be deleted by Pathia updates.
+We highly recommend backing up all the Your_ folders in the editor.
+You could do this by:
+  selecting the folder, and click export at the top of the page
+  right clicking the folder, select copy than paste that data into a text editor
 
 Parthia is intended to be a community project.
 As we wrote code we made certain to comment nearly every line.
@@ -42,13 +42,6 @@ As you write code you can share it at the parthia discord server on the player-s
 			<packageName></packageName>
 			<regex></regex>
 		</AliasGroup>
-		<Alias isActive="yes" isFolder="no">
-			<name>tecclient Your_Files</name>
-			<script>tecOpenDirectory(tecSettingsFolder)</script>
-			<command></command>
-			<packageName></packageName>
-			<regex>^tecclient Your_Files$</regex>
-		</Alias>
 	</AliasPackage>
 	<ActionPackage />
 	<ScriptPackage />

@@ -18,11 +18,11 @@ In short Key Bindings replace a key press with the code you specif.
 You will notice in the TEC_Client_KeyBindings folder there are key bindings
 to replace num pad keys with directions. ctrl+r runs a room check.
 
-Any code written in the Your_Key_Bindings folder will never be changed by Pathia updates.
-We highly recommend backing up all the Your_ files in your `The Eternal City` mudlet profile.
-We have made an aliase to easy open the folder these files are in.
-To run it type `tecclient Your_Files`
-Also you will see that aliase in Your_Aliases folder.
+Any code written in the Your_Key_Bindings folder will never be deleted by Pathia updates.
+We highly recommend backing up all the Your_ folders in the editor.
+You could do this by:
+  selecting the folder, and click export at the top of the page
+  right clicking the folder, select copy than paste that data into a text editor
 
 Parthia is intended to be a community project.
 As we wrote code we made certain to comment nearly every line.
