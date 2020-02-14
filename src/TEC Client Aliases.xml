@@ -530,6 +530,13 @@ PlayerDev.SetPackages(false)</script>
 				<packageName></packageName>
 				<regex>^parthia playerdevelopment uninstall$</regex>
 			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>parthia commands</name>
+				<script>parthiaCommandsHelp()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^parthia commands$</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Debug</name>
@@ -714,6 +721,29 @@ Current font size: ]]..getTECFont()
 				<command></command>
 				<packageName></packageName>
 				<regex>^font$</regex>
+			</Alias>
+		</AliasGroup>
+		<AliasGroup isActive="yes" isFolder="yes">
+			<name>commands</name>
+			<script>--[[
+commands ground is intended for commands that interact with the game.
+Not commands that interact with the client.
+Example would be `wait for drover`
+]]--</script>
+			<command></command>
+			<packageName></packageName>
+			<regex></regex>
+			<Alias isActive="yes" isFolder="no">
+				<name>wait for drover</name>
+				<script>if not parthiaGetWaitForDrover() then --if the player is not already waiting for the drover
+  parthiaSetWaitForDrover(true) --wait for the drover. Uses trigger `Drover Arrives`
+  echo("You patiently wait for the drover to arrive.\n")
+else --player is already waiting for drover
+  echo("You are already waiting for the drover.\n")
+end --if not parthiaGetWaitForDrover()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^wait for drover$</regex>
 			</Alias>
 		</AliasGroup>
 	</AliasPackage>

@@ -2898,6 +2898,82 @@ end --getTECTimerDebugMode</script>
 				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>Misc</name>
+				<packageName></packageName>
+				<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external scripts --
+-------------------------------------------------
+</script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>dontForgetToSave()</name>
+					<packageName></packageName>
+					<script>function dontForgetToSave()
+  cecho("Don't forget to save your changes:\n")
+  cecho("Save all settings with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save all\n", 
+  [[tecClientSaveAll(true)]],
+  "Save all settings", true)
+  cecho("") --cechoLink will not \n on its own.
+end --function dontForgetToSave</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>ReplaceStringMagicChar(tmpString)</name>
+					<packageName></packageName>
+					<script>--used to replace magic characters in a string with the proper escape character 
+--sequence. Useful for replacing file names on sysDownload events.
+function ReplaceStringMagicChar(tmpString)
+  tmpString = tmpString:gsub("%%", "%%%")
+  tmpString = tmpString:gsub("%(", "%%(")
+  tmpString = tmpString:gsub("%)", "%%)")
+  tmpString = tmpString:gsub("%.", "%%.")
+  tmpString = tmpString:gsub("%+", "%%+")
+  tmpString = tmpString:gsub("%[", "%%[")
+  tmpString = tmpString:gsub("%^", "%%^")
+  tmpString = tmpString:gsub("%$", "%%$")
+  tmpString = tmpString:gsub("%-", "%%-")
+  tmpString = tmpString:gsub("%*", "%%*")
+  tmpString = tmpString:gsub("%?", "%%?")
+return tmpString
+end --function ReplaceStringMagicChar(tmpString)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>hex2rgb(hex)</name>
+					<packageName></packageName>
+					<script>--convert hex to RGB
+function hex2rgb(hex)
+    hex = hex:gsub("#","")
+    return tonumber("0x"..hex:sub(1,2)), tonumber("0x"..hex:sub(3,4)), tonumber("0x"..hex:sub(5,6))
+end</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>GetConsoleColumnCount(localConsole)</name>
+					<packageName></packageName>
+					<script>function GetConsoleColumnCount(localConsole)
+
+  --get average pilxelwidth of font
+  local fontWidth, _ = calcFontSize(getFontSize())
+  --Get size of the entire window.
+  local localConsoleWidth = localConsole:get_width()
+  
+  --Calculate how many characters can fit into consoles
+  localConsoleColumnCount = math.floor((localConsoleWidth / fontWidth) - 1)
+  
+  displayDebug("function parthiaRoomCharactersWrap, Font Width: "..tostring(fontWidth)
+    .." localConsoleWidth: "..tostring(localConsoleWidth)
+    .." localConsoleColumnCount: "..tostring(localConsoleColumnCount))
+  
+  return localConsoleColumnCount
+end --function parthiaRoomCharactersWrap()</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>GUI</name>
 				<packageName></packageName>
 				<script>--[[
@@ -4883,6 +4959,11 @@ end --end function tecDebugHelp</script>
   [[printCmdLine("parthia font size ")]],
   "Change client font size", true)
   echo(", Change font size for all consoles.\n")
+  
+    cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia commands", 
+  [[parthiaCommandsHelp()]],
+  "List custom parthia commands", true)
+  echo(", game commands that exist in parthia only.\n")
 
 end --function tecClientHelp</script>
 					<eventHandlerList />
@@ -4989,6 +5070,18 @@ function tecClientChangeColors()
   cecho("")
 
 end --function tecClientChangeColors()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaCommandsHelp()</name>
+					<packageName></packageName>
+					<script>function parthiaCommandsHelp()
+  cecho("\nCustom Parthia commands:\n")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;wait for drover", 
+  [[expandAlias("wait for drover")]],
+  "Wait for a drover", true)
+  echo(", wait for a wagon drover.\n")
+end --function parthiaCommandsHelp()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -6155,7 +6248,7 @@ function GitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if GitUpdate.localRespitory not exist
   GitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  GitUpdate.localVersion = "0.1.29" --Must match the tag in your github release
+  GitUpdate.localVersion = "0.1.30" --Must match the tag in your github release
   GitUpdate.aliasName = "parthia update" --Name of alias user runs to process update
   --Name of the alias to check if an update is available.
   GitUpdate.updateCheckAlias = "parthia update check" 
@@ -6780,9 +6873,10 @@ end --end function getRoomCharactersActive</script>
 					<name>setTECRoomCheckActive(tecRoomCheckActive, displayToScreen)</name>
 					<packageName></packageName>
 					<script>function setTECRoomCheckActive(tecRoomCheckActive, displayToScreen)
-  displayToScreen = displayToScreen or false
-	tecRoomObjects.checkActive = tecRoomCheckActive
-  tecRoomObjects.displayToScreen = displayToScreen --will ac . display to main
+  displayToScreen = fuzzyBoolean(displayToScreen) --verify good boolean sent
+  tecRoomCheckActive = fuzzyBoolean(tecRoomCheckActive) --verify good boolean sent
+	tecRoomObjects.checkActive = tecRoomCheckActive --tell triggers to expect a room check
+  tecRoomObjects.displayToScreen = displayToScreen --will ac . display to main?
 end --end function setRoomCharactersActive</script>
 					<eventHandlerList />
 				</Script>
@@ -6802,47 +6896,52 @@ function runTECRoomObjectCheck(displayToScreen)
 
 	clearTECRoomObjects() --clear room data before running check
 
-	clearWindow("roomCharacters.console") --clear the character window.
-  clearWindow("MultiWindow.roomCharacters.console") --clear the character console in MultiWindow
+	clearRoomCharacterWindow() --clear all roomCharacter windows
 	
 	setTECRoomCheckActive(true,displayToScreen)--set a room check to true.
 
-	--send an ac . command to list characters in the room.
-  send("ac .", false)
+  send("ac .", false) --send an ac . command to list characters in the room.
 
 end --function runRoomCharacterCheck()</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>echoRoomCharacterWindows(message)</name>
+					<name>echoLeftRoomCharacterWindows(message)</name>
 					<packageName></packageName>
-					<script>function echoRoomCharacterWindows(message)
+					<script>--display text to left side of all Room Character Windows
+function echoLeftRoomCharacterWindows(message)
   if type(message) ~= "string" then --if the type is incorrect
-    tecErrorNotification("function echoRoomCharactersWindows, sent a none string variable.")
+    tecErrorNotification("function echoLeftRoomCharacterWindows, sent a none string variable.")
   end --if type(message) ~= "string"
-  cecho("roomCharacters.console", message) --send message to primary roomCharacters console
-  cecho("MultiWindow.roomCharacters.console", message) --send message to MultiWindow roomCharacters console
-end --function echoRoomCharacterWindows(message)</script>
+  --display messages to side of the screen
+  debugToDisplay("function echoLeftRoomCharacterWindows, message: "..message)
+  hecho(roomCharacters.console.name,message) --send message or standard room character window
+  hecho(MultiWindow.roomCharacters.console.name,message) --send message to room character multi window
+end --function echoLeftRoomCharacterWindows()</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>hechoRoomCharacterWindows(message)</name>
+					<name>echoRightRoomCharacterWindows(message)</name>
 					<packageName></packageName>
-					<script>function hechoRoomCharacterWindows(message)
+					<script>function echoRightRoomCharacterWindows(message)
   if type(message) ~= "string" then --if the type is incorrect
-    tecErrorNotification("function echoRoomCharactersWindows, sent a none string variable.")
+    tecErrorNotification("function echoRightRoomCharacterWindows, sent a none string variable.")
   end --if type(message) ~= "string"
-  hecho("roomCharacters.console", message) --send message to primary roomCharacters console
-  hecho("MultiWindow.roomCharacters.console", message) --send message to MultiWindow roomCharacters console
-end --function echoRoomCharacterWindows(message)</script>
+  --display messages to side of the screen
+  debugToDisplay("function echoRightRoomCharacterWindows, message: "..message)
+  hecho(roomCharacters.rightConsole.name,message) --send message or standard room character window
+  hecho(MultiWindow.roomCharacters.rightConsole.name,message) --send message to room character multi window
+end --function echoLeftRoomCharacterWindows()</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
 					<name>clearRoomCharacterWindow()</name>
 					<packageName></packageName>
 					<script>function clearRoomCharacterWindow()
-	clearWindow("roomCharacters.console") --clear primary room characters window
-  clearWindow("MultiWindow.roomCharacters.console") --clear the MultiWindow room characters console
+	clearWindow(roomCharacters.console.name) --clear left side standard room characters window
+  clearWindow(MultiWindow.roomCharacters.console.name) --clear left side of the MultiWindow room characters console
+  clearWindow(MultiWindow.roomCharacters.rightConsole.name) --clear right side of standard room character window
+  clearWindow(roomCharacters.rightConsole.name) --clear the right side of the multi window room characters console
   tecRoomObjects.refreshMessageDisplayed = false --tell Parthia refresh message has not been shown
 end --clearRoomCharacterWindow</script>
 					<eventHandlerList />
@@ -6850,16 +6949,17 @@ end --clearRoomCharacterWindow</script>
 				<Script isActive="yes" isFolder="no">
 					<name>tecRoomCharRefreshNotification()</name>
 					<packageName></packageName>
-					<script>local function tecRoomCharRefreshMessage()
-  echoRoomCharacterWindows("Populate window by: Runing command ")
-  cechoLink("roomCharacters.console","&lt;:maroon&gt;room check", 
+					<script>--Show notification to the player than something has changed and a room check is needed
+local function tecRoomCharRefreshMessage()
+  --displaying to right panel, because it will have very little text in it
+  echoRightRoomCharacterWindows("Refresh Recommended ")
+    cechoLink(roomCharacters.rightConsole.name,"&lt;:maroon&gt;room check", 
     [[runTECRoomObjectCheck()]],
     "Populate Room Character window.", true)
-  cechoLink("MultiWindow.roomCharacters.console","&lt;:maroon&gt;room check", 
+  cechoLink(MultiWindow.roomCharacters.rightConsole.name,"&lt;:maroon&gt;room check", 
     [[runTECRoomObjectCheck()]],
     "Populate Room Character window.", true)
-  echoRoomCharacterWindows(" or pressing ctrl+R.\n")
-  echoRoomCharacterWindows("Refresh Recommended")
+  echoRightRoomCharacterWindows(" or press ctrl+r.\n")
 end --function tecRoomCharRefreshMessage()
 
 function tecRoomCharRefreshNotification()
@@ -6875,65 +6975,55 @@ end --function recRoomCharRefreshNotification()</script>
 				<Script isActive="yes" isFolder="no">
 					<name>tecResetRoomCharacterWindow()</name>
 					<packageName></packageName>
-					<script>function tecResetRoomCharacterWindow()
+					<script>--clear out the room character windows and tell player how to refresh
+function tecResetRoomCharacterWindow()
   clearRoomCharacterWindow() --Room characters window no longer accurate, clear it.
-  echoRoomCharacterWindows("Populate window by: Runing command ")
-  cechoLink("roomCharacters.console","&lt;:maroon&gt;room check", 
+  echoLeftRoomCharacterWindows("Populate this space with characters in this room by:")
+  echoRightRoomCharacterWindows("running command ")
+  cechoLink(roomCharacters.rightConsole.name,"&lt;:maroon&gt;room check", 
     [[runTECRoomObjectCheck()]],
     "Populate Room Character window.", true)
-  cechoLink("MultiWindow.roomCharacters.console","&lt;:maroon&gt;room check", 
+  cechoLink(MultiWindow.roomCharacters.rightConsole.name,"&lt;:maroon&gt;room check", 
     [[runTECRoomObjectCheck()]],
     "Populate Room Character window.", true)
-  echoRoomCharacterWindows(" or pressing ctrl+R.")
+  echoRightRoomCharacterWindows(" or pressing ctrl+r.\n")
   tecRoomObjects.refreshMessageDisplayed = true --tell client no further refreshes needed
 end --function tecResetRoomCharacterWindow</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>Misc</name>
+				<name>Game commands</name>
 				<packageName></packageName>
-				<script>-------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external scripts --
--------------------------------------------------
-</script>
+				<script>--[[
+Commands used to interact with the game itself.
+
+IE: `wait for drover`
+]]--</script>
 				<eventHandlerList />
-				<Script isActive="yes" isFolder="no">
-					<name>dontForgetToSave()</name>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>wait for drover</name>
 					<packageName></packageName>
-					<script>function dontForgetToSave()
-  cecho("Don't forget to save your changes:\n")
-  cecho("Save all settings with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save all\n", 
-  [[tecClientSaveAll(true)]],
-  "Save all settings", true)
-  cecho("") --cechoLink will not \n on its own.
-end --function dontForgetToSave</script>
+					<script></script>
 					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>ReplaceStringMagicChar(tmpString)</name>
-					<packageName></packageName>
-					<script>--used to replace magic characters in a string with the proper escape character 
---sequence. Useful for replacing file names on sysDownload events.
-function ReplaceStringMagicChar(tmpString)
-  tmpString = tmpString:gsub("%%", "%%%")
-  tmpString = tmpString:gsub("%(", "%%(")
-  tmpString = tmpString:gsub("%)", "%%)")
-  tmpString = tmpString:gsub("%.", "%%.")
-  tmpString = tmpString:gsub("%+", "%%+")
-  tmpString = tmpString:gsub("%[", "%%[")
-  tmpString = tmpString:gsub("%^", "%%^")
-  tmpString = tmpString:gsub("%$", "%%$")
-  tmpString = tmpString:gsub("%-", "%%-")
-  tmpString = tmpString:gsub("%*", "%%*")
-  tmpString = tmpString:gsub("%?", "%%?")
-return tmpString
-end --function ReplaceStringMagicChar(tmpString)</script>
-					<eventHandlerList />
-				</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaSetWaitForDrover(waiting)</name>
+						<packageName></packageName>
+						<script>function parthiaSetWaitForDrover(waiting)
+  waiting = fuzzyBoolean(waiting) --make certain it is a good variable
+  parthiaWaitingForDrover = waiting
+end --function parthiaSetWaitForDrover(waiting)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaGetWaitForDrover()</name>
+						<packageName></packageName>
+						<script>function parthiaGetWaitForDrover()
+  return parthiaWaitingForDrover 
+end --function parthiaGetWaitForDrover()</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
 			</ScriptGroup>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
@@ -7406,15 +7496,13 @@ roomCharacters = Geyser.Container:new({
 })
 
 --box that will store the miniconsoles
-roomCharacters.back = Geyser.Label:new({
+roomCharacters.back = Geyser.HBox:new({
   name = "roomCharacters.back",
   x = 0, --horizontal position
 	y = 0, --adjusted for tabs
   width = "100%",
 	height = "100%"
 },roomCharacters)
-
-roomCharacters.back:setStyleSheet(labelsStyle) --set to default label style
 
 --This are the miniconsoles that will hold the text
 roomCharacters.console = Geyser.MiniConsole:new({ --menu v will be a tab name.
@@ -7430,6 +7518,21 @@ roomCharacters.console = Geyser.MiniConsole:new({ --menu v will be a tab name.
 },roomCharacters.back)
 roomCharacters.console:setColor(getBgColor()) --set miniconsoles to main consol BG color
 roomCharacters.console:raise()
+
+--This are the miniconsoles that will hold the text
+roomCharacters.rightConsole = Geyser.MiniConsole:new({ --menu v will be a tab name.
+  name = "roomCharacters.rightConsole", --Issues experienced if I attempt to name them v.."Console"
+	x = 0, --%horizontally position in parent
+	y = 0, --%vertical position in parent
+	width = "100%", --% of parent
+	height = "100%", --% of parent
+	autoWrap = true, --allows text to wrap if too long
+	fontSize = getTECFont(), --in variables
+	font = getFont(), --get font type from main
+	--scrollBar = true,
+},roomCharacters.back)
+roomCharacters.rightConsole:setColor(getBgColor()) --set miniconsoles to main consol BG color
+roomCharacters.rightConsole:raise()
 
 function tecCRWindowResize()
 	
@@ -7818,16 +7921,13 @@ UIManagerRegisterWindow(macroMenu.container)
 MultiWindow.back = Geyser.VBox:new({ name = "Multi Window", }) --Horizonal box to hold our multiwindows.
 MultiWindow.back.GUIframeLocation = "topright" --set location for container in GUIframe.
 
+--MultiWindow.top = Geyser.VBox:new({ name = "MultiWindow.top", }, MultiWindow.back) --Vertical window break for the room characters windows
+
 --Create a window that is a copy of the Room Characters window.
 MultiWindow.roomCharacters = MultiWindow.roomCharacters or {} --create a table to hold roomCharters window
-MultiWindow.roomCharacters.container = Geyser.Container:new({
+MultiWindow.roomCharacters.back = Geyser.HBox:new({
   name = "MultiWindow Room Characters",
   }, MultiWindow.back)
---Can work as a background image if borders or other mis is wanted in the future.
---MultiWindow.roomCharacters.back = Geyser.Label:new({
---  name = "MultiWindow roomCharacters.back",
---  x = 0, y = 0, width = "100%", height = "100%" --position and size of window
---},MultiWindow.roomCharacters.container)
 --MultiWindow.roomCharacters.back:setStyleSheet(labelsStyle) --set label for background
 MultiWindow.roomCharacters.console = Geyser.MiniConsole:new({ --Create the mini console that will hold the text.
   name = "MultiWindow.roomCharacters.console",
@@ -7836,9 +7936,19 @@ MultiWindow.roomCharacters.console = Geyser.MiniConsole:new({ --Create the mini 
 	fontSize = getTECFont(), --in variables
 	font = getFont(), --get font type from main
 	--scrollBar = true,
-},MultiWindow.roomCharacters.container)
+},MultiWindow.roomCharacters.back)
 MultiWindow.roomCharacters.console:raise()
 MultiWindow.roomCharacters.console:setColor(getBgColor()) --set miniconsoles to main consol BG color
+MultiWindow.roomCharacters.rightConsole = Geyser.MiniConsole:new({ --Create the mini console that will hold the text.
+  name = "MultiWindow.roomCharacters.rightConsole",
+	x = 0, y = 0, width = "100%", height = "100%", --position and size of console
+	autoWrap = true, --allows text to wrap if too long
+	fontSize = getTECFont(), --in variables
+	font = getFont(), --get font type from main
+	--scrollBar = true,
+},MultiWindow.roomCharacters.back)
+MultiWindow.roomCharacters.rightConsole:raise()
+MultiWindow.roomCharacters.rightConsole:setColor(getBgColor()) --set miniconsoles to main consol BG color
 
 --create the window that holds the macros.
 MultiWindow.macroMenu = MultiWindow.macroMenu or {} --table to hold the windows variables

@@ -511,16 +511,19 @@ elseif line:match("^%d+:") then --if line starts with "#: "
   	) --end displayToDebug
   end --end if debug is on.
 
+  local characterPrefix = "" --holds status of character or _
+
 	--This ( only occurs if your character is approached. If your character is approached.
 	if characterStatus:match("%(engaging%)") then
+  
     --Last character of an engaged name will be a space, this removes it.
     tecRoomObjects.characters[tecRoomObjects.lc] = tecRoomObjects.characters[tecRoomObjects.lc]:sub(1,-2)
     
     --check if the character is (unconscious)
     if characterStatus:match("unconscious") then 
-      hechoRoomCharacterWindows(tecSettings.ApproachedCharactersColor.."KO: ")
+      characterPrefix = tecSettings.ApproachedCharactersColor.."KO: "
     else --if they are not unonscious prefice with a _ instead
-      hechoRoomCharacterWindows(tecSettings.ApproachedCharactersColor.."_")
+      characterPrefix = tecSettings.ApproachedCharactersColor.."_"
     end
     
     local localApproachedCmdList = {
@@ -544,22 +547,27 @@ elseif line:match("^%d+:") then --if line starts with "#: "
 		tecSettings.approachedCommandHelp[6]}
     
 		--create a right clickable list with the characters full name.
-		hechoPopup("roomCharacters.console",tecSettings.ApproachedCharactersColor
+		hechoPopup(roomCharacters.rightConsole.name,
+      characterPrefix..tecSettings.ApproachedCharactersColor
       ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
       localApproachedCmdList,
       localApproachedCmdHelp, true)
     --create right clickable list for MultiWIndow roomCharacters console
-    hechoPopup("MultiWindow.roomCharacters.console",tecSettings.ApproachedCharactersColor
+    hechoPopup(MultiWindow.roomCharacters.rightConsole.name,
+      characterPrefix..tecSettings.ApproachedCharactersColor
       ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
       localApproachedCmdList,
       localApproachedCmdHelp, true)
+      
+    --new line only the right consoles, or approached consoles.
+    echoRightRoomCharacterWindows("\n")
     
 	else
     --check if the character is (unconscious), prefice with KO:
     if characterStatus:match("unconscious") then 
-      hechoRoomCharacterWindows(tecSettings.ApproachedCharactersColor.."KO: ")
+      characterPrefix = tecSettings.ApproachedCharactersColor.."KO: "
     else --if they are not unonscious prefice with a _ instead
-      hechoRoomCharacterWindows(tecSettings.notApproachedCharacterColor.."_")
+      characterPrefix = tecSettings.notApproachedCharacterColor.."_"
     end
     
     local localNotApproachedCmdList = {
@@ -580,20 +588,24 @@ elseif line:match("^%d+:") then --if line starts with "#: "
 		tecSettings.commandHelp[5],
 		tecSettings.commandHelp[6]}
 		--characters that are not approached to the players
-		hechoPopup("roomCharacters.console",tecSettings.notApproachedCharacterColor
+		hechoPopup(roomCharacters.console.name,
+      characterPrefix..tecSettings.notApproachedCharacterColor
       ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
 		  localNotApproachedCmdList,
 		  localNotApproachedHelpList, true)
-    hechoPopup("MultiWindow.roomCharacters.console",tecSettings.notApproachedCharacterColor
+    hechoPopup(MultiWindow.roomCharacters.console.name,
+      characterPrefix..tecSettings.notApproachedCharacterColor
       ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
 		  localNotApproachedCmdList,
 		  localNotApproachedHelpList, true)
+    
+    --new line only the left consoles or approached consoles
+    echoLeftRoomCharacterWindows("\n")
 	end --end if else characterEnaged == "("
   
-  --Attempting to resolve issue with window not filling
-  hechoRoomCharacterWindows("\n")
-  
-  tecScrollBarCheck("roomCharacters.console") --check if a scroll bar is needed.
+  tecScrollBarCheck(roomCharacters.console.name) --check if a scroll bar is needed.
+  tecScrollBarCheck(MultiWindow.roomCharacters.console.name)
+  tecScrollBarCheck(MultiWindow.roomCharacters.rightConsole.name)
   
 	--Delete main's line if we are not displaying it to screen
   if not tecRoomObjects.displayToScreen then deleteLine() end
@@ -609,21 +621,25 @@ elseif line == "&lt;/pre&gt;" then --end of ac . command found.
 --if it is dark set RoomCheck to false so it does not remain active.
 elseif line == "It is too dark to see anything." then
   setTECRoomCheckActive(false) --disable room check for characters.
-  clearRoomCharacterWindow()
-  hechoRoomCharacterWindows("It is too dark to see anything.")
+  --clearRoomCharacterWindow()
+  echoLeftRoomCharacterWindows("It is too dark to see anything.")
+
+elseif line:match("Your immediate surroundings are obscured by darkness") then
+  setTECRoomCheckActive(false) --disable room check for characters.
+  --clearRoomCharacterWindow()
+  echoLeftRoomCharacterWindows("It is too dark to see anything.")
   
 --if player is stunned set RoomCheck to false so it does not remain active.
 elseif line == "You can't do that while stunned." then
   setTECRoomCheckActive(false) --disable room check for characters.
-  clearRoomCharacterWindow()
-  hechoRoomCharacterWindows("You can't do that while stunned.")
+  --clearRoomCharacterWindow()
+  echoLeftRoomCharacterWindows("You can't do that while stunned.")
   
 --if player is unconcious RoomCheck to false so it does not remain active.
 elseif line == "You can't do that while unconcious." then
   setTECRoomCheckActive(false) --disable room check for characters.
-  clearRoomCharacterWindow()
-  hechoRoomCharacterWindows("You can't do that while unconcious.")
-
+  --clearRoomCharacterWindow()
+  echoLeftRoomCharacterWindows("You can't do that while unconcious.")
 end --if line has a ac . character in it.
 
 --No else, becase if it isn't one of the items we are looking for above.
@@ -1477,7 +1493,10 @@ tecRoomCharRefreshNotification()</script>
 				<script>--triggers when the player enters a new room.
 
 --Set default text in room characters window
-tecResetRoomCharacterWindow()</script>
+tecResetRoomCharacterWindow()
+
+--stop waiting for the drover, so it will not auto follow after a player has walked away while waiting for a drover.
+parthiaSetWaitForDrover(false) </script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1548,10 +1567,7 @@ tecResetRoomCharacterWindow()</script>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Vision loss</name>
 				<script>--Triggers when the player can not see.
-
---Notify user that room characters can not be populated.
-clearRoomCharacterWindow()
-cecho("roomCharacters.console", "It is too dark to see anything.")</script>
+</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1571,7 +1587,10 @@ cecho("roomCharacters.console", "It is too dark to see anything.")</script>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Drover Arrives</name>
-				<script></script>
+				<script>if parthiaGetWaitForDrover() then --if the wait for drover command was run, follow drover when it arrives.
+  send("follow drover") --follow the drover
+  parthiaSetWaitForDrover(false) --stop waiting for the drover, so it will not auto follow
+end --if parthiaGetWaitForDrover()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1583,10 +1602,10 @@ cecho("roomCharacters.console", "It is too dark to see anything.")</script>
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>A drover makes his way in </string>
+					<string>A drover makes \w+ way in </string>
 				</regexCodeList>
 				<regexCodePropertyList>
-					<integer>2</integer>
+					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
 		</TriggerGroup>
