@@ -159,6 +159,9 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   --Is the player using GUIframe UI manager
   tecSettings.useGUIframe = true
   
+  --Does the player want to have the player development folders managed
+  tecSettings.PlayerDevelopmentSpaceEnabled = false
+  
   --keep track of UI manager names. Not case sensative.
   UIManagers = { "GUIframe" , "none"}
   
@@ -216,9 +219,11 @@ function tecFileLoadSettings(displayToScreen)
 	path = path:gsub("\\","/")
 	--If the file does not exist let the user know.
   if not io.exists(path) then 
-		debugToDisplay("tecFileLoadSettings: "..path.." file doesn't exist.") --TEC debug screen
-		debugc("tecFileLoadSettings: "..path.." file doesn't exist.") --mudlets debug screen
-		if displayToScreen then echo("Client settings did not load from file\n") end
+		cecho("tecDebugWindow","tecFileLoadSettings: "..path.." file doesn't exist.") --TEC debug screen
+		--debugc("tecFileLoadSettings: "..path.." file doesn't exist.") --mudlets debug screen
+		if displayToScreen then
+      cecho("[ Info ]  - No settings file. Parthia using default settings.\n")
+    end
 	return --kill the function before real errors occur
 	else
     table.load(path, tecTmpSettingsTable) --Load the settings in from file
@@ -2818,7 +2823,8 @@ end --end function getTECdebugMode</script>
 				<Script isActive="yes" isFolder="no">
 					<name>displayDebug(textMessage)</name>
 					<packageName></packageName>
-					<script>function displayDebug(textMessage)
+					<script>--intended for sending debug messages to debug window IF display mode is enabled.
+function displayDebug(textMessage)
   if getTECDisplayDebugMode() then
     debugToDisplay(textMessage)
   end -- if getTECDisplayDebugMode()
@@ -2890,6 +2896,82 @@ end --setTECTimerDebugMode</script>
 function getTECTimerDebugMode()
 	return tecSettings.tecTimerDebugMode
 end --getTECTimerDebugMode</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>Misc</name>
+				<packageName></packageName>
+				<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external scripts --
+-------------------------------------------------
+</script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>dontForgetToSave()</name>
+					<packageName></packageName>
+					<script>function dontForgetToSave()
+  cecho("Don't forget to save your changes:\n")
+  cecho("Save all settings with: ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save all\n", 
+  [[tecClientSaveAll(true)]],
+  "Save all settings", true)
+  cecho("") --cechoLink will not \n on its own.
+end --function dontForgetToSave</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>ReplaceStringMagicChar(tmpString)</name>
+					<packageName></packageName>
+					<script>--used to replace magic characters in a string with the proper escape character 
+--sequence. Useful for replacing file names on sysDownload events.
+function ReplaceStringMagicChar(tmpString)
+  tmpString = tmpString:gsub("%%", "%%%")
+  tmpString = tmpString:gsub("%(", "%%(")
+  tmpString = tmpString:gsub("%)", "%%)")
+  tmpString = tmpString:gsub("%.", "%%.")
+  tmpString = tmpString:gsub("%+", "%%+")
+  tmpString = tmpString:gsub("%[", "%%[")
+  tmpString = tmpString:gsub("%^", "%%^")
+  tmpString = tmpString:gsub("%$", "%%$")
+  tmpString = tmpString:gsub("%-", "%%-")
+  tmpString = tmpString:gsub("%*", "%%*")
+  tmpString = tmpString:gsub("%?", "%%?")
+return tmpString
+end --function ReplaceStringMagicChar(tmpString)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>hex2rgb(hex)</name>
+					<packageName></packageName>
+					<script>--convert hex to RGB
+function hex2rgb(hex)
+    hex = hex:gsub("#","")
+    return tonumber("0x"..hex:sub(1,2)), tonumber("0x"..hex:sub(3,4)), tonumber("0x"..hex:sub(5,6))
+end</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>GetConsoleColumnCount(localConsole)</name>
+					<packageName></packageName>
+					<script>function GetConsoleColumnCount(localConsole)
+
+  --get average pilxelwidth of font
+  local fontWidth, _ = calcFontSize(getFontSize())
+  --Get size of the entire window.
+  local localConsoleWidth = localConsole:get_width()
+  
+  --Calculate how many characters can fit into consoles
+  localConsoleColumnCount = math.floor((localConsoleWidth / fontWidth) - 1)
+  
+  displayDebug("function parthiaRoomCharactersWrap, Font Width: "..tostring(fontWidth)
+    .." localConsoleWidth: "..tostring(localConsoleWidth)
+    .." localConsoleColumnCount: "..tostring(localConsoleColumnCount))
+  
+  return localConsoleColumnCount
+end --function parthiaRoomCharactersWrap()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -3619,7 +3701,11 @@ function UIManagerShowWindow(objectName, mode, displayToScreen)
         end --if windowName == "all" or windowName == objectName
     end --for ipairs(tecWindowNames)
   end --if mode
-  guiChange() --redraw windows since the display has changed
+  if guiChange then --if the guiChange function has been created
+    if displayToScreen then --displayToScreen is only true when ShowWindow is run by alias, if it is false it is run by SetTheme().
+      guiChange() --resize windows.
+    end --if displayToScreen
+  end--end if guiChange
 end --function setGUIframeObject</script>
 						<eventHandlerList />
 					</Script>
@@ -3681,7 +3767,7 @@ end --function setGUIframeObject</script>
     if window.name:lower() == geyserContainer.name:lower() then
       debugToDisplay("\tFound "..geyserContainer.name:lower()
         .." in tecGeyserWindows table. It is already being manged by UI manager.")
-      windowIsAlreadyTracked = true --notify function container already in table.
+--      windowIsAlreadyTracked = true --notify function container already in table.
     end --if window.name:lower() == geyserContainer:lower()
   end --for pairs(tecGeyserWindows)
   
@@ -3695,11 +3781,11 @@ end --function setGUIframeObject</script>
   else --container not already in tecGeyserWindows table.
 
     debugToDisplay("function UIManagerRegisterWindow, adding "..geyserContainer.name.." to tecGeyserWindows table.")
-    if tecGeyserWindows[geyserContainer.name] then --container name is already in table.
-      tecErrorNotification("function UIManagerRegisterWindow, tecGeyserWindows has a table named "
-        ..geyserContainer.name)
-      return --end function
-    else -- tecGeyserWindows[geyserContainer.name] does not exist
+--    if tecGeyserWindows[geyserContainer.name] then --container name is already in table.
+--      tecErrorNotification("function UIManagerRegisterWindow, tecGeyserWindows has a table named "
+--        ..geyserContainer.name)
+--      return --end function
+--    else -- tecGeyserWindows[geyserContainer.name] does not exist
       tecGeyserWindows[geyserContainer.name] = geyserContainer
       if not tecGeyserWindows[geyserContainer.name].name then --container did not add
         local errorFound = "function UIManagerRegisterWindow, "..geyserContainer.name
@@ -3708,11 +3794,12 @@ end --function setGUIframeObject</script>
         tecErrorNotification(errorFound)
         error(errorFound)
       end 
-    end --if tecGeyserWindows[geyserContainer.name]
+--    end --if tecGeyserWindows[geyserContainer.name]
     if displayToScreen then --Display to player.
       echo("Adding "..geyserContainer.name.." to interface manager "..GetUIManager()..".\n")
     end --if displayToSreen
     tecGeyserWindows[geyserContainer.name]:hide() --hide the window it is not in a UI yet
+    --UIManagerShowWindow(geyserContainer.name, true, displayToScreen)
   end --if windowIsAlreadyTracked
 end --function UIManagerRegisterWindow</script>
 						<eventHandlerList />
@@ -3744,13 +3831,13 @@ function UIManagerEnableWindow(objectName, mode, displayToScreen)
         for windowName, window in pairs(tecGeyserWindows) do--loop through containers
             --make commandfor cechoLink
             local cmdToSend = [[UIManagerEnableWindow("]]..windowName..[[",true,true)]]
-            cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display enable "..windowName, 
+            cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable "..windowName, 
               cmdToSend, --runs on click.
               "Enable "..windowName.." window", true)
             cecho(", ")
         end --for pairs(tecGeyserWindows)
         cecho("and ")
-          cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display enable all",
+          cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable all",
               [[UIManagerEnableWindow("all",true,true)]], --runs on click.
               "Enable all windows", true)
       end --if displayToScreen
@@ -3759,13 +3846,13 @@ function UIManagerEnableWindow(objectName, mode, displayToScreen)
         for windowName, window in pairs(tecGeyserWindows) do--loop through containers
             --make commandfor cechoLink
             local cmdToSend = [[UIManagerEnableWindow("]]..windowName..[[",false,true)]]
-            cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display disable "..windowName, 
+            cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window disable "..windowName, 
               cmdToSend, --runs on click.
               "Disable "..windowName.." window", true)
             cecho(", ")
         end --for pairs(tecGeyserWindows)
         cecho("and ")
-          cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display disable all",
+          cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window disable all",
               [[UIManagerEnableWindow("all",false,true)]], --runs on click.
               "Disable all windows", true)
       end --if displayToScreen
@@ -3787,13 +3874,26 @@ function UIManagerEnableWindow(objectName, mode, displayToScreen)
           local tmpEnabledSideFound = false --used to tell function that an enabled side was found
           --if this window is about to  go to a side that is disabled, change the side.
           for _, tmpSide in ipairs(tmpSidesTable) do --loop through sides
-            if not uiThemes.PlayersTheme.borders[tmpSide] then --if the side is disabled
-              if tmpWindowLocation:match(tmpSide) then--if the window is going to a disabled side
+            if not UIManagerSettings.PlayersTheme.borders[tmpSide] then --if the side is disabled
+              local localGUIframeLocatioDisabled = false
+              --check if the side the window is going to is disabled
+              if table.contains({"top","bottom"}, tmpSide) then --if the disabled side is the top or bottom
+                if tmpWindowLocation == tmpSide then --if the window is going to a disabled side
+                  localGUIframeLocatioDisabled = true
+                end --if tmpWindowLocation == tmpSide
+              end --if table.contains({"top","bottom"}, tmpSide)
+              if table.contains({"right","left"}, tmpSide) then--if the disabled side is the left or right
+                if tmpWindowLocation:match(tmpSide) then --if the window is going to a disabled side
+                  localGUIframeLocatioDisabled = true
+                end --if tmpWindowLocation:match("left") or tmpWindowLocation:match("right")
+              end --table.contains({"right","left"}, tmpSide)
+              
+              if localGUIframeLocatioDisabled then --if the side the window is going to is disabled
                 for _, tmpSideModeCheck in ipairs({"left", "right"}) do --loop through sides
                   --check the left and right sides, windows added to those can be moved.
                   --Because of lack of layering support we do not want to place a window 
                   --on the top or bottom. Because it will cover windows already there.
-                  if uiThemes.PlayersTheme.borders[tmpSideModeCheck] then --if side is enabled
+                  if UIManagerSettings.PlayersTheme.borders[tmpSideModeCheck] then --if side is enabled
                     local errorFound = "Window "..window.name.. " is set to go to the "
                       ..window.GUIframeLocation.." of the screen. The "..tmpSide
                       .." side of the screen is disabled. Sending the window to the "
@@ -3802,7 +3902,7 @@ function UIManagerEnableWindow(objectName, mode, displayToScreen)
                     tmpEnabledSideFound = true --tell function an enabled side was found
                     debugToDisplay("function UIManagerEnableWindow, "..errorFound)
                     if displayToScreen then cecho(errorFound.."\n") end
-                  end --if uiThemes.PlayersTheme.borders[tmpSide]
+                  end --if UIManagerSettings.PlayersTheme.borders[tmpSide]
                 end --for _, tmpSideModeCheck in ipairs(tmpSidesTable)
                 if not tmpEnabledSideFound then --if both left and right sides are disabled.
                   local errorFound = "Both left and right sides of display are disabled. "
@@ -3816,7 +3916,7 @@ function UIManagerEnableWindow(objectName, mode, displayToScreen)
                   UIManagerSettings[window.name].disabled = true 
                 end --if not tmpEnabledSideFound
               end --if window.GUIframelocation:match(tmpSide)
-            end --if not uiThemes.PlayersTheme.borders[tmpSide]
+            end --if not UIManagerSettings.PlayersTheme.borders[tmpSide]
           end --ipairs(tmpSidesTable)
         end --if GetUIManager() == "GUIframe"
       
@@ -3831,10 +3931,9 @@ function UIManagerEnableWindow(objectName, mode, displayToScreen)
         --if window name is not in UIManagerSettings table, create a table for the window.
         if not UIManagerSettings[window.name] then UIManagerSettings[window.name] = {} end 
         UIManagerSettings[window.name].disabled = true --tell the UI manager not to load window
-        
+
         --if using GUIframe
         if GetUIManager() == "GUIframe" and GUIframe.initialized then --if using GUIframe
-          
           if GUIframe.windows[window.name] then --if the window exists.
             debugToDisplay("function UIManagerEnableWindow, removing: "..window.name
               .." from GUIframe.windows table.")
@@ -3857,7 +3956,7 @@ function UIManagerEnableWindow(objectName, mode, displayToScreen)
     end --if objectName == "all" or window.name == objectName
   end --for pairs(tecGeyserWindows)
   
-  if displayToScreen then dontForgetToSave() end --remind play to save
+  --if guiChange then guiChange() end--redraw windows since the display has changed
 end --function tecUIManagerEnableWindow(objectName, displayToScreen)</script>
 						<eventHandlerList />
 					</Script>
@@ -3908,6 +4007,10 @@ COPY BELOW
   uiThemes.namehere.windows["Compass"] = "topleft"
   uiThemes.namehere.windows["Communications"] = "top"
   uiThemes.namehere.windows["Room Characters"] = "topright"
+  
+  --add windowsnames to table clickWindows and they will be clicked after layout has completed
+  uiThemes.orchil.clickWindows = {}
+  uiThemes.orchil.clickWindows["TEC Map"] = true
   
   --control what sides are displayed.
   --true means the side will be displayed.
@@ -3963,7 +4066,7 @@ function UIManagerGUIframeThemes(displayToScreen)
   --Goes in the square brackets and quotes ["name"]
   --The location of the window in GUIframe goes in the quotes after the equal symbol.
   --GUIframe location goes = "GUIframeLocation"
-  --an easy method to list window names is `tecclient add list`
+  --an easy method to list window names is `display add list`
   uiThemes.NiceHat.windows = { }
 
   uiThemes.NiceHat.windows["TEC Map"] = "bottomright"
@@ -4010,16 +4113,16 @@ function UIManagerGUIframeThemes(displayToScreen)
   --Goes in the square brackets and quotes ["name"]
   --The location of the window in GUIframe goes in the quotes after the equal symbol.
   --GUIframe location goes = "GUIframeLocation"
-  --an easy method to list window names is `tecclient add list`
+  --an easy method to list window names is `display add list`
   uiThemes.orchil.windows = { }
-
-  uiThemes.orchil.windows["TEC Map"] = "bottomright"
   uiThemes.orchil.windows["Settings"] = "bottomright"
-  uiThemes.orchil.windows["Macros"] = "bottomright"
-  uiThemes.orchil.windows["Status"] = "bottom"
-  uiThemes.orchil.windows["Compass"] = "topright"
   uiThemes.orchil.windows["Communications"] = "top"
-  uiThemes.orchil.windows["Room Characters"] = "topright"
+  uiThemes.orchil.windows["Multi Window"] = "topright"
+  uiThemes.orchil.windows["TEC Map"] = "bottomright"
+  
+  --add windowsnames to table clickWindows and they will be clicked after layout has completed
+  uiThemes.orchil.clickWindows = {}
+  uiThemes.orchil.clickWindows["TEC Map"] = true
   
   --control what sides are displayed.
   --true means the side will be displayed.
@@ -4029,7 +4132,7 @@ function UIManagerGUIframeThemes(displayToScreen)
     left = false,
     right = true,
     top = true,
-    bottom = true,
+    bottom = false,
   }
   --End theme orchil----------------------------------------
   
@@ -4054,9 +4157,7 @@ end --function tecUILayoutManagerConfig</script>
 					<Script isActive="yes" isFolder="no">
 						<name>UIManagerSetTheme()</name>
 						<packageName></packageName>
-						<script>
-
-function UIManagerSetTheme(themeName, displayToScreen)
+						<script>function UIManagerSetTheme(themeName, displayToScreen)
   displayToScreen = fuzzyBoolean(displayToScreen) --if true display actions to screen
   UIManagerGUIframeThemes(displayToScreen) --configure GUIframe layout themes
   --list of acceptable GUIframe window locations
@@ -4161,7 +4262,7 @@ function UIManagerSetTheme(themeName, displayToScreen)
     --loop through theme windows to be added for theme make certain they are correct.
     --if they are send them to the UI manager.
     for tmpWindowName, tmpWindowGUIframeLocation in pairs(uiThemes[themeName].windows) do
-      debugToDisplay("function UIManagerSetTheme, attempting window: "..tmpWindowName
+      debugToDisplay("function UIManagerSetTheme, testing window name: "..tmpWindowName
         .." going to GUIframe location "..tmpWindowGUIframeLocation)
         
       --Window name error checking.
@@ -4184,7 +4285,7 @@ function UIManagerSetTheme(themeName, displayToScreen)
         debugToDisplay("function UIManagerSetTheme, "..errorFound) --display error to debug
         return --stop function bad window name sent.
       end --if not tmpWindowName
-    
+      
       --error check GUIframeLocation    
       if not guiFrameWindowLocations:match(tmpWindowGUIframeLocation) then
         --find an enabled border and set the location to that border.
@@ -4207,7 +4308,7 @@ function UIManagerSetTheme(themeName, displayToScreen)
       --Window name and location tested good, we will add it to the display.
       --if the window exists in the tecGeyserWindows table, set its GUIframeLocation
       if tecGeyserWindows[tmpWindowName] then 
-        debugToDisplay("function UIManagerSetTheme, setting window "..tmpWindowName
+        debugToDisplay("function UIManagerSetTheme, enabeling window "..tmpWindowName
           .." to GUIframe location "..tmpWindowGUIframeLocation)
         tecGeyserWindows[tmpWindowName].GUIframeLocation = tmpWindowGUIframeLocation
       else --the window name does not exist. and error occured.
@@ -4219,17 +4320,55 @@ function UIManagerSetTheme(themeName, displayToScreen)
       end --if tecGeyserWindows[tmpWindowName]
       debugToDisplay("\tUIManagerSetTheme, error checking passed for window "
         ..tmpWindowName.."enabeling it and adding it to display")
+      --make the players theme a duplicate of the desired theme
+      UIManagerSettings.PlayersTheme = table.deepcopy(uiThemes[themeName])
       --enable and display the window.
       --Do not display to screen as it will run dontforgettosave() for each window.
       UIManagerEnableWindow(tmpWindowName, true)
     end --for tmpWinowSide, tmpEnableSide in pairs(uiThemes[themeName].windows)
 
+    --Loop through windows to click after enabeling windows, check if the names are good
+    --if they are send them to the UI manager.
+    if uiThemes[themeName].clickWindows then -- If there is a window to click
+      for tmpWindowName, clickWindow in pairs(uiThemes[themeName].clickWindows) do
+        debugToDisplay("function UIManagerSetTheme, testing clickWindows name: "..tmpWindowName
+          ..", clickWindow is "..tostring(clickWindow))
+        --Window name error checking.
+        local incorrectWindowName = tmpWindowName --used later if themeName sent is correct
+        --verify the window name exists.
+        tmpWindowName = UIManagerTestWindow(tmpWindowName, displayToScreen)
+        if not tmpWindowName then --if the window name was bad.
+          --create a smart error message
+          local errorFound = "clickWindows test of window "..incorrectWindowName.." is not a window name. Supported names are: "
+          for tmpThemeWindowNames, _ in pairs(uiThemes[themeName].windows) do
+              errorFound = errorFound.."\""..tmpThemeWindowNames.."\" "
+          end --for fullListWindowName,_ in pairs(tecGeyserWindows) do
+          errorFound = errorFound.."\nTheme config code needing correction looks like: "
+            ..[[uiThemes.]]..themeName..[[.clickWindows["]]..incorrectWindowName..[["] = ]]..tostring(clickWindow)
+            .."\n\""..incorrectWindowName.."\" needs to be replaced with a supported window name, listed above.\n"
+            .."Please correct and attempt again.\n"
+          if displayToScreen then --if we want to display to player screen
+            echo(errorFound) --display error direct to player
+          end --if displayToScreen
+          debugToDisplay("function UIManagerSetTheme, "..errorFound) --display error to debug
+          return --stop function bad window name sent.
+        else --the window name was good. click it.
+          debugToDisplay("function UIManagerSetTheme, clicking window "..tmpWindowName)
+          GUIframe.activate(tmpWindowName) --click the window. Hiding other windows in that space.
+        end --if not tmpWindowName
+      end --for pairs(uiThemes[themeName].clickWindows)
+    end --if uiThemes[themeName].clickWindows
+    
     --redraw GUIframe with new layout.
-    GUIframe.eventHandler("sysWindowResizeEvent")
+    --GUIframe.eventHandler("sysWindowResizeEvent")
+    if guiChange then guiChange() end --Size windows to theme setting.
+    
+    if displayToScreen then
+      cecho("Layout changed to theme, "..themeName.."\n")
+      dontForgetToSave() --remind player to save changes
+    end --if displayToScreeen
   end --if GetUIManager() == "GUIframe" and GUIframe.initialized
 
-  --prompt player to save after layout completion
-  --if displayToScreen then dontForgetToSave() end
 end --function UIManagerSetTheme(themeName, displayToScreen)</script>
 						<eventHandlerList />
 					</Script>
@@ -4297,7 +4436,7 @@ function UIManagerEnableSide(sideName,mode,displayToScreen)
       ..sideName.." to "..tostring(mode))
     --Change settings in playerstheme table.
     --Now if they save display settings these changes will load on startup.
-    uiThemes.PlayersTheme.borders[sideName] = mode
+    UIManagerSettings.PlayersTheme.borders[sideName] = mode
     if mode then --if mode is true, enable side.
       GUIframe.enable(sideName)
     else --mode is false disable side
@@ -4310,7 +4449,11 @@ function UIManagerEnableSide(sideName,mode,displayToScreen)
     tecWarningNotification("function UIManagerEnableSide, "..errorFound)
   end --if GetUIManager() == "GUIframe" and GUIframe.initialized
 
-  guiChange() --redraw windows since the display has changed
+  if guiChange then --if the guiChange function has been created
+    if displayToScreen then --displayToScreen is only true when ShowWindow is run by alias, if it is false it is run by SetTheme().
+      guiChange() --resize windows.
+    end --if displayToScreen
+  end--end if guiChange
 
   if displayToScreen then dontForgetToSave() end
 end --function UIManagerEnableSide</script>
@@ -4323,9 +4466,11 @@ end --function UIManagerEnableSide</script>
   if tecSettings.useGUIframe then --if using GUIframe manager
     GUIframe.saveSettings() --While we do not use it presently still save GUIframe settings
     --if UIManagerSettings table does not exist make it.
-    if not UIManagerSettings then UIManagerSettings = {} end
-    --Copy currently used theme to the UIManagerSettings table, so they will be saved.
-    UIManagerSettings.PlayersTheme = uiThemes.PlayersTheme
+    if not UIManagerSettings then 
+      UIManagerSettings = {}
+      UIManagerSettings.PlayersTheme = uiThemes.PlayersTheme
+    end --if not UIManagerSettings
+    
     --save GUIframe sizes to UIManagerSettings table, so they will load on startup
     UIManagerSettings.PlayersTheme.GUIframe.leftStartWidth = getBorderLeft() --left border width
     UIManagerSettings.PlayersTheme.GUIframe.leftStartHeight = GUIframe.topLeftContainer:get_height() --Where top and bottom windows meet
@@ -4334,20 +4479,22 @@ end --function UIManagerEnableSide</script>
     UIManagerSettings.PlayersTheme.GUIframe.topStartHeight = getBorderTop() --width of top
     UIManagerSettings.PlayersTheme.GUIframe.bottomStartHeight = getBorderBottom() --width of bottom
     
-    --save managed windows locations
-    for windowName, window in pairs(tecGeyserWindows) do --loop through UI managed windows
-      --We know the managed window's parent is a GUIframe container
-      --Using the .container table of a geyser object gains access to the objects parent or container
-      --window.container.name is the name of the parent of the window being checked
-      --We know the windows are named a after a GUIframe location with the word Container at the end
-      --We remove the word container with gsub
-      --Than lower case the remaining text with ():lower 
-      --Now tmpGUIframeLocation is a string looking like "top" or "bottomright"
-      local tmpGUIframeLocation = (window.container.name:gsub("Container","")):lower()
-      debugToDisplay("function UIManagerFileSave, Window "..windowName
+    --save enabled windows locations
+    for windowName, window in pairs(tecGeyserWindows) do --loop through manged windows
+      if UIManagerSettings[window.name] then --if the window exists in the settings area
+        if UIManagerSettings[window.name].disabled then --check if the window is disabled
+          if UIManagerSettings.PlayersTheme.windows[window.name] --if the window exists in the saved playerstheme
+            --erase the settings for the window. If we do not the window will load on startup and when display layout is run.
+            then UIManagerSettings.PlayersTheme.windows[window.name] = nil
+          end --if UIManagerSettings[window.name].disabled
+        else --if the window is enabled
+          --get the location of the window from the name of its container
+          local tmpGUIframeLocation = (window.container.name:gsub("Container","")):lower()
+          debugToDisplay("function UIManagerFileSave, Window "..window.name
             .." saving to GUIframe location "..tmpGUIframeLocation.."\n")
-      --save the windows location for startup
-      UIManagerSettings.PlayersTheme.windows[windowName] = tmpGUIframeLocation
+          UIManagerSettings.PlayersTheme.windows[window.name] = tmpGUIframeLocation --save the windows location
+        end --if UIManagerSettings[window.name].disabled
+      end --if UIManagerSettings[window.name]
     end --for pairs(tecGeyserWindows)
     
   else --UI manager not in use.
@@ -4379,7 +4526,8 @@ function UIManagerFileLoad(displayToScreen)
 	--If the file does not exist let the user know.
   if not io.exists(path) then 
 		debugToDisplay("tecFileLoadSettings: "..path.." file doesn't exist.") --TEC debug screen
-		debugc("tecFileLoadSettings: "..path.." file doesn't exist.") --mudlets debug screen
+    cecho("[ Info ]  - No display settings file. Parthia using default settings.\n")
+		--debugc("tecFileLoadSettings: "..path.." file doesn't exist.") --mudlets debug screen
 	return --kill the function before real errors occur
 	else
     table.load(path, tecTMPDisplayTable) --Load the settings in from file
@@ -4398,7 +4546,7 @@ end --function UIManagerFileLoad</script>
 					<Script isActive="yes" isFolder="no">
 						<name>UIManagerReset(displayToScreen)</name>
 						<packageName></packageName>
-						<script>--reset display layout colors are changed in tecClientReset()
+						<script>--reset window layout to default theme
 function UIManagerReset(displayToScreen)
 
   --make certain display to screen is good
@@ -4410,7 +4558,7 @@ function UIManagerReset(displayToScreen)
       if uiThemes then --if the uiThemes table exists
         debugToDisplay("function UIManagerReset, setting PlayersTheme table to defaultUILayout table.")
         UIManagerSettings = {}
-        UIManagerSettings.PlayersTheme = uiThemesDefaultLayout --erase players UI layout with default
+        UIManagerSettings.PlayersTheme = uiThemesDefaultLayout --replace players UI layout with default
       else --the uiThemes table somehow does not exist.
         tecErrorNotification("function UIManagerReset, uiThemes table missing.")
       end --if uiThemes
@@ -4514,7 +4662,7 @@ function UIManagerHelp()
   
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display layout list", 
   [[UIManagerSetTheme("list",true);
-    echo("Click a command above to switch to a different layout theme.")]], 
+    echo("Click a command above to switch to a different layout theme.\n")]], 
   "Change windows layout", true)
 	echo(", change window's layout to a preset theme.\n")
   
@@ -4626,7 +4774,7 @@ end --function tecResizeDisplayHelp</script>
   		.."They are:\n")	
   end --end if not tecBrief
  
-  cechoLink(tecWindow, "&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient", 
+  cechoLink(tecWindow, "&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia", 
   [[tecClientHelp()]], 
   "Save or load client settings.", true)
   if not tecBrief then --if we do not want to be brief
@@ -4721,79 +4869,104 @@ end --end function tecDebugHelp</script>
 					<packageName></packageName>
 					<script>function tecClientHelp()
 
-  echo("\ntecclient command:\n")
+  echo("\nparthia command:\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient beta test yes", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia update check", 
+  [[DownloadGitReleaseJSON()]],
+  "Check for updates", true)
+  echo(", check if Parthia updates are available.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia version", 
+  [[expandAlias("parthia version")]],
+  "Display version of Parthia", true)
+  echo(", check installed Parthia version.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia beta test yes", 
   [[tecSetBetaTester(true)]],
   "Receive beta updates", true)
   echo(", Receive beta updates and help us make a reliable client.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient beta test no", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia beta test no", 
   [[tecSetBetaTester(false)]],
   "Stop receiving beta updates", true)
   echo(", No longer receive beta updates.\n")
-	
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient font size", 
-  [[printCmdLine("tecclient font size ")]],
-  "Change client font size", true)
-  echo(", Change font size for all consoles.\n")
-  
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient tab font size", 
-  [[printCmdLine("tecclient tab font size ")]],
-  "Change font size of tabs", true)
-  echo(", Change font size for window tabs.\n") 
-  
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient change colors", 
-  [[tecClientChangeColors()]],
-  "Change client colors", true)
-  echo(", Change color scheme for client.\n")
-  
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save all", 
+
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save all", 
   [[tecClientSaveAll(true)]],
   "Save all client settings", true)
   echo(", Save client and display settings to file.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save", 
   [[tecFileSaveSettings(true)]],
   "Save client settings", true)
   echo(", Save basic client settings to file.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient load", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia load", 
   [[tecFileLoadSettings(true)]],
   "Load client settings from file", true)
-  echo(", Loads client settings from file. You need to run -tecclient"
-  	.." save- or -tecclient save all- to create a settings file.\n")
+  echo(", Loads client settings from file. Run -parthia"
+  	.." save- to create a settings file.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient reset", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia reset", 
   [[tecClientReset(true);dontForgetToSave(true)]],
   "Reset client to default", true)
-  echo(", Reset client to default client settings.\n"
-  	.."Use -display reset- or -tecclient reset all- to reset display.\n")
+  echo(", Reset client to default client settings. "
+  	.."Run -display reset- to reset display.\n")
   	
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient reset all", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia reset all", 
   [[tecClientResetAll()]],
   "Reset all client settings to default", true)
   echo(", Reset client and display to default settings.\n")
     
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient repair", 
-  [[DownloadGitScripts()]],
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia repair", 
+  [[expandAlias("parthia repair")]],
   "Repair Parthia", true)
   echo(", repairs Parthia. By replacing all developer created code.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient version", 
-  [[expandAlias("tecclient version")]],
-  "Display version of Parthia", true)
-  echo(", check installed Parthia version.\n")
-  
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient update check", 
-  [[DownloadGitReleaseJSON()]],
-  "Check for updates", true)
-  echo(", check if updates are required.\n")
-  
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient report", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia report", 
   [[tecReportIssues()]],
   "Report Parthia issues", true)
   echo(", receive instruction on reporting issues.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment Install", 
+  [[PlayerDev.SetEnabled(true)]],
+  "Install player development folders", true)
+  echo(", install player development folders.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment uninstall", 
+  [[PlayerDev.SetPackages(false)]],
+  "Uninstall player development folders", true)
+  echo(", Uninstall player development folders.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment disable", 
+  [[PlayerDev.SetEnabled(false)]],
+  "Disable player development updates", true)
+  echo(", stop receiving player development code updates.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment update", 
+  [[PlayerDev.Update(true)]],
+  "Check for player development updates", true)
+  echo(", check for updates to player development folders. Occurs automatically with client updates.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia tab font size", 
+  [[printCmdLine("parthia tab font size ")]],
+  "Change font size of tabs", true)
+  echo(", Change font size for window tabs.\n") 
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia change colors", 
+  [[tecClientChangeColors()]],
+  "Change client colors", true)
+  echo(", Change color scheme for client.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia font size", 
+  [[printCmdLine("parthia font size ")]],
+  "Change client font size", true)
+  echo(", Change font size for all consoles.\n")
+  
+    cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia commands", 
+  [[parthiaCommandsHelp()]],
+  "List custom parthia commands", true)
+  echo(", game commands that exist in parthia only.\n")
 
 end --function tecClientHelp</script>
 					<eventHandlerList />
@@ -4804,64 +4977,64 @@ end --function tecClientHelp</script>
 					<script>--lists commands that directly change colors
 function tecClientChangeColorsList()
 cecho("Change background color of windows that do not have text with: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient windows background color colorname\n", 
-  [[printCmdLine("tecclient windows background color ");
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia windows background color colorname\n", 
+  [[printCmdLine("parthia windows background color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change background color nontext windows", true)
 
   cecho("Change background color of windows that have text in them with: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient background colorname ", 
-  [[printCmdLine("tecclient background ");
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia background colorname ", 
+  [[printCmdLine("parthia background ");
     cecho("You will need to restart for text background to change")]],
   "Change background color of text windows", true)
   cecho("&lt;-Restart required on Windows OS.\n")
   cecho("Command echo background must be changed in Options -&gt; Preferences -&gt; Color View -&gt; Command Background.\n")
   
   cecho("Change background color of the client's tabs with: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient tabs background color colorname\n", 
-  [[printCmdLine("tecclient tabs background color ");
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia tabs background color colorname\n", 
+  [[printCmdLine("parthia tabs background color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change background color clients tabs", true)
   
   cecho("Change the color of windows and tabs as your mouse hovers over them: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient hover color colorname\n", 
-  [[printCmdLine("tecclient hover color ");
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia hover color colorname\n", 
+  [[printCmdLine("parthia hover color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change mouse hover color", true)
   
   cecho("Change the color help commands are highlighted in: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient helphighlight color colorname\n", 
-  [[printCmdLine("tecclient helphighlight color ");
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia helphighlight color colorname\n", 
+  [[printCmdLine("parthia helphighlight color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change help command highlight color", true)
 
   cecho("Change TEC's primary text color: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient text color colorname\n", 
-  [[printCmdLine("tecclient text color ");
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia text color colorname\n", 
+  [[printCmdLine("parthia text color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change TEC's primary text color", true)
   
   cecho("Change the color of TEC's default green: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient greentext color colorname\n", 
-  [[printCmdLine("tecclient greentext color ");
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia greentext color colorname\n", 
+  [[printCmdLine("parthia greentext color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change TEC's green text color", true)
   
   cecho("Change the color of TEC's default blue: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient bluetext color colorname\n", 
-  [[printCmdLine("tecclient bluetext color ");
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia bluetext color colorname\n", 
+  [[printCmdLine("parthia bluetext color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change TEC's blue text color", true)
   
   cecho("Change the color approached characters appear in Room Characters window: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient approached character color colorname\n", 
-  [[printCmdLine("tecclient approached character color ");
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia approached character color colorname\n", 
+  [[printCmdLine("parthia approached character color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change color approached characters in Room Character Window", true)
   
   cecho("Change the color not approached characters appear in Room Characters window: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient not approached character color colorname\n", 
-  [[printCmdLine("tecclient not approached character color ");
+  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia not approached character color colorname\n", 
+  [[printCmdLine("parthia not approached character color ");
     cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change color not approached characters in Room Character Window", true)
 end --function tecClientChnageColorsList
@@ -4871,12 +5044,12 @@ function tecClientChangeColors()
 
   cecho("List all commands that change colors with: ")
   cechoLink("&lt;:"..tecSettings.helpHighlightColor
-    .."&gt;tecclient change colors commands\n", 
+    .."&gt;parthia change colors commands\n", 
   [[tecClientChangeColorsList()]],
   "Save client settings", true)
    
   cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save\n", 
   [[tecFileSaveSettings(true)]],
   "Save client settings", true)
   
@@ -4887,7 +5060,7 @@ function tecClientChangeColors()
   "List color names", true)
   
   cecho("Open colorname chooser window: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient colors\n", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia colors\n", 
   [[tecColorWindow()]],
   "Open color chooser window", true)
   
@@ -4900,6 +5073,18 @@ function tecClientChangeColors()
   cecho("")
 
 end --function tecClientChangeColors()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaCommandsHelp()</name>
+					<packageName></packageName>
+					<script>function parthiaCommandsHelp()
+  cecho("\nCustom Parthia commands:\n")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;wait for drover", 
+  [[expandAlias("wait for drover")]],
+  "Wait for a drover", true)
+  echo(", wait for a wagon drover.\n")
+end --function parthiaCommandsHelp()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -4936,6 +5121,151 @@ function tecMapIconAdjustment(tecIconDimmension, tecMapDimmension)
 	--Than device the % of the icon size by that resulting number.
 	return tecIconDimmension / (tecMapDimmension / 240)
 end --end tecMapIconAdjustment</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaDrawMapRooms()</name>
+					<packageName></packageName>
+					<script>--SKOOT 6 -10,-10,20,#ff0000,17.1111,-10,10,20,#ffffff,25.5555
+--This skoot is from a map that I am certain there are two rooms.
+--Both the same size. One higher up is red one directly below is white
+--They are the same size.
+--There are door open and closed lines on them. Those are handled with skoot 10 messages
+--SKOOT 6 x, y, size, color, ?
+--x horizonal position of top left corner
+--y is vertical position of top left corner
+--size is the size of the room 
+--color is the color of the room 
+--No fucking idea what the fucking number at the end is!
+
+--This is going to be the games largest in drawn pixels and most common skoot message
+--SKOOT 6 -40,-40,80,#ff0000,117.624,40,-40,80,#00ff00,117.624,-120,-40,80,#00ff00,117.624,
+---40,-120,80,#ffffff,117.624,-40,40,80,#ffffff,117.624,-120,40,80,#ffffff,117.624,
+--40,40,80,#ffffff,117.624,40,-120,80,#ffffff,117.624,-120,-120,80,#ffffff,108.576
+--Now we need to get room data in %.
+--We know that 80 is the max room size for a single room. By observing skoots.
+--We know, only because of playing. That these rooms are normally in a 3x3 grid.
+--So we know now our draw win is 240x240
+--TEC numbers map to a graph, not a window. So their 0 is x120 y120 in our window.
+--To get our correct position we have to do xpos + 120. 
+--x and y are both -40 / 120. It would be -.33333.
+--multiply that by 100 to get the number is a full percent. -33.333
+--Now since tec sees x120,y120 as position 0 and the rest of the world sees x0,y0 as zero
+--We need to add our number to 50, because 120 is 50% of our total draw size of 240 pixels.
+--50 + -33.333 = 16.667. so 16.667% are our x and y positions.
+--size is 80 that will be our width and height.
+--We need to get what percent 80 is of our overall draw size 240
+-- 80 / 240 = .33333. Multiply that by 100, 33.333
+--The room is 33.33% of the entire draw window.
+--Subtract 1% of that so we have a border between rooms.
+--ff0000 is red so the room will be red.
+--17.1111 can go fuck itself because I can't figure out what is is.
+
+--Loop through the sckoot message. Looking for a pattern of room data.
+--The patterns in () get returned on gmatch. We capture those into variables.
+--Those varibles will be used to draw the room.
+--Explaining: "(-?%d+),(-?%d+),(%d+),(#%x+),%d+.%d+,?"
+--"-?" means there MAY be a -
+--"%d+" is a decimal number that CAN be more than one digit long.
+--"%x+: is a hexidecimal number that CAN be more than one digit long.
+-- ",?" At the very end. There MAY be a , at the end of our pattern or there
+--[.%d*]? means there may be a . followed by 0 or more numbers. Like .4555
+--may not be. The last number in the skoot message does not have a ,.
+--Not looking for that comma in earlier messages might cause future
+--pattern searches to fail.
+function parthiaDrawMapRooms()
+  for xpos, ypos, size, tecMapRoomcolor in string.gmatch( line, "(-?%d+),(-?%d+),(%d+),(#%x+),%d+[.%d*]?,?" ) do
+  
+    --TEC uses grid logic for their map. xposition is up to 120 +-.
+    --240 is the total size of their draw space. What percent is our position in that space.
+    -- +.5 just gives us a border.
+    xposScaler = ((((tonumber(xpos) + 120) / 240) * 100)) * mapZoom
+    yposScaler = ((((tonumber(ypos) + 120) / 240) * 100)) * mapZoom
+  
+  	--Convert the size of the room to draw into % of its size on the map.
+    --size / 240 = decimalNumber like .3333. Multiply decimalNumber by 100, that is your % 
+    sizeScaler = tecMapPixelToPercent(size)
+  
+  	if getTECMapDebugMode() then --if Display Debug Mod is on.
+    	debugToDisplay("Map Room "..tostring(mapRoomsLC).." xpos: "..tostring(tonumber(xpos)+120)
+  		.." xposScaler: "..tostring(xposScaler)
+      .." ypos: "..tostring(tonumber(ypos)+120).." yposScaler: "..tostring(yposScaler)
+      .." size: "..tostring(size).." sizeScaler: "..tostring(sizeScaler)
+      .." color: "..tostring(tecMapRoomcolor))
+    	cecho(mapRoom[mapRoomsLC].name,tostring(mapRoomsLC),blue,"c") --put room # on label
+  	end --end if DisplayDebugMode is true
+    	
+    mapRoom[mapRoomsLC]:move(tostring(xposScaler).."%", tostring(yposScaler).."%") --Move the room into position.
+    mapRoom[mapRoomsLC]:resize(tostring(sizeScaler).."%", tostring(sizeScaler).."%") --Change the rooms size.
+  	--using style sheets set the shape and color of the room
+  	if tecMapRoomcolor == "#ff0000" then mapRoom[mapRoomsLC]:setStyleSheet(mapRoomStyleRed)
+  	elseif tecMapRoomcolor == "#00ff00" then mapRoom[mapRoomsLC]:setStyleSheet(mapRoomStyleGreen)
+  	else mapRoom[mapRoomsLC]:setStyleSheet(mapRoomStyleWhite) end
+  	
+    mapRoom[mapRoomsLC]:show() --Now show the room.
+    mapRoomsLC = mapRoomsLC +1 --Iterate so we can do this again.
+  end --end gmatch room data search loop
+end --function parthiaDrawMapRooms()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaDrawMapExits()</name>
+					<packageName></packageName>
+					<script>--[[
+Draw exits for map
+SKOOT 10 x y, dir, open
+x is horizontal position, from center of line
+y is vertical position, from center of line.
+dir is the direction the Exit is facing, normally it is a line so
+	"hor" is horizontal, v is vertical
+	"ne" is a 45 degree angle going from left to right, so north east on a map.
+	"nw" is a 45 degree andle going from right to left. so north west on a map.
+open if the Exit is open. 1 is open 0 is closed.
+]]--
+
+function parthiaDrawMapExits()
+  --look through line for the data pattern to get exit data. Input them into variables.
+  for xpos, ypos, exitDirection, exitOpen in string.gmatch( line, "(-?%d+),(-?%d+),(%w+),(%d+),?" ) do
+  
+  	if getTECMapDebugMode() then --if Display Debug Mode is on.
+    	debugToDisplay("Map Exit "..tostring(mapExitsLC).." xpos: "
+  		..tostring(tonumber(xpos)+120).." xposScaler: "..tostring(xposScaler)
+      .." ypos: "..tostring(tonumber(ypos)+120).." yposScaler: "..tostring(yposScaler)
+      .." Direction: "..exitDirection
+      .." open: "..tostring(exitOpen)
+  		.."\nExit Icon: Width: "..tecExit[exitDirection].width
+  		.." Height: "..tecExit[exitDirection].height
+      .." Style sheet: "..tecExit[exitDirection][exitOpen].tecExitStyleSheet)
+  	end --end if DisplayDebugMode is true
+  
+  	--pulling sizes from the tecExit table resize the label for the icon	
+    mapExit[mapExitsLC]:resize(tecExit[exitDirection].width, tecExit[exitDirection].height)
+  	--Now set the style sheet for the  
+  	mapExit[mapExitsLC]:setStyleSheet(tecExit[exitDirection][exitOpen].tecExitStyleSheet)
+  
+  	--labels start at x0y0 in mudlet, but TEC is providing a center point for our exit icons
+  	--convert half the size of the icons for exits into % of the total map window.
+  	--Than take the overall size of the map window / that by our standard 240 window size.
+  	--The resulting number is used to adjust the icon position as the map is scaled.
+  	local iconWidthAdjustment = tecMapIconAdjustment(tecExit[exitDirection].width, tecMap_back:get_width())
+  	
+    --TEC uses grid logic for their map. xposition is 120 +-.
+    --240 is the total size of their draw space. What percent is our position in that space.
+  	--halfWidth is used to center
+  	local xposScaler = ((((tonumber(xpos) + 120) / 240) * 100) - iconWidthAdjustment) * mapZoom
+  	
+  	--same logic as aboive
+  	local iconHeightAdjustment = tecMapIconAdjustment(tecExit[exitDirection].height, tecMap_back:get_height())
+  	local yposScaler = ((((tonumber(ypos) + 120) / 240) * 100) - iconHeightAdjustment) * mapZoom	
+  	
+  	--Move the Exit into position.
+    mapExit[mapExitsLC]:move(tostring(xposScaler).."%", tostring(yposScaler).."%") 
+  	mapExit[mapExitsLC]:lower() --Position rooms ontop of exits.
+  	mapExit[mapExitsLC]:show() --Now show the exit path.
+  
+    mapExitsLC = mapExitsLC +1 --Iterate so we can do this again on a new exit.
+  end --end gmatch room data search loop
+end --function parthiaDrawMapExits()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -5003,7 +5333,7 @@ end --function tecRefreshSettingsWindow
 				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>TEC Client</name>
+				<name>Parthia Commands</name>
 				<packageName></packageName>
 				<script></script>
 				<eventHandlerList />
@@ -5081,11 +5411,7 @@ function tecClientSetFontSize(numbertemp)--set font settings with this function
   tecRefreshSettingsWindow() --Redraw text in setttings window.
   tecResetRoomCharacterWindow() --Redraw text in room characters window.
   
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  cecho("") --cechoLink does not new line itself.
+  dontForgetToSave() --reminder player to save
 
 end --end tecClientSetFontSize</script>
 						<eventHandlerList />
@@ -5122,10 +5448,7 @@ function tecClientSetTabFontSize(tecTmpTabFont)--set font settings with this fun
   --Redraw all tabs, this includes labels.  
   tecRedrawLabels()
   
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
+  dontForgetToSave() --reminder player to save
   cecho("") --cechoLink does not new line itself.
 
 end --end tecClientSetTabFontSize(numbertemp)</script>
@@ -5261,11 +5584,7 @@ function tecLabelBackgroundColor(tecColor)
   
   tecRedrawLabels() --redraw labels appling change
   
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  cecho("") --cechoLink does not new line itself.
+  dontForgetToSave() --reminder player to save
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -5278,11 +5597,7 @@ function tecTabsBackgroundColor(tecColor)
   
   tecRedrawLabels() --redraw labels appling change
   
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  cecho("") --cechoLink does not new line itself.
+  dontForgetToSave() --reminder player to save
   
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
@@ -5296,11 +5611,7 @@ function tecSetMouseHoverColor(tecColor)
   
   tecRedrawLabels() --redraw labels appling change
   
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  cecho("") --cechoLink does not new line itself.
+  dontForgetToSave() --reminder player to save
   
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
@@ -5313,11 +5624,7 @@ function tecSetHelpHighlightColor(tecColor)
   tecSettings.helpHighlightColor = tecColor
   tecRefreshSettingsWindow() --refresh settings window text
   
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  cecho("") --cechoLink does not new line itself.
+  dontForgetToSave() --reminder player to save
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -5329,11 +5636,7 @@ function tecSetGreenTextColor(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.GreenTextColor = Geyser.Color.hex(tecColor)
   
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  cecho("") --cechoLink does not new line itself.
+  dontForgetToSave() --reminder player to save
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -5345,11 +5648,7 @@ function tecSetBlueTextColor(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.BlueTextColor = Geyser.Color.hex(tecColor)
   
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  cecho("") --cechoLink does not new line itself.
+  dontForgetToSave() --reminder player to save
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -5361,11 +5660,7 @@ function tecSetTextColor(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.tecTextColor = Geyser.Color.hex(tecColor)
   
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  cecho("") --cechoLink does not new line itself.
+  dontForgetToSave() --reminder player to save
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -5404,11 +5699,7 @@ function tecSettecNotApproachedCharacter(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.notApproachedCharacterColor = Geyser.Color.hex(tecColor)
   runTECRoomObjectCheck(displayToScreen) --refresh room characters window.
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  cecho("") --cechoLink does not new line itself.
+  dontForgetToSave() --reminder player to save
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -5420,11 +5711,7 @@ function tecSettecApproachedCharacter(tecColor)
   --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
   tecSettings.ApproachedCharactersColor = Geyser.Color.hex(tecColor)
   runTECRoomObjectCheck(displayToScreen) --refresh room characters window.
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  cecho("") --cechoLink does not new line itself.
+  dontForgetToSave() --reminder player to save
 end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
@@ -5652,6 +5939,244 @@ end --function tecSetBetaTester(betaTester)</script>
 end --function tecGetBetaTester</script>
 					<eventHandlerList />
 				</Script>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>Player Development Folders</name>
+					<packageName></packageName>
+					<script>--if the player development table does not exist, create it.
+if not PlayerDev then PlayerDev = {} end</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>PlayerDev.SetPackages()</name>
+						<packageName></packageName>
+						<script>--Install or remove player development packages.
+ function PlayerDev.SetPackages(mode)
+  mode = fuzzyBoolean(mode)
+  --table contains information on packages needing installation
+  local packageTable = { trigger = { file = "Your_Triggers.xml"},
+                         alias   = { file = "Your_Aliases.xml"},
+                         script  = {file  = "Your_Scripts.xml"}, 
+                         timer   = {file  = "Your_Timmers.xml"},
+                         keybind = {file  = "Your_Key_Bindings.xml"},
+                       }
+  
+  --loop through the packageTable. Check if the package needs to be installed.
+  for packageType, packageToInstall in pairs(packageTable) do
+    --the folder the package makes after it is installed.
+    local packageFolder = packageToInstall.file:match("^(%a+_%a+_?%a*)")
+    debugToDisplay("function PlayerDevCreateScripts, packageType is "..packageType..", packageToInstall.file is "
+      ..packageToInstall.file.." packageFolder is "..packageFolder)
+    local localPackageFile = tecSettingsFolder..packageToInstall.file --full folder and file name of package to install
+    if mode then --if the function was sent true, install needed packages.
+      if exists(packageFolder, packageType) == 0 then --check if the package's folder does not exist
+        --check if the file for the package exists, if it does install it.
+        if io.exists(localPackageFile) then --package file found
+          debugToDisplay("function PlayerDevCreateScripts, "..localPackageFile
+            .." found attempting package installation.")
+          installPackage(localPackageFile) --install the package.
+        else --the file for the package does not exist, show an error.
+          errorFound = "player package file "..localPackageFile.." does NOT exits.\n"
+          tecErrorNotification("function PlayerDevCreateScripts, "..errorFound)
+        end --if io.exists(localPackageFile)
+      end --if exists(packageFolder, packageType)
+    else --mode is false, remove the player packages
+      if exists(packageFolder, packageType) &gt; 0 then --check if the package's folder exist
+          uninstallPackage(packageFolder) --remove the package.
+          tecSettings.PlayerDevelopmentSpaceEnabled = mode
+      else --the package does not exist.
+          errorFound = "player package "..packageFolder.." does NOT exits.\n"
+          tecErrorNotification("function PlayerDevCreateScripts, "..errorFound)
+       end --if exists(packageFolder, packageType) &gt; 0
+    end --if mode
+  end --for pairs(packageTable)
+  if not mode then --if uninstalling packages
+    cecho("Packages removed. If changes are not saved, packages will reinstall with next update.\n")
+    dontForgetToSave() --tell player to save
+  end --if not mode
+end --function PlayerDev.SetPackages(mode)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>PlayerDev.Triggers()</name>
+						<packageName></packageName>
+						<script>--create triggers in the player development space.
+--reference https://wiki.mudlet.org/w/Manual:Lua_Functions
+function PlayerDev.Triggers()
+
+  --[[
+  To add a trigger to a player's development space, it needs to be in the triggersTable
+  An example of a trigger to add to the triggersTable is:
+  COPY BELOW  
+    subTableNameMustBeUnique = { 
+        name = "Trigger name, must be unique", 
+        parent = "Player Game Events",
+        triggerType = "substring",
+        patterns = {"trigger ", "patterns here"},
+        code = "--Should be a commented description.\n" }
+  COPY ABOVE
+    name, is the name that will show in the triggers section of the editor.
+    parent, is the group the trigger needs to go in. Most likely will be "Player Game Evets"
+    triggerType, can be "substring" "regex" or "beginofline"
+    patterns, is a table. It can contain one or more triggers like "You fall"
+      The patterns have to be surrounded by {}, with commas between each trigger.
+      for example {"trigger one", "trigger two", "trigger three}
+    code, is the lua code that the trigger will run. I recommend making this commented
+      code to describe when the trigger will trigger.
+  ]]--
+  
+  local triggerSuffix = " -Do not change this name-" --Will be added to the end of each trigger. To give it a unique name and tell player not to change it.
+  local playerTriggersParentGroup = "Player Game Events"..triggerSuffix
+
+  local triggersTable = {
+
+    PlayerApproaches = { 
+      name = "Player approaches a character", 
+      parent = playerTriggersParentGroup,
+      triggerType = "substring",
+      patterns = {"You stop next to "},
+      code = "--triggers when the player approaches something.\n" },
+
+    PlayerRetreat = { 
+    	name = "Player retreats", 
+    	parent = playerTriggersParentGroup,
+    	triggerType = "beginofline",
+    	patterns = {"You retreat."},
+    	code = "--triggers when a player retreats or falls back.\n" },
+
+    PlayerIsApproached = { 
+	   name = "Player is approached", 
+	   parent = playerTriggersParentGroup,
+	   triggerType = "substring",
+	   patterns = {"stops next to you."},
+	   code = "--triggers when a player's character is approached.\n" },
+
+    CharacterEntersRoom = { 
+      name = "Character walks into players room", 
+	    parent = playerTriggersParentGroup,
+      triggerType = "substring",
+      patterns = {"walks in", "runs in", "flies in"},
+      code = "--triggers when a character enters the players room.\n" },
+
+    CharacterLeavesRoom = { 
+      name = "Character leave players room", 
+      parent = playerTriggersParentGroup,
+      triggerType = "substring",
+      patterns = {"walks away", "runs away", "flies away"},
+      code = "--triggers when a character leaves the players room.\n" },
+      
+    NPCSpawns = { 
+      name = "Character Arrives", 
+      parent = playerTriggersParentGroup,
+      triggerType = "substring",
+      patterns = {"arrives."},
+      code = "--triggers when an NPC is spawned.\n" },
+      
+    PlayerRoomChange = { 
+      name = "Player enters a room", 
+      parent = playerTriggersParentGroup,
+      triggerType = "beginofline",
+      patterns = {"You arrive at "},
+      code = "--triggers when the player enters a new room.\n" },
+      
+    SuccessfulLogin = { 
+      name = "Successful login", 
+      parent = playerTriggersParentGroup,
+      triggerType = "beginofline",
+      patterns = {"&lt;center&gt;*** Login successful"},
+      code = "--triggers after a successful login.\n" },
+      
+    VisionLoss = { 
+      name = "Vision loss", 
+      parent = playerTriggersParentGroup,
+      triggerType = "beginofline",
+      patterns = {"It is too dark to see anything."},
+      code = "--Triggers when the player can not see.\n" }
+  } --substringTriggers
+
+  --loop through the triggers to install.
+  --if they do no already exist. Install them.
+  for _, triggerTable in pairs(triggersTable) do
+    local createTrigger = nil --Will be used to store a function to create desired trigger type
+    if exists(triggerTable.name..triggerSuffix, "trigger") == 0 then --the trigger does NOT exists
+      debugToDisplay("function PlayerDev.Triggers, Trigger "..triggerTable.name
+        ..triggerSuffix.." does not exist, creating it.\n")
+      --Find the type of trigger being created. 
+      --Once found make createTrigger a copy of the function needed to create the trigger
+      if triggerTable.triggerType:lower() == "substring" then --check the type of trigger needed to be made
+        createTrigger = permSubstringTrigger --createTrigger is now permSubstringTrigger, it will create a substring trigger when called
+      elseif triggerTable.triggerType:lower() == "beginofline" then --check the type of trigger needed to be made
+        createTrigger = permBeginOfLineStringTrigger --createTrigger is now permBeginOfLineStringTrigger, it will create a begin of line or start of line trigger when called
+      elseif triggerTable.triggerType:lower() == "regex" then --check the type of trigger needed to be made
+        createTrigger = permRegexTrigger --createTrigger is now permRegexTrigger, it will create a perl regex trigger when called
+      else --no good trigger type found
+        tecErrorNotification("function PlayerDev.Triggers, no good trigger type found. "
+          .."Correct trigger types are substring, beginofline and regex.")
+      end --if TriggerTable.triggerType.lower() == "substring"
+      if exists(triggerTable.parent, "trigger") == 0 then --the parent ground the trigger needs to go to does not exist
+        tecWarningNotification("function PlayerDev.Triggers, parent group "..triggerTable.parent.." does not exist.\n") 
+      else --the parent group to the trigger exists, so make the trigger.
+        createTrigger(triggerTable.name..triggerSuffix, triggerTable.parent, triggerTable.patterns, triggerTable.code)
+        disableTrigger(triggerTable.name..triggerSuffix) --disable the trigger, so it is not needlessly checked
+      end --if exists(triggerTable.parent, "trigger") == 0
+    end --if exists(TriggerName, "trigger") == 0
+  end --for pairs(triggersTable)
+
+end --function PlayDevSubstringTriggers()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>PlayerDev.GetEnabled()</name>
+						<packageName></packageName>
+						<script>--returns if the player development mode
+function PlayerDev.GetEnabled()
+  if tecSettings.PlayerDevelopmentSpaceEnabled then --if the variable exists and is true
+    return tecSettings.PlayerDevelopmentSpaceEnabled --return it
+  else --if the variable does not exist.
+    return false --We know the player has not set the enabled variable, so return false
+  end --if tecSettings.PlayerDevelopmentSpaceEnabled
+end --function PlayerDev.Get()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>PlayerDev.Update()</name>
+						<packageName></packageName>
+						<script>--Add new code to the players development folders.
+function PlayerDev.Update(displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  if PlayerDev.GetEnabled() then --if player dev space is enabled
+    if displayToScreen then cecho("Checking if player development modules need to be installed.\n") end
+    PlayerDev.SetPackages(true) --Install modules if they do not already exist.
+    if displayToScreen then cecho("Installing new player development triggers.\n") end
+    PlayerDev.Triggers() --create player triggers
+    if displayToScreen then cecho("Completed updating player development folders.\n") end
+  end --if PlayerDev.GetEnabled()
+end --function PlayerDev.runUpdate()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>PlayerDev.SetEnabled(mode)</name>
+						<packageName></packageName>
+						<script>--set and save if the player wanted their player development space created
+function PlayerDev.SetEnabled(mode)
+  mode = fuzzyBoolean(mode) --make certain correct boolean sent.
+  tecSettings.PlayerDevelopmentSpaceEnabled = mode --make certain this setting can be saved
+  if mode then --player wants the player development space created.
+    cecho("Creating folders for you in the script editor. Each section will have a folder "
+      .."starting with Your_. Save your code to these folders.\nWe will never remove "
+      .."code from these folders. With updates we may add code to these folders. "
+      .."Only if it will not replace code you have created. In mudlet\'s editor "
+      .."folders are called groups.\n")
+    PlayerDev.Update() --installed player modules and code, or updates it
+    cecho("Player development folders have been created. "
+      .."Press alt\+e to open the script editor.\n")
+  else --player does not want to contine to receive updates.
+    cecho("If you save changes, you will no longer receive updates to the player "
+      .."Your_ folders in the editor. This will not remove those folders.\n")
+  end --if mode
+  dontForgetToSave()
+end --function PlayerDev.set(mode)</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
 				<Script isActive="yes" isFolder="no">
 					<name>Git Updates</name>
 					<packageName></packageName>
@@ -5726,10 +6251,10 @@ function GitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if GitUpdate.localRespitory not exist
   GitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  GitUpdate.localVersion = "0.1.23" --Must match the tag in your github release
-  GitUpdate.aliasName = "tecclient update" --Name of alias user runs to process update
+  GitUpdate.localVersion = "0.1.31" --Must match the tag in your github release
+  GitUpdate.aliasName = "parthia update" --Name of alias user runs to process update
   --Name of the alias to check if an update is available.
-  GitUpdate.updateCheckAlias = "tecclient update check" 
+  GitUpdate.updateCheckAlias = "parthia update check" 
   --The full name or a word in the file that this update script is in.
   GitUpdate.updateFileNameReference = "Scripts"
   --notify update engine if player is a beta tester. If the player is a beta
@@ -5742,11 +6267,13 @@ function GitUpdateconfig() --Create variables used for updates
   GitUpdate.removeModules = {} --modules that are no longer used in the project and should be removed.
   --Used to tell player correct installation method if they installed scripts as modules
   GitUpdate.installationURL = "https://github.com/TheEternalCitizens/mudlet-integration/wiki/Installation"
-  --use in a repair aliase, set this variable to true if a repair install 
-  --is needed.
+  --use in a repair aliase, set this variable to true if a repair install is needed.
   GitUpdate.repairInstall = fuzzyBoolean(GitUpdate.repairInstall)
   --cecho compatible color, it will hightlight cecholinks in the update process
   GitUpdate.cmdHighlight = "blue"
+  --Copy a function you would like to have run when an update is completed.
+  --Make false if you do not want it to run after the update has completed.
+  GitUpdate.postUpdateFunction = PlayerDev.Update
 
   --No need to change variables below
   GitUpdate.filePattern = ".*%/(.*%..*)$" --string pattern to detect file name at end of url or file path string
@@ -6073,7 +6600,7 @@ local function compareVersions()
           return --end releaseSearch
         end --if errorFound
       else --this is not a repair install. So let the player know no update is available.
-        cecho("Thank you for beta testing!\n\tNo new releases at this time.")
+        cecho("Thank you for beta testing!\n\tNo new releases at this time.\n")
       end --if GitUpdate.repairInstall
     end --if beta tester is not using latest release
   else --The user is not a beta tester.
@@ -6271,6 +6798,10 @@ local function InstallGitUpdates()
   if GitUpdate.uninstallPackageID then
     killAnonymousEventHandler(GitUpdate.uninstallPackageID) 
   end --if GitUpdate.downloadDoneID
+
+  --runs a function specified in config
+  if GitUpdate.postUpdateFunction then GitUpdate.postUpdateFunction(true) end
+
 end --function InstallGitUpdates
 
 function GitUpdateEventHandler(event, ...)
@@ -6345,9 +6876,10 @@ end --end function getRoomCharactersActive</script>
 					<name>setTECRoomCheckActive(tecRoomCheckActive, displayToScreen)</name>
 					<packageName></packageName>
 					<script>function setTECRoomCheckActive(tecRoomCheckActive, displayToScreen)
-  displayToScreen = displayToScreen or false
-	tecRoomObjects.checkActive = tecRoomCheckActive
-  tecRoomObjects.displayToScreen = displayToScreen --will ac . display to main
+  displayToScreen = fuzzyBoolean(displayToScreen) --verify good boolean sent
+  tecRoomCheckActive = fuzzyBoolean(tecRoomCheckActive) --verify good boolean sent
+	tecRoomObjects.checkActive = tecRoomCheckActive --tell triggers to expect a room check
+  tecRoomObjects.displayToScreen = displayToScreen --will ac . display to main?
 end --end function setRoomCharactersActive</script>
 					<eventHandlerList />
 				</Script>
@@ -6365,42 +6897,72 @@ function runTECRoomObjectCheck(displayToScreen)
 
   displayToScreen = displayToScreen or false --if not declared default is false
 
-	--clear room data before running check 
-	clearTECRoomObjects()
+	clearTECRoomObjects() --clear room data before running check
 
-	--clear the character window.
-	clearWindow("roomCharacters.console")
+	clearRoomCharacterWindow() --clear all roomCharacter windows
 	
-	--set a room check to true.
-	setTECRoomCheckActive(true,displayToScreen)
+	setTECRoomCheckActive(true,displayToScreen)--set a room check to true.
 
-	--send an ac . command to list characters in the room.
-  send("ac .", false)
+  send("ac .", false) --send an ac . command to list characters in the room.
 
 end --function runRoomCharacterCheck()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>echoLeftRoomCharacterWindows(message)</name>
+					<packageName></packageName>
+					<script>--display text to left side of all Room Character Windows
+function echoLeftRoomCharacterWindows(message)
+  if type(message) ~= "string" then --if the type is incorrect
+    tecErrorNotification("function echoLeftRoomCharacterWindows, sent a none string variable.")
+  end --if type(message) ~= "string"
+  --display messages to side of the screen
+  debugToDisplay("function echoLeftRoomCharacterWindows, message: "..message)
+  hecho(roomCharacters.console.name,message) --send message or standard room character window
+  hecho(MultiWindow.roomCharacters.console.name,message) --send message to room character multi window
+end --function echoLeftRoomCharacterWindows()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>echoRightRoomCharacterWindows(message)</name>
+					<packageName></packageName>
+					<script>function echoRightRoomCharacterWindows(message)
+  if type(message) ~= "string" then --if the type is incorrect
+    tecErrorNotification("function echoRightRoomCharacterWindows, sent a none string variable.")
+  end --if type(message) ~= "string"
+  --display messages to side of the screen
+  debugToDisplay("function echoRightRoomCharacterWindows, message: "..message)
+  hecho(roomCharacters.rightConsole.name,message) --send message or standard room character window
+  hecho(MultiWindow.roomCharacters.rightConsole.name,message) --send message to room character multi window
+end --function echoLeftRoomCharacterWindows()</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
 					<name>clearRoomCharacterWindow()</name>
 					<packageName></packageName>
 					<script>function clearRoomCharacterWindow()
-	clearWindow("roomCharacters.console")
-  tecRoomObjects.refreshMessageDisplayed =false
+	clearWindow(roomCharacters.console.name) --clear left side standard room characters window
+  clearWindow(MultiWindow.roomCharacters.console.name) --clear left side of the MultiWindow room characters console
+  clearWindow(MultiWindow.roomCharacters.rightConsole.name) --clear right side of standard room character window
+  clearWindow(roomCharacters.rightConsole.name) --clear the right side of the multi window room characters console
+  tecRoomObjects.refreshMessageDisplayed = false --tell Parthia refresh message has not been shown
 end --clearRoomCharacterWindow</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
 					<name>tecRoomCharRefreshNotification()</name>
 					<packageName></packageName>
-					<script>local function tecRoomCharRefreshMessage()
-  cecho("roomCharacters.console", "Refresh Room Characters by:\n")
-  cecho("roomCharacters.console", "Runing command, ")
-  cechoLink("roomCharacters.console","&lt;:maroon&gt;room check", 
+					<script>--Show notification to the player than something has changed and a room check is needed
+local function tecRoomCharRefreshMessage()
+  --displaying to right panel, because it will have very little text in it
+  echoRightRoomCharacterWindows("Refresh Recommended ")
+    cechoLink(roomCharacters.rightConsole.name,"&lt;:maroon&gt;room check", 
     [[runTECRoomObjectCheck()]],
     "Populate Room Character window.", true)
-  cecho("roomCharacters.console", ".\n")
-  cecho("roomCharacters.console", "Pressing ctrl+R.\n")
-  cecho("roomCharacters.console", "Refresh Recommended")
+  cechoLink(MultiWindow.roomCharacters.rightConsole.name,"&lt;:maroon&gt;room check", 
+    [[runTECRoomObjectCheck()]],
+    "Populate Room Character window.", true)
+  echoRightRoomCharacterWindows(" or press ctrl+r.\n")
 end --function tecRoomCharRefreshMessage()
 
 function tecRoomCharRefreshNotification()
@@ -6416,66 +6978,55 @@ end --function recRoomCharRefreshNotification()</script>
 				<Script isActive="yes" isFolder="no">
 					<name>tecResetRoomCharacterWindow()</name>
 					<packageName></packageName>
-					<script>function tecResetRoomCharacterWindow()
+					<script>--clear out the room character windows and tell player how to refresh
+function tecResetRoomCharacterWindow()
   clearRoomCharacterWindow() --Room characters window no longer accurate, clear it.
-  cecho("roomCharacters.console", "Populate the Room Characters window by:\n")
-  cecho("roomCharacters.console", "Runing command, ")
-  cechoLink("roomCharacters.console","&lt;:maroon&gt;room check", 
+  echoLeftRoomCharacterWindows("Populate this space with characters in this room by:")
+  echoRightRoomCharacterWindows("running command ")
+  cechoLink(roomCharacters.rightConsole.name,"&lt;:maroon&gt;room check", 
     [[runTECRoomObjectCheck()]],
     "Populate Room Character window.", true)
-  cecho("roomCharacters.console", ".\n")
-  cecho("roomCharacters.console", "Pressing ctrl+R.\n")
-  cecho("roomCharacters.console", "\nCurrently this is not automated because TEC can only receive "
-    .."one command per second.\nWe will be automating this in future releases.\n")
+  cechoLink(MultiWindow.roomCharacters.rightConsole.name,"&lt;:maroon&gt;room check", 
+    [[runTECRoomObjectCheck()]],
+    "Populate Room Character window.", true)
+  echoRightRoomCharacterWindows(" or pressing ctrl+r.\n")
   tecRoomObjects.refreshMessageDisplayed = true --tell client no further refreshes needed
 end --function tecResetRoomCharacterWindow</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>Misc</name>
+				<name>Game commands</name>
 				<packageName></packageName>
-				<script>-------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external scripts --
--------------------------------------------------
-</script>
+				<script>--[[
+Commands used to interact with the game itself.
+
+IE: `wait for drover`
+]]--</script>
 				<eventHandlerList />
-				<Script isActive="yes" isFolder="no">
-					<name>dontForgetToSave()</name>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>wait for drover</name>
 					<packageName></packageName>
-					<script>function dontForgetToSave()
-  cecho("Don't forget to save your changes:\n")
-  cecho("Save all settings with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save all\n", 
-  [[tecClientSaveAll(true)]],
-  "Save all settings", true)
-  cecho("") --cechoLink will not \n on its own.
-end --function dontForgetToSave</script>
+					<script></script>
 					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>ReplaceStringMagicChar(tmpString)</name>
-					<packageName></packageName>
-					<script>--used to replace magic characters in a string with the proper escape character 
---sequence. Useful for replacing file names on sysDownload events.
-function ReplaceStringMagicChar(tmpString)
-  tmpString = tmpString:gsub("%%", "%%%")
-  tmpString = tmpString:gsub("%(", "%%(")
-  tmpString = tmpString:gsub("%)", "%%)")
-  tmpString = tmpString:gsub("%.", "%%.")
-  tmpString = tmpString:gsub("%+", "%%+")
-  tmpString = tmpString:gsub("%[", "%%[")
-  tmpString = tmpString:gsub("%^", "%%^")
-  tmpString = tmpString:gsub("%$", "%%$")
-  tmpString = tmpString:gsub("%-", "%%-")
-  tmpString = tmpString:gsub("%*", "%%*")
-  tmpString = tmpString:gsub("%?", "%%?")
-return tmpString
-end --function ReplaceStringMagicChar(tmpString)</script>
-					<eventHandlerList />
-				</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaSetWaitForDrover(waiting)</name>
+						<packageName></packageName>
+						<script>function parthiaSetWaitForDrover(waiting)
+  waiting = fuzzyBoolean(waiting) --make certain it is a good variable
+  parthiaWaitingForDrover = waiting
+end --function parthiaSetWaitForDrover(waiting)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaGetWaitForDrover()</name>
+						<packageName></packageName>
+						<script>function parthiaGetWaitForDrover()
+  return parthiaWaitingForDrover 
+end --function parthiaGetWaitForDrover()</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
 			</ScriptGroup>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
@@ -6508,18 +7059,22 @@ UIManagerRegisterWindow(status_bar)</script>
   x=0, y=0,
   width="50%", height="50%",
 },status_bar)
-hpbar.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffdcdc, stop: 0.1 #ff8c8c, stop: 0.49 #ff4c4c, stop: 0.5 #ff4c4c, stop: 1 #ff6666);
+
+hpbar.frontStyleSheet = [[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffdcdc, stop: 0.1 #ff8c8c, stop: 0.49 #ff4c4c, stop: 0.5 #ff4c4c, stop: 1 #ff6666);
     border-top: 1px black solid;
     border-left: 1px black solid;
     border-bottom: 1px black solid;
     border-radius: 7;
-    padding: 3px;]]) --                                                                           
-hpbar.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ff6666, stop: 0.1 #F05050, stop: 0.49 #E03030, stop: 0.5 #E03030, stop: 1 #E03030);
+    padding: 3px;]]
+hpbar.front:setStyleSheet(hpbar.frontStyleSheet) --set the forground gradiant
+
+hpbar.backStyleSheet = [[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ff6666, stop: 0.1 #F05050, stop: 0.49 #E03030, stop: 0.5 #E03030, stop: 1 #E03030);
     border-width: 1px;
     border-color: black;
     border-style: solid;
     border-radius: 7;
-    padding: 3px;]])
+    padding: 3px;]]                                             
+hpbar.back:setStyleSheet(hpbar.backStyleSheet) --set the background gradiant
 
 hpbar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Health&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])</script>
 					<eventHandlerList />
@@ -6532,18 +7087,22 @@ hpbar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt
   x=0, y="50%",
   width="50%", height="50%",
 },status_bar)
-fatiguebar.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f0fff0, stop: 0.1 #f0ffca, stop: 0.49 #f0d09a, stop: 0.5 #f0d09a, stop: 1 #f0d09a);
+
+fatiguebar.frontStyleSheet = [[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f0fff0, stop: 0.1 #f0ffca, stop: 0.49 #f0d09a, stop: 0.5 #f0d09a, stop: 1 #f0d09a);
     border-top: 1px black solid;
     border-left: 1px black solid;
     border-bottom: 1px black solid;
     border-radius: 7;
-    padding: 3px;]])
-fatiguebar.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f0d09a, stop: 0.1 #e0c08a, stop: 0.49 #d0b07a, stop: 0.5 #d0b07a, stop: 1 #d0b07a);
+    padding: 3px;]]
+fatiguebar.front:setStyleSheet(fatiguebar.frontStyleSheet)
+
+fatiguebar.backStyleSheet = [[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f0d09a, stop: 0.1 #e0c08a, stop: 0.49 #d0b07a, stop: 0.5 #d0b07a, stop: 1 #d0b07a);
     border-width: 1px;
     border-color: black;
     border-style: solid;
     border-radius: 7;
-    padding: 3px;]])
+    padding: 3px;]]
+fatiguebar.back:setStyleSheet(fatiguebar.backStyleSheet)
 
 fatiguebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Fatigue&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
 </script>
@@ -6557,19 +7116,20 @@ fatiguebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&g
   x="50%", y=0,
   width="50%", height="50%",
 },status_bar)
-hungerbar.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #F0FEe0, stop: 0.1 #E6FDe0, stop: 0.49 #A0E070, stop: 0.5 #A0E070, stop: 1 #A0E070);
+hungerbar.frontStyleSheet = [[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #F0FEe0, stop: 0.1 #E6FDe0, stop: 0.49 #A0E070, stop: 0.5 #A0E070, stop: 1 #A0E070);
     border-top: 1px black solid;
     border-left: 1px black solid;
     border-bottom: 1px black solid;
     border-radius: 7;
-    padding: 3px;]])
-hungerbar.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #A0E070, stop: 0.1 #99d869, stop: 0.49 #60c830, stop: 0.5 #60c830, stop: 1 #60c830);
+    padding: 3px;]]
+hungerbar.front:setStyleSheet(hungerbar.frontStyleSheet)
+hungerbar.backStyleSheet = [[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #A0E070, stop: 0.1 #99d869, stop: 0.49 #60c830, stop: 0.5 #60c830, stop: 1 #60c830);
     border-width: 1px;
     border-color: black;
     border-style: solid;
     border-radius: 7;
-    padding: 3px;]])
-
+    padding: 3px;]]
+hungerbar.back:setStyleSheet(hungerbar.backStyleSheet)
 hungerbar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Hunger&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])</script>
 					<eventHandlerList />
 				</Script>
@@ -6581,19 +7141,20 @@ hungerbar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt
   x="50%", y="50%",
   width="50%", height="50%",
 },status_bar)
-encumbrancebar.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #F0FBFE, stop: 0.1 #E6F8FD, stop: 0.49 #AFDDED, stop: 0.5 #AFDDED, stop: 1 #AFDDED);
+encumbrancebar.frontStyleSheet = [[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #F0FBFE, stop: 0.1 #E6F8FD, stop: 0.49 #AFDDED, stop: 0.5 #AFDDED, stop: 1 #AFDDED);
     border-top: 1px black solid;
     border-left: 1px black solid;
     border-bottom: 1px black solid;
     border-radius: 7;
-    padding: 3px;]])
-encumbrancebar.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #AFDDED, stop: 0.1 #A7D7E9, stop: 0.49 #80AEC7, stop: 0.5 #80AEC7, stop: 1 #80AEC7);
+    padding: 3px;]]
+encumbrancebar.front:setStyleSheet(encumbrancebar.frontStyleSheet)
+encumbrancebar.backStyleSheet = [[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #AFDDED, stop: 0.1 #A7D7E9, stop: 0.49 #80AEC7, stop: 0.5 #80AEC7, stop: 1 #80AEC7);
     border-width: 1px;
     border-color: black;
     border-style: solid;
     border-radius: 7;
-    padding: 3px;]])
-
+    padding: 3px;]]
+encumbrancebar.back:setStyleSheet(encumbrancebar.backStyleSheet)
 encumbrancebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Encumbrance&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])</script>
 					<eventHandlerList />
 				</Script>
@@ -6625,7 +7186,14 @@ tecCompass.back = Geyser.Label:new({
   height = "100%", --% of parent
 },tecCompass.window) --The parent of this label. Main is main window.
 
-tecCompass.back:setStyleSheet(labelsStyle)
+--set background image for compass
+tecCompass.back:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/compass/background.svg");]])
+    
+tecCompass.overlay = Geyser.Label:new({
+  name = "tecCompass.overlay",
+  x = "0%", y = "0%", width = "100%", height = "100%", --position and size of background
+  },tecCompass.back) --put the label into the Compass container
+tecCompass.overlay:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/compass/CompassOverlay.svg");]]) --set the background label
 
 --Horizontal box
 tecCompass.hbox = Geyser.HBox:new({
@@ -6699,16 +7267,12 @@ end
 
 --Function that will put images to direction labels. name will be n nw so on in tecCompass under triggers
 function tecCompass.lit(name)
-  tecCompass[name]:setStyleSheet([[
-    border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"..[[/]].."compass"..[[/]]..name..[[hover.png");
-    margin: 5px;
-  ]])
+  tecCompass[name]:setStyleSheet([[background-color: "#5577dd77";]])
 end
 --when the space should be unlit change it back to white.
 function tecCompass.unlit(name)
   tecCompass[name]:setStyleSheet([[
-    border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"..[[/]].."compass"..[[/]]..name..[[.png");
-    margin: 5px;
+    background-color: "#00000000";
   ]])
 end
 
@@ -6722,11 +7286,12 @@ end
 --setLabelOnLeave are also set for each label.
 
 --loop through dirs in table tecCompass
-for k,v in pairs(tecCompass.dirs) do
+for _,v in pairs(tecCompass.dirs) do
   tecCompass[v]:setStyleSheet([[
-    border-image: url("]]..getMudletHomeDir()..[[/]].."imgs"
-		..[[/]].."compass"..[[/]]..v..[[.png");
-    margin: 5px;]]) --apply pictures to directions on compass
+    background-color: "#000000FF";
+  ]]) --apply pictures to directions on compass
+  
+  SetTooltip(tecCompass[v].name, "Go "..v.." ") --create hover tooltip for direction
   
 	--if tecCompass is clicked, go in that direction
 	tecCompass[v]:setClickCallback("tecCompass.click",v)  
@@ -6748,6 +7313,10 @@ function tecCompass.drawKeepSquare()
 	if tecCompass.window:get_height() &lt; tecCompass.window:get_width() then
   	tecCompass.back:resize(tecCompass.window:get_height(), tecCompass.window.height)
 	end --end if height is less than width
+  
+  if tecCompass.back:get_width() &lt; tecCompass.window:get_width() then
+    tecCompass.back:move((tecCompass.window:get_width() - tecCompass.back:get_width()) * .5)
+  end
 	
 end --end function keep square.
 
@@ -6859,7 +7428,7 @@ tecMap_back = Geyser.Label:new({
 },tecMap) --The parent of this label.
 
 --set the appearance of what is behind the map
-tecMap_back:setStyleSheet(labelsStyle)
+tecMap_back:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/map/background.svg");]])
 
 --rgba(25, 50, 150)
 
@@ -6895,8 +7464,12 @@ function tecMapdrawKeepSquare()
     tecMap_back:move(centerAdjustment,0) --Move the map to the center of the map box
 	end --en if width is less than height.
 	
-	echo("tecMap_back","Please walk\nto draw map.")
-  tecMap_back:raise()
+	echo(mapRoom[150].name,"Map exits may be misaligned until you walk.")
+  mapRoom[150]:resize(tecMap_back:get_width(), (tecMap:get_height() * .1))
+  mapRoom[150]:setStyleSheet(labelsStyle)
+  mapRoom[150]:move(0,0)
+  mapRoom[150]:show()
+  mapRoom[150]:raise()
 	
 end --end function keep square.
 
@@ -6926,15 +7499,13 @@ roomCharacters = Geyser.Container:new({
 })
 
 --box that will store the miniconsoles
-roomCharacters.back = Geyser.Label:new({
+roomCharacters.back = Geyser.HBox:new({
   name = "roomCharacters.back",
   x = 0, --horizontal position
 	y = 0, --adjusted for tabs
   width = "100%",
 	height = "100%"
 },roomCharacters)
-
-roomCharacters.back:setStyleSheet(labelsStyle) --set to default label style
 
 --This are the miniconsoles that will hold the text
 roomCharacters.console = Geyser.MiniConsole:new({ --menu v will be a tab name.
@@ -6950,6 +7521,21 @@ roomCharacters.console = Geyser.MiniConsole:new({ --menu v will be a tab name.
 },roomCharacters.back)
 roomCharacters.console:setColor(getBgColor()) --set miniconsoles to main consol BG color
 roomCharacters.console:raise()
+
+--This are the miniconsoles that will hold the text
+roomCharacters.rightConsole = Geyser.MiniConsole:new({ --menu v will be a tab name.
+  name = "roomCharacters.rightConsole", --Issues experienced if I attempt to name them v.."Console"
+	x = 0, --%horizontally position in parent
+	y = 0, --%vertical position in parent
+	width = "100%", --% of parent
+	height = "100%", --% of parent
+	autoWrap = true, --allows text to wrap if too long
+	fontSize = getTECFont(), --in variables
+	font = getFont(), --get font type from main
+	--scrollBar = true,
+},roomCharacters.back)
+roomCharacters.rightConsole:setColor(getBgColor()) --set miniconsoles to main consol BG color
+roomCharacters.rightConsole:raise()
 
 function tecCRWindowResize()
 	
@@ -7117,7 +7703,7 @@ UIManagerRegisterWindow(tecComWindows.container)</script>
 			<Script isActive="yes" isFolder="no">
 				<name>Macro Menu</name>
 				<packageName></packageName>
-				<script>--If no UI mananger is in use, do not draw the window.
+				<script> --If no UI mananger is in use, do not draw the window.
 --if GetUIManager() == "none" then return end
 
 --[[
@@ -7162,6 +7748,7 @@ macroMenu.back = Geyser.Label:new({
   y = 0,
   width = "100%",
 }, macroMenu.container)
+macroMenu.back:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/macro/background.svg");]])
 
 --Create a 3x5 grid
 --The macro menu is split into 15 sections, one for each macro. This 3x5 grid is created by 5 HBoxes
@@ -7275,14 +7862,39 @@ local tecMacroMappings = {
 }
 
 --add onto standard label. We want a small margin for this label.								
---macroLabelStyle = labelsStyle.."margin: 1px\n";
-macroLabelStyle = labelsStyle
+--macroLabelStyle = labelsStyle.."margin: 1px\n"; 537dC0
+macroLabelStyle = [[
+  	QLabel{
+  		background-color: "#55537dC0";
+      border-bottom: 1px;
+      border-right: 1px;
+      border-style: outset;
+      border-color: lightgray;
+      margin-right: 0px;
+      margin-left: 0px;
+  		font-size: 20px;
+      qproperty-alignment: 'AlignCenter | AlignCenter';
+    }
+  	QLabel::hover{
+  		background-color: "#33436db0";
+      border-bottom: 1px;
+      border-right: 1px;
+      border-style: outset;
+      border-color: gray;
+      margin-right: 0px;
+      margin-left: 0px;
+  		font-size: 20px;
+      qproperty-alignment: 'AlignCenter | AlignCenter';
+    }
+  ]]
 
 for _, tecMacroMap in pairs(tecMacroMappings) do --loop trough mappings table using data within
   macroMenu[tecMacroMap.name] = Geyser.Label:new({
     name = "macroMenu." .. tecMacroMap.name, --name label fe# so it is easy to pass
 	  message = "&lt;center&gt;" .. tecMacroMap.label .. "&lt;/center&gt;", --puts roman numerals on label
   }, tecMacroMap.row) --parent is gettings passed via mapping table row reference
+    local localMacroTooltip = "run macro "..tecMacroMap.name:match("(%d%d?)$").."  "
+  SetTooltip(macroMenu[tecMacroMap.name].name, localMacroTooltip) --create hover tooltip
   macroMenu[tecMacroMap.name]:setClickCallback("onMacroClick", tecMacroMap.name)
   macroMenu[tecMacroMap.name]:setStyleSheet(macroLabelStyle) --create window layout
 end
@@ -7302,6 +7914,238 @@ end --function tecMacroMenuResize
 macroMenu.container.GUIframeLocation = "bottomleft"
 UIManagerRegisterWindow(macroMenu.container)
 </script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>multiWindow</name>
+				<packageName></packageName>
+				<script>MultiWindow = multiWindow or {}
+
+MultiWindow.back = Geyser.VBox:new({ name = "Multi Window", }) --Horizonal box to hold our multiwindows.
+MultiWindow.back.GUIframeLocation = "topright" --set location for container in GUIframe.
+
+--MultiWindow.top = Geyser.VBox:new({ name = "MultiWindow.top", }, MultiWindow.back) --Vertical window break for the room characters windows
+
+--Create a window that is a copy of the Room Characters window.
+MultiWindow.roomCharacters = MultiWindow.roomCharacters or {} --create a table to hold roomCharters window
+MultiWindow.roomCharacters.back = Geyser.HBox:new({
+  name = "MultiWindow Room Characters",
+  }, MultiWindow.back)
+--MultiWindow.roomCharacters.back:setStyleSheet(labelsStyle) --set label for background
+MultiWindow.roomCharacters.console = Geyser.MiniConsole:new({ --Create the mini console that will hold the text.
+  name = "MultiWindow.roomCharacters.console",
+	x = 0, y = 0, width = "100%", height = "100%", --position and size of console
+	autoWrap = true, --allows text to wrap if too long
+	fontSize = getTECFont(), --in variables
+	font = getFont(), --get font type from main
+	--scrollBar = true,
+},MultiWindow.roomCharacters.back)
+MultiWindow.roomCharacters.console:raise()
+MultiWindow.roomCharacters.console:setColor(getBgColor()) --set miniconsoles to main consol BG color
+MultiWindow.roomCharacters.rightConsole = Geyser.MiniConsole:new({ --Create the mini console that will hold the text.
+  name = "MultiWindow.roomCharacters.rightConsole",
+	x = 0, y = 0, width = "100%", height = "100%", --position and size of console
+	autoWrap = true, --allows text to wrap if too long
+	fontSize = getTECFont(), --in variables
+	font = getFont(), --get font type from main
+	--scrollBar = true,
+},MultiWindow.roomCharacters.back)
+MultiWindow.roomCharacters.rightConsole:raise()
+MultiWindow.roomCharacters.rightConsole:setColor(getBgColor()) --set miniconsoles to main consol BG color
+
+--create the window that holds the macros.
+MultiWindow.macroMenu = MultiWindow.macroMenu or {} --table to hold the windows variables
+MultiWindow.macroMenu.container = Geyser.Container:new({ name = "MultiWindow.Macros", }, MultiWindow.back)
+MultiWindow.macroMenu.back = Geyser.Label:new({ --Create a label that could be used as a background
+  name = "MultiWindow.macroMenu.back",
+  x = 0,y = 0, width = "100%", height = "100%" --Position and size of window
+  }, MultiWindow.macroMenu.container) --end of MultiWindow.macroMenu.back
+MultiWindow.macroMenu.back:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/macro/background.svg");]])
+MultiWindow.macroMenu.box = Geyser.VBox:new({ --creates the verticle window breaks
+  name = "MultiWindow.macroMenu.box",
+  x = 0, y = 0, width = "100%", height = "100%"
+  }, MultiWindow.macroMenu.back) --end MultiWindow.macroMenu.box
+--Create the five rows of buttons
+MultiWindow.macroMenu.row1 = Geyser.HBox:new({
+  name = "MultiWindow.macroMenu.row1",
+  }, MultiWindow.macroMenu.box)
+MultiWindow.macroMenu.row2 = Geyser.HBox:new({
+  name = "MultiWindow.macroMenu.row2",
+  },MultiWindow.macroMenu.box)
+MultiWindow.macroMenu.row3 = Geyser.HBox:new({
+  name = "MultiWindow.macroMenu.row3",
+  }, MultiWindow.macroMenu.box)
+MultiWindow.macroMenu.row4 = Geyser.HBox:new({
+  name = "MultiWindow.macroMenu.row4",
+  }, MultiWindow.macroMenu.box)
+MultiWindow.macroMenu.row5 = Geyser.HBox:new({
+  name = "MultiWindow.macroMenu.row5",
+  }, MultiWindow.macroMenu.box)
+MultiWindow.macroMenu.row5:hide()
+--create table to hold data for macro buttons.
+local tecMacroMappings = {
+  {
+    name = "fe1", --name of label that will be created. Will be passed to setClickCallBack function
+    label = "I", --What will be on the label
+    row = MultiWindow.macroMenu.row1, --the geyser box we want this label to go in
+  },
+  { name = "fe2", label = "II", row = MultiWindow.macroMenu.row1, },
+  { name = "fe3", label = "III", row = MultiWindow.macroMenu.row1, },
+  { name = "fe4", label = "IV", row = MultiWindow.macroMenu.row2, },
+  { name = "fe5", label = "V", row = MultiWindow.macroMenu.row2, },
+  { name = "fe6", label = "VI", row = MultiWindow.macroMenu.row2, },
+  { name = "fe7", label = "VII", row = MultiWindow.macroMenu.row3, },
+  { name = "fe8", label = "VIII", row = MultiWindow.macroMenu.row3, },
+  { name = "fe9", label = "IX", row = MultiWindow.macroMenu.row3, },
+  { name = "fe10", label = "X", row = MultiWindow.macroMenu.row4, },
+  { name = "fe11", label = "XI", row = MultiWindow.macroMenu.row4, },
+  { name = "fe12", label = "XII", row = MultiWindow.macroMenu.row4, },
+  { name = "fe13", label = "XIII", row = MultiWindow.macroMenu.row5, },
+  { name = "fe14", label = "XIV", row = MultiWindow.macroMenu.row5, },
+  { name = "fe15", label = "XV", row = MultiWindow.macroMenu.row5, },
+} --tecMacroMappings table
+--macroLabelStyle = labelsStyle --make a standard label for
+for _, tecMacroMap in pairs(tecMacroMappings) do --loop trough mappings table using data within
+  MultiWindow.macroMenu[tecMacroMap.name] = Geyser.Label:new({
+    name = "MultiWindow.macroMenu." .. tecMacroMap.name, --name label fe# so it is easy to pass
+	  message = "&lt;center&gt;" .. tecMacroMap.label .. "&lt;/center&gt;", --puts roman numerals on label
+  }, tecMacroMap.row) --parent is gettings passed via mapping table row reference
+  local localMacroTooltip = "run macro "..tecMacroMap.name:match("(%d%d?)$").."  "
+  SetTooltip(MultiWindow.macroMenu[tecMacroMap.name].name, localMacroTooltip) --create hover tooltip
+  MultiWindow.macroMenu[tecMacroMap.name]:setClickCallback("onMacroClick", tecMacroMap.name)
+  MultiWindow.macroMenu[tecMacroMap.name]:setStyleSheet(macroLabelStyle)
+end --for pairs(tecMacroMappings)
+function onMacroClick(name) send(name, false) end --Create a click callback function
+
+--used to hold compass and the status bars aside eachother at the bottom of the multiwindow
+--MultiWindow.bottom = Geyser.HBox:new({ name = "MultiWindow.Bottom", }, MultiWindow.back) --Vertical window break for the bottom of the window
+MultiWindow.bottom = Geyser.Container:new({ name = "MultiWindow.Bottom", }, MultiWindow.back) --Vertical window break for the bottom of the window
+
+--Create the compass in the MultiWindow
+MultiWindow.Compass = MultiWindow.Compass or { --table to hold compass
+  dirs = {"nw","n","ne","w","up","down","e","sw","s","se"}, --directions for the compass
+  } --end MultiWindow.Compass object declaration
+MultiWindow.Compass.window = Geyser.Container:new({ --container for compass
+  name = "Multi Compass",
+  x=0, y=0, width = "50%", height="100%", --position and size of container
+  },MultiWindow.bottom) --put the window in the HBox at the bottom of the MultiWindow
+MultiWindow.Compass.back = Geyser.Label:new({
+  name = "MultiWindow.Compass.back",
+  x = "0%", y = "0%", width = "100%", height = "100%", --position and size of background
+  },MultiWindow.Compass.window) --put the label into the Compass container
+MultiWindow.Compass.back:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/compass/background.svg");]]) --set the background label
+--MultiWindow.Compass.back:setStyleSheet(labelsStyle) --set the background label
+MultiWindow.Compass.overlay = Geyser.Label:new({
+  name = "MultiWindow.Compass.overlay",
+  x = "0%", y = "0%", width = "100%", height = "100%", --position and size of background
+  },MultiWindow.Compass.back) --put the label into the Compass container
+MultiWindow.Compass.overlay:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/compass/CompassOverlay.svg");]]) --set the background label
+--MultiWindow.Compass.overlay:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/compass/vectorcompass.svg");]]) --set the background label
+--MultiWindow.Compass.overlay:raise()
+MultiWindow.Compass.hbox = Geyser.HBox:new({ --container to make columns
+    name = "MultiWindow.Compass.box",
+    x = 0, y = 0, width = "100%", height = "100%", --position and size of container
+  },MultiWindow.Compass.back) --parent of this Hbox
+--create three rows of the compass
+MultiWindow.Compass.row1 = Geyser.VBox:new({name = "MultiWindow.Compass.row1",},MultiWindow.Compass.hbox)
+MultiWindow.Compass.row2 = Geyser.VBox:new({name = "MultiWindow.Compass.row2",},MultiWindow.Compass.hbox)
+MultiWindow.Compass.row3 = Geyser.VBox:new({name = "MultiWindow.Compass.row3",},MultiWindow.Compass.hbox)
+--Create labels for the compass
+MultiWindow.Compass.nw = Geyser.Label:new({ name = "MultiWindow.Compass.nw", },MultiWindow.Compass.row1)
+MultiWindow.Compass.w = Geyser.Label:new({ name = "MultiWindow.Compass.w", },MultiWindow.Compass.row1)
+MultiWindow.Compass.sw = Geyser.Label:new({ name = "MultiWindow.Compass.sw", },MultiWindow.Compass.row1)
+MultiWindow.Compass.n = Geyser.Label:new({ name = "MultiWindow.Compass.n", },MultiWindow.Compass.row2)
+MultiWindow.Compass.center = Geyser.VBox:new({ name = "MultiWindow.Compass.center", },MultiWindow.Compass.row2)
+MultiWindow.Compass.up = Geyser.Label:new({ name = "MultiWindow.Compass.up", },MultiWindow.Compass.center)
+MultiWindow.Compass.down = Geyser.Label:new({ name = "MultiWindow.Compass.down", },MultiWindow.Compass.center)
+MultiWindow.Compass.s = Geyser.Label:new({ name = "MultiWindow.Compass.s", },MultiWindow.Compass.row2)
+MultiWindow.Compass.ne = Geyser.Label:new({ name = "MultiWindow.Compass.ne", },MultiWindow.Compass.row3)
+MultiWindow.Compass.e = Geyser.Label:new({ name = "MultiWindow.Compass.e", },MultiWindow.Compass.row3)
+MultiWindow.Compass.se = Geyser.Label:new({ name = "MultiWindow.Compass.se", },MultiWindow.Compass.row3)
+--function that occurs when a label above is clicked, 
+function MultiWindow.Compass.click(name) send(name) end --send the name of the 
+function MultiWindow.Compass.lit(name) --When a player can go in the direction, make the label an active image
+  MultiWindow.Compass[name]:setStyleSheet([[background-color: "#5577dd77";]])
+end --function MultiWindow.Compass.lit(name)
+--when the space should be unlit change it back to white.
+function MultiWindow.Compass.unlit(name) --When a player cannot go in the direction, make the label an active image
+  MultiWindow.Compass[name]:setStyleSheet([[background-color: "#00000000";]])
+end --function MultiWindow.Compass.unlit(name)
+for _,v in pairs(MultiWindow.Compass.dirs) do --loop through dirs table
+  SetTooltip(MultiWindow.Compass[v].name, "Go "..v.." ") --create hover tool tips
+  MultiWindow.Compass[v]:setStyleSheet([[background-color: "#00000000";]]) --blank the compass directions
+	MultiWindow.Compass[v]:setClickCallback("MultiWindow.Compass.click",v) --give each label an event to run the click function above.
+end --end loop through MultiWindow.Compass.dirs
+
+--create satus bar
+MultiWindow.status_bar = Geyser.Container:new({
+  name = "MultiWindow Status",    -- give it a unique name here
+  x="50%", y=0, width = "50%", height="100%", --position and size of container
+},MultiWindow.bottom)
+MultiWindow.hpbar = Geyser.Gauge:new({ --create HP bar
+  name="hpbar",
+  x=0, y=0, width="100%", height="25%", --position and size of container
+},MultiWindow.status_bar)
+MultiWindow.hpbar.front:setStyleSheet(hpbar.frontStyleSheet) --set the forground gradiant                                          
+MultiWindow.hpbar.back:setStyleSheet(hpbar.backStyleSheet) --set the background gradiant
+MultiWindow.hpbar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Health&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
+MultiWindow.fatiguebar = Geyser.Gauge:new({ --create fatigue bar
+  name="MultiWindow fatiguebar",
+  x=0, y="25%", width="100%", height="25%", --position and size of container
+},MultiWindow.status_bar)
+MultiWindow.fatiguebar.front:setStyleSheet(fatiguebar.frontStyleSheet)
+MultiWindow.fatiguebar.back:setStyleSheet(fatiguebar.backStyleSheet)
+MultiWindow.fatiguebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Fatigue&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
+MultiWindow.hungerbar = Geyser.Gauge:new({ --create hunger bar
+  name="MultiWindow hungerbar",
+  x=0, y="50%", width="100%", height="25%", --position and size of container
+},MultiWindow.status_bar)
+MultiWindow.hungerbar.front:setStyleSheet(hungerbar.frontStyleSheet)
+MultiWindow.hungerbar.back:setStyleSheet(hungerbar.backStyleSheet)
+MultiWindow.hungerbar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Hunger&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
+MultiWindow.encumbrancebar = Geyser.Gauge:new({ --make encumberance bar
+  name="MultiWindow encumbrancebar",
+  x=0, y="75%", width="100%", height="25%", --position and size of container
+},MultiWindow.status_bar)
+MultiWindow.encumbrancebar.front:setStyleSheet(encumbrancebar.frontStyleSheet)
+MultiWindow.encumbrancebar.back:setStyleSheet(encumbrancebar.backStyleSheet)
+MultiWindow.encumbrancebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Encumbrance&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
+
+--redraw windows within MultiWindow so they fill spaces properly
+function MultiWindow.redrawWindows()
+  local localMultiWindowWidth = MultiWindow.back:get_width() --get width of entire multi window
+  local localMultiWindowHeight = MultiWindow.back:get_height() --get width of entire multi window
+  local localCompassWidth = MultiWindow.Compass.window:get_width() --get the width of the window
+  local localCompassHeight = MultiWindow.Compass.window:get_height() --get the height of the window
+  local localMultiWindowBottomHeight = MultiWindow.bottom:get_height() --get the height of the window
+  MultiWindow.lastResizeWidth = MultiWindow.lastResizeWidth or 0 --used to detect when a resize is needed
+  MultiWindow.lastResizeHeight = MultiWindow.lastResizeHeight or 0 --used to detect when a resize is needed
+  displayDebug("function MultiWindow.redrawWindows,\n\t"
+    .."CompassWidth "..localCompassWidth.." localCompassHeight "..localCompassHeight.." localMultiWindowBottomHeight "..localMultiWindowBottomHeight
+    .."\n\tlocalMultiWindowWidth "..localMultiWindowWidth.." MultiWindow.lastResizeWidth "..MultiWindow.lastResizeWidth
+    .."\n\tlocalMultiWindowHeight "..localMultiWindowHeight.." MultiWindow.lastResizeHeight "..MultiWindow.lastResizeHeight
+    .."\n")
+  --only run window resizing if it is needed.
+  if  localMultiWindowWidth ~= MultiWindow.lastResizeWidth or  --if the multiWindow has changed size since last run
+      localMultiWindowHeight ~= MultiWindow.lastResizeHeight or --if the multiWindow has changed size since last run
+      localCompassWidth ~= localCompassHeight then --if the compass is not square
+    localCompassHeight = localMultiWindowBottomHeight --Record the height of the bottom of the multi window to resize compass with
+  	if localCompassWidth &lt; localCompassHeight then --if the compass width is less than the height of the bottom portion of the multiwindow
+    	MultiWindow.Compass.window:resize(localCompassHeight, localCompassHeight) --make compass square, while widening it
+      localCompassWidth = localCompassHeight --make the width variable the same as height, used to resize status bar.
+  	elseif localCompassWidth &gt; localCompassHeight then --if the compass width is more than the height of the bottom portion of the multiwindow
+    	MultiWindow.Compass.window:resize(localCompassHeight, localCompassHeight) --make compass square, while widening it
+      localCompassWidth = localCompassHeight --make the width variable the same as height, used to resize status bar.
+  	end --if elseif window is not square
+    MultiWindow.status_bar:move(localCompassWidth) --move the status bar past the compass
+    MultiWindow.status_bar:resize(localMultiWindowWidth - localCompassWidth) --changed the width to fill space to the right of the compass
+    MultiWindow.lastResizeWidth = localMultiWindowWidth --record the current width, to only run resizing when needed
+    MultiWindow.lastResizeHeight = localMultiWindowHeight --record the current height, to only run resizing when needed
+    displayDebug("Multi window resize run.\n")
+  end --if not localMultiWindowWidth == MultiWindow.lastResizeWidth or not localMultiWindowHeight == MultiWindow.lastResizeHeight
+end --end function keep square.
+
+UIManagerRegisterWindow(MultiWindow.back) --send the window to the UI Manager</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
@@ -7326,13 +8170,24 @@ UIManagerRegisterWindow(macroMenu.container)
 --If I Recall the last event would not occur.
 
 function guiChange()
-	setMainWindowAutoWrap() --adjusts word wrap for user.
+	setMainWindowAutoWrap() --adjusts word wrap for main window.
 	if getTECDisplayDebugMode() then geyserDebug() end --if displaydebug is on
-	tecCompass.drawKeepSquare()
-	tecMapdrawKeepSquare()
-	tecComWindowResize() --resize commmunications window
-	tecCRWindowResize() --resize the Room Character window now
-	tecSettingsWindowResize() --resize the Room Character window now
+  --only resize windows managed by UIManager if they are enabled
+	if UIManagerSettings[tecCompass.window.name] then --if window exists chek if it is enabled
+    if not UIManagerSettings[tecCompass.window.name].disabled then tecCompass.drawKeepSquare() end --Keep the windowed compass square
+  end --if UIManagerSettings[tecCompass.window.name]
+  if UIManagerSettings[MultiWindow.back.name] then --if window exists chek if it is enabled
+    if not UIManagerSettings[MultiWindow.back.name].disabled then MultiWindow.redrawWindows() end--keep the compass in the multi window square
+  end --if UIManagerSettings[MultiWindow.back.name]
+  if UIManagerSettings[tecMap.name] then --if window exists chek if it is enabled
+	 if not UIManagerSettings[tecMap.name].disabled then tecMapdrawKeepSquare() end --resize map
+  end --if UIManagerSettings[tecMap.name]
+  if UIManagerSettings[tecComWindows.container.name] then --if window exists chek if it is enabled
+	 if not UIManagerSettings[tecComWindows.container.name].disabled then tecComWindowResize() end --resize commmunications window
+  end --if UIManagerSettings[tecComWindows.container.name]
+  if UIManagerSettings[tecSettingsBar.name] then --if window exists chek if it is enabled
+	 if not UIManagerSettings[tecSettingsBar.name].disabled then tecSettingsWindowResize() end--resize the Room Character window now
+  end --if UIManagerSettings[tecSettingsBar.name]
 end --end function guiChange
 
 --whenever event sysWindowReizeEvent occurs run setMainWindowAutowrap.

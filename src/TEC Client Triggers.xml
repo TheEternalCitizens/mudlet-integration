@@ -45,49 +45,7 @@ deleteLine() --remove line from main console. line variable remains unchanged.
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>TEC Map Rooms</name>
-				<script>--[[
-SKOOT 6 lines I am nearly certain are for drawing the 2d map
-
---SKOOT 6 -10,-10,20,#ff0000,17.1111,-10,10,20,#ffffff,25.5555
---This skoot is from a map that I am certain there are two rooms.
---Both the same size. One higher up is red one directly below is white
---They are the same size.
---There are door open and closed lines on them. Those are handled with skoot 10 messages
---SKOOT 6 x, y, size, color, ?
---x horizonal position of top left corner
---y is vertical position of top left corner
---size is the size of the room 
---color is the color of the room 
---No fucking idea what the fucking number at the end is!
-
---This is going to be the games largest in drawn pixels and most common skoot message
---SKOOT 6 -40,-40,80,#ff0000,117.624,40,-40,80,#00ff00,117.624,-120,-40,80,#00ff00,117.624,
----40,-120,80,#ffffff,117.624,-40,40,80,#ffffff,117.624,-120,40,80,#ffffff,117.624,
---40,40,80,#ffffff,117.624,40,-120,80,#ffffff,117.624,-120,-120,80,#ffffff,108.576
---Now we need to get room data in %.
---We know that 80 is the max room size for a single room. By observing skoots.
---We know, only because of playing. That these rooms are normally in a 3x3 grid.
---So we know now our draw win is 240x240
---TEC numbers map to a graph, not a window. So their 0 is x120 y120 in our window.
---To get our correct position we have to do xpos + 120. 
---x and y are both -40 / 120. It would be -.33333.
---multiply that by 100 to get the number is a full percent. -33.333
---Now since tec sees x120,y120 as position 0 and the rest of the world sees x0,y0 as zero
---We need to add our number to 50, because 120 is 50% of our total draw size of 240 pixels.
---50 + -33.333 = 16.667. so 16.667% are our x and y positions.
---size is 80 that will be our width and height.
---We need to get what percent 80 is of our overall draw size 240
--- 80 / 240 = .33333. Multiply that by 100, 33.333
---The room is 33.33% of the entire draw window.
---Subtract 1% of that so we have a border between rooms.
---ff0000 is red so the room will be red.
---17.1111 can go fuck itself because I can't figure out what is is.
-]]--
-
---selectCurrentLine("tecMap_back") --proper code for when hinsert is fixed.
---replace("")
---deselect()
-echo("tecMap_back","")
+				<script>--SKOOT 6, provides room sizes and positions for map
 
 --We are about to draw a new map, so hide all the rooms.
 --We are not going to bother with setting room sizes and moving moves to off screen
@@ -99,88 +57,15 @@ for i = 1, 150 do --We know the room count because we set it in script 2dMap.
 	mapRoom[i]:hide() --Hide rooms
 end --end of hide rooms loop
 
-local lc = 1 --Just a loop counter so we can go through rooms easily.
+mapRoomsLC = 1 --Just a loop counter so we can go through rooms easily.
 
---Loop through the sckoot message. Looking for a pattern of room data.
---The patterns in () get returned on gmatch. We capture those into variables.
---Those varibles will be used to draw the room.
---Explaining: "(-?%d+),(-?%d+),(%d+),(#%x+),%d+.%d+,?"
---"-?" means there MAY be a -
---"%d+" is a decimal number that CAN be more than one digit long.
---"%x+: is a hexidecimal number that CAN be more than one digit long.
--- ",?" At the very end. There MAY be a , at the end of our pattern or there
---[.%d*]? means there may be a . followed by 0 or more numbers. Like .4555
---may not be. The last number in the skoot message does not have a ,.
---Not looking for that comma in earlier messages might cause future
---pattern searches to fail.
-for xpos, ypos, size, tecMapRoomcolor in string.gmatch( line, "(-?%d+),(-?%d+),(%d+),(#%x+),%d+[.%d*]?,?" ) do
+--collect data from global line variable and draw the map.
+parthiaDrawMapRooms()
 
-  --TEC uses grid logic for their map. xposition is up to 120 +-.
-  --240 is the total size of their draw space. What percent is our position in that space.
-  -- +.5 just gives us a border.
-  xposScaler = ((((tonumber(xpos) + 120) / 240) * 100)) * mapZoom
-  yposScaler = ((((tonumber(ypos) + 120) / 240) * 100)) * mapZoom
-
-	--Convert the size of the room to draw into % of its size on the map.
-  --size / 240 = decimalNumber like .3333. Multiply decimalNumber by 100, that is your % 
-  sizeScaler = tecMapPixelToPercent(size)
-
-	if getTECMapDebugMode() then --if Display Debug Mod is on.
-  	debugToDisplay("Map Room "..tostring(lc).." xpos: "..tostring(tonumber(xpos)+120)
-		.." xposScaler: "..tostring(xposScaler)
-    .." ypos: "..tostring(tonumber(ypos)+120).." yposScaler: "..tostring(yposScaler)
-    .." size: "..tostring(size).." sizeScaler: "..tostring(sizeScaler)
-    .." color: "..tostring(tecMapRoomcolor))
-  	cecho(mapRoom[lc].name,tostring(lc),blue,"c") --put room # on label
-	end --end if DisplayDebugMode is true
-  	
-  mapRoom[lc]:move(tostring(xposScaler).."%", tostring(yposScaler).."%") --Move the room into position.
-  mapRoom[lc]:resize(tostring(sizeScaler).."%", tostring(sizeScaler).."%") --Change the rooms size.
-	--using style sheets set the shape and color of the room
-	if tecMapRoomcolor == "#ff0000" then mapRoom[lc]:setStyleSheet(mapRoomStyleRed)
-	elseif tecMapRoomcolor == "#00ff00" then mapRoom[lc]:setStyleSheet(mapRoomStyleGreen)
-	else mapRoom[lc]:setStyleSheet(mapRoomStyleWhite) end
-	
-  mapRoom[lc]:show() --Now show the room.
-  lc = lc +1 --Iterate so we can do this again.
-end --end gmatch room data search loop
-
---We want the map zoon level, but not 100 times...
+--We want the map zoom level, but not 100 times.
 if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
 
-deleteLine() --remove line from main console. line variable remains unchanged.
-
---[[
-in the for loop the string pattern: "(-?%d+),(-?%d+),(%d+),(#%x+),%d+[.%d*]?,?"
-Mentioning this because lpeg would be a method for avoiding the use of regex in triggers.
-could be replaced with:
-
-local pattern; do
-    local comma = lpeg.P(',')
-    local digit = lpeg.R('09')
-    local hex_char = lpeg.R('09', 'af', 'AF')
-    local number = lpeg.P('-') ^ -1 * ((digit ^ 1 * '.' * digit ^ 1) + (digit ^ 1))
-    local hex_color = '#' * hex_char * hex_char * hex_char * hex_char * hex_char * hex_char
-
-    pattern = lpeg.C(number) * comma * lpeg.C(number) * comma * lpeg.C(number) * comma * lpeg.C(hex_color) * comma * number * (comma ^ -1 + -1)
-end
-
-local function lpeg_gmatch(str, patt)
-    patt = lpeg.Ct(patt) * lpeg.Cp()
-    local ret, pos = nil, 1
-
-    return function()
-        ret, pos = lpeg.match(patt, str, pos)
-
-        if not ret then return nil end
-        return unpack(ret)
-    end
-end
-
-for xpos, ypos, size, color in lpeg_gmatch( line, pattern ) do
-    
-end
-]]--</script>
+deleteLine() --remove line from main console. line variable remains unchanged.</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -199,70 +84,47 @@ end
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>TEC map exits</name>
-				<script>--SKOOT 10 is Exit position on the map
---[[
-SKOOT 10 x y, dir, open?
-x is horizontal position, from center of line
-y is vertical position, from center of line.
-dir is the direction the Exit is facing, normally it is a line so
-	"hor" is horizontal, v is vertical
-	"ne" is a 45 degree angle going from left to right, so north east on a map...
-	"nw" is a 45 degree andle going from right to left. sp north west on a map...
-open if the Exit is open. 1 is open 0 is closed.
+				<name>Map Room error catch</name>
+				<script>--[[
+TEC does not have GA or Go Ahead telnet support.
+Due to this very long lines may parse if there is lag.
+This catches an unwanted parse during a SKOOT 6 or map room draw message
 ]]--
 
---data types that will be used in later loop
-local xposScaler = 0 --used to hold postion on map in % rather than pixels
-local yposScaler = 0
-local iconWidthAdjustment = 0
-local iconHeightAdjustment = 0
+if not string.starts(line, "SKOOT") then --do not run if this is a SKOOT message
+  debugToDisplay("trigger, Map Room error catch.")
+  parthiaDrawMapRooms()--draw the rooms, use data from global line variable
+  deleteLine() --remove line from main console. line variable remains unchanged.
+end
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>return line:match("(-?%d+),(-?%d+),(%d+),(#%x+),%d+[.%d*]?,?" )</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>4</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>TEC map exits</name>
+				<script>--SKOOT 10 is Exit position on the map
 
-local lc = 1 --Just a loop counter so we can go through rooms easily.
+mapExitsLC = 1 --Just a loop counter so we can go through rooms easily.
 
---look through line for the data pattern to get exit data. Input them into variables.
-for xpos, ypos, exitDirection, exitOpen in string.gmatch( line, "(-?%d+),(-?%d+),(%w+),(%d+),?" ) do
-
-	if getTECMapDebugMode() then --if Display Debug Mode is on.
-  	debugToDisplay("Map Exit "..tostring(lc).." xpos: "
-		..tostring(tonumber(xpos)+120).." xposScaler: "..tostring(xposScaler)
-    .." ypos: "..tostring(tonumber(ypos)+120).." yposScaler: "..tostring(yposScaler)
-    .." Direction: "..exitDirection
-    .." open: "..tostring(exitOpen)
-		.."\nExit Icon: Width: "..tecExit[exitDirection].width
-		.." Height: "..tecExit[exitDirection].height
-    .." Style sheet: "..tecExit[exitDirection][exitOpen].tecExitStyleSheet)
-	end --end if DisplayDebugMode is true
-
-	--pulling sizes from the tecExit table resize the label for the icon	
-  mapExit[lc]:resize(tecExit[exitDirection].width, tecExit[exitDirection].height)
-	--Now set the style sheet for the  
-	mapExit[lc]:setStyleSheet(tecExit[exitDirection][exitOpen].tecExitStyleSheet)
-
-	--labels start at x0y0 in mudlet, but TEC is providing a center point for our exit icons
-	--convert half the size of the icons for exits into % of the total map window.
-	--Than take the overall size of the map window / that by our standard 240 window size.
-	--The resulting number is used to adjust the icon position as the map is scaled.
-	iconWidthAdjustment = tecMapIconAdjustment(tecExit[exitDirection].width, tecMap_back:get_width())
-	
-  --TEC uses grid logic for their map. xposition is 120 +-.
-  --240 is the total size of their draw space. What percent is our position in that space.
-	--halfWidth is used to center
-	xposScaler = ((((tonumber(xpos) + 120) / 240) * 100) - iconWidthAdjustment) * mapZoom
-	
-	--same logic as aboive
-	iconHeightAdjustment = tecMapIconAdjustment(tecExit[exitDirection].height, tecMap_back:get_height())
-	yposScaler = ((((tonumber(ypos) + 120) / 240) * 100) - iconHeightAdjustment) * mapZoom	
-	
-	--Move the Exit into position.
-  mapExit[lc]:move(tostring(xposScaler).."%", tostring(yposScaler).."%") 
-	mapExit[lc]:lower() --Position rooms ontop of exits.
-	mapExit[lc]:show() --Now show the exit path.
-
-  lc = lc +1 --Iterate so we can do this again on a new exit.
-end --end gmatch room data search loop
+parthiaDrawMapExits()
 
 tecMap_back:lower() --lower the background behind the exits.
+mapRoom[150]:hide() --mapRoom[150] is used to show exits off message on resize
+mapRoom[150]:lower()
 
 --We want the map zoon level, but not 100 times...
 if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
@@ -287,101 +149,64 @@ deleteLine() --remove line from main console. line variable remains unchanged.
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Map Exits error catch</name>
+				<script>--[[
+TEC does not have GA or Go Ahead telnet support.
+Due to this very long lines may parse if there is lag.
+This catches an unwanted parse during a SKOOT 6 or map room draw message
+]]--
+
+if not string.starts(line, "SKOOT") and 
+  (line:match("hor") or line:match("ver") ) then --do not run if this is a SKOOT message
+  debugToDisplay("trigger, Map Exits error catch.")
+  parthiaDrawMapExits()--draw the exits, using data from global line variable
+  tecMap_back:lower() --lower the background behind the exits.
+  deleteLine() --remove line from main console. line variable remains unchanged.
+end
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>return line:match("(-?%d+),(-?%d+),(%w+),(%d+),?" )</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>4</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Compass</name>
-				<script>--Because I only need to do this 11 times. I am doing it without
---a loop. Using a find command 11 times would require more processing.
---This could have also been done with string.match
---was fairly certain this required fewer cycles.
+				<script>--[[
+Use data from SKOOT 7 message to change images on the compass.
+References:
+https://wiki.mudlet.org/w/Manual:String_Functions#string.gmatch.2C_utf8.gmatch
+https://www.lua.org/pil/20.2.html
+]]--
 
---print("\nNorth is: ") --Test the count numbers
---print(string.sub(line, 11, 14)) --Test the count numbers
---north
-if  string.sub(line, 11, 14) == "show" then
-	tecCompass.lit("n")
-else
-	tecCompass.unlit("n")
-end
-
---print("\nNorth East is: ") --Test the count numbers
---print(string.sub(line, 19, 22)) --Test the count numbers
---ne
-if  string.sub(line, 19, 22) == "show" then
-	tecCompass.lit("ne")
-else
-	tecCompass.unlit("ne")
-end
-
---print("\nEast is: ") --Test the count numbers
---print(string.sub(line, 26, 29)) --Test the count numbers
---e
-if  string.sub(line, 26, 29) == "show" then
-	tecCompass.lit("e")
-else
-	tecCompass.unlit("e") 
-end
-
---print("\nSouth East is: ") --Test the count numbers
---print(string.sub(line, 34, 37)) --Test the count numbers
---se
-if  string.sub(line, 34, 37) == "show" then
-	tecCompass.lit("se")
-else
-	tecCompass.unlit("se")
-end
-
---print("\nSouth  is: ") --Test the count numbers
---print(string.sub(line, 41, 44)) --Test the count numbers
---s
-if  string.sub(line, 41, 44) == "show" then
-	tecCompass.lit("s")
-else
-	tecCompass.unlit("s")
-end
-
---print("\nSouth West  is: ") --Test the count numbers
---print(string.sub(line, 49, 52)) --Test the count numbers
---sw
-if  string.sub(line, 49, 52) == "show" then
-	tecCompass.lit("sw")
-else
-	tecCompass.unlit("sw")
-end
-
---print("\nWest  is: ") --Test the count numbers
---print(string.sub(line, 56, 59)) --Test the count numbers
---w
-if  string.sub(line, 56, 59) == "show" then
-	tecCompass.lit("w")
-else
-	tecCompass.unlit("w")
-end
-
---print("\nNorth West  is: ") --Test the count numbers
---print(string.sub(line, 64, 67)) --Test the count numbers
---nw
-if  string.sub(line, 64, 67) == "show" then
-	tecCompass.lit("nw")
-else
-	tecCompass.unlit("nw")
-end
-
---print("\nUp  is: ") --Test the count numbers
---print(string.sub(line, 71, 74)) --Test the count numbers
---up not supported YET
-if  string.sub(line, 71, 74) == "show" then
-	tecCompass.lit("up")
-else
-	tecCompass.unlit("up")
-end
-
---print("\nDown  is: ") --Test the count numbers
---print(string.sub(line, 78, 81)) --Test the count numbers
---down not supported YET
-if  string.sub(line, 78, 81) == "show" then
-	tecCompass.lit("down")
-else
-	tecCompass.unlit("down")
-end
+--get all directions and if they should be showed from the skoot 7 message
+for direction, show in string.gmatch( line, ",?(%a+),(%a+)" ) do
+  
+  displayDebug("trigger Compass, setting dirrection "..direction.." to "..show)
+  
+  --if the direction is u or d convert it into up or down.
+  if direction == "u" then direction = "up"
+  elseif direction == "d" then direction = "down" end
+  
+  if show == "show" then --if the direction should be shown.
+    MultiWindow.Compass.lit(direction) --show the direction as active in the MultiWindow compass
+    tecCompass.lit(direction) --show the direction as active in the standard tec compass
+  else --if the compass direction should be inactive
+    MultiWindow.Compass.unlit(direction) --show the direction as inactive in the MultiWindow compass
+    tecCompass.unlit(direction) --show the direction as inactive in the standard tec compass
+  end --if show == "show"
+end --for string.gmatch( line, "(%a%a?),(?%d+)" )
 
 deleteLine() --remove line from main console. line variable remains unchanged.</script>
 				<triggerType>0</triggerType>
@@ -440,6 +265,7 @@ deleteLine() --remove line from main console. line variable remains unchanged.</
 	--local health =  string.sub(line, 16, string.len(line))
 	
 	hpbar:setValue(tonumber(health),100) --set bar on screen
+  MultiWindow.hpbar:setValue(tonumber(health),100) --set bar in the MultiWindow
 	--echo("\nYour current health is: ")
 	--echo(health)
 
@@ -470,6 +296,7 @@ deleteLine() --remove line from main console. line variable remains unchanged.</
 	local fatigue = string.gsub(line,"SKOOT 8 Fatigue,","")
 
 	fatiguebar:setValue(tonumber(fatigue),100) --set bar on screen
+  MultiWindow.fatiguebar:setValue(tonumber(fatigue),100) --set bar in the MultiWindow
 	--echo("\nYour current fatigue is: ")
 	--echo(fatigue)
 	
@@ -502,6 +329,7 @@ deleteLine() --remove line from main console. line variable remains unchanged.</
 	local encumbrance = string.gsub(line,"SKOOT 8 Encumbrance,","")
 
 	encumbrancebar:setValue(tonumber(encumbrance),100) --set bar on screen
+  MultiWindow.encumbrancebar:setValue(tonumber(encumbrance),100) --set bar in MultiWindow
 	--echo("\nYour current encumbrance rate is: ")
 	--echo(encumbrance)
 	
@@ -532,6 +360,7 @@ deleteLine() --remove line from main console. line variable remains unchanged.</
 	local hunger = string.gsub(line,"SKOOT 8 Satiation,","")
 
 	hungerbar:setValue(tonumber(hunger),100) --set bar on screen
+  MultiWindow.hungerbar:setValue(tonumber(hunger),100) --set bar in MultiWindow
 	--echo("\nYour current hunger rate is: ")
 	--echo(hunger)
 	
@@ -682,22 +511,22 @@ elseif line:match("^%d+:") then --if line starts with "#: "
   	) --end displayToDebug
   end --end if debug is on.
 
+  local characterPrefix = "" --holds status of character or _
+
 	--This ( only occurs if your character is approached. If your character is approached.
 	if characterStatus:match("%(engaging%)") then
+  
     --Last character of an engaged name will be a space, this removes it.
     tecRoomObjects.characters[tecRoomObjects.lc] = tecRoomObjects.characters[tecRoomObjects.lc]:sub(1,-2)
     
     --check if the character is (unconscious)
     if characterStatus:match("unconscious") then 
-      hecho("roomCharacters.console",tecSettings.ApproachedCharactersColor.."KO: ")
+      characterPrefix = tecSettings.ApproachedCharactersColor.."KO: "
     else --if they are not unonscious prefice with a _ instead
-      hecho("roomCharacters.console",tecSettings.ApproachedCharactersColor.."_")
+      characterPrefix = tecSettings.ApproachedCharactersColor.."_"
     end
     
-		--create a right clickable list with the characters full name.
-		hechoPopup("roomCharacters.console",tecSettings.ApproachedCharactersColor
-      ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
-		{
+    local localApproachedCmdList = {
 		--apprachedCommandList is list of commands for characters that have approached yours
 		--tecNameMatches is now many times something with the same short name was previously found
 		--tecCharacterShort is the first word after a in a name. We can not target with full name.
@@ -706,27 +535,42 @@ elseif line:match("^%d+:") then --if line starts with "#: "
 		tecSettings.approachedCommandList[3]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
 		tecSettings.approachedCommandList[4]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
 		tecSettings.approachedCommandList[5]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
-		tecSettings.approachedCommandList[6]..tostring(tecNameMatches).." "..tecCharacterShort..[["]]},
-		{ 
+		tecSettings.approachedCommandList[6]..tostring(tecNameMatches).." "..tecCharacterShort..[["]]}
+    
+    local localApproachedCmdHelp = { 
 		--Tool bar tips that show on mouse over and right click.
 		tecSettings.approachedCommandHelp[1], 
 		tecSettings.approachedCommandHelp[2], 
 		tecSettings.approachedCommandHelp[3],
 		tecSettings.approachedCommandHelp[4],
 		tecSettings.approachedCommandHelp[5],
-		tecSettings.approachedCommandHelp[6]}, true)
+		tecSettings.approachedCommandHelp[6]}
+    
+		--create a right clickable list with the characters full name.
+		hechoPopup(roomCharacters.rightConsole.name,
+      characterPrefix..tecSettings.ApproachedCharactersColor
+      ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
+      localApproachedCmdList,
+      localApproachedCmdHelp, true)
+    --create right clickable list for MultiWIndow roomCharacters console
+    hechoPopup(MultiWindow.roomCharacters.rightConsole.name,
+      characterPrefix..tecSettings.ApproachedCharactersColor
+      ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
+      localApproachedCmdList,
+      localApproachedCmdHelp, true)
+      
+    --new line only the right consoles, or approached consoles.
+    echoRightRoomCharacterWindows("\n")
+    
 	else
     --check if the character is (unconscious), prefice with KO:
     if characterStatus:match("unconscious") then 
-      hecho("roomCharacters.console",tecSettings.ApproachedCharactersColor.."KO: ")
+      characterPrefix = tecSettings.ApproachedCharactersColor.."KO: "
     else --if they are not unonscious prefice with a _ instead
-      hecho("roomCharacters.console",tecSettings.notApproachedCharacterColor.."_")
+      characterPrefix = tecSettings.notApproachedCharacterColor.."_"
     end
     
-		--characters that are not approached to the players
-		hechoPopup("roomCharacters.console",tecSettings.notApproachedCharacterColor
-      ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
-		{
+    local localNotApproachedCmdList = {
 		--list of commands for characters not approached to yours.
 		--refer to approached logic explination above for reference.
 		tecSettings.commandList[1]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
@@ -734,21 +578,34 @@ elseif line:match("^%d+:") then --if line starts with "#: "
 		tecSettings.commandList[3]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
 		tecSettings.commandList[4]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
 		tecSettings.commandList[5]..tostring(tecNameMatches).." "..tecCharacterShort..[["]],
-		tecSettings.commandList[6]..tostring(tecNameMatches).." "..tecCharacterShort..[["]]},
-		{ 
+		tecSettings.commandList[6]..tostring(tecNameMatches).." "..tecCharacterShort..[["]]}
+    local localNotApproachedHelpList = { 
 		--Tool bar tips that show on mouse over and right click.
 		tecSettings.commandHelp[1], 
 		tecSettings.commandHelp[2], 
 		tecSettings.commandHelp[3],
 		tecSettings.commandHelp[4],
 		tecSettings.commandHelp[5],
-		tecSettings.commandHelp[6]}, true)
+		tecSettings.commandHelp[6]}
+		--characters that are not approached to the players
+		hechoPopup(roomCharacters.console.name,
+      characterPrefix..tecSettings.notApproachedCharacterColor
+      ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
+		  localNotApproachedCmdList,
+		  localNotApproachedHelpList, true)
+    hechoPopup(MultiWindow.roomCharacters.console.name,
+      characterPrefix..tecSettings.notApproachedCharacterColor
+      ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
+		  localNotApproachedCmdList,
+		  localNotApproachedHelpList, true)
+    
+    --new line only the left consoles or approached consoles
+    echoLeftRoomCharacterWindows("\n")
 	end --end if else characterEnaged == "("
   
-  --Attempting to resolve issue with window not filling
-  hecho("roomCharacters.console","\n")
-  
-  tecScrollBarCheck("roomCharacters.console") --check if a scroll bar is needed.
+  tecScrollBarCheck(roomCharacters.console.name) --check if a scroll bar is needed.
+  tecScrollBarCheck(MultiWindow.roomCharacters.console.name)
+  tecScrollBarCheck(MultiWindow.roomCharacters.rightConsole.name)
   
 	--Delete main's line if we are not displaying it to screen
   if not tecRoomObjects.displayToScreen then deleteLine() end
@@ -764,21 +621,25 @@ elseif line == "&lt;/pre&gt;" then --end of ac . command found.
 --if it is dark set RoomCheck to false so it does not remain active.
 elseif line == "It is too dark to see anything." then
   setTECRoomCheckActive(false) --disable room check for characters.
-  clearRoomCharacterWindow()
-  cecho("roomCharacters.console", "It is too dark to see anything.")
+  --clearRoomCharacterWindow()
+  echoLeftRoomCharacterWindows("It is too dark to see anything.")
+
+elseif line:match("Your immediate surroundings are obscured by darkness") then
+  setTECRoomCheckActive(false) --disable room check for characters.
+  --clearRoomCharacterWindow()
+  echoLeftRoomCharacterWindows("It is too dark to see anything.")
   
 --if player is stunned set RoomCheck to false so it does not remain active.
 elseif line == "You can't do that while stunned." then
   setTECRoomCheckActive(false) --disable room check for characters.
-  clearRoomCharacterWindow()
-  cecho("roomCharacters.console", "You can't do that while stunned.")
+  --clearRoomCharacterWindow()
+  echoLeftRoomCharacterWindows("You can't do that while stunned.")
   
 --if player is unconcious RoomCheck to false so it does not remain active.
 elseif line == "You can't do that while unconcious." then
   setTECRoomCheckActive(false) --disable room check for characters.
-  clearRoomCharacterWindow()
-  cecho("roomCharacters.console", "You can't do that while unconcious.")
-
+  --clearRoomCharacterWindow()
+  echoLeftRoomCharacterWindows("You can't do that while unconcious.")
 end --if line has a ac . character in it.
 
 --No else, becase if it isn't one of the items we are looking for above.
@@ -1072,13 +933,15 @@ appendBuffer("Thoughts") --paste copied text to miniConsole
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>^&lt;/font&gt;&lt;font color="#(\w+)"&gt;&amp;lt;(\w+) thinks aloud:</string>
+					<string>^&lt;/font&gt;&lt;font color="#\w+"&gt;&amp;lt;\w+ thinks aloud:</string>
 					<string>&amp;lt;You think aloud: </string>
-					<string>^&lt;/font&gt;&lt;font color="#(\w+)"&gt;&amp;lt;(\w+) (\w+) thinks aloud:</string>
+					<string>^&lt;/font&gt;&lt;font color="#\w+"&gt;&amp;lt;\w+ \w+ thinks aloud:</string>
+					<string>^&amp;lt;\w+ thinks aloud: </string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>1</integer>
 					<integer>2</integer>
+					<integer>1</integer>
 					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
@@ -1235,34 +1098,6 @@ printCmdLine("Username: ") --insert into the command line.
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>Correct bad copy right</name>
-				<script>local myFormatter = demonnic.TextFormatter:new( { --use ftext function to center text.
-    width = (getColumnCount() - 1), --width of main console -1 is so autowrap no trigger
-    textColor = "&lt;gray&gt;"
-  })
-selectCurrentLine() --select current line in main.
-replace("") --Erase text from main. Otherwise variable line will apear on console.
-deselect() --Don't forget your deselects!
-echo("\n")
-cecho(myFormatter:format("  (c)1996-2019 Skotos Tech")) --echo out out ftext</script>
-				<triggerType>0</triggerType>
-				<conditonLineDelta>0</conditonLineDelta>
-				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
-				<mFgColor>#ff0000</mFgColor>
-				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
-				<colorTriggerFgColor>#000000</colorTriggerFgColor>
-				<colorTriggerBgColor>#000000</colorTriggerBgColor>
-				<regexCodeList>
-					<string>                           (c)1996-2013 Skotos Tech</string>
-				</regexCodeList>
-				<regexCodePropertyList>
-					<integer>3</integer>
-				</regexCodePropertyList>
-			</Trigger>
-			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Failed Login</name>
 				<script>connectToServer("tec.skotos.net", 6730) --reconnect if there is a disconnect at login.</script>
 				<triggerType>0</triggerType>
@@ -1282,19 +1117,9 @@ cecho(myFormatter:format("  (c)1996-2019 Skotos Tech")) --echo out out ftext</sc
 					<integer>3</integer>
 				</regexCodePropertyList>
 			</Trigger>
-			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>== replacement</name>
-				<script>myFormatter = demonnic.TextFormatter:new( {
-  width = (getColumnCount() - 1), 
-  cap = "=========",
-  capColor = "&lt;gray&gt;",
-  textColor = "&lt;gray&gt;"
-})
-selectCurrentLine() --select current line in main.
-replace("") --Erase text from main. Otherwise variable line will apear on console.
-deselect() --Don't forget your deselects!
-echo("\n")
-cecho(myFormatter:format("========="))</script>
+			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>welcome message</name>
+				<script></script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1305,13 +1130,217 @@ cecho(myFormatter:format("========="))</script>
 				<mSoundFile></mSoundFile>
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
-				<regexCodeList>
-					<string>===============================================================================</string>
-				</regexCodeList>
-				<regexCodePropertyList>
-					<integer>3</integer>
-				</regexCodePropertyList>
-			</Trigger>
+				<regexCodeList />
+				<regexCodePropertyList />
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>== replacement</name>
+					<script>myFormatter = demonnic.TextFormatter:new( {
+  width = (getColumnCount() - 1), 
+  cap = "=========",
+  capColor = "&lt;gray&gt;",
+  textColor = "&lt;gray&gt;"
+})
+selectCurrentLine() --select current line in main.
+replace("") --Erase text from main. Otherwise variable line will apear on console.
+deselect() --Don't forget your deselects!
+echo("\n")
+cecho(myFormatter:format("========="))</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>===============================================================================</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>3</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Correct bad copy right</name>
+					<script>local myFormatter = demonnic.TextFormatter:new( { --use ftext function to center text.
+    width = (getColumnCount() - 1), --width of main console -1 is so autowrap no trigger
+    textColor = "&lt;gray&gt;"
+  })
+selectCurrentLine() --select current line in main.
+replace("") --Erase text from main. Otherwise variable line will apear on console.
+deselect() --Don't forget your deselects!
+echo("\n")
+cecho(myFormatter:format("(c)1996-2020 Skotos Tech")) --echo out out ftext</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>                           (c)1996-2013 Skotos Tech</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>3</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Welcome to The Eternal City</name>
+					<script>local myFormatter = demonnic.TextFormatter:new( { --use ftext function to center text.
+    width = (getColumnCount() - 1), --width of main console -1 is so autowrap no trigger
+    textColor = "&lt;gray&gt;"
+  })
+selectCurrentLine() --select current line in main.
+replace("") --Erase text from main. Otherwise variable line will apear on console.
+deselect() --Don't forget your deselects!
+echo("\n")
+cecho(myFormatter:format("Welcome to The Eternal City")) --echo out out ftext</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>                          Welcome to The Eternal City</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>3</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Welcome to The Eternal City second</name>
+					<script>local myFormatter = demonnic.TextFormatter:new( { --use ftext function to center text.
+    width = (getColumnCount() - 1), --width of main console -1 is so autowrap no trigger
+    textColor = "&lt;gray&gt;"
+  })
+selectCurrentLine() --select current line in main.
+replace("") --Erase text from main. Otherwise variable line will apear on console.
+deselect() --Don't forget your deselects!
+echo("\n")
+cecho(myFormatter:format("Welcome to The Eternal City")) --echo out out ftext</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>                         Welcome to The Eternal City!</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>3</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>-- replacement</name>
+					<script>local myFormatter = demonnic.TextFormatter:new( { --use ftext function to center text.
+    width = (getColumnCount() - 1), --width of main console -1 is so autowrap no trigger
+    textColor = "&lt;gray&gt;"
+  })
+selectCurrentLine() --select current line in main.
+replace("") --Erase text from main. Otherwise variable line will apear on console.
+deselect() --Don't forget your deselects!
+echo("\n")
+cecho(myFormatter:format("-----")) --echo out out ftext</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>                       --------------------------------</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>3</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>password troubles</name>
+					<script>selectCurrentLine() --select current line in main.
+replace("") --Erase text from main. Otherwise variable line will apear on console.
+deselect() --Don't forget your deselects!</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>          If you are having any password or other connection troubles</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>3</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>please send mail to ce@skotos.net</name>
+					<script>selectCurrentLine() --select current line in main.
+replace("") --Erase text from main. Otherwise variable line will apear on console.
+deselect() --Don't forget your deselects!</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>                       please send mail to ce@skotos.net</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>3</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>&lt;xch_page clear="text" /&gt;</name>
+					<script>selectCurrentLine() --select current line in main.
+replace("") --Erase text from main. Otherwise variable line will apear on console.
+deselect() --Don't forget your deselects!</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>&lt;xch_page clear="text" /&gt;</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>3</integer>
+					</regexCodePropertyList>
+				</Trigger>
+			</TriggerGroup>
 		</TriggerGroup>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>Game Events</name>
@@ -1464,7 +1493,10 @@ tecRoomCharRefreshNotification()</script>
 				<script>--triggers when the player enters a new room.
 
 --Set default text in room characters window
-tecResetRoomCharacterWindow()</script>
+tecResetRoomCharacterWindow()
+
+--stop waiting for the drover, so it will not auto follow after a player has walked away while waiting for a drover.
+parthiaSetWaitForDrover(false) </script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1535,10 +1567,7 @@ tecResetRoomCharacterWindow()</script>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Vision loss</name>
 				<script>--Triggers when the player can not see.
-
---Notify user that room characters can not be populated.
-clearRoomCharacterWindow()
-cecho("roomCharacters.console", "It is too dark to see anything.")</script>
+</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1554,6 +1583,29 @@ cecho("roomCharacters.console", "It is too dark to see anything.")</script>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>3</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Drover Arrives</name>
+				<script>if parthiaGetWaitForDrover() then --if the wait for drover command was run, follow drover when it arrives.
+  send("follow drover") --follow the drover
+  parthiaSetWaitForDrover(false) --stop waiting for the drover, so it will not auto follow
+end --if parthiaGetWaitForDrover()</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>A drover makes \w+ way in </string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
 		</TriggerGroup>

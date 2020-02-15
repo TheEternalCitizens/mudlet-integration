@@ -21,7 +21,7 @@ cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Help Anything",
 [[printCmdLine("help ")]], 
 "wiki search", true)
 echo(" Type help followed by anything. "
-	.." You will be able to search the wiki for it.\n\n")
+	.."You will be given a clickable link to search for your question on TEC's wiki.\n\n")
 
 cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;World maps", 
 [[openUrl("http://eternal-city.wikidot.com/maps")]], 
@@ -269,48 +269,48 @@ UIManagerEnableSide("list",false,true)</script>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
-			<name>tecclient</name>
+			<name>parthia</name>
 			<script></script>
 			<command></command>
 			<packageName></packageName>
 			<regex></regex>
 			<Alias isActive="yes" isFolder="no">
-				<name>tecclient load</name>
+				<name>parthia load</name>
 				<script>--Load settings from file.
 
 --True echos to the user if it was successfull
 tecFileLoadSettings(true)</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^tecclient load$</regex>
+				<regex>^parthia load$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>tecclient save all</name>
+				<name>parthia save all</name>
 				<script>--save display and client settings.
 tecClientSaveAll(true)</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^tecclient save all$</regex>
+				<regex>^parthia save all$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>tecclient save</name>
+				<name>parthia save</name>
 				<script>--save client settings
 --not display settings.
 tecFileSaveSettings(true)</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^tecclient save$</regex>
+				<regex>^parthia save$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>tecclient</name>
+				<name>parthia</name>
 				<script>--display tecClientHelp to screen
 tecClientHelp()</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^tecclient$</regex>
+				<regex>^parthia$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>tecclient reset</name>
+				<name>parthia reset</name>
 				<script>--reloads user profile. Can't complete this right now.
 --resetProfile()
 
@@ -318,77 +318,40 @@ tecClientHelp()</script>
 tecClientReset(true)</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^tecclient reset$</regex>
+				<regex>^parthia reset$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>tecclient reset all</name>
+				<name>parthia reset all</name>
 				<script>tecClientResetAll(true) --resets all client settings</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^tecclient reset all$</regex>
+				<regex>^parthia reset all$</regex>
 			</Alias>
-			<AliasGroup isActive="yes" isFolder="yes">
-				<name>font</name>
-				<script></script>
-				<command></command>
-				<packageName></packageName>
-				<regex></regex>
-				<Alias isActive="yes" isFolder="no">
-					<name>font Size</name>
-					<script>tecClientSetFontSize(tonumber(matches[2])) 
---matches[2] is the word in () in the pattern</script>
-					<command></command>
-					<packageName></packageName>
-					<regex>^font (\d+)$</regex>
-				</Alias>
-				<Alias isActive="yes" isFolder="no">
-					<name>font tab #</name>
-					<script>tecClientSetTabFontSize(tonumber(matches[2]))
---matches[2] is the word in () in the pattern</script>
-					<command></command>
-					<packageName></packageName>
-					<regex>^font tab (.*)$</regex>
-				</Alias>
-				<Alias isActive="yes" isFolder="no">
-					<name>font</name>
-					<script>echo([[
-The font command is used to change font settings.
-Currently you can change the size of the font.
-Uses are:
-font size, changes the size of the font to the size entered.
-IE: font 12, sets the font size to 12.
-Current font size: ]]..getTECFont()
-.."\nfont tab #, changes the size of window tabs.")</script>
-					<command></command>
-					<packageName></packageName>
-					<regex>^font$</regex>
-				</Alias>
-			</AliasGroup>
 			<Alias isActive="yes" isFolder="no">
-				<name>tecclient font size #</name>
+				<name>parthia font size #</name>
 				<script>tecClientSetFontSize(tonumber(matches[2])) 
 --matches[2] is the word in () in the pattern</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^tecclient font size (.*)</regex>
+				<regex>^parthia font size (.*)</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>tecclient tab font size #</name>
+				<name>parthia tab font size #</name>
 				<script>tecClientSetTabFontSize(tonumber(matches[2]))
 --matches[2] is the word in () in the pattern</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^tecclient tab font size (.*)$</regex>
+				<regex>^parthia tab font size (.*)$</regex>
 			</Alias>
 			<Alias isActive="no" isFolder="no">
-				<name>tecclient update</name>
+				<name>parthia update</name>
 				<script>DownloadGitScripts() --Begin downloading updates</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^tecclient update$</regex>
+				<regex>^parthia update$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>tecclient repair</name>
+				<name>parthia repair</name>
 				<script>--force an update installation. Intended for repair installation.
 if not tecGitUpdate then --if the update engine has not been configured.
   GitUpdateconfig() --create default update engine config
@@ -398,28 +361,28 @@ GitUpdate.installationInProgress = false --notifies update engine if update is r
 DownloadGitReleaseJSON() --start the update process</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^tecclient repair$</regex>
+				<regex>^parthia repair$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>tecclient update check</name>
+				<name>parthia update check</name>
 				<script>DownloadGitReleaseJSON() --check if an update is needed.</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^tecclient update check$</regex>
+				<regex>^parthia update check$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>tecclient beta test yes</name>
+				<name>parthia beta test yes</name>
 				<script>tecSetBetaTester(true) --inform Parthia player is a beta tester.</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^tecclient beta test yes$</regex>
+				<regex>^parthia beta test yes$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>tecclient beta test no</name>
+				<name>parthia beta test no</name>
 				<script>tecSetBetaTester(false) --inform Parthia player is a beta tester.</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^tecclient beta test no$</regex>
+				<regex>^parthia beta test no$</regex>
 			</Alias>
 			<AliasGroup isActive="yes" isFolder="yes">
 				<name>colors</name>
@@ -428,119 +391,151 @@ DownloadGitReleaseJSON() --start the update process</script>
 				<packageName></packageName>
 				<regex></regex>
 				<Alias isActive="yes" isFolder="no">
-					<name>tecclient colors</name>
+					<name>parthia colors</name>
 					<script>tecColorWindow() --Open floating window to choose colors with.</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^tecclient colors$</regex>
+					<regex>^parthia colors$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>tecclient change colors</name>
+					<name>parthia change colors</name>
 					<script>tecClientChangeColors() --Help user change color scheams.</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^tecclient change colors$</regex>
+					<regex>^parthia change colors$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>tecclient change colors commands</name>
+					<name>parthia change colors commands</name>
 					<script>tecClientChangeColorsList() --List commands to change display colors.</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^tecclient change colors commands$</regex>
+					<regex>^parthia change colors commands$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>tecclient windows background color</name>
+					<name>parthia windows background color</name>
 					<script>tecLabelBackgroundColor(matches[2])</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^tecclient windows background color (.*)</regex>
+					<regex>^parthia windows background color (.*)</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>tecclient tabs background color</name>
+					<name>parthia tabs background color</name>
 					<script>tecTabsBackgroundColor(matches[2])</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^tecclient tabs background color (.*)</regex>
+					<regex>^parthia tabs background color (.*)</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>tecclient hover color</name>
+					<name>parthia hover color</name>
 					<script>tecSetMouseHoverColor(matches[2])</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^tecclient hover color (.*)</regex>
+					<regex>^parthia hover color (.*)</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>tecclient greentext color</name>
+					<name>parthia greentext color</name>
 					<script>tecSetGreenTextColor(matches[2])</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^tecclient greentext color (.*)</regex>
+					<regex>^parthia greentext color (.*)</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>tecclient bluetext color</name>
+					<name>parthia bluetext color</name>
 					<script>tecSetBlueTextColor(matches[2])</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^tecclient bluetext color (.*)</regex>
+					<regex>^parthia bluetext color (.*)</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>tecclient text color</name>
+					<name>parthia text color</name>
 					<script>tecSetTextColor(matches[2])</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^tecclient text color (.*)</regex>
+					<regex>^parthia text color (.*)</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>tecclient helphighlight color</name>
+					<name>parthia helphighlight color</name>
 					<script>tecSetHelpHighlightColor(matches[2])</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^tecclient helphighlight color (.*)</regex>
+					<regex>^parthia helphighlight color (.*)</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>tecclient approached character color</name>
+					<name>parthia approached character color</name>
 					<script>tecSettecApproachedCharacter(matches[2])</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^tecclient approached character color (.*)</regex>
+					<regex>^parthia approached character color (.*)</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>tecclient not approached character color</name>
+					<name>parthia not approached character color</name>
 					<script>tecSettecNotApproachedCharacter(matches[2])</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^tecclient not approached character color (.*)</regex>
+					<regex>^parthia not approached character color (.*)</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>tecclient background color</name>
+					<name>parthia background color</name>
 					<script>tecSetBackgroundColor(matches[2])</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^tecclient background (.*)</regex>
+					<regex>^parthia background (.*)</regex>
 				</Alias>
 			</AliasGroup>
 			<Alias isActive="yes" isFolder="no">
-				<name>tecclient report</name>
+				<name>parthia report</name>
 				<script>tecReportIssues()</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^tecclient report$</regex>
+				<regex>^parthia report$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>display side top disable</name>
-				<script>GUIframe.enable("left")</script>
-				<command></command>
-				<packageName></packageName>
-				<regex>^display side top disable$</regex>
-			</Alias>
-			<Alias isActive="yes" isFolder="no">
-				<name>tecclient version</name>
+				<name>parthia version</name>
 				<script>--if the update engine has not been initialized do it, to make the version number.
 if not GitUpdate then GitUpdateconfig() end
-cecho("Parthia version: "..GitUpdate.localVersion)</script>
+cecho("Parthia version: "..GitUpdate.localVersion.."\n")</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^tecclient version$</regex>
+				<regex>^parthia version$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>parthia playerdevelopment install</name>
+				<script>--Installed modules set aside for player development.
+--populate them with meaningfull triggers.
+PlayerDev.SetEnabled(true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^parthia playerdevelopment install$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>parthia playerdevelopment disable</name>
+				<script>--Tell Parthia to no longer receive player development updates.
+PlayerDev.SetEnabled(false)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^parthia playerdevelopment disable$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>parthia playerdevelopment update</name>
+				<script>PlayerDev.Update(true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^parthia playerdevelopment update$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>parthia playerdevelopment uninstall</name>
+				<script>--Tell Parthia to no longer receive player development updates.
+PlayerDev.SetPackages(false)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^parthia playerdevelopment uninstall$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>parthia commands</name>
+				<script>parthiaCommandsHelp()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^parthia commands$</regex>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
@@ -548,7 +543,7 @@ cecho("Parthia version: "..GitUpdate.localVersion)</script>
 			<script>tecDebugHelp() --display help window.</script>
 			<command></command>
 			<packageName></packageName>
-			<regex>^room obect check$</regex>
+			<regex>^debug$</regex>
 			<Alias isActive="yes" isFolder="no">
 				<name>debug on</name>
 				<script>--function in scripts - variables.
@@ -689,6 +684,66 @@ tecPasswordEntry = true --used to prevent the password entry from beind sent to 
 				<command></command>
 				<packageName></packageName>
 				<regex>^Username: (.+)$</regex>
+			</Alias>
+		</AliasGroup>
+		<AliasGroup isActive="yes" isFolder="yes">
+			<name>font</name>
+			<script></script>
+			<command></command>
+			<packageName></packageName>
+			<regex></regex>
+			<Alias isActive="yes" isFolder="no">
+				<name>font Size</name>
+				<script>tecClientSetFontSize(tonumber(matches[2])) 
+--matches[2] is the word in () in the pattern</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^font (\d+)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>font tab #</name>
+				<script>tecClientSetTabFontSize(tonumber(matches[2]))
+--matches[2] is the word in () in the pattern</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^font tab (.*)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>font</name>
+				<script>echo([[
+The font command is used to change font settings.
+Currently you can change the size of the font.
+Uses are:
+font size, changes the size of the font to the size entered.
+IE: font 12, sets the font size to 12.
+Current font size: ]]..getTECFont()
+.."\nfont tab #, changes the size of window tabs.")</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^font$</regex>
+			</Alias>
+		</AliasGroup>
+		<AliasGroup isActive="yes" isFolder="yes">
+			<name>commands</name>
+			<script>--[[
+commands ground is intended for commands that interact with the game.
+Not commands that interact with the client.
+Example would be `wait for drover`
+]]--</script>
+			<command></command>
+			<packageName></packageName>
+			<regex></regex>
+			<Alias isActive="yes" isFolder="no">
+				<name>wait for drover</name>
+				<script>if not parthiaGetWaitForDrover() then --if the player is not already waiting for the drover
+  parthiaSetWaitForDrover(true) --wait for the drover. Uses trigger `Drover Arrives`
+  echo("You patiently wait for the drover to arrive.\n")
+else --player is already waiting for drover
+  echo("You are already waiting for the drover.\n")
+end --if not parthiaGetWaitForDrover()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^wait for drover$</regex>
 			</Alias>
 		</AliasGroup>
 	</AliasPackage>
