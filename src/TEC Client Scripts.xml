@@ -219,9 +219,11 @@ function tecFileLoadSettings(displayToScreen)
 	path = path:gsub("\\","/")
 	--If the file does not exist let the user know.
   if not io.exists(path) then 
-		debugToDisplay("tecFileLoadSettings: "..path.." file doesn't exist.") --TEC debug screen
-		debugc("tecFileLoadSettings: "..path.." file doesn't exist.") --mudlets debug screen
-		if displayToScreen then echo("Client settings did not load from file\n") end
+		cecho("tecDebugWindow","tecFileLoadSettings: "..path.." file doesn't exist.") --TEC debug screen
+		--debugc("tecFileLoadSettings: "..path.." file doesn't exist.") --mudlets debug screen
+		if displayToScreen then
+      cecho("[ Info ]  - No settings file. Parthia using default settings.\n")
+    end
 	return --kill the function before real errors occur
 	else
     table.load(path, tecTmpSettingsTable) --Load the settings in from file
@@ -4524,7 +4526,8 @@ function UIManagerFileLoad(displayToScreen)
 	--If the file does not exist let the user know.
   if not io.exists(path) then 
 		debugToDisplay("tecFileLoadSettings: "..path.." file doesn't exist.") --TEC debug screen
-		debugc("tecFileLoadSettings: "..path.." file doesn't exist.") --mudlets debug screen
+    cecho("[ Info ]  - No display settings file. Parthia using default settings.\n")
+		--debugc("tecFileLoadSettings: "..path.." file doesn't exist.") --mudlets debug screen
 	return --kill the function before real errors occur
 	else
     table.load(path, tecTMPDisplayTable) --Load the settings in from file
@@ -8170,12 +8173,21 @@ function guiChange()
 	setMainWindowAutoWrap() --adjusts word wrap for main window.
 	if getTECDisplayDebugMode() then geyserDebug() end --if displaydebug is on
   --only resize windows managed by UIManager if they are enabled
-	if not UIManagerSettings[tecCompass.window.name].disabled then tecCompass.drawKeepSquare() end --Keep the windowed compass square
-  if not UIManagerSettings[MultiWindow.back.name].disabled then MultiWindow.redrawWindows() end--keep the compass in the multi window square
-	if not UIManagerSettings[tecMap.name].disabled then tecMapdrawKeepSquare() end --resize map
-	if not UIManagerSettings[tecComWindows.container.name].disabled then tecComWindowResize() end --resize commmunications window
-	--if not UIManagerSettings[roomCharacters.name].disabled then tecCRWindowResize() end--resize the Room Character window now
-	if not UIManagerSettings[tecSettingsBar.name].disabled then tecSettingsWindowResize() end--resize the Room Character window now
+	if UIManagerSettings[tecCompass.window.name] then --if window exists chek if it is enabled
+    if not UIManagerSettings[tecCompass.window.name].disabled then tecCompass.drawKeepSquare() end --Keep the windowed compass square
+  end --if UIManagerSettings[tecCompass.window.name]
+  if UIManagerSettings[MultiWindow.back.name] then --if window exists chek if it is enabled
+    if not UIManagerSettings[MultiWindow.back.name].disabled then MultiWindow.redrawWindows() end--keep the compass in the multi window square
+  end --if UIManagerSettings[MultiWindow.back.name]
+  if UIManagerSettings[tecMap.name] then --if window exists chek if it is enabled
+	 if not UIManagerSettings[tecMap.name].disabled then tecMapdrawKeepSquare() end --resize map
+  end --if UIManagerSettings[tecMap.name]
+  if UIManagerSettings[tecComWindows.container.name] then --if window exists chek if it is enabled
+	 if not UIManagerSettings[tecComWindows.container.name].disabled then tecComWindowResize() end --resize commmunications window
+  end --if UIManagerSettings[tecComWindows.container.name]
+  if UIManagerSettings[tecSettingsBar.name] then --if window exists chek if it is enabled
+	 if not UIManagerSettings[tecSettingsBar.name].disabled then tecSettingsWindowResize() end--resize the Room Character window now
+  end --if UIManagerSettings[tecSettingsBar.name]
 end --end function guiChange
 
 --whenever event sysWindowReizeEvent occurs run setMainWindowAutowrap.
