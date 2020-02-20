@@ -8,78 +8,6 @@
 	<ScriptPackage />
 	<KeyPackage>
 		<Key isActive="yes" isFolder="no">
-			<name>KeyPad plus -&gt; Down</name>
-			<packageName></packageName>
-			<script></script>
-			<command>Down</command>
-			<keyCode>43</keyCode>
-			<keyModifier>536870912</keyModifier>
-		</Key>
-		<Key isActive="yes" isFolder="no">
-			<name>KeyPad Minus -&gt; Up</name>
-			<packageName></packageName>
-			<script></script>
-			<command>UP</command>
-			<keyCode>45</keyCode>
-			<keyModifier>536870912</keyModifier>
-		</Key>
-		<Key isActive="yes" isFolder="no">
-			<name>KeyPad 7 -&gt; Walk NW</name>
-			<packageName></packageName>
-			<script></script>
-			<command>NW</command>
-			<keyCode>55</keyCode>
-			<keyModifier>536870912</keyModifier>
-		</Key>
-		<Key isActive="yes" isFolder="no">
-			<name>KeyPad 4 -&gt; Walk W</name>
-			<packageName></packageName>
-			<script></script>
-			<command>W</command>
-			<keyCode>52</keyCode>
-			<keyModifier>536870912</keyModifier>
-		</Key>
-		<Key isActive="yes" isFolder="no">
-			<name>KeyPad 2 -&gt; Walk S</name>
-			<packageName></packageName>
-			<script></script>
-			<command>S</command>
-			<keyCode>50</keyCode>
-			<keyModifier>536870912</keyModifier>
-		</Key>
-		<Key isActive="yes" isFolder="no">
-			<name>KeyPad 3 - &gt; Walk SE</name>
-			<packageName></packageName>
-			<script></script>
-			<command>SE</command>
-			<keyCode>51</keyCode>
-			<keyModifier>536870912</keyModifier>
-		</Key>
-		<Key isActive="yes" isFolder="no">
-			<name>KeyPad 6 -&gt; Walk E</name>
-			<packageName></packageName>
-			<script></script>
-			<command>E</command>
-			<keyCode>54</keyCode>
-			<keyModifier>536870912</keyModifier>
-		</Key>
-		<Key isActive="yes" isFolder="no">
-			<name>KeyPad 9 -&gt; Walk NE</name>
-			<packageName></packageName>
-			<script></script>
-			<command>NE</command>
-			<keyCode>57</keyCode>
-			<keyModifier>536870912</keyModifier>
-		</Key>
-		<Key isActive="yes" isFolder="no">
-			<name>KeyPad 8 -&gt; Walk N</name>
-			<packageName></packageName>
-			<script></script>
-			<command>N</command>
-			<keyCode>56</keyCode>
-			<keyModifier>536870912</keyModifier>
-		</Key>
-		<Key isActive="yes" isFolder="no">
 			<name>ctrl+r -&gt; Room Check</name>
 			<packageName></packageName>
 			<script>--Check room for characters and fill the room character window.
@@ -88,22 +16,102 @@ runTECRoomObjectCheck()</script>
 			<keyCode>82</keyCode>
 			<keyModifier>67108864</keyModifier>
 		</Key>
-		<Key isActive="yes" isFolder="no">
-			<name>KeyPad 1 - Walk SW</name>
+		<KeyGroup isActive="yes" isFolder="yes">
+			<name>numpad navigation</name>
 			<packageName></packageName>
 			<script></script>
-			<command>SW</command>
-			<keyCode>49</keyCode>
-			<keyModifier>536870912</keyModifier>
-		</Key>
-		<Key isActive="yes" isFolder="no">
-			<name>KeyPad 5 -&gt; Look</name>
-			<packageName></packageName>
-			<script></script>
-			<command>Look</command>
-			<keyCode>53</keyCode>
-			<keyModifier>536870912</keyModifier>
-		</Key>
+			<command></command>
+			<keyCode>-1</keyCode>
+			<keyModifier>-1</keyModifier>
+			<Key isActive="yes" isFolder="no">
+				<name>KeyPad 9 -&gt; Walk NE</name>
+				<packageName></packageName>
+				<script></script>
+				<command>NE</command>
+				<keyCode>57</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>KeyPad 8 -&gt; Walk N</name>
+				<packageName></packageName>
+				<script></script>
+				<command>N</command>
+				<keyCode>56</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>KeyPad 7 -&gt; Walk NW</name>
+				<packageName></packageName>
+				<script></script>
+				<command>NW</command>
+				<keyCode>55</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>KeyPad 6 -&gt; Walk E</name>
+				<packageName></packageName>
+				<script></script>
+				<command>E</command>
+				<keyCode>54</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>KeyPad 5 -&gt; Look</name>
+				<packageName></packageName>
+				<script></script>
+				<command>Look</command>
+				<keyCode>53</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>KeyPad 4 -&gt; Walk W</name>
+				<packageName></packageName>
+				<script></script>
+				<command>W</command>
+				<keyCode>52</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>KeyPad 3 - &gt; Walk SE</name>
+				<packageName></packageName>
+				<script></script>
+				<command>SE</command>
+				<keyCode>51</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>KeyPad 2 -&gt; Walk S</name>
+				<packageName></packageName>
+				<script></script>
+				<command>S</command>
+				<keyCode>50</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>KeyPad 1 - Walk SW</name>
+				<packageName></packageName>
+				<script></script>
+				<command>SW</command>
+				<keyCode>49</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>KeyPad Minus -&gt; Up</name>
+				<packageName></packageName>
+				<script></script>
+				<command>UP</command>
+				<keyCode>45</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>KeyPad plus -&gt; Down</name>
+				<packageName></packageName>
+				<script></script>
+				<command>Down</command>
+				<keyCode>43</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+		</KeyGroup>
 	</KeyPackage>
 	<HelpPackage>
 		<helpURL></helpURL>
