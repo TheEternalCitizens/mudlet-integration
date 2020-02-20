@@ -537,6 +537,32 @@ PlayerDev.SetPackages(false)</script>
 				<packageName></packageName>
 				<regex>^parthia commands$</regex>
 			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>parthia numpad navigation</name>
+				<script>if getNumpadNaviation() then --numpad is enabled so disable it
+  setNumpadNavigation(false) --tell parthia to disable num navigation
+  cecho("Number pad navigation disabled.\n")
+ else --numpad navigation is disabled, so enable it
+  setNumpadNavigation(true) --tell parthia to enable numpad navigation
+  cecho("Number pad navigation enabled.\n")
+end --if getNumpadNaviation() then
+
+dontForgetToSave() --remind the player to save their changes.</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^parthia numpad navigation$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>parthia prepare release</name>
+				<script>setNumpadNavigation(true) --tell parthia to enable numpad navigation
+cecho("Number pad navigation enabled.\n")
+
+disableAlias("parthia update") --make certain update command is disabled
+cecho("Update command disabled.\n")</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^parthia prepare release$</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Debug</name>

@@ -162,6 +162,9 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   --Does the player want to have the player development folders managed
   tecSettings.PlayerDevelopmentSpaceEnabled = false
   
+  --should keybindings to navigate with the numpad be enabled
+  tecSettings.numpadNavigationEnabled = true
+  
   --keep track of UI manager names. Not case sensative.
   UIManagers = { "GUIframe" , "none"}
   
@@ -4869,7 +4872,14 @@ end --end function tecDebugHelp</script>
 					<packageName></packageName>
 					<script>function tecClientHelp()
 
-  echo("\nparthia command:\n")
+  echo("\nparthia developer commands:\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia prepare release", 
+  [[expandAlias("parthia prepare release")]],
+  "Prepare code for release", true)
+  echo(", set mudlet objects to default enable or disabled state.\n")
+  
+  echo("\nparthia player commands:\n")
   
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia update check", 
   [[DownloadGitReleaseJSON()]],
@@ -4948,6 +4958,11 @@ end --end function tecDebugHelp</script>
   "Check for player development updates", true)
   echo(", check for updates to player development folders. Occurs automatically with client updates.\n")
   
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia numpad navigation", 
+  [[expandAlias("parthia numpad navigation")]],
+  "Toggle numpad navigation", true)
+  echo(", turn navigation using the numberpad on or off.\n")
+  
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia tab font size", 
   [[printCmdLine("parthia tab font size ")]],
   "Change font size of tabs", true)
@@ -4963,7 +4978,7 @@ end --end function tecDebugHelp</script>
   "Change client font size", true)
   echo(", Change font size for all consoles.\n")
   
-    cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia commands", 
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia commands", 
   [[parthiaCommandsHelp()]],
   "List custom parthia commands", true)
   echo(", game commands that exist in parthia only.\n")
@@ -7028,6 +7043,41 @@ end --function parthiaGetWaitForDrover()</script>
 					</Script>
 				</ScriptGroup>
 			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>numpad navigation</name>
+				<packageName></packageName>
+				<script>--enable or disable numpad naviation</script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>setNumpadNavigation(mode)</name>
+					<packageName></packageName>
+					<script>--enable or disable numberpad navigation support
+function setNumpadNavigation(mode)
+  mode = fuzzyBoolean(mode) --made certain variable sent is good.
+  numNaviationkeyName = "numpad navigation" --name of the navitation group the navigation keys are in
+  
+  if mode then --if true enable numpadgroup
+    enableKey(numNaviationkeyName)
+  else --if false disable
+    disableKey(numNaviationkeyName)
+  end --if mode then
+  
+  --save to file if player wants numpad navigation enabled.
+  tecSettings.numpadNavigationEnabled = mode
+  
+end --function setNumNaviation(mode)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>getNumpadNaviation()</name>
+					<packageName></packageName>
+					<script>--returns the enabled or disabled state of numpad navigation
+function getNumpadNaviation()
+  return tecSettings.numpadNavigationEnabled
+end --function getNumpadNaviation()</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
 			<name>Windows</name>
@@ -8252,7 +8302,10 @@ tecRefreshSettingsWindow() --Refreshes text in settings window.
 tecResetRoomCharacterWindow() --fill room characters window with text
 
 --Enable or disable scroll bars. Dependant on user preference.
-tecSetScrollBars(tecSettings.showScrollBars, false)</script>
+tecSetScrollBars(tecSettings.showScrollBars, false)
+
+--set proper state for numpad navigation
+setNumpadNavigation(getNumpadNavigation)</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
