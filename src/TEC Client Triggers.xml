@@ -619,7 +619,7 @@ elseif line == "&lt;/pre&gt;" then --end of ac . command found.
   deleteLine() --Make is so line does not appear in main console.
   
 --if it is dark set RoomCheck to false so it does not remain active.
-elseif line == "It is too dark to see anything." then
+elseif line:match("It is too dark to see anything.") then
   setTECRoomCheckActive(false) --disable room check for characters.
   --clearRoomCharacterWindow()
   echoLeftRoomCharacterWindows("It is too dark to see anything.")
@@ -630,13 +630,13 @@ elseif line:match("Your immediate surroundings are obscured by darkness") then
   echoLeftRoomCharacterWindows("It is too dark to see anything.")
   
 --if player is stunned set RoomCheck to false so it does not remain active.
-elseif line == "You can't do that while stunned." then
+elseif line:match("You can't do that while stunned.") then
   setTECRoomCheckActive(false) --disable room check for characters.
   --clearRoomCharacterWindow()
   echoLeftRoomCharacterWindows("You can't do that while stunned.")
   
 --if player is unconcious RoomCheck to false so it does not remain active.
-elseif line == "You can't do that while unconcious." then
+elseif line:match("You can't do that while unconcious.") then
   setTECRoomCheckActive(false) --disable room check for characters.
   --clearRoomCharacterWindow()
   echoLeftRoomCharacterWindows("You can't do that while unconcious.")
@@ -663,358 +663,6 @@ end --if line has a ac . character in it.
 			</Trigger>
 		</TriggerGroup>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-			<name>Text Filters</name>
-			<script>--!!!!!!!!!!!!!!!!!!READ BEFORE CHANGING FILTER CODE!!!!!!!!!!!!!!!!!!!!!
---Needed because TEC does not support GMCP or MSDP
---so TEC outputs health bar, compass and other gui elements
---over text with telnet...
-
---ORDER OF THESE ITEMS ARE IMPORTANT!!!
---These are intended to be in an order that will allow for
---optimal performance.
---I have placed items that delete the main line first
---This removes the number of color filter triggers that occurs.
---No we are never going to clean code enough to free up for the use of a mapping system.
---Let's try any way!
-
---so they don't get filtered wasting processor time</script>
-			<triggerType>0</triggerType>
-			<conditonLineDelta>0</conditonLineDelta>
-			<mStayOpen>0</mStayOpen>
-			<mCommand></mCommand>
-			<packageName></packageName>
-			<mFgColor>#ff0000</mFgColor>
-			<mBgColor>#ffff00</mBgColor>
-			<mSoundFile></mSoundFile>
-			<colorTriggerFgColor>#000000</colorTriggerFgColor>
-			<colorTriggerBgColor>#000000</colorTriggerBgColor>
-			<regexCodeList />
-			<regexCodePropertyList />
-			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>delete lines</name>
-				<script>--Lines that are not needed. Because we do not use html tags as of yet.
---&lt;pre&gt; would never have a function for us reguardless.
-
-deleteLine() --remove line from main console. line variable remains unchanged.</script>
-				<triggerType>0</triggerType>
-				<conditonLineDelta>0</conditonLineDelta>
-				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
-				<mFgColor>#ff0000</mFgColor>
-				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
-				<colorTriggerFgColor>#000000</colorTriggerFgColor>
-				<colorTriggerBgColor>#000000</colorTriggerBgColor>
-				<regexCodeList>
-					<string>&lt;hr&gt;</string>
-					<string>&lt;/pre&gt;</string>
-				</regexCodeList>
-				<regexCodePropertyList>
-					<integer>3</integer>
-					<integer>3</integer>
-				</regexCodePropertyList>
-			</Trigger>
-			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>Text Filters</name>
-				<script>--trigger mean all lines have this trigger occur.
---prel regex allows for triggers with special mudlet functions for text searching
---^means start of line. Nothing after it means line with anything in it
-
---hreplace Code provided by s/Mud/Game on mudletdiscord. THANK YOU s/Mud/Game!!!!
-
-selectCurrentLine() --select current line in main console.
---pull the text from the current line in main into filteredLine variable.
---What would appear in the main window's newest line is now in filteredLine
-filteredLine , _ , _ = getSelection() --_ prevents the variable from being retained
-deselect() --unselect line in main.
-
-if not filteredLine then filteredLine = "" end --if nothing was in main make filteredLine empty.
---Without this you will receive errors that filteredLine is nil.
-
---Removes what is in brackets
---Make filtered line a copy of the main line, removing all &lt;/font&gt; declarations
---string.gsub referece: https://wiki.mudlet.org/w/Manual:String_Functions
---string.gsub('The whole string to modify', 'what to replace in the string', 'what to replace it with')
---replace /font with default color. This adds support for old color standard.
---Old standard was 'gray text with white highlights'
-filteredLine = string.gsub(filteredLine, [[&lt;/font&gt;]], tecSettings.tecTextColor)
-
---string.gsub referece: https://wiki.mudlet.org/w/Manual:String_Functions
---string.gsub('The whole string to modify', 'what to replace in the string', 'what to replace it with')
---%1 is whatever is inside of the ()
---if you get &lt;font color="#000000 %1 is 000000
---so it's replacing &lt;font color="#000000&gt; with &lt;#000000&gt;
-filteredLine = string.gsub(filteredLine, '&lt;font color="#(%x+)"&gt;', '#%1')
---So now all &lt;font color="#hexcolorcode have turned into &lt;#hexcolorcode&gt; in replacement this is a standard format lua can work with.
-
---if background is dark turn #000000 into #c0c0c0
---local redBG, greenBG, blueBG = getBgColor() --get main console background color
---if redBG &lt; 75 and greenBG &lt; 75 and blueBG &lt; 75 then --if the background is very dark, use light text
---	tecSettings.tecTextColor = "#c0c0c0" --setting to very light text. This should probably be a default variable
-	
-  --turn all black text declarations into tecTextColor
-  filteredLine = string.gsub(filteredLine, "#000000", tecSettings.tecTextColor)
-  --turn all black text declarations into tecTextColor
-  filteredLine = string.gsub(filteredLine, "#646464", "#FFFFFF")
-  --Change deep blue to a much lighter blue
-  filteredLine = string.gsub(filteredLine, "#0020ff", tecSettings.BlueTextColor)
-  --Change deep green to a much lighter green
-  filteredLine = string.gsub(filteredLine, "#00cd20", tecSettings.GreenTextColor)
-  --Change deep purple to a much lighter purple
-  filteredLine = string.gsub(filteredLine, "#e119e1", tecSettings.PurpleTextColor)
-  
---end
-
-
-
---Replaces what is in brackets with what is in quotes
-filteredLine = string.gsub(filteredLine, [[&amp;lt;]], "&lt;")
-filteredLine = string.gsub(filteredLine, [[&amp;gt;]], "&gt;")
-filteredLine = string.gsub(filteredLine, [[&amp;quot;]], "\"")
-filteredLine = string.gsub(filteredLine, [[&amp;amp;]], "&amp;")
-
-
---text below will entirely remove the code in the brackets
---For these items we may want to create formating rules.
---Though more likely much easier would be to replace the
---commands that uses these with alias. Read in the lines 
---than format with ftext
-filteredLine = string.gsub(filteredLine, [[&lt;hr&gt;]], "")
-filteredLine = string.gsub(filteredLine, [[&lt;/pre&gt;]], "")
-filteredLine = string.gsub(filteredLine, [[&lt;pre&gt;]], "")
-filteredLine = string.gsub(filteredLine, [[&lt;b&gt;]], "")
-filteredLine = string.gsub(filteredLine, [[&lt;/b&gt;]], "")
-
---Removing &lt;font size=+1&gt;
---The double operators appear to cause issues.
---%p is puncuation. No + after because we know there is only one punctuation to wild after =
---So now instead of double operators we have an operator and
---a single wild declaration that must be a puncuation. So + in this case.
-filteredLine = string.gsub(filteredLine, [[&lt;font size=%p1&gt;]], "")
-
---There should be code here to see if the line now has no viewable text.
---Not nil or wild, because it may be nothing but spaces. Spaces are something.
---it should include encapsulate the add default color code if below
-
---if the line does not have a color code in it.
---insert the default color code at the start 
---# is what all the color codes start with
---%x means hexadecimal number 
---+ means multiple, in this case hexadecimal numbers
-if "#%x+" ~= string.match(filteredLine, "#%x+") then
-	filteredLine = tecSettings.tecTextColor..filteredLine --Add current text color to the start of the line
-end
-
-if [[&lt;ul&gt;]] == string.match(filteredLine, [[&lt;ul&gt;]]) then
-  --if we find a ul we need to tab an additional tab.  
-  tecInventorySpacer = tecInventorySpacer.."\t"
-  --and replace all occurances of &lt;ul&gt;
-  filteredLine = filteredLine:gsub([[&lt;ul&gt;]], "")
-end --line match &lt;ul&gt;
-
-if [[&lt;/ul&gt;]] == string.match(filteredLine, [[&lt;/ul&gt;]]) then
-  --Replace ONE tab in tecInventorySpacer  
-  tecInventorySpacer = tecInventorySpacer:gsub("\t", "", 1)
-  --and replace all occurances of &lt;/ul&gt;
-  filteredLine = filteredLine:gsub([[&lt;/ul&gt;]], "")
-end --line match &lt;/ul&gt;
-
---replace all &lt;li&gt; with appropriate spacing created above.
-filteredLine = string.gsub(filteredLine, [[&lt;li&gt;]], tecInventorySpacer:gsub("\t", "", 1))
-
---if we reached the end of out unsorted lists blank out tecInventorySpacer
---It should be blank, but just in case...
-if [[&lt;/ul&gt;]] == filteredLine then tecInventorySpacer = "" end
-
---if text needs to be centered.
-if "&lt;center&gt;" == string.match(filteredLine, "&lt;center&gt;") then
-	
-	--remove hex color codes @ &lt;center&gt; from filteredLine
-	filteredLine = string.gsub(filteredLine, "#%x+", "")
-	filteredLine = string.gsub(filteredLine, "&lt;center&gt;", "")
-	filteredLine = string.gsub(filteredLine, "&lt;/center&gt;", "")
-	
-  local myFormatter = demonnic.TextFormatter:new( { --use ftext function to center text.
-    width = (getColumnCount() - 1), --width of main console -1 is so autowrap no trigger
-    textColor = "&lt;gray&gt;"
-  })
-	selectCurrentLine() --select current line in main.
-	replace("") --Erase text from main. Otherwise variable line will apear on console.
-	deselect() --Don't forget your deselects!
-  cecho(myFormatter:format(filteredLine)) --echo out out ftext
-else --text that does not need to be centered.
- 
-	selectCurrentLine() --select current line in main.
-	replace("") --Erase text from main. Otherwise variable line will apear on console.
-	--hinsertText(filteredLine) --insert text into console. Replacing hex color codes with colored text.
-	deselect() --Don't forget your deselects!
-  hecho(filteredLine)
-end --if &lt;center&gt; in line else hreplace.
-
---displays unfiltered line to debug screen.
---display with setTECDebugMode(true)
---or command line: debug on
-debugToDisplay("Unfiltered line: "..line)
-</script>
-				<triggerType>0</triggerType>
-				<conditonLineDelta>0</conditonLineDelta>
-				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
-				<mFgColor>#ff0000</mFgColor>
-				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
-				<colorTriggerFgColor>#000000</colorTriggerFgColor>
-				<colorTriggerBgColor>#000000</colorTriggerBgColor>
-				<regexCodeList>
-					<string>^</string>
-				</regexCodeList>
-				<regexCodePropertyList>
-					<integer>1</integer>
-				</regexCodePropertyList>
-			</Trigger>
-		</TriggerGroup>
-		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-			<name>communications</name>
-			<script>--&lt;/font&gt;&lt;font color="#0020ff"&gt;&amp;lt;Avidia thinks aloud: Client, if you will, come to Ylsa's?&amp;gt;&lt;/font&gt;
---&lt;/font&gt;&lt;font color="#0020ff"&gt;&amp;lt;Arteus thinks aloud: Yep.&amp;gt;&lt;/font&gt;
---&lt;/font&gt;&lt;font color="#0020ff"&gt;&amp;lt;Aoden thinks aloud: We have found all the secrets. No cliffs.&amp;gt;&lt;/font&gt;
---Piqolo wakes up.&lt;/font&gt;</script>
-			<triggerType>0</triggerType>
-			<conditonLineDelta>0</conditonLineDelta>
-			<mStayOpen>0</mStayOpen>
-			<mCommand></mCommand>
-			<packageName></packageName>
-			<mFgColor>#ff0000</mFgColor>
-			<mBgColor>#ffff00</mBgColor>
-			<mSoundFile></mSoundFile>
-			<colorTriggerFgColor>#000000</colorTriggerFgColor>
-			<colorTriggerBgColor>#000000</colorTriggerBgColor>
-			<regexCodeList />
-			<regexCodePropertyList />
-			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>Thoughts</name>
-				<script>--trigger is for how think declarations appear in the main line.
---Not for how it appears in filteredLine
---The third item that appears nearly identical to the first is needed for patricians.
---Their first and last names appear in thoughts and speech.
-
---This trigger puts thoughts to the  communicationsAll window 
---and to thoughts window.
-
-
---https://wiki.mudlet.org/w/Manual:UI_Functions#hecho
---Echo to Communication window, coloring hex colors
-hecho("Communication", filteredLine.."\n")
-
---Echo to Thoughts Window, coloring hex showColors
-hecho("Thoughts", filteredLine.."\n")
-
---[[ Don't use the technique below
-it will cause filters to fail for a short time when too many
-triggers occuring in succession.
-
-selectCurrentLine() --Selects ENTIRE line including line breaks.
-copy() --Copies CURRENT selection to clipboard
-appendBuffer("Communication") --paste copied text to miniConsole
-selectCurrentLine() --Selects ENTIRE line including line breaks.
-copy() --Copies CURRENT selection to clipboard
-appendBuffer("Thoughts") --paste copied text to miniConsole
-]]--</script>
-				<triggerType>0</triggerType>
-				<conditonLineDelta>0</conditonLineDelta>
-				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
-				<mFgColor>#ff0000</mFgColor>
-				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
-				<colorTriggerFgColor>#000000</colorTriggerFgColor>
-				<colorTriggerBgColor>#000000</colorTriggerBgColor>
-				<regexCodeList>
-					<string>^&lt;/font&gt;&lt;font color="#\w+"&gt;&amp;lt;\w+ thinks aloud:</string>
-					<string>&amp;lt;You think aloud: </string>
-					<string>^&lt;/font&gt;&lt;font color="#\w+"&gt;&amp;lt;\w+ \w+ thinks aloud:</string>
-					<string>^&amp;lt;\w+ thinks aloud: </string>
-				</regexCodeList>
-				<regexCodePropertyList>
-					<integer>1</integer>
-					<integer>2</integer>
-					<integer>1</integer>
-					<integer>1</integer>
-				</regexCodePropertyList>
-			</Trigger>
-			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>speech</name>
-				<script>--This trigger puts speech to the communicationsAll window 
---and to speech window.
-
---If over triggering becomes a concern
---trigger start of line [[You say, &amp;quot;]]
---prel regex [[^(\w+) says, &amp;quot;]]
-
---https://wiki.mudlet.org/w/Manual:UI_Functions#hecho
---Echo to Communication window, coloring hex colors
-hecho("Communication", filteredLine.."\n")
-
---https://wiki.mudlet.org/w/Manual:UI_Functions#hecho
---Echo to Communication window, coloring hex colors
-hecho("Speech", filteredLine.."\n")
-
---This method sometimes kills filtering don't use it
---selectCurrentLine() --Selects ENTIRE line including line breaks.
---copy() --Copies CURRENT selection to clipboard
---appendBuffer("Communication")
---Keeping it as a  reminder that sometimes, my code sucks!
-</script>
-				<triggerType>0</triggerType>
-				<conditonLineDelta>0</conditonLineDelta>
-				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
-				<mFgColor>#ff0000</mFgColor>
-				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
-				<colorTriggerFgColor>#000000</colorTriggerFgColor>
-				<colorTriggerBgColor>#000000</colorTriggerBgColor>
-				<regexCodeList>
-					<string>, &amp;quot;</string>
-				</regexCodeList>
-				<regexCodePropertyList>
-					<integer>0</integer>
-				</regexCodePropertyList>
-			</Trigger>
-			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>Rumors</name>
-				<script>--set bool to yes
---input line to CommunicationsAll &amp; rumor bar
---https://wiki.mudlet.org/w/Manual:UI_Functions#hecho
---Echo to Communication window, coloring hex colors
-hecho("Communication", filteredLine.."\n")
-
---https://wiki.mudlet.org/w/Manual:UI_Functions#hecho
---Echo to Communication window, coloring hex colors
---hecho("Rumors", filteredLine.."\n")</script>
-				<triggerType>0</triggerType>
-				<conditonLineDelta>0</conditonLineDelta>
-				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
-				<mFgColor>#ff0000</mFgColor>
-				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
-				<colorTriggerFgColor>#000000</colorTriggerFgColor>
-				<colorTriggerBgColor>#000000</colorTriggerBgColor>
-				<regexCodeList>
-					<string>&lt;/font&gt;&lt;font color="#e119e1"&gt;</string>
-				</regexCodeList>
-				<regexCodePropertyList>
-					<integer>2</integer>
-				</regexCodePropertyList>
-			</Trigger>
-		</TriggerGroup>
-		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>Login</name>
 			<script></script>
 			<triggerType>0</triggerType>
@@ -1035,7 +683,10 @@ hecho("Communication", filteredLine.."\n")
 --This trigger WILL fail if the developers stop having a blank space
 --after the login it is not [[login]] it is [[login ]]
 
-deleteLine() --remove line from main console. line variable remains unchanged.
+--deleteLine() --remove line from main console. line variable remains unchanged.
+selectCurrentLine() --select current line in main.
+replace("") --Erase text from main. Otherwise variable line will apear on console.
+deselect() --Don't forget your deselects!
 
 --This trigger function does the client handshake for the user.
 send("SKOTOS Zealous 0.7.12.2", false) --sending the zealous handshake
@@ -1064,19 +715,26 @@ send("SKOTOS Zealous 0.7.12.2", false) --sending the zealous handshake
 --This only works because this is the only time the system passes us SECRET NONE.
 --Now we need to get the USER ID from the user.
 
-deleteLine() --remove line from main console. line variable remains unchanged.
-
-echo("If you do not have a user ID ")
-cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Create one", 
-[[openUrl("https://www.skotos.net/user/create/start.php")]], 
-"Create user ID for TEC", true)
-echo("\n")
-echo("If you are having issues you can verify or credentials at: ")
-cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;TEC's Login Page", 
-[[openUrl("https://www.skotos.net/user/login.php")]], 
-"TEC Login page", true)
-echo("\n")
-echo("Please enter your username.\n")
+if getParthiaTalk() then --if parthia talk is enabled
+  selectCurrentLine() --select current line in main.
+  replace("") --Erase text from main. Otherwise variable line will apear on console.
+  deselect() --Don't forget your deselects!
+  cecho("Create an ID at https://www.skotos.net/user/create/start.php\n")
+  cecho("Login can be verified at : https://www.skotos.net/user/login.php\n")
+else --if parthia talk is not enabled
+  deleteLine() --remove line from main console. line variable remains unchanged.
+  cecho("Create an ID at ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://www.skotos.net/user/create/start.php", 
+  [[openUrl("https://www.skotos.net/user/create/start.php")]], 
+  "Create user ID for TEC", true)
+  cecho("\n")
+  cecho("Login can be verified at : ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://www.skotos.net/user/login.php", 
+  [[openUrl("https://www.skotos.net/user/login.php")]], 
+  "TEC Login page", true)
+  cecho("\n")
+end
+cecho("Please enter your username.\n")
 printCmdLine("Username: ") --insert into the command line.
 
 --Login control continues in Aliases - TECCommandLineReplacement - USERLogin</script>
@@ -1136,7 +794,7 @@ printCmdLine("Username: ") --insert into the command line.
 					<name>== replacement</name>
 					<script>myFormatter = demonnic.TextFormatter:new( {
   width = (getColumnCount() - 1), 
-  cap = "=========",
+  cap = "---------",
   capColor = "&lt;gray&gt;",
   textColor = "&lt;gray&gt;"
 })
@@ -1144,7 +802,7 @@ selectCurrentLine() --select current line in main.
 replace("") --Erase text from main. Otherwise variable line will apear on console.
 deselect() --Don't forget your deselects!
 echo("\n")
-cecho(myFormatter:format("========="))</script>
+cecho(myFormatter:format("---------"))</script>
 					<triggerType>0</triggerType>
 					<conditonLineDelta>0</conditonLineDelta>
 					<mStayOpen>0</mStayOpen>
@@ -1171,7 +829,7 @@ cecho(myFormatter:format("========="))</script>
 selectCurrentLine() --select current line in main.
 replace("") --Erase text from main. Otherwise variable line will apear on console.
 deselect() --Don't forget your deselects!
-echo("\n")
+--echo("\n")
 cecho(myFormatter:format("(c)1996-2020 Skotos Tech")) --echo out out ftext</script>
 					<triggerType>0</triggerType>
 					<conditonLineDelta>0</conditonLineDelta>
@@ -1199,8 +857,10 @@ cecho(myFormatter:format("(c)1996-2020 Skotos Tech")) --echo out out ftext</scri
 selectCurrentLine() --select current line in main.
 replace("") --Erase text from main. Otherwise variable line will apear on console.
 deselect() --Don't forget your deselects!
-echo("\n")
-cecho(myFormatter:format("Welcome to The Eternal City")) --echo out out ftext</script>
+cecho("\n")
+cecho(myFormatter:format("Welcome to The Eternal City")) --echo out out ftext
+
+if getParthiaTalk() then ttsSpeak(".") end --steps the queue from hanging up</script>
 					<triggerType>0</triggerType>
 					<conditonLineDelta>0</conditonLineDelta>
 					<mStayOpen>0</mStayOpen>
@@ -1220,15 +880,15 @@ cecho(myFormatter:format("Welcome to The Eternal City")) --echo out out ftext</s
 				</Trigger>
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 					<name>Welcome to The Eternal City second</name>
-					<script>local myFormatter = demonnic.TextFormatter:new( { --use ftext function to center text.
-    width = (getColumnCount() - 1), --width of main console -1 is so autowrap no trigger
-    textColor = "&lt;gray&gt;"
-  })
+					<script>--local myFormatter = demonnic.TextFormatter:new( { --use ftext function to center text.
+--    width = (getColumnCount() - 1), --width of main console -1 is so autowrap no trigger
+--    textColor = "&lt;gray&gt;"
+--  })
 selectCurrentLine() --select current line in main.
 replace("") --Erase text from main. Otherwise variable line will apear on console.
 deselect() --Don't forget your deselects!
-echo("\n")
-cecho(myFormatter:format("Welcome to The Eternal City")) --echo out out ftext</script>
+--echo("\n")
+--pecho(myFormatter:format("Welcome to The Eternal City")) --echo out out ftext</script>
 					<triggerType>0</triggerType>
 					<conditonLineDelta>0</conditonLineDelta>
 					<mStayOpen>0</mStayOpen>
@@ -1341,6 +1001,380 @@ deselect() --Don't forget your deselects!</script>
 					</regexCodePropertyList>
 				</Trigger>
 			</TriggerGroup>
+		</TriggerGroup>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>Text Filters</name>
+			<script>--!!!!!!!!!!!!!!!!!!READ BEFORE CHANGING FILTER CODE!!!!!!!!!!!!!!!!!!!!!
+--Needed because TEC does not support GMCP or MSDP
+--so TEC outputs health bar, compass and other gui elements
+--over text with telnet...
+
+--ORDER OF THESE ITEMS ARE IMPORTANT!!!
+--These are intended to be in an order that will allow for
+--optimal performance.
+--I have placed items that delete the main line first
+--This removes the number of color filter triggers that occurs.
+--No we are never going to clean code enough to free up for the use of a mapping system.
+--Let's try any way!
+
+--so they don't get filtered wasting processor time</script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>delete lines</name>
+				<script>--Lines that are not needed. Because we do not use html tags as of yet.
+--&lt;pre&gt; would never have a function for us reguardless.
+
+deleteLine() --remove line from main console. line variable remains unchanged.</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>&lt;hr&gt;</string>
+					<string>&lt;/pre&gt;</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>3</integer>
+					<integer>3</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Text Filters</name>
+				<script>--trigger mean all lines have this trigger occur.
+--prel regex allows for triggers with special mudlet functions for text searching
+--^means start of line. Nothing after it means line with anything in it
+
+--hreplace Code provided by s/Mud/Game on mudletdiscord. THANK YOU s/Mud/Game!!!!
+
+selectCurrentLine() --select current line in main console.
+--pull the text from the current line in main into filteredLine variable.
+--What would appear in the main window's newest line is now in filteredLine
+filteredLine , _ , _ = getSelection() --_ prevents the variable from being retained
+deselect() --unselect line in main.
+
+if not filteredLine then filteredLine = "" end --if nothing was in main make filteredLine empty.
+--Without this you will receive errors that filteredLine is nil.
+
+--Replaces what is in brackets with what is in quotes
+filteredLine = string.gsub(filteredLine, [[&amp;lt;]], "&lt;")
+filteredLine = string.gsub(filteredLine, [[&amp;gt;]], "&gt;")
+filteredLine = string.gsub(filteredLine, [[&amp;quot;]], "\"")
+filteredLine = string.gsub(filteredLine, [[&amp;amp;]], "&amp;")
+
+--text below will entirely remove the code in the brackets
+--For these items we may want to create formating rules.
+--Though more likely much easier would be to replace the
+--commands that uses these with alias. Read in the lines 
+--than format with ftext
+filteredLine = string.gsub(filteredLine, [[&lt;hr&gt;]], "")
+filteredLine = string.gsub(filteredLine, [[&lt;/pre&gt;]], "")
+filteredLine = string.gsub(filteredLine, [[&lt;pre&gt;]], "")
+filteredLine = string.gsub(filteredLine, [[&lt;b&gt;]], "")
+filteredLine = string.gsub(filteredLine, [[&lt;/b&gt;]], "")
+
+--Removing &lt;font size=+1&gt;
+--The double operators appear to cause issues.
+--%p is puncuation. No + after because we know there is only one punctuation to wild after =
+--So now instead of double operators we have an operator and
+--a single wild declaration that must be a puncuation. So + in this case.
+filteredLine = string.gsub(filteredLine, [[&lt;font size=%p1&gt;]], "")
+
+--There should be code here to see if the line now has no viewable text.
+--Not nil or wild, because it may be nothing but spaces. Spaces are something.
+--it should include encapsulate the add default color code if below
+
+if [[&lt;ul&gt;]] == string.match(filteredLine, [[&lt;ul&gt;]]) then
+  --if we find a ul we need to tab an additional tab.  
+  tecInventorySpacer = tecInventorySpacer.."\t"
+  --and replace all occurances of &lt;ul&gt;
+  filteredLine = filteredLine:gsub([[&lt;ul&gt;]], "")
+end --line match &lt;ul&gt;
+
+if [[&lt;/ul&gt;]] == string.match(filteredLine, [[&lt;/ul&gt;]]) then
+  --Replace ONE tab in tecInventorySpacer  
+  tecInventorySpacer = tecInventorySpacer:gsub("\t", "", 1)
+  --and replace all occurances of &lt;/ul&gt;
+  filteredLine = filteredLine:gsub([[&lt;/ul&gt;]], "")
+end --line match &lt;/ul&gt;
+
+--replace all &lt;li&gt; with appropriate spacing created above.
+filteredLine = string.gsub(filteredLine, [[&lt;li&gt;]], tecInventorySpacer:gsub("\t", "", 1))
+
+--if we reached the end of out unsorted lists blank out tecInventorySpacer
+--It should be blank, but just in case...
+if [[&lt;/ul&gt;]] == filteredLine then tecInventorySpacer = "" end
+
+--Removed all non hex code html tags from filtered line.
+--At this point send the filter out anything unwanted in the tts system parthia talk
+parthiaTalkLine = parthiaTalkFilter(filteredLine)
+
+--Removes what is in brackets
+--Make filtered line a copy of the main line, removing all &lt;/font&gt; declarations
+--string.gsub referece: https://wiki.mudlet.org/w/Manual:String_Functions
+--string.gsub('The whole string to modify', 'what to replace in the string', 'what to replace it with')
+--replace /font with default color. This adds support for old color standard.
+--Old standard was 'gray text with white highlights'
+filteredLine = string.gsub(filteredLine, [[&lt;/font&gt;]], tecSettings.tecTextColor)
+
+--string.gsub referece: https://wiki.mudlet.org/w/Manual:String_Functions
+--string.gsub('The whole string to modify', 'what to replace in the string', 'what to replace it with')
+--%1 is whatever is inside of the ()
+--if you get &lt;font color="#000000 %1 is 000000
+--so it's replacing &lt;font color="#000000&gt; with &lt;#000000&gt;
+filteredLine = string.gsub(filteredLine, '&lt;font color="#(%x+)"&gt;', '#%1')
+--So now all &lt;font color="#hexcolorcode have turned into &lt;#hexcolorcode&gt; in replacement this is a standard format lua can work with.
+	
+--turn all black text declarations into tecTextColor
+filteredLine = string.gsub(filteredLine, "#000000", tecSettings.tecTextColor)
+--turn all gray text declarations into tecTextColor
+filteredLine = string.gsub(filteredLine, "#646464", tecSettings.GrayTextColor)
+--Change TECs default blue
+filteredLine = string.gsub(filteredLine, "#0020ff", tecSettings.BlueTextColor)
+--Change TECs default green
+filteredLine = string.gsub(filteredLine, "#00cd20", tecSettings.GreenTextColor)
+--Change TECS default purple
+filteredLine = string.gsub(filteredLine, "#e119e1", tecSettings.PurpleTextColor)
+
+--if background is dark turn #000000 into #c0c0c0
+--local redBG, greenBG, blueBG = getBgColor() --get main console background color
+--if redBG &lt; 75 and greenBG &lt; 75 and blueBG &lt; 75 then --if the background is very dark, use light text
+--	tecSettings.tecTextColor = "#c0c0c0" --setting to very light text. This should probably be a default variable
+--end
+
+--if the line does not have a color code in it.
+--insert the default color code at the start 
+--# is what all the color codes start with
+--%x means hexadecimal number 
+--+ means multiple, in this case hexadecimal numbers
+if "#%x+" ~= string.match(filteredLine, "#%x+") then
+	filteredLine = tecSettings.tecTextColor..filteredLine --Add current text color to the start of the line
+end
+
+--if text needs to be centered.
+if "&lt;center&gt;" == string.match(filteredLine, "&lt;center&gt;") then
+	
+	--remove hex color codes @ &lt;center&gt; from filteredLine
+	filteredLine = string.gsub(filteredLine, "#%x+", "")
+	filteredLine = string.gsub(filteredLine, "&lt;center&gt;", "")
+	filteredLine = string.gsub(filteredLine, "&lt;/center&gt;", "")
+	
+  local myFormatter = demonnic.TextFormatter:new( { --use ftext function to center text.
+    width = (getColumnCount() - 1), --width of main console -1 is so autowrap no trigger
+    textColor = "&lt;gray&gt;"
+  })
+	selectCurrentLine() --select current line in main.
+	replace("") --Erase text from main. Otherwise variable line will apear on console.
+	deselect() --Don't forget your deselects!
+  cecho(myFormatter:format(filteredLine)) --echo out out ftext
+  
+else --text that does not need to be centered.
+ 
+	selectCurrentLine() --select current line in main.
+	replace("") --Erase text from main. Otherwise variable line will apear on console.
+	--hinsertText(filteredLine) --insert text into console. Replacing hex color codes with colored text.
+	deselect() --Don't forget your deselects!
+  hecho(filteredLine)
+  
+end --if &lt;center&gt; in line else hreplace.
+
+  --now send to the tts system parthia talk
+  if getParthiaTalk() then --if parthiaTalk is enabled send filteredLine to it.
+    if parthiaTalkLine ~= "" then
+      ttsQueue(parthiaTalkLine) --send the filtered line to queue.
+    end --if not parthiaTalkLine == "" then
+  end --if getParthiaTalk() then
+
+--displays unfiltered line to debug screen.
+--display with setTECDebugMode(true)
+--or command line: debug on
+debugToDisplay("Unfiltered line: "..line)
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+		</TriggerGroup>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>communications</name>
+			<script>--&lt;/font&gt;&lt;font color="#0020ff"&gt;&amp;lt;Avidia thinks aloud: Client, if you will, come to Ylsa's?&amp;gt;&lt;/font&gt;
+--&lt;/font&gt;&lt;font color="#0020ff"&gt;&amp;lt;Arteus thinks aloud: Yep.&amp;gt;&lt;/font&gt;
+--&lt;/font&gt;&lt;font color="#0020ff"&gt;&amp;lt;Aoden thinks aloud: We have found all the secrets. No cliffs.&amp;gt;&lt;/font&gt;
+--Piqolo wakes up.&lt;/font&gt;</script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Thoughts</name>
+				<script>--trigger is for how think declarations appear in the main line.
+--Not for how it appears in filteredLine
+--The third item that appears nearly identical to the first is needed for patricians.
+--Their first and last names appear in thoughts and speech.
+
+--This trigger puts thoughts to the  communicationsAll window 
+--and to thoughts window.
+
+--https://wiki.mudlet.org/w/Manual:UI_Functions#hecho
+--Echo to Communication window, coloring hex colors
+hecho("Communication", filteredLine.."\n")
+
+--Echo to Thoughts Window, coloring hex showColors
+hecho("Thoughts", filteredLine.."\n")
+
+--speak thoughts if parthia talk is disabled and parthia talk thoughts is enabled
+if not getParthiaTalk() then --if parthia talk is enabled.
+  if parthiaTalkGetThoughts() then --if parthia talk thoughts is enabled
+    pecho(filteredLine, true, true) --speak filteredLine, even if parthia talk is disabled
+  end --if parthiaTalkGetThoughts()
+end --if not getParthiaTalk()
+
+--[[ Don't use the technique below
+it will cause filters to fail for a short time when too many
+triggers occuring in succession.
+
+selectCurrentLine() --Selects ENTIRE line including line breaks.
+copy() --Copies CURRENT selection to clipboard
+appendBuffer("Communication") --paste copied text to miniConsole
+selectCurrentLine() --Selects ENTIRE line including line breaks.
+copy() --Copies CURRENT selection to clipboard
+appendBuffer("Thoughts") --paste copied text to miniConsole
+]]--</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^&lt;/font&gt;&lt;font color="#\w+"&gt;&amp;lt;\w+ thinks aloud:</string>
+					<string>&amp;lt;You think aloud: </string>
+					<string>^&lt;/font&gt;&lt;font color="#\w+"&gt;&amp;lt;\w+ \w+ thinks aloud:</string>
+					<string>^&amp;lt;\w+ thinks aloud: </string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>2</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>speech</name>
+				<script>--This trigger puts speech to the communicationsAll window 
+--and to speech window.
+
+--If over triggering becomes a concern
+--trigger start of line [[You say, &amp;quot;]]
+--prel regex [[^(\w+) says, &amp;quot;]]
+
+--https://wiki.mudlet.org/w/Manual:UI_Functions#hecho
+--Echo to Communication window, coloring hex colors
+hecho("Communication", filteredLine.."\n")
+
+--https://wiki.mudlet.org/w/Manual:UI_Functions#hecho
+--Echo to Communication window, coloring hex colors
+hecho("Speech", filteredLine.."\n")
+
+--speak speech if parthia talk is disabled and parthia talk speech is enabled
+if not getParthiaTalk() then --if parthia talk is disabled.
+  if parthiaTalkGetSpeech() then --if parthia talk speech is enabled
+    pecho(filteredLine, true, true) --speak filteredLine, even if parthia talk is disabled
+  end --if parthiaTalkGetSpeech()
+end --if not getParthiaTalk()
+
+--This method sometimes kills filtering don't use it
+--selectCurrentLine() --Selects ENTIRE line including line breaks.
+--copy() --Copies CURRENT selection to clipboard
+--appendBuffer("Communication")
+--Keeping it as a  reminder that sometimes, my code sucks!
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>, &amp;quot;</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>0</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Rumors</name>
+				<script>--set bool to yes
+--input line to CommunicationsAll &amp; rumor bar
+--https://wiki.mudlet.org/w/Manual:UI_Functions#hecho
+--Echo to Communication window, coloring hex colors
+hecho("Communication", filteredLine.."\n")
+
+--https://wiki.mudlet.org/w/Manual:UI_Functions#hecho
+--Echo to Communication window, coloring hex colors
+--hecho("Rumors", filteredLine.."\n")</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>&lt;/font&gt;&lt;font color="#e119e1"&gt;</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
 		</TriggerGroup>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>Game Events</name>

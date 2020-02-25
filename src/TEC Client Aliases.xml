@@ -6,53 +6,53 @@
 	<AliasPackage>
 		<Alias isActive="yes" isFolder="no">
 			<name>help</name>
-			<script>echo("\nYour vision blurs as a sudden wealth of information becomes available with a touch you can gain access to:\n")
-cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Newbie guide", 
+			<script>pecho("\nYour vision blurs as a sudden wealth of information becomes available with a touch you can gain access to:\n")
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Newbie guide", 
 [[openUrl("http://eternal-city.wikidot.com/newbie-guides")]], 
 "Guide explaining this games basic interworkings", true)
 echo("        ") --There is a bug with cechoLink tabs cause issues
 
-cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Character creation guide", 
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Character creation guide", 
 [[openUrl("http://eternal-city.wikidot.com/character-generator")]], 
 "Character creation tutorial", true)
 echo("\n\n")
 
-cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Help Anything", 
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Help Anything", 
 [[printCmdLine("help ")]], 
 "wiki search", true)
-echo(" Type help followed by anything. "
+pecho(" Type help followed by anything. "
 	.."You will be given a clickable link to search for your question on TEC's wiki.\n\n")
 
-cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;World maps", 
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;World maps", 
 [[openUrl("http://eternal-city.wikidot.com/maps")]], 
 "Maps of all major areas in this game", true)
 echo("          ") --There is a bug with cechoLink tabs cause issues
 
-cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Hunting grounds", 
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Hunting grounds", 
 [[openUrl("http://eternal-city.wikidot.com/hunting-grounds")]], 
 "Maps and explanation of hunting areas", true)
 echo("\n\n")
 
-cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Commands", 
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Commands", 
 [[openUrl("http://eternal-city.wikidot.com/commands")]], 
 "Full list of game commands", true)
 echo("            ")
 
-cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Commune with mortals", 
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Commune with mortals", 
 [[openUrl("https://discord.gg/fevBA8j")]], 
 "TEC Discord", true)
 echo("\n\n")
 
-cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Full respitory of this worlds interworkings", 
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Full respitory of this worlds interworkings", 
 [[openUrl("http://eternal-city.wikidot.com/")]], 
 "wiki site home", true)
 echo("\n\n")
 
-cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;help client", 
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;help client", 
 [[tecClientFullHelp(false, "main")]], 
 "wiki site home", true)
 
-echo("\nWith some effort you are able focus your mind and clear your vision back to reality.\n\n")</script>
+pecho("\nWith some effort you are able focus your mind and clear your vision back to reality.\n\n")</script>
 			<command></command>
 			<packageName></packageName>
 			<regex>^help$</regex>
@@ -343,7 +343,7 @@ tecClientReset(true)</script>
 				<packageName></packageName>
 				<regex>^parthia tab font size (.*)$</regex>
 			</Alias>
-			<Alias isActive="no" isFolder="no">
+			<Alias isActive="yes" isFolder="no">
 				<name>parthia update</name>
 				<script>DownloadGitScripts() --Begin downloading updates</script>
 				<command></command>
@@ -445,6 +445,20 @@ DownloadGitReleaseJSON() --start the update process</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia bluetext color (.*)</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia gray color</name>
+					<script>tecSetGrayTextColor(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia gray color (.*)</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia purple color</name>
+					<script>tecSetPurpleTextColor(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia purple color (.*)</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia text color</name>
@@ -563,6 +577,153 @@ cecho("Update command disabled.\n")</script>
 				<packageName></packageName>
 				<regex>^parthia prepare release$</regex>
 			</Alias>
+			<AliasGroup isActive="yes" isFolder="yes">
+				<name>parthia talk</name>
+				<script>--Reference https://wiki.mudlet.org/w/Manual:Text_to_Speech_Functions
+
+parthiaTalkHelp() --display parthia talk help</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^parthia talk$</regex>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk enable</name>
+					<script>setParthiaTalk(true) --enable parthia talk
+parthiaEcho("parthia talk enabled.")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk enable$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk disable</name>
+					<script>setParthiaTalk(false) --enable parthia talk
+expandAlias("parthia talk stop") --stop parthia talk's current speech.
+parthiaEcho("parthia talk disabled.")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk disable$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk stop</name>
+					<script>ttsClearQueue() --clear out the message queue
+ttsSkip() --skip the current message so it stops reading</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk stop$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk st</name>
+					<script>expandAlias("parthia talk stop")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk st$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk skip</name>
+					<script>ttsSkip() --skip the current message</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk skip$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk sk</name>
+					<script>expandAlias("parthia talk skip")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk sk$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>pt *</name>
+					<script>--create shorter version of parthia talk command
+expandAlias("parthia talk "..tostring(matches[2]))
+</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^pt (.*)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>pt</name>
+					<script>expandAlias("parthia talk")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^pt$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk test</name>
+					<script>ttsSpeak("Parthia talk test.")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk test$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk voice</name>
+					<script>parthiaTalkSetVoice(matches[2], true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk voice (\w+)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk resume</name>
+					<script>ttsResume() --resume talking through tts queue
+ttsSpeak(" ") --sometimes the queue stops this will unstop it</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk resume$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk clear</name>
+					<script>ttsClearQueue() --remove all messages from tts queue</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk clear$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk pause</name>
+					<script>ttsPause() --pause speech</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk pause$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk speed</name>
+					<script>--set speed parthia talk speeks at, and display messages to screen
+parthiaTalkSetSpeed(matches[2], true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk speed (.*)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk show</name>
+					<script>display(ttsGetQueue())
+ttsSpeak(" ") --sometimes GetQueue stop the queue, this prevents that.</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk show$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk thoughts</name>
+					<script>--Toggle state of parthia talk thoughts, and display a message to screen
+parthiaTalkSetThoughts(true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk thoughts$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk speech</name>
+					<script>--Toggle state of parthia talk speech, and display a message to screen
+parthiaTalkSetSpeech(true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk speech$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk pitch</name>
+					<script>--Set pitch of the voice parthia talk uses, displaying messages to screen
+parthiaTalkSetPitch(matches[2], true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk pitch (.*)$</regex>
+				</Alias>
+			</AliasGroup>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Debug</name>
@@ -592,7 +753,7 @@ setTECMapDebugMode(false)
 --turn off timer debug mesages
 setTECTimerDebugMode(false)
 
-echo("\nAll debug modes off.\n")</script>
+pecho("\nAll debug modes off.\n")</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^debug off</regex>
@@ -704,7 +865,7 @@ tecRoomCharRefreshNotification()</script>
 				<name>Username:</name>
 				<script>-- This alias gets 'triggered' from triggers - login - secret trigger 
 tecUsername = matches[2] --the first item
-echo("\nPlease enter your password.\n")
+pecho("\nPlease enter your password.\n")
 clearCmdLine() --clear the text user entered from command line
 tecPasswordEntry = true --used to prevent the password entry from beind sent to servers.</script>
 				<command></command>
@@ -736,14 +897,14 @@ tecPasswordEntry = true --used to prevent the password entry from beind sent to 
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>font</name>
-				<script>echo([[
+				<script>pecho([[
 The font command is used to change font settings.
 Currently you can change the size of the font.
 Uses are:
 font size, changes the size of the font to the size entered.
 IE: font 12, sets the font size to 12.
 Current font size: ]]..getTECFont()
-.."\nfont tab #, changes the size of window tabs.")</script>
+.."\nfont tab #, changes the size of window tabs.\n")</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^font$</regex>
@@ -763,9 +924,9 @@ Example would be `wait for drover`
 				<name>wait for drover</name>
 				<script>if not parthiaGetWaitForDrover() then --if the player is not already waiting for the drover
   parthiaSetWaitForDrover(true) --wait for the drover. Uses trigger `Drover Arrives`
-  echo("You patiently wait for the drover to arrive.\n")
+  pecho("You patiently wait for the drover to arrive.\n")
 else --player is already waiting for drover
-  echo("You are already waiting for the drover.\n")
+  pecho("You are already waiting for the drover.\n")
 end --if not parthiaGetWaitForDrover()</script>
 				<command></command>
 				<packageName></packageName>

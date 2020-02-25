@@ -6,8 +6,44 @@
 	<AliasPackage />
 	<ActionPackage />
 	<ScriptPackage>
+		<Script isActive="yes" isFolder="no">
+			<name>fuzzyBoolean(bool)</name>
+			<packageName></packageName>
+			<script>-- Provided by demonnic
+--- Expands boolean definitions to be more flexible.
+-- &lt;br&gt;True values are "true", "yes", "0", 0, and true
+-- &lt;br&gt;False values are "false", "no", "1", 1, false, and nil
+-- @param bool item to test for truthiness
+function fuzzyBoolean(bool)
+  if type(bool) == "boolean" or bool == nil then
+    return bool
+  elseif tostring(bool) then
+    local truth = {
+      "yes",
+      "true",
+      "0"
+    }
+    local untruth = {
+      "no",
+      "false",
+      "1"
+    }
+    local boolstr = tostring(bool)
+    if table.contains(truth, boolstr) then
+      return true
+    elseif table.contains(untruth, boolstr) then
+      return false
+    else
+      return nil
+    end
+  else
+    return nil
+  end
+end</script>
+			<eventHandlerList />
+		</Script>
 		<ScriptGroup isActive="yes" isFolder="yes">
-			<name>Variables Data Themese</name>
+			<name>TextToSpeech</name>
 			<packageName></packageName>
 			<script>-------------------------------------------------
 --         Put your Lua functions here.        --
@@ -15,6 +51,130 @@
 -- Note that you can also use external scripts --
 -------------------------------------------------
 </script>
+			<eventHandlerList />
+			<Script isActive="yes" isFolder="no">
+				<name>setParthiaTalk(mode)</name>
+				<packageName></packageName>
+				<script>function setParthiaTalk(mode)
+  tecSettings.parthiaTalkEnabled = fuzzyBoolean(mode)
+end --function setParthiaTalk(mode)</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>getParthiaTalk()</name>
+				<packageName></packageName>
+				<script>function getParthiaTalk()
+  return tecSettings.parthiaTalkEnabled
+end --function setParthiaTalk(mode)</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>parthiaTalkFilter(message)</name>
+				<packageName></packageName>
+				<script>function parthiaTalkFilter(message)
+  if not type(message) == "string" then --if the message variable is not a string
+    local errorFound = "parthiaTalkFilter, was sent a non string variable. Type sent was "..tostring(type(message))
+    debugc("Error: "..errorFound)
+    cecho("tecDebugWindow","\n".."&lt;red:&gt;Error: "..errorFound)
+    cecho("&lt;red:&gt;Error: "..errorFound.."\n\tPlease contact a developer with command ")
+    cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
+      [[tecReportIssues()]],
+      "Report issues or bugs", true)
+    if getParthiaTalk() then --if parthia talk is enabled
+      ttsQueue(error..errorFound) --send error to tts queue
+    end --if getParthiaTalk() then
+  else --message is a string, filter it
+    message = string.gsub(message, '&lt;font color="#%x+"&gt;', '')
+    message = string.gsub(message, [[&lt;/font&gt;]], '')
+    message = string.gsub(message, "#%x+", "")
+	  message = string.gsub(message, "&lt;center&gt;", "")
+	  message = string.gsub(message, "&lt;/center&gt;", "")
+    if message:match("think") then --if there is a thought remove &lt;&gt;
+      message = string.gsub(message, [[&lt;]], '') --remove or thoughts will not read
+      message = string.gsub(message, [[&gt;]], '') --remove or thoughts will not read
+    end --if message:match("think")
+    if not message:match("%S") then message = "" end
+    --remove all multiple spaces from the talk like.
+    while message:match("  ") do --loop through the line 
+      message = message:gsub( "  ", " ") --remove all double spaces
+    end --while parthiaTalkLine:match("  ") do
+    return message --send the filtered message back
+  end --if not type(message) == "string"
+end --function parthiaTalkFilter(message)</script>
+				<eventHandlerList />
+			</Script>
+		</ScriptGroup>
+		<Script isActive="yes" isFolder="no">
+			<name>pecho(message, talkOnly, forceSpeech)</name>
+			<packageName></packageName>
+			<script>function parthiaEcho(message, talkOnly, forceSpeech)
+  talkOnly = fuzzyBoolean(talkOnly) --only speak do not show to screen
+  forceSpeech = fuzzyBoolean(forceSpeech) --Speak even if parthia talk is disabled, for parthia talk thoughts and parthia talk speech
+  if not type(message) == "string" then --if the message variable is not a string
+    local errorFound = "function parthiaEcho, was sent a non string variable. Type sent was "..tostring(type(message))
+    debugc("Error: "..errorFound)
+    cecho("tecDebugWindow","\n".."&lt;red:&gt;Error: "..errorFound)
+    cecho("&lt;red:&gt;Error: "..errorFound.."\n\tPlease contact a developer with command ")
+    cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
+      [[tecReportIssues()]],
+      "Report issues or bugs", true)
+    message = "Error function parthiaEcho, was sent a non string variable. Type sent was "..tostring(type(message))
+  else --message is a string, display it
+    if not talkOnly then cecho(message) end
+    if getParthiaTalk() or forceSpeech then --if parthia talk is enabled, or forceSpeech is set
+      ttsSpeak(" ") --sometimes the queue stops, this prevents that.
+      message = parthiaTalkFilter(message) --filter message for tts
+      if message ~= "" then ttsQueue(message) end --If there is a message send it to the tts queue
+    end --if Parthia talk is enabled que the message
+  end --if not type(message) == "string" then
+
+end --function parthiaEcho(message)
+
+pecho = parthiaEcho --make pecho a reference of parthiaEcho so it can be used as shorter reference.</script>
+			<eventHandlerList />
+		</Script>
+		<Script isActive="yes" isFolder="no">
+			<name>pechoLink(linkTable)</name>
+			<packageName></packageName>
+			<script>function pechoLink(message, command, hint, bool)
+
+  local errorFound = false --used to detect errors
+
+  --make certain arguments are good
+  if not type(message) == "string" then --if the message variable is not a string
+    local errorFound = "function parthiaEcho, arg[1] message is a non string variable. Type sent was "..tostring(type(message))
+  end --if not type(message) == "string"
+  if not type(command) == "string" then --if the command variable is not a string
+    local errorFound = "function parthiaEcho, arg[2] command is a non string variable. Type sent was "..tostring(type(command))
+  end --if not type(command) == "string"
+  if not type(hint) == "string" then --if the hint variable is not a string
+    local errorFound = "function parthiaEcho, arg[3] hint is a non string variable. Type sent was "..tostring(type(command))
+  end --if not type(hint) == "string"
+  bool = true --bools in echoLinks are always true
+  
+  if errorFound then 
+    debugc("Error: "..errorFound)
+    cecho("tecDebugWindow","\n".."&lt;red:&gt;Error: "..errorFound)
+    cecho("&lt;red:&gt;Error: "..errorFound.."\n\tPlease contact a developer with command ")
+    cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
+      [[tecReportIssues()]],
+      "Report issues or bugs", true)
+    message = "&lt;red:&gt;Error: "..errorFound
+  end --if errorFound
+
+  cechoLink(message, command, hint, bool) --show echo to screen
+  if getParthiaTalk() then --if parthia talk is enabled
+    ttsSpeak(" ") --the queue stops somewhat frequently ttsSpeak starts it again
+    message = parthiaTalkFilter(message) --filter message for tts
+    if message ~= "" then ttsQueue(message) end --If there is a message send it to the tts queue
+  end --if Parthia talk is enabled que the message
+end --function pechoLink(linkTable)</script>
+			<eventHandlerList />
+		</Script>
+		<ScriptGroup isActive="yes" isFolder="yes">
+			<name>Variables Data Themese</name>
+			<packageName></packageName>
+			<script></script>
 			<eventHandlerList />
 			<Script isActive="yes" isFolder="no">
 				<name>Variables</name>
@@ -47,6 +207,7 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   tecSettings.GreenTextColor = "#77dd77"
   tecSettings.BlueTextColor = "#8888ff"
   tecSettings.PurpleTextColor = "#cca9dd"
+  tecSettings.GrayTextColor = "#646464"
   tecSettings.notApproachedCharacterColor = "#77dd77"
   tecSettings.ApproachedCharactersColor = "#ff6666"
   
@@ -173,8 +334,15 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   
   --Used to save settings for GUI objects.
   UIManagerSettings = UIManagerSettings or {}
+  
+  tecSettings.parthiaTalkEnabled = false --is parthia talk enabled
+  tecSettings.parthiaTalkThoughts = false --is parthia talk thoughts enabled
+  tecSettings.parthiaTalkSpeech = false --is parthia talk speech enabled
+  tecSettings.parthiaTalkSpeed = 6 --speed parthia talk speaks at
+  tecSettings.parthiaTalkPitch = 6 --pitch parthia talk speaks in
+  tecSettings.parthiaTalkVoice = "" --default voice parthia talk speaks in. No way to know what voices are supported
 
-	if displayToScreen then echo("Parthia settings set to default.\n") end
+	if displayToScreen then pecho("Parthia settings set to default.\n") end
 
 end --function tecClientReset()
 </script>
@@ -200,7 +368,7 @@ function tecFileSaveSettings(displayToScreen)
   table.save(tecSettingsFolder.."TECClientData.lua", tecSettings)
 	
 	--display save to screen
-	if displayToScreen then echo("Client settings saved.\n") end
+	if displayToScreen then pecho("Client settings saved.\n") end
 end</script>
 					<eventHandlerList />
 				</Script>
@@ -233,7 +401,7 @@ function tecFileLoadSettings(displayToScreen)
     --Load settings from file updating default settings where different.
     tecSettings = table.update(tecSettings, tecTmpSettingsTable)
     if displayToScreen then 
-      cecho("[  OK  ]  - Parthia settings successfully loaded from file.\n") 
+      pecho("[  OK  ]  - Parthia settings successfully loaded from file.\n") 
     end --if displayToScreen
 	end --end if file exists else
   
@@ -466,6 +634,9 @@ Intended for setting default settings for variables and loading settings from fi
 ]]--
 
 tecClientReset(false) --create default settings.
+
+--remove all messages from tts queue
+if getParthiaTalk() then ttsClearQueue() end
 
 --Call the function so data loads when mudlet starts.
 tecFileLoadSettings(true)
@@ -2488,42 +2659,6 @@ function md5.sumhexa(s)
 end</script>
 				<eventHandlerList />
 			</Script>
-			<Script isActive="yes" isFolder="no">
-				<name>fuzzyBoolean(bool)</name>
-				<packageName></packageName>
-				<script>-- Provided by demonnic
---- Expands boolean definitions to be more flexible.
--- &lt;br&gt;True values are "true", "yes", "0", 0, and true
--- &lt;br&gt;False values are "false", "no", "1", 1, false, and nil
--- @param bool item to test for truthiness
-function fuzzyBoolean(bool)
-  if type(bool) == "boolean" or bool == nil then
-    return bool
-  elseif tostring(bool) then
-    local truth = {
-      "yes",
-      "true",
-      "0"
-    }
-    local untruth = {
-      "no",
-      "false",
-      "1"
-    }
-    local boolstr = tostring(bool)
-    if table.contains(truth, boolstr) then
-      return true
-    elseif table.contains(untruth, boolstr) then
-      return false
-    else
-      return nil
-    end
-  else
-    return nil
-  end
-end</script>
-				<eventHandlerList />
-			</Script>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
 			<name>TECFunctions</name>
@@ -2557,9 +2692,9 @@ function setTECDebugMode(tectmpSetDebug)
 		--loadWindowLayout() --load previously save miniconsole position.
 		--tecDebugWindow:addScrollbars(parent, "Vertical")
     if tecSettings.showScrollBars then enableScrollBar("tecDebugWindow") end
-		echo("Debug mode enabled.\n")
+		pecho("Debug mode enabled.\n")
 	else --else disabling debug
-		echo("Debug mode disabled.\n")
+		pecho("Debug mode disabled.\n")
 		setTECDisplayDebugMode(tectmpSetDebug)
 		setTECMapDebugMode(tectmpSetDebug)
 		setTECTimerDebugMode(tectmpSetDebug)
@@ -2679,65 +2814,65 @@ end --end geyserDebug() function</script>
 					<script>--help user create an issue request
 --tecBrief is if screen reporting should be brief
 --tecWindow is the string name of the window to send the command help to
-function tecReportIssuesHelp(tecBrief, tecWindow) 
+function tecReportIssuesHelp(tecBrief) 
 
 	--if a window was forgotten default to main
-	tecWindow = tecWindow or "main"
+	--tecWindow = tecWindow or "main"
 	tecBrief = tecBrief or false
 
-  cechoLink(tecWindow, "&lt;:"..tecSettings.helpHighlightColor.."&gt;debug report issue", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug report issue", 
   	[[tecReportIssues()]], 
   	"Report client issues", true)
   if not tecBrief then --if we do not want to be brief
-  	echo(tecWindow, ", Report client issues to developers.\n")
-	else echo(tecWindow, "\n")
+  	pecho(", Report client issues to developers.\n")
+	else echo("\n")
   end --end if not tecBrief
 
 end --function tecReportIssues
 
 function tecReportDebugHelp()
-	echo("\n---Debug collection helper---\n")
-	echo("Please do not follow these steps unless you have opened an issue report and "
+	pecho("\n---Debug collection helper---\n")
+	pecho("Please do not follow these steps unless you have opened an issue report and "
 		.."were asked to collect debug data from a developer.\n"
 		.."The debug modes available are: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug on&lt;reset&gt;, ", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug on&lt;reset&gt;, ", 
   	[[setTECDebugMode(true)]], 
   	"Enable basic debug", true)
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug display on&lt;reset&gt;, ", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug display on&lt;reset&gt;, ", 
   	[[setTECDisplayDebugMode(true)]], 
   	"Enable display debugging", true)
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug map on&lt;reset&gt;, ", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug map on&lt;reset&gt;, ", 
   	[[setTECMapDebugMode(true)]], 
   	"Enable map debugging", true)
-	echo("and ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug timer on&lt;reset&gt;.\n", 
+	pecho("and ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug timer on&lt;reset&gt;.\n", 
   	[[setTECTimerDebugMode(true)]], 
   	"Enable timer debugging", true)
-	echo("After enabling the debug mode or modes requested clear your main window with, ") 
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display clear\n", 
+	pecho("After enabling the debug mode or modes requested clear your main window with, ") 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display clear\n", 
   [[UIManagerClearMainWindow() tecReportDebugHelp()]], 
   "Remove text from main screen", true)
-	echo("Now cause the issue reported to occur. After you have disable debug mode with ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug off.\n", 
+	pecho("Now cause the issue reported to occur. After you have disable debug mode with ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug off.\n", 
   	[[setTECDebugMode(false)]], 
   	"Disable debugging", true)
-	echo("Please verify the debug window has text in it than click ")
-	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Save debug window.\n", 
+	pecho("Please verify the debug window has text in it than click ")
+	pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Save debug window.\n", 
   	[[tecSaveWindowText("tecDebugWindow")]], 
   	"Save debug window text to file", true)
-	echo("Please save the text in the main window to file by clicking: ")
-	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Save main window.\n", 
+	pecho("Please save the text in the main window to file by clicking: ")
+	pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Save main window.\n", 
   	[[tecSaveWindowText()]], 
   	"Save main window text to file", true)
-	echo("Open your issue report, at the TEC gitHub ")
+	pecho("Open your issue report, at the TEC gitHub ")
 	  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Issue Page.\n", 
   	[[openUrl("https://github.com/TheEternalCitizens/mudlet-integration/issues")]], 
   	"Goto issues page", true)
-	echo("Open the folder that contains the debug window text by clicking ")
-	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Open Folder.\n", 
+	pecho("Open the folder that contains the debug window text by clicking ")
+	pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Open Folder.\n", 
   	[[tecOpenDirectory(tecDebugSaveDir)]], 
   	"Open debug save folder", true)
-	cecho("Open main.txt and tecDebugWindow.txt and verify nothing is in it that you would "
+	pecho("Open main.txt and tecDebugWindow.txt and verify nothing is in it that you would "
 		.."not want to be viewed by the public.\n"
 		.."&lt;black:red&gt;If for any reason you do not want to make text on your screen publically visable "
 		.."please skip the next step highlighted in blue.&lt;reset&gt; "
@@ -2748,12 +2883,12 @@ function tecReportDebugHelp()
 end --function tecReportDebugHelp()
 
 function tecReportStandardIssue()
-	echo("\n---Create an issue request helper---\n")
-	echo("Go to the client's issue reporting gitHub page: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Issue Page.\n", 
+	pecho("\n---Create an issue request helper---\n")
+	pecho("Go to the client's issue reporting gitHub page: ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Issue Page.\n", 
   	[[openUrl("https://github.com/TheEternalCitizens/mudlet-integration/issues")]], 
   	"Goto issues page", true)
-	echo("Please view our current open issues to see if your issue was already reported.\n"
+	pecho("Please view our current open issues to see if your issue was already reported.\n"
 		.."If you have not you will need to log into gitHub.\n"
 		.."To create an issue report click the green -New Issue- button, on the right side of the page.\n"
 		.."A new page will load. In the -Title- section please provide a brief description of your issue\(s\).\n"
@@ -2761,18 +2896,18 @@ function tecReportStandardIssue()
 		.."It is highly recommendable to clear you main display and recreate your issue "
 		.."before continuing forward.\n"
 		.."If you would like to, clear your display with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display clear\n", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display clear\n", 
   [[UIManagerClearMainWindow() tecReportDebugHelp()]], 
   "Remove text from main screen", true)
 	echo("Save the text in the main window to file by clicking: ")
 	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Save main window.\n", 
   	[[tecSaveWindowText()]], 
   	"Save main window text to file", true)
-	echo("This file is called main.txt and can easily found by clicking: ")
-	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Open Folder.\n", 
+	pecho("This file is called main.txt and can easily found by clicking: ")
+	pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Open Folder.\n", 
   	[[tecOpenDirectory(tecDebugSaveDir)]], 
   	"Open debug save folder", true)
-	cecho("Open main.txt and verify nothing is in it that you would not want to be viewed "
+	pecho("Open main.txt and verify nothing is in it that you would not want to be viewed "
 		.."by the public!\n"
 		.."&lt;black:red&gt;If for any reason you do not want to make text on your screen publically visable "
 		.."please skip the next step highlighted in blue.&lt;reset&gt; "
@@ -2784,13 +2919,13 @@ end --end function tecReportMajorIssue
 
 function tecReportIssues()
 
-	cecho("&lt;black:red&gt;\nPlease follow the instructions below.\n")
+	pecho("&lt;black:red&gt;\nPlease follow the instructions below.\n")
 
-	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;\n---Start an issue request---\n", 
+	pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;\n---Start an issue request---\n", 
   	[[tecReportStandardIssue()]], 
   	"Standard issue report tutorial", true)
 	
-	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;\n---A developer asked you to enable debug---", 
+	pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;\n---A developer asked you to enable debug---", 
   	[[tecReportDebugHelp()]], 
   	"Debug collection tutorial", true)
 		
@@ -2809,8 +2944,8 @@ end --function tecReportIssues</script>
 	
 	tecSettings.tecDisplayDebugMode = tmpDebugMode or false
 	
-	if tecSettings.tecDisplayDebugMode then echo("Display debug mode on.\n")
-	else echo("Display Debug Off.\n") end
+	if tecSettings.tecDisplayDebugMode then pecho("Display debug mode on.\n")
+	else pecho("Display Debug Off.\n") end
 end --end setTECVideoDebugMode</script>
 					<eventHandlerList />
 				</Script>
@@ -2861,8 +2996,8 @@ end --end tecColorTest function</script>
 	
 	tecSettings.tecMapDebugMode = tmpDebugMode or false --enable map debug mode
 	
-	if tecSettings.tecMapDebugMode then echo("Debug map mode on.\n")
-	else echo("Map Debug Off.\n") end
+	if tecSettings.tecMapDebugMode then pecho("Debug map mode on.\n")
+	else pecho("Map Debug Off.\n") end
 	
 end --end setTECVideoDebugMode</script>
 					<eventHandlerList />
@@ -2887,8 +3022,8 @@ function setTECTimerDebugMode(tmpDebugMode)
 	end --if tmpDebugMode
 
 	tecSettings.tecTimerDebugMode = tmpDebugMode or false
-	if tecSettings.tecTimerDebugMode then echo("Debug timer mode on.\n")
-	else echo("Timer Debug Off.\n") end
+	if tecSettings.tecTimerDebugMode then pecho("Debug timer mode on.\n")
+	else pecho("Timer Debug Off.\n") end
 end --setTECTimerDebugMode</script>
 					<eventHandlerList />
 				</Script>
@@ -2899,6 +3034,37 @@ end --setTECTimerDebugMode</script>
 function getTECTimerDebugMode()
 	return tecSettings.tecTimerDebugMode
 end --getTECTimerDebugMode</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecErrorNotification(errorFound)</name>
+					<packageName></packageName>
+					<script>--fully notifies user when an error is found.
+function tecErrorNotification(errorFound)
+  debugc("Error: "..errorFound)
+  debugToDisplay("&lt;red:&gt;Error: "..errorFound)
+  pecho("&lt;red:&gt;Error: "..errorFound.."\n\tPlease contact a developer with command ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
+    [[tecReportIssues()]],
+    "Report issues or bugs", true)
+  cecho("")
+end --function tecErrorNotification</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>tecWarningNotification(errorFound)</name>
+					<packageName></packageName>
+					<script>--fully notifies user when an error is found.
+function tecWarningNotification(errorFound)
+  debugc("Warning: "..errorFound)
+  debugToDisplay("&lt;yellow:&gt;Warning: "..errorFound)
+--  cecho("&lt;yellow:&gt;Warning: "..errorFound
+--    .."\n\tIf you experence issues contact a developer with: ")
+--  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
+--    [[tecReportIssues()]],
+--    "Report issues or bugs", true)
+--  cecho("")
+end --function tecErrorNotification</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -2916,9 +3082,9 @@ end --getTECTimerDebugMode</script>
 					<name>dontForgetToSave()</name>
 					<packageName></packageName>
 					<script>function dontForgetToSave()
-  cecho("Don't forget to save your changes:\n")
-  cecho("Save all settings with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save all\n", 
+  pecho("Don't forget to save your changes:\n")
+  pecho("Save all settings with: ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save all\n", 
   [[tecClientSaveAll(true)]],
   "Save all settings", true)
   cecho("") --cechoLink will not \n on its own.
@@ -3219,7 +3385,7 @@ function tecSetScrollBars(mode, displayToScreen)
         .."Right border set set.")
     end --if GetUIManager() == "GUIframe" and GUIframe.initialized
     if displayToScreen then
-      cecho("Enabled scrollbars. "
+      pecho("Enabled scrollbars. "
         .."Some windows will not show their scrollbars until there is enough text "
         .."to need to scroll the window.\n")
     end --if displayToScreen
@@ -3234,7 +3400,7 @@ function tecSetScrollBars(mode, displayToScreen)
       setBorderRight(-16) --hide the scroll bar off the screen
       setMainWindowAutoWrap() --Adjust mains autowrap now that main has changed.
       if displayToScreen then
-        cecho("Disabled scrollbars. "
+        pecho("Disabled scrollbars. "
           .."You will need to scroll with your mouse wheel or page up page down keys. "
           .."Main console scrollbar will reappear while moving windows.\n")
       end --if displayToScreen
@@ -3243,13 +3409,7 @@ function tecSetScrollBars(mode, displayToScreen)
   
   debugToDisplay("Completed setting scroll bars.")
   
-  if displayToScreen then
-    cecho("Don't forget to save your changes with: ")
-    cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;tecclient save\n", 
-    [[tecFileSaveSettings(true)]],
-    "Save client settings", true)
-    cecho("") --cechoLink will not \n on its own.
-  end --if displayToScreen
+  if displayToScrenn then dontForgetToSave() end --If player ran command remind them to save.
   
 end --tecSetScrollBar</script>
 					<eventHandlerList />
@@ -3458,14 +3618,14 @@ function SetUIManager(UIManagerName, displayToScreen)
   --manager name is incorrect send supported commands to player
   if not UIManagerNameCorrect then --if the wrong name was sent.
     if displayToScreen then
-      cecho("User Interface managers or display manager commands are: ")
+      pecho("User Interface managers or display manager commands are: ")
       for iterator, UIManager in ipairs(UIManagers) do --get UI manager names to click.
         local cmdToSend = [[SetUIManager( "]]..UIManager..[[",true)]] --make commandfor cechoLink
-        cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display manager "..UIManager, 
+        pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display manager "..UIManager, 
           cmdToSend, --runs on click.
           "Set UI manager.", true)
         --add proper punctuation.
-        if iterator &lt; (#UIManagers - 1) then cecho(", ") elseif iterator == (#UIManagers - 1) then echo(" and ") end
+        if iterator &lt; (#UIManagers - 1) then cecho(", ") elseif iterator == (#UIManagers - 1) then pecho(" and ") end
       end --for ipairs(UIManagers)
       cecho(".\n")
       return --stop process error found
@@ -3481,12 +3641,12 @@ function SetUIManager(UIManagerName, displayToScreen)
 
   if UIManagerName == "GUIframe" then --if true is sent enable GUIframe
     tecSettings.useGUIframe = true
-    echo("UI manager set to GUIframe. Please restart.\n")
+    pecho("UI manager set to GUIframe. Please restart.\n")
     tecFileSaveSettings(displayToScreen) --force a save
   elseif UIManagerName == "none" then
     tecSettings.useGUIframe = false
     setBorderSizes(0,0,0,0)
-    echo("disabled all UI managers. Please restart.\n")
+    pecho("disabled all UI managers. Please restart.\n")
     tecFileSaveSettings(displayToScreen) --force a save.
   else --if it was false disable GUIframe
     tecErrorNotification("function SetUIManager, incorrect UI Manager name after "
@@ -3622,30 +3782,30 @@ function UIManagerShowWindow(objectName, mode, displayToScreen)
   objectName = UIManagerTestWindow(objectName, displayToScreen)
   if not objectName then --objectName passed was incorrect
     if displayToScreen then
-      cecho("Incorrect window name sent. Supported commands are:\n")
+      pecho("Incorrect window name sent. Supported commands are:\n")
       for windowName, window in pairs(tecGeyserWindows) do--loop through containers
         if mode then 
           --make commandfor cechoLink
           local cmdToSend = [[UIManagerShowWindow("]]..windowName..[[",true,true)]]
-          cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display add "..windowName, 
+          pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display add "..windowName, 
             cmdToSend, --runs on click.
             "Add window to display", true)
-          cecho(", ")
+          pecho(", ")
         else
           local cmdToSend = [[UIManagerShowWindow("]]..windowName..[[",false,true)]]
-          cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display remove "..windowName, 
+          pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display remove "..windowName, 
             cmdToSend, --runs on click.
             "Remove window from display", true)
-          cecho(", ")
+          pecho(", ")
         end --if mode
       end --for pairs(tecGeyserWindows)
-      cecho("and ")
+      pecho("and ")
       if mode then
-        cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display add all",
+        pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display add all",
             [[UIManagerShowWindow("all",true,true)]], --runs on click.
             "Add all windows from display", true)
       else --if mode
-        cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display remove all",
+        pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display remove all",
             [[UIManagerShowWindow("all",false,true)]], --runs on click.
             "remove all windows from display", true)
       end --if mode
@@ -3664,9 +3824,9 @@ function UIManagerShowWindow(objectName, mode, displayToScreen)
             if UIManagerSettings[window.name].disabled then --if the window is disabled.
               if displayToScreen then
                 --display a clickable command to screen
-                cecho("Window "..window.name.." is currently disabled. Enable window with: ")
+                pecho("Window "..window.name.." is currently disabled. Enable window with: ")
                 local cmdToSend = [[tecEnableUIManagerWindow("]]..window.name..[[",true)]]
-                cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display enable "..window.name, 
+                pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display enable "..window.name, 
                   cmdToSend, --runs on click.
                   "Enable window in UI Manager", true)
               end --displayToScreen
@@ -3680,7 +3840,7 @@ function UIManagerShowWindow(objectName, mode, displayToScreen)
           if GetUIManager() == "GUIframe" then --if using GUIframe manager
             debugToDisplay("Adding "..window.name.." to "..window.GUIframeLocation..".\n")
             if displayToScreen then
-              cecho("Adding "..window.name.." to "..window.GUIframeLocation..".\n")
+              pecho("Adding "..window.name.." to "..window.GUIframeLocation..".\n")
             end --if displayToScreen
             --Add the window to GUIframe manager
             GUIframe.addWindow(tecGeyserWindows[windowName], window.name, window.GUIframeLocation)
@@ -3799,7 +3959,7 @@ end --function setGUIframeObject</script>
       end 
 --    end --if tecGeyserWindows[geyserContainer.name]
     if displayToScreen then --Display to player.
-      echo("Adding "..geyserContainer.name.." to interface manager "..GetUIManager()..".\n")
+      pecho("Adding "..geyserContainer.name.." to interface manager "..GetUIManager()..".\n")
     end --if displayToSreen
     tecGeyserWindows[geyserContainer.name]:hide() --hide the window it is not in a UI yet
     --UIManagerShowWindow(geyserContainer.name, true, displayToScreen)
@@ -3822,25 +3982,25 @@ function UIManagerEnableWindow(objectName, mode, displayToScreen)
   objectName = UIManagerTestWindow(objectName, displayToScreen)
   if not objectName then --objectName passed was incorrect
     if (unchangedObjectName:lower()):match("list") then --if the we receive a list request
-      cecho("Supported ")
-      if mode then cecho("enable ") 
-      else cecho("disable ") end
-      cecho("commands are: ")
+      pecho("Supported ")
+      if mode then pecho("enable ") 
+      else pecho("disable ") end
+      pecho("commands are: ")
     else 
-      cecho(unchangedObjectName.." is not a managed window. Supported commands are: ")
+      pecho(unchangedObjectName.." is not a managed window. Supported commands are: ")
     end
     if mode then--if enable was wanted
       if displayToScreen then
         for windowName, window in pairs(tecGeyserWindows) do--loop through containers
             --make commandfor cechoLink
             local cmdToSend = [[UIManagerEnableWindow("]]..windowName..[[",true,true)]]
-            cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable "..windowName, 
+            pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable "..windowName, 
               cmdToSend, --runs on click.
               "Enable "..windowName.." window", true)
-            cecho(", ")
+            pecho(", ")
         end --for pairs(tecGeyserWindows)
-        cecho("and ")
-          cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable all",
+        pecho("and ")
+          pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable all",
               [[UIManagerEnableWindow("all",true,true)]], --runs on click.
               "Enable all windows", true)
       end --if displayToScreen
@@ -3849,18 +4009,18 @@ function UIManagerEnableWindow(objectName, mode, displayToScreen)
         for windowName, window in pairs(tecGeyserWindows) do--loop through containers
             --make commandfor cechoLink
             local cmdToSend = [[UIManagerEnableWindow("]]..windowName..[[",false,true)]]
-            cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window disable "..windowName, 
+            pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window disable "..windowName, 
               cmdToSend, --runs on click.
               "Disable "..windowName.." window", true)
-            cecho(", ")
+            pecho(", ")
         end --for pairs(tecGeyserWindows)
-        cecho("and ")
-          cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window disable all",
+        pecho("and ")
+          pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window disable all",
               [[UIManagerEnableWindow("all",false,true)]], --runs on click.
               "Disable all windows", true)
       end --if displayToScreen
     end --if mode
-    cecho("\n")
+    pecho("\n")
     return --error found
    end --if error found with UIManagerTestWindow
 
@@ -3913,7 +4073,7 @@ function UIManagerEnableWindow(objectName, mode, displayToScreen)
                     .." of the screen. Left or right side of the screen must be enabled for this "
                     .."window to be added to display."
                   tecWarningNotification("function UIManagerEnableWindow, "..errorFound)
-                  if displayToScreen then cecho(errorFound.."\n") end
+                  if displayToScreen then pecho(errorFound.."\n") end
                   windowLocationGood = false --stop this window from being enabled.
                   --tell the UI manager not to load window
                   UIManagerSettings[window.name].disabled = true 
@@ -3925,7 +4085,7 @@ function UIManagerEnableWindow(objectName, mode, displayToScreen)
       
         if windowLocationGood then --the GUIframeLocation checked good above.
           debugToDisplay("function UIManagerEnableWindow, Enabling window: "..window.name)
-          if displayToScreen then echo("Enabling window: "..window.name..".\n") end --if displayToScreen
+          if displayToScreen then pecho("Enabling window: "..window.name..".\n") end --if displayToScreen
           if not UIManagerSettings[window.name] then UIManagerSettings[window.name] = {} end --if the table does not exist, create it.
           UIManagerSettings[window.name].disabled = false --enable the window.
           UIManagerShowWindow(window.name,mode,displayToScreen) --display the window again.
@@ -3954,7 +4114,7 @@ function UIManagerEnableWindow(objectName, mode, displayToScreen)
           end --if getTECDisplayDebugMode
         end --if GetUIManager() == "GUIframe" and GUIframe.initialized
         --display message to player. Window disabled.
-        if displayToScreen then echo(window.name.." disabled.\n") end --if displayToScreen
+        if displayToScreen then pecho(window.name.." disabled.\n") end --if displayToScreen
       end --if mode
     end --if objectName == "all" or window.name == objectName
   end --for pairs(tecGeyserWindows)
@@ -4158,7 +4318,7 @@ end --function tecUILayoutManagerConfig</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
-						<name>UIManagerSetTheme()</name>
+						<name>UIManagerSetTheme(themeName, displayToScreen)</name>
 						<packageName></packageName>
 						<script>function UIManagerSetTheme(themeName, displayToScreen)
   displayToScreen = fuzzyBoolean(displayToScreen) --if true display actions to screen
@@ -4204,20 +4364,20 @@ end --function tecUILayoutManagerConfig</script>
   if not tecThemeExists then --Theme sent to function did not match any saved themes
     if displayToScreen then --display message to screen.
         if (themeName:lower()):match("list") then --if the we receive a list request
-          cecho("Supported window layout themes are: ")
+          pecho("Supported window layout themes are: ")
         else --if themeName is not "list"
-          cecho(themeName.." is not a layout theme. Supported window layout themes are: ")
+          pecho(themeName.." is not a layout theme. Supported window layout themes are: ")
         end
         for uiThemeName, uiTheme in pairs(uiThemes) do--loop through containers
             --make command for cechoLink
             local cmdToSend = [[UIManagerSetTheme("]]..uiThemeName..[[",true)]]
-            cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display layout "..uiThemeName, 
+            pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display layout "..uiThemeName, 
               cmdToSend, --runs on click.
               "Change display layout.", true)
             if (uiThemeName:lower()):match("playerstheme") then --if it is the playertheme
-              cecho("&lt;-your saved theme") --notify the player.
+              pecho("-your saved theme-") --notify the player.
             end --if (uiThemeName:lower()):match("playerstheme")
-            cecho(" ")
+            pecho(" ")
         end --for pairs(tecGeyserWindows)
     else
       tecErrorNotification("function UIManagerSetTheme, Incorrect theme name. Supported themes are "
@@ -4232,7 +4392,7 @@ end --function tecUILayoutManagerConfig</script>
   if GetUIManager() == "GUIframe" then --is GUIframe being used
     debugToDisplay("\tUIManagerSetTheme, starting GUIframe config")
     
-    if displayToScreen then cecho("Removing windows, please wait.\n") end
+    if displayToScreen then pecho("Removing windows, please wait.\n") end
     
     if GUIframe.initialized then 
       --remove all windows from UI manager and display.
@@ -4250,7 +4410,7 @@ end --function tecUILayoutManagerConfig</script>
     GUIframe.disable("left", true)
     GUIframe.disable("right", true)
 
-    if displayToScreen then cecho("Adding windows, please wait.\n") end
+    if displayToScreen then pecho("Adding windows, please wait.\n") end
 
     --enable or disable sides.
     for tmpWinowSide,_ in pairs(uiThemes[themeName].borders) do
@@ -4283,7 +4443,7 @@ end --function tecUILayoutManagerConfig</script>
           .."\n\""..incorrectWindowName.."\" needs to be replaced with a supported window name, listed above.\n"
           .."Please correct and attempt again.\n"
         if displayToScreen then --if we want to display to player screen
-          echo(errorFound) --display error direct to player
+          pecho(errorFound) --display error direct to player
         end --if displayToScreen
         debugToDisplay("function UIManagerSetTheme, "..errorFound) --display error to debug
         return --stop function bad window name sent.
@@ -4351,7 +4511,7 @@ end --function tecUILayoutManagerConfig</script>
             .."\n\""..incorrectWindowName.."\" needs to be replaced with a supported window name, listed above.\n"
             .."Please correct and attempt again.\n"
           if displayToScreen then --if we want to display to player screen
-            echo(errorFound) --display error direct to player
+            pecho(errorFound) --display error direct to player
           end --if displayToScreen
           debugToDisplay("function UIManagerSetTheme, "..errorFound) --display error to debug
           return --stop function bad window name sent.
@@ -4367,7 +4527,7 @@ end --function tecUILayoutManagerConfig</script>
     if guiChange then guiChange() end --Size windows to theme setting.
     
     if displayToScreen then
-      cecho("Layout changed to theme, "..themeName.."\n")
+      pecho("Layout changed to theme, "..themeName.."\n")
       dontForgetToSave() --remind player to save changes
     end --if displayToScreeen
   end --if GetUIManager() == "GUIframe" and GUIframe.initialized
@@ -4395,34 +4555,34 @@ function UIManagerEnableSide(sideName,mode,displayToScreen)
     --if displayToScreen is true, show a list of acceptable commands
     if displayToScreen then 
       if (sideName:lower()):match("list") then --if the we receive a list request
-        cecho("Supported side ")
-        if mode then cecho("enable ") 
-        else cecho("disable ") end
-        cecho("commands are: ")
+        pecho("Supported side ")
+        if mode then pecho("enable ") 
+        else pecho("disable ") end
+        pecho("commands are: ")
       else 
-        cecho(sideName.." is not side. Supported commands are: ")
+        pecho(sideName.." is not side. Supported commands are: ")
       end
       if mode then --show a list of enable commands if mode is true
         --loop through side names inserting them into command examples
         for iterator, tmpSideName in ipairs(tmpSidesTable) do
           --loading a command into a variable to put into a cecholink
           local cmdToSend = [[UIManagerEnableSide("]]..tmpSideName..[[",true,true)]]
-          cechoLink("&lt;:"..tecSettings.helpHighlightColor
+          pechoLink("&lt;:"..tecSettings.helpHighlightColor
             .."&gt;display side enable "..tmpSideName, 
             cmdToSend, --runs cmdToSend string on click.
             "Enable side "..tmpSideName, true)
-            cecho(" ")
+          cecho(" ")
         end --for pairs("left", "right", "top", "bottom")
       else --mode false so send disable examples.
         --loop through side names inserting them into command examples
         for iterator, tmpSideName in ipairs(tmpSidesTable) do
           --loading a command into a variable to put into a cecholink
           local cmdToSend = [[UIManagerEnableSide("]]..tmpSideName..[[",false,true)]]
-          cechoLink("&lt;:"..tecSettings.helpHighlightColor
+          pechoLink("&lt;:"..tecSettings.helpHighlightColor
             .."&gt;display side disable "..tmpSideName, 
             cmdToSend, --runs cmdToSend string on click.
             "Disable side "..tmpSideName, true)
-            cecho(" ")
+          cecho(" ")
         end --for pairs(tmpSidesTable)                                                                            
       end --if mode
       cecho("\n") --put a new line at the end of the command examples
@@ -4513,7 +4673,7 @@ end --function UIManagerEnableSide</script>
     tecErrorNotification("function UIManagerFileSave, UIManagerSettings table not present.")
   end --if UIManagerSettings
   
-  if displayToScreen then echo("\nDisplay settings saved.\n") end
+  if displayToScreen then pecho("\nDisplay settings saved.\n") end
 end --function UIManagerFileSave</script>
 						<eventHandlerList />
 					</Script>
@@ -4529,7 +4689,7 @@ function UIManagerFileLoad(displayToScreen)
 	--If the file does not exist let the user know.
   if not io.exists(path) then 
 		debugToDisplay("tecFileLoadSettings: "..path.." file doesn't exist.") --TEC debug screen
-    cecho("[ Info ]  - No display settings file. Parthia using default settings.\n")
+    pecho("[ Info ]  - No display settings file. Parthia using default settings.\n")
 		--debugc("tecFileLoadSettings: "..path.." file doesn't exist.") --mudlets debug screen
 	return --kill the function before real errors occur
 	else
@@ -4588,116 +4748,88 @@ end --function UIManagerReset</script>
 --Intended to be used within a help system you make.
 function UIManagerHelp()
 
-  echo("Developer display commands:\n")
+  pecho("Developer display commands:\n")
 
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display add window name", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display add window name", 
     [[printCmdLine("display add ");
-    echo("Now enter a window name, all to add all windows or list to list supported window names.")]], 
+    pecho("Now enter a window name, all to add all windows or list to list supported window names.")]], 
     "Add graphical object", true)
-	echo(", show a registered window.\n")
+	pecho(", show a registered window.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display remove window name", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display remove window name", 
   [[printCmdLine("display remove ");
-    echo("Now enter a window name, all to remove all windows or list to list supported window names.")]], 
+    pecho("Now enter a window name, all to remove all windows or list to list supported window names.")]], 
   "Remove graphical object", true)
-	echo(", hide a registered window.\n")
-	
+	pecho(", hide a registered window.\n")
   
+  pecho("\nPlayer display commands:\n")
   
-  echo("\nPlayer display commands:\n")
-  
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display clear", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display clear", 
   [[UIManagerClearMainWindow()]], 
   "Remove text from main screen", true)
-	echo(", clear text from main text console.\n")
+	pecho(", clear text from main text console.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display scrollbars enable", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display scrollbars enable", 
   [[tecSetScrollBars(true)]], 
   "Enable scroll bars", true)
-	echo(", enable scrollbars in Parthia.\n")
+	pecho(", enable scrollbars in Parthia.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display scrollbars disable", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display scrollbars disable", 
   [[tecSetScrollBars(false)]], 
   "Hide scroll bars", true)
 	echo(", hide scrollbars in Parthia.\n")
 
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display side list", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display side list", 
   [[UIManagerEnableSide("list",true,true);
     UIManagerEnableSide("list",false,true);
-    cecho("Click a command above to enable or disable a side of the screen.\n")]], 
+    pecho("Click a command above to enable or disable a side of the screen.\n")]], 
   "Control what sides are displayed", true)
-	echo(", enable or disable sides of the screen that hold windows.\n")
-  
---  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display side disable name", 
---  [[UIManagerEnableSide("list",false,true);
---    printCmdLine("display side disable ");
---    cecho("Click a command above or type a side name in the command line to disable that side.\n")]], 
---  "Remove a side from display", true)
---	echo(", remove a side from display.\n")
-  
---  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display side enable name", 
---  [[UIManagerEnableSide("list",true,true);
---    printCmdLine("display side enable ");
---    cecho("Click a command above or type a side name in the command line to enable that side.\n")]], 
---  "Enable a side on display", true)
---	echo(", Enable a side to display.\n")
+	pecho(", enable or disable sides of the screen that hold windows.\n")
 
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window list", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window list", 
   [[UIManagerEnableWindow("list",true,true);
     UIManagerEnableWindow("list",false,true);
-    echo("Click a command above to enable or disable a window.\n")]], 
+    pecho("Click a command above to enable or disable a window.\n")]], 
   "List all window commands", true)
-	echo(", show all windows that can be enabled or disabled.\n")
+	pecho(", show all windows that can be enabled or disabled.\n")
   
---  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable name", 
---  [[printCmdLine("display window enable ");
---    UIManagerEnableWindow("list",true,true);
---    echo("Click a command above or enter a window name in the command line to enable that window.")]], 
---  "Enable graphical objects", true)
---	echo(", enable a window previously removed from display.\n")
-
---  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable name", 
---  [[printCmdLine("display window disable ");
---    UIManagerEnableWindow("list",true,true);
---    echo("Click a command above or enter a window name in the command line to disables that window.")]], 
---  "Disable graphical objects", true)
---	echo(", remove a window from display and keep it from loading on startup.\n")
-  
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display layout list", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display layout list", 
   [[UIManagerSetTheme("list",true);
-    echo("Click a command above to switch to a different layout theme.\n")]], 
+    pecho("Click a command above to switch to a different layout theme.\n")]], 
   "Change windows layout", true)
-	echo(", change window's layout to a preset theme.\n")
+	pecho(", change window's layout to a preset theme.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display manager name", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display manager name", 
   [[SetUIManager("list", true)]], 
   "Change display manager", true)
-	echo(", change display manager.\n")
+	pecho(", change display manager.\n")
 	
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display save", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display save", 
   [[UIManagerFileSave(true)]], 
   "Save window positions", true)
-	echo(", save window positions.\n")
+	pecho(", save window positions.\n")
 	
-	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display load", 
+	pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display load", 
   [[UIManagerFileLoad(true)]], 
   "Load window positions", true)
-	echo(", reset window positions to last save.\n")
+	pecho(", reset window positions to last save.\n")
 	
-	cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display reset", 
+	pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display reset", 
   [[UIManagerReset()]], 
   "Reset window positions", true)
-	echo(", reset window positions to default.\n")
+	pecho(", reset window positions to default.\n")
 			
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Resize Windows tutorial", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Resize Windows tutorial", 
   [[UIManagerResizeHelp()]], 
   "Resize windows tutorial", true)
-	echo(", expand or shrink windows.\n")
+	pecho(", expand or shrink windows.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Move Windows tutorial", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Move Windows tutorial", 
   [[UIManagerMoveWindowHelp()]], 
   "Move windows tutorial", true)
-	echo(", move windows in display.\n")
+	pecho(", move windows in display.\n")
+  
+  pecho("Click a command above or type it into the command line.\n")
   
    --Explains how to move tabs
 
@@ -4709,7 +4841,7 @@ end --function UIManagerHelp</script>
 						<packageName></packageName>
 						<script>function UIManagerResizeHelp() --explains how to resize display
 	if GetUIManager() == "GUIframe" and GUIframe.initialized then
-    cecho("You are currently using the GUIframe display manager. "
+    pecho("You are currently using the GUIframe display manager. "
     .."To reize windows right "
 		.."click one of the four very faint blue arrows and drag it. "
 		.."These arrows are on the top, bottom, left and right outer edges "
@@ -4717,10 +4849,10 @@ end --function UIManagerHelp</script>
 		.."When you move your mouse over the arrows they will "
 		.."become bold blue arrows and show a resize tip in a small gray box.\n"
     .."Don't forget to save changes with ")
-    cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display save", 
+    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display save", 
       [[UIManagerFileSave(true)]],
       "Save display settings", true)
-    cecho("\n")
+    pecho("\n")
   else
     tecErrorNotification("You are not using a display manager. "
       .."No windows should show on screen to resize.")
@@ -4733,14 +4865,14 @@ end --function UIManagerResizeHelp</script>
 						<packageName></packageName>
 						<script>function UIManagerMoveWindowHelp() --explains how to move tabs on display
   if GetUIManager() == "GUIframe" and GUIframe.initialized then
-	 cecho("You are currently using the GUIframe display manager.\n"
+	 pecho("You are currently using the GUIframe display manager.\n"
 		.."To move a window you can right click its name tab at the top of the window. "
     .."Than drag it to the tab of another window. "
     .."When it is ready to be release a black space will open in the tabs bar to fit the name tab of the window being moved.\n"
     .."It may take a few tries because it requires the tip of the mouse's cursor to be directly over another tab. "
     .."After releasing the mouse the window and its name tab will stay where you moved it.\n"
     .."Don't forget to save changes with ")
-    cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display save", 
+    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display save", 
       [[UIManagerFileSave(true)]],
       "Save display settings", true)
     cecho("\n")
@@ -4756,12 +4888,10 @@ end --function tecResizeDisplayHelp</script>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>help</name>
 				<packageName></packageName>
-				<script>-------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external scripts --
--------------------------------------------------
-</script>
+				<script>--[[
+functions to display help messages to screen
+like the parthia command or parthia talk command
+]]--</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
 					<name>tecClientFullHelp(tecBrief, tecWindow)</name>
@@ -4771,17 +4901,27 @@ end --function tecResizeDisplayHelp</script>
 	--if a window was forgotten default to main
 	tecWindow = tecWindow or "main"
 	tecBrief = tecBrief or false
-	
-	if not tecBrief then --if we do not want to be brief
-    echo(tecWindow, "There are a number of commands to adjust the game client. "
+  local parthiaCmdHelp = " change many client settings."
+  local displayCmdHelp = " Save or load window positions, "
+		.."reset display to defaults, "
+  	.."and clear text off the display."
+  local debugCmdHelp = " Use to get information to report issues."
+  
+  if not tecBrief then --if we do not want to be brief
+    pecho("There are a number of commands to adjust the game client. "
   		.."They are:\n")	
   end --end if not tecBrief
+  
+  if getParthiaTalk() then --if parthia talk is enabled
+    pecho("parthia."..parthiaCmdHelp.." display."..displayCmdHelp
+      .." debug."..debugCmdHelp, true) --send to pecho talkOnly true
+  end --if getParthiaTalk()
  
   cechoLink(tecWindow, "&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia", 
   [[tecClientHelp()]], 
   "Save or load client settings.", true)
   if not tecBrief then --if we do not want to be brief
-  	echo(tecWindow, " Save or load client settings.\n")
+  	echo(tecWindow, parthiaCmdHelp.."\n")
 	else echo(tecWindow, "\n")
   end --end if not tecBrief
  
@@ -4789,9 +4929,7 @@ end --function tecResizeDisplayHelp</script>
   [[UIManagerHelp()]], 
   "Change display settings.", true)
   if not tecBrief then --if we do not want to be brief
-    echo(tecWindow, " Save or load display positions, "
-			.."reset display to defaults, "
-  		.."and clear text off the display.\n") 
+    echo(tecWindow, displayCmdHelp.."\n") 
 	else echo(tecWindow, "\n")
   end --end if not tecBrief
   
@@ -4799,7 +4937,7 @@ end --function tecResizeDisplayHelp</script>
   [[tecDebugHelp()]], 
   "Create debug messages", true)
   if not tecBrief then --if we do not want to be brief
-  	echo(tecWindow, " Use to get information to report issues.\n")
+  	echo(tecWindow, debugCmdHelp.."\n")
 	else echo(tecWindow, "\n")
   end --end if not tecBrief
   
@@ -4811,58 +4949,60 @@ end --end function tecClientFullHelp</script>
 					<name>tecDebugHelp()</name>
 					<packageName></packageName>
 					<script>function tecDebugHelp()
-  cecho("\n&lt;black:red&gt;Debug mode is intended for collecting data to report "
+  pecho("\n&lt;black:red&gt;Debug mode is intended for collecting data to report "
 		.."issues.&lt;reset&gt;\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug on", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug on", 
   [[setTECDebugMode(true)]],
   "Send debug text to debug window", true)
-  echo(", Create debug window and send basic info to it.\n")
+  pecho(", Create debug window and send basic info to it.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug off", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug off", 
   [[setTECDisplayDebugMode(false) setTECMapDebugMode(false) setTECDebugMode(false)]],
   "Stop all debug messages", true)
-  echo(", Stops sending all debug messages.\n")
+  pecho(", Stops sending all debug messages.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug display on", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug display on", 
   [[setTECDisplayDebugMode(true)]],
   "Show display messages to debug window", true)
-  echo(", Send display information to debug.\n")
+  pecho(", Send display information to debug.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug display off", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug display off", 
   [[setTECDisplayDebugMode(false)]],
   "Stop showing display messages to debug window", true)
-  echo(", Disables display debug messages only.\n")
+  pecho(", Disables display debug messages only.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug map on", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug map on", 
   [[setTECMapDebugMode(true)]],
   "Show map messages to debug window", true)
-  echo(", Send map debug messages to debug.\n")
+  pecho(", Send map debug messages to debug.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug map off", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug map off", 
   [[setTECMapDebugMode(false)]],
   "Stop showing map messages to debug window", true)
-  echo(", Disables map debug messages only.\n")
+  pecho(", Disables map debug messages only.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug timers on", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug timers on", 
   [[setTECTimerDebugMode(true)]],
   "Start showing timmer messages to debug window", true)
-  echo(", Send timer debug messages to debug.\n")
+  pecho(", Send timer debug messages to debug.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug timers off", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug timers off", 
   [[setTECTimerDebugMode(false)]],
   "Stop showing timmer messages to debug window", true)
-  echo(", Disables timmer debug messages only.\n")
+  pecho(", Disables timmer debug messages only.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug test colors", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug test colors", 
   [[tecColorTest()]],
   "Send basic colors to screen", true)
-  echo(", Sends colored text to screen.\n")
+  pecho(", Sends colored text to screen.\n")
 	
-	tecReportIssuesHelp(false, "main")
+	tecReportIssuesHelp(false)
   
-  cecho("&lt;black:red&gt;Debug mode is intended for collecting data to report "
+  pecho("&lt;black:red&gt;Debug mode is intended for collecting data to report "
 		.."issues.&lt;reset&gt;\n")
+    
+  pecho("Click a command above or type it into the command line.\n")
 
 end --end function tecDebugHelp</script>
 					<eventHandlerList />
@@ -4880,83 +5020,89 @@ end --end function tecDebugHelp</script>
   echo(", set mudlet objects to default enable or disabled state.\n")
   
   echo("\nparthia player commands:\n")
+  pecho("\nparthia command:\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia update check", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk", 
+  [[parthiaTalkHelp()]],
+  "parthia talk help", true)
+  pecho(", list parthia's text to speech commands.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia update check", 
   [[DownloadGitReleaseJSON()]],
   "Check for updates", true)
-  echo(", check if Parthia updates are available.\n")
+  pecho(", check if Parthia updates are available.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia version", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia version", 
   [[expandAlias("parthia version")]],
   "Display version of Parthia", true)
-  echo(", check installed Parthia version.\n")
+  pecho(", check installed Parthia version.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia beta test yes", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia beta test yes", 
   [[tecSetBetaTester(true)]],
   "Receive beta updates", true)
-  echo(", Receive beta updates and help us make a reliable client.\n")
+  pecho(", Receive beta updates and help us make a reliable client.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia beta test no", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia beta test no", 
   [[tecSetBetaTester(false)]],
   "Stop receiving beta updates", true)
-  echo(", No longer receive beta updates.\n")
+  pecho(", No longer receive beta updates.\n")
 
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save all", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save all", 
   [[tecClientSaveAll(true)]],
   "Save all client settings", true)
-  echo(", Save client and display settings to file.\n")
+  pecho(", Save client and display settings to file.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save", 
   [[tecFileSaveSettings(true)]],
   "Save client settings", true)
-  echo(", Save basic client settings to file.\n")
+  pecho(", Save basic client settings to file.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia load", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia load", 
   [[tecFileLoadSettings(true)]],
   "Load client settings from file", true)
-  echo(", Loads client settings from file. Run -parthia"
+  pecho(", Loads client settings from file. Run -parthia"
   	.." save- to create a settings file.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia reset", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia reset", 
   [[tecClientReset(true);dontForgetToSave(true)]],
   "Reset client to default", true)
-  echo(", Reset client to default client settings. "
+  pecho(", Reset client to default client settings. "
   	.."Run -display reset- to reset display.\n")
   	
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia reset all", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia reset all", 
   [[tecClientResetAll()]],
   "Reset all client settings to default", true)
-  echo(", Reset client and display to default settings.\n")
+  pecho(", Reset client and display to default settings.\n")
     
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia repair", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia repair", 
   [[expandAlias("parthia repair")]],
   "Repair Parthia", true)
-  echo(", repairs Parthia. By replacing all developer created code.\n")
+  pecho(", repairs Parthia. By replacing all developer created code.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia report", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia report", 
   [[tecReportIssues()]],
   "Report Parthia issues", true)
-  echo(", receive instruction on reporting issues.\n")
+  pecho(", receive instruction on reporting issues.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment Install", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment Install", 
   [[PlayerDev.SetEnabled(true)]],
   "Install player development folders", true)
-  echo(", install player development folders.\n")
+  pecho(", install player development folders.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment uninstall", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment uninstall", 
   [[PlayerDev.SetPackages(false)]],
   "Uninstall player development folders", true)
-  echo(", Uninstall player development folders.\n")
+  pecho(", Uninstall player development folders.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment disable", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment disable", 
   [[PlayerDev.SetEnabled(false)]],
   "Disable player development updates", true)
-  echo(", stop receiving player development code updates.\n")
+  pecho(", stop receiving player development code updates.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment update", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment update", 
   [[PlayerDev.Update(true)]],
   "Check for player development updates", true)
-  echo(", check for updates to player development folders. Occurs automatically with client updates.\n")
+  pecho(", check for updates to player development folders. Occurs automatically with client updates.\n")
   
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia numpad navigation", 
   [[expandAlias("parthia numpad navigation")]],
@@ -4965,23 +5111,30 @@ end --end function tecDebugHelp</script>
   
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia tab font size", 
   [[printCmdLine("parthia tab font size ")]],
+
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia tab font size fontsize", 
+  [[printCmdLine("parthia tab font size ");
+    pecho("Now enter the font size at the end of the command and press enter.\n")]],
   "Change font size of tabs", true)
-  echo(", Change font size for window tabs.\n") 
+  pecho(", Change font size for window tabs.\n") 
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia change colors", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia change colors", 
   [[tecClientChangeColors()]],
   "Change client colors", true)
-  echo(", Change color scheme for client.\n")
+  pecho(", Change color scheme for client.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia font size", 
-  [[printCmdLine("parthia font size ")]],
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia font size fontsize", 
+  [[printCmdLine("parthia font size ");
+    pecho("Now enter the font size at the end of the command and press enter.\n")]],
   "Change client font size", true)
-  echo(", Change font size for all consoles.\n")
+  pecho(", Change font size for all consoles.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia commands", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia commands", 
   [[parthiaCommandsHelp()]],
   "List custom parthia commands", true)
-  echo(", game commands that exist in parthia only.\n")
+  pecho(", game commands that exist in parthia only.\n")
+  
+  pecho("Click a command above or type it into the command line.\n")
 
 end --function tecClientHelp</script>
 					<eventHandlerList />
@@ -4991,101 +5144,116 @@ end --function tecClientHelp</script>
 					<packageName></packageName>
 					<script>--lists commands that directly change colors
 function tecClientChangeColorsList()
-cecho("Change background color of windows that do not have text with: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia windows background color colorname\n", 
+  pecho("Change background color of windows that do not have text with: ")
+  pechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia windows background color colorname\n", 
   [[printCmdLine("parthia windows background color ");
-    cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
+    pecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change background color nontext windows", true)
 
-  cecho("Change background color of windows that have text in them with: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia background colorname ", 
+  pecho("Change background color of windows that have text in them with: ")
+  pechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia background colorname ", 
   [[printCmdLine("parthia background ");
-    cecho("You will need to restart for text background to change")]],
+    pecho("You will need to restart mudlet for text background to change")]],
   "Change background color of text windows", true)
-  cecho("&lt;-Restart required on Windows OS.\n")
-  cecho("Command echo background must be changed in Options -&gt; Preferences -&gt; Color View -&gt; Command Background.\n")
+  pecho("-Mudlet restart required on Windows OS.\n\tText background color saved in mudlet not Parthia.\n")
+  pecho("Command echo background must be changed in Options -&gt; Preferences -&gt; Color View -&gt; Command Background.\n")
   
-  cecho("Change background color of the client's tabs with: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia tabs background color colorname\n", 
+  pecho("Change background color of the client's tabs with: ")
+  pechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia tabs background color colorname\n", 
   [[printCmdLine("parthia tabs background color ");
-    cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
+    pecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change background color clients tabs", true)
   
-  cecho("Change the color of windows and tabs as your mouse hovers over them: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia hover color colorname\n", 
+  pecho("Change the color of windows and tabs as your mouse hovers over them: ")
+  pechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia hover color colorname\n", 
   [[printCmdLine("parthia hover color ");
-    cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
+    pecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change mouse hover color", true)
   
-  cecho("Change the color help commands are highlighted in: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia helphighlight color colorname\n", 
-  [[printCmdLine("parthia helphighlight color ");
-    cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
-  "Change help command highlight color", true)
-
-  cecho("Change TEC's primary text color: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia text color colorname\n", 
-  [[printCmdLine("parthia text color ");
-    cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
-  "Change TEC's primary text color", true)
-  
-  cecho("Change the color of TEC's default green: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia greentext color colorname\n", 
-  [[printCmdLine("parthia greentext color ");
-    cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
-  "Change TEC's green text color", true)
-  
-  cecho("Change the color of TEC's default blue: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia bluetext color colorname\n", 
-  [[printCmdLine("parthia bluetext color ");
-    cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
-  "Change TEC's blue text color", true)
-  
-  cecho("Change the color approached characters appear in Room Characters window: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia approached character color colorname\n", 
+  pecho("Change the color approached characters appear in Room Characters window: ")
+  pechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia approached character color colorname\n", 
   [[printCmdLine("parthia approached character color ");
-    cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
+    pecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change color approached characters in Room Character Window", true)
   
-  cecho("Change the color not approached characters appear in Room Characters window: ")
-  cechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia not approached character color colorname\n", 
+  pecho("Change the color not approached characters appear in Room Characters window: ")
+  pechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia not approached character color colorname\n", 
   [[printCmdLine("parthia not approached character color ");
-    cecho("\nNow enter the color name at the end of the command and press enter.\n")]],
+    pecho("\nNow enter the color name at the end of the command and press enter.\n")]],
   "Change color not approached characters in Room Character Window", true)
+  
+  pecho("Change the color help commands are highlighted in: ")
+  pechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia helphighlight color colorname\n", 
+  [[printCmdLine("parthia helphighlight color ");
+    pecho("\nNow enter the color name at the end of the command and press enter.\n")]],
+  "Change help command highlight color", true)
+
+  pecho("Change TEC's gray text color: ")
+  pechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia gray color colorname\n", 
+  [[printCmdLine("parthia gray color ");
+    pecho("\nNow enter the color name at the end of the command and press enter.\n")]],
+  "Change TEC's primary text color", true)
+  
+  pecho("Change TEC's purple text color: ")
+  pechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia purple color colorname\n", 
+  [[printCmdLine("parthia purple color ");
+    pecho("\nNow enter the color name at the end of the command and press enter.\n")]],
+  "Change TEC's primary text color", true)
+  
+  pecho("Change the color of TEC's default green: ")
+  pechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia greentext color colorname\n", 
+  [[printCmdLine("parthia greentext color ");
+    pecho("\nNow enter the color name at the end of the command and press enter.\n")]],
+  "Change TEC's green text color", true)
+  
+  pecho("Change the color of TEC's default blue: ")
+  pechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia bluetext color colorname\n", 
+  [[printCmdLine("parthia bluetext color ");
+    pecho("\nNow enter the color name at the end of the command and press enter.\n")]],
+  "Change TEC's blue text color", true)
+  
+  pecho("Change TEC's primary text color: ")
+  pechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia text color colorname\n", 
+  [[printCmdLine("parthia text color ");
+    pecho("\nNow enter the color name at the end of the command and press enter.\n")]],
+  "Change TEC's primary text color", true)
+
+  pecho("Click a command above or type it into the command line.\n")  
+
 end --function tecClientChnageColorsList
 
 --General help for changing colors.
 function tecClientChangeColors()
 
-  cecho("List all commands that change colors with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor
+  pecho("List all commands that change colors with: ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor
     .."&gt;parthia change colors commands\n", 
   [[tecClientChangeColorsList()]],
   "Save client settings", true)
    
-  cecho("Don't forget to save your changes with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save\n", 
+  pecho("Don't forget to save your changes with: ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save\n", 
   [[tecFileSaveSettings(true)]],
   "Save client settings", true)
   
-  cecho("List colornames in main window: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;lua showColors(3)\n", 
+  pecho("List colornames in main window: ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;lua showColors(3)\n", 
   [[showColors(3);
     cecho("Click a color to add it to the end of the command bar")]],
   "List color names", true)
   
-  cecho("Open colorname chooser window: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia colors\n", 
+  pecho("Open colorname chooser window: ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia colors\n", 
   [[tecColorWindow()]],
   "Open color chooser window", true)
   
-  cecho("Color names in each command can be a hex color also, IE: #FF0000 is red."
+  pecho("Color names in each command can be a hex color also, IE: #FF0000 is red."
     .." If you would like to use hex colors here is a ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;hex color picker.\n", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;hex color picker.\n", 
   [[openUrl("https://www.w3schools.com/colors/colors_picker.asp")]],
   "Hex color tool", true)
   
-  cecho("")
+  pecho("Click a command above or type it into the command line.\n")
 
 end --function tecClientChangeColors()</script>
 					<eventHandlerList />
@@ -5094,12 +5262,101 @@ end --function tecClientChangeColors()</script>
 					<name>parthiaCommandsHelp()</name>
 					<packageName></packageName>
 					<script>function parthiaCommandsHelp()
-  cecho("\nCustom Parthia commands:\n")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;wait for drover", 
+  pecho("\nCustom Parthia commands:\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;wait for drover", 
   [[expandAlias("wait for drover")]],
   "Wait for a drover", true)
-  echo(", wait for a wagon drover.\n")
+  pecho(", wait for a wagon drover.\n")
+  
+  pecho("Click a command above or type it into the command line.\n")
 end --function parthiaCommandsHelp()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaTalkHelp()</name>
+					<packageName></packageName>
+					<script>--help message that appears when `parthia talk` command is run
+function parthiaTalkHelp()
+  pecho("Parthia talk commands are\n")
+
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk enable", 
+    [[expandAlias("parthia talk enable")]],
+    "Enable parthia talk", true)
+  pecho(", enable parthia's text to speech system.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk disable", 
+    [[expandAlias("parthia talk disable")]],
+    "Disable parthia talk", true)
+  pecho(", disable parthia's text to speech system.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk pause", 
+    [[expandAlias("parthia talk pause")]],
+    "Pause parthia talk", true)
+  pecho(", pause parthia talk, keep message queue.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk resume", 
+    [[expandAlias("parthia talk resume")]],
+    "Resume parthia talk", true)
+  pecho(", resume talk after pausing.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk skip", 
+    [[expandAlias("parthia talk skip")]],
+    "Skip current message", true)
+  pecho(", skip the current message in the talk queue.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk sk", 
+    [[expandAlias("parthia talk sk")]],
+    "Skip current message", true)
+  pecho(", skip the current message in the talk queue.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk stop", 
+    [[expandAlias("parthia talk stop")]],
+    "Stop current messages", true)
+  pecho(", stop current message and clear speech queue.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk st", 
+    [[expandAlias("parthia talk st")]],
+    "Stop current messages", true)
+  pecho(", stop current message and clear speech queue.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk voice list", 
+    [[expandAlias("parthia talk voice list")]],
+    "Choose talk voice", true)
+  pecho(", change voice parthia talk speaks in.\n")
+  
+--  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk clear", 
+--    [[expandAlias("parthia talk clear")]],
+--    "Clear talk queue", true)
+--  pecho(", clear parthia talk's message queue.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk speed list", 
+    [[expandAlias("parthia talk speed list")]],
+    "List talk speed list", true)
+  pecho(", list speeds parthia talk speaks in.\n")
+
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk pitch list", 
+    [[expandAlias("parthia talk pitch list")]],
+    "List talk pitch commands", true)
+  pecho(", speak game speech even if parthia talk is disabled.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk thoughts", 
+    [[expandAlias("parthia talk thoughts")]],
+    "Speak thoughts always", true)
+  pecho(", speak thoughts even if parthia talk is disabled.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk speech", 
+    [[expandAlias("parthia talk speech")]],
+    "Speak speech always", true)
+  pecho(", speak game speech even if parthia talk is disabled.\n")
+  
+  pecho("\nparthia talk has a short hand version of pt. For example ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;pt enable", 
+    [[expandAlias("pt enable")]],
+    "Enable parthia talk", true)
+  cecho("\n")
+  
+  pecho("Click a command above or type it into the command line.\n")
+end --function parthiaTalkHelp()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -5367,7 +5624,7 @@ function tecClientResetAll(displayToScreen)
   UIManagerReset(true)
 
   if displayToScreen then 
-    cecho("All settings at default. ")
+    pecho("All settings at default. ")
     dontForgetToSave()
   end
 
@@ -5404,14 +5661,14 @@ end</script>
 
 function tecClientSetFontSize(numbertemp)--set font settings with this function
 
-	cecho("\nSetting font to: "..numbertemp.."\n")
+	pecho("\nSetting font to: "..numbertemp.."\n")
 
 	--if somethings is attempting to set the font below 8, tell them no.
 	--It sets the font size for main and the editor window. very frustrating
 	--when font is 1...
 	if numbertemp &lt; 8 then
 		numbertemp = 8
-		echo("\nFonts below 8 are not supported, setting font to 8.\n")
+		pecho("\nFonts below 8 are not supported, setting font to 8.\n")
 	end --end if numbertemp is below 8
 	
 	tecSettings.tecFontSize = numbertemp or tecDefaultFontSize --set it to size passed OR default on fail
@@ -5422,6 +5679,8 @@ function tecClientSetFontSize(numbertemp)--set font settings with this function
     debugToDisplay("Font Change: Window: "..windowName.." font is now: "
       ..tecSettings.tecFontSize)
   end --for windowName in table tecTextWindowNames
+  
+  --pecho("Parthia console font is now: "..tecSettings.tecFontSize..".\n")
   
   tecRefreshSettingsWindow() --Redraw text in setttings window.
   tecResetRoomCharacterWindow() --Redraw text in room characters window.
@@ -5445,10 +5704,10 @@ function tecClientSetTabFontSize(tecTmpTabFont)--set font settings with this fun
 	--when font is 1...
 	if tecTmpTabFont &lt; 8 then
 		tecTmpTabFont = 8
-		cecho("\nFonts below 8 are not supported, setting font to 8.\n")
+		pecho("\nFonts below 8 are not supported, setting font to 8.\n")
 	end --end if numbertemp is below 8
   
-  cecho("Setting tab font to: "..tecTmpTabFont.."\n")
+  pecho("Setting tab font to: "..tecTmpTabFont.."\n")
 	
 	tecSettings.tecTabsFontSize = tostring(tecTmpTabFont) or tostring(tecDefaultFontSize) --set it to size passed OR default on fail
   
@@ -5519,7 +5778,7 @@ function tecSaveWindowText(tecWindow, tecDirectory)
     io.output( tecDirectory..tecWindow..".txt" ) --Open new file in text mode
     io.write( tecWindowBufferString ) --Write the string used as a buffer to file.
     io.output():close() --Close the file
-		echo("Window saved\n")
+		pecho("Window saved\n")
   else --if the folder does not exist.
   	lfs.mkdir( tecDirectory ) --make the directory.
 		tecFolderExists = nil --clear the folder check
@@ -5529,9 +5788,9 @@ function tecSaveWindowText(tecWindow, tecDirectory)
       io.output( tecDirectory..tecWindow..".txt" ) --Open new file in text mode
       io.write( tecWindowBufferString ) --Write the string used as a buffer to file.
       io.output():close() --Close the file
-			echo("Window saved\n")
+			pecho("Window saved\n")
 		else --the folder could not be created.
-			echo("unable to create folder"..tecDirectory)
+			pecho("unable to create folder"..tecDirectory)
 			debugToDisplay("unable to create folder"..tecDirectory)
 		end --if tecFolderExists
   end --if tecFolderExists else
@@ -5549,10 +5808,10 @@ function tecOpenDirectory(tecTMPDir)
 	if getOS() == "windows" then
 		os.execute("start \"\" \""..tecTMPDir.."\"") --opens explorer to the folder requested
 	elseif getOS() == "mac" then
-		echo("Sorry mac is currently not supported. Please open finder and go to: "
+		pecho("Sorry mac is currently not supported. Please open finder and go to: "
 			..tecTMPDir)
 	elseif getOS() == "linux" then
-		echo("Sorry linux is currently not supported. Please open a file browser and go to: "
+		pecho("Sorry linux is currently not supported. Please open a file browser and go to: "
 			..tecTMPDir)
 	end --if os version
 end --tecOpenDirectory</script>
@@ -5668,6 +5927,30 @@ end --function tecLabelBackgroundColor</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
+						<name>tecSetGrayTextColor(tecColor)</name>
+						<packageName></packageName>
+						<script>--set the color that tec will use for default gray text.
+function tecSetGrayTextColor(tecColor)
+  --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
+  tecSettings.GrayTextColor = Geyser.Color.hex(tecColor)
+
+  dontForgetToSave() --reminder player to save
+end --function tecLabelBackgroundColor</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>tecSetPurpleTextColor(tecColor)</name>
+						<packageName></packageName>
+						<script>--set the color that tec will use for default gray text.
+function tecSetPurpleTextColor(tecColor)
+  --Reference: https://www.mudlet.org/geyser/files/geyser/GeyserColor.html
+  tecSettings.PurpleTextColor = Geyser.Color.hex(tecColor)
+
+  dontForgetToSave() --reminder player to save
+end --function tecLabelBackgroundColor</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
 						<name>tecSetTextColor(tecColor)</name>
 						<packageName></packageName>
 						<script>--set the color that tec will use for main text.
@@ -5699,7 +5982,7 @@ function tecSetBackgroundColor(tecColor)
   end
   
   runTECRoomObjectCheck(false)
-  cecho("Text box background color changes are saved by mudlet immediately.\n"
+  pecho("Text box background color changes are saved by mudlet immediately.\n"
     .."If using windows you will need to restart for text background "
     .."colors to change")
   
@@ -5899,37 +6182,6 @@ end --function tecColorWindow()</script>
 					</Script>
 				</ScriptGroup>
 				<Script isActive="yes" isFolder="no">
-					<name>tecErrorNotification(errorFound)</name>
-					<packageName></packageName>
-					<script>--fully notifies user when an error is found.
-function tecErrorNotification(errorFound)
-  debugc("Error: "..errorFound)
-  debugToDisplay("&lt;red:&gt;Error: "..errorFound)
-  cecho("&lt;red:&gt;Error: "..errorFound.."\n\tPlease contact a developer with: ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
-    [[tecReportIssues()]],
-    "Report issues or bugs", true)
-  cecho("")
-end --function tecErrorNotification</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>tecWarningNotification(errorFound)</name>
-					<packageName></packageName>
-					<script>--fully notifies user when an error is found.
-function tecWarningNotification(errorFound)
-  debugc("Warning: "..errorFound)
-  debugToDisplay("&lt;yellow:&gt;Warning: "..errorFound)
---  cecho("&lt;yellow:&gt;Warning: "..errorFound
---    .."\n\tIf you experence issues contact a developer with: ")
---  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
---    [[tecReportIssues()]],
---    "Report issues or bugs", true)
---  cecho("")
-end --function tecErrorNotification</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
 					<name>tecSetBetaTester(betaTester)</name>
 					<packageName></packageName>
 					<script>function tecSetBetaTester(betaTester)
@@ -5937,9 +6189,9 @@ end --function tecErrorNotification</script>
   tecSettings.betaTester = betaTester --tell Parthia player is a beta tester.
   
   if tecSettings.betaTester then
-    cecho("You will now receive beta updates.\n\tThank you this helps us a GREAT deal!\n")
+    pecho("You will now receive beta updates.\n\tThank you this helps us a GREAT deal!\n")
   else
-    cecho("You will not receive beta updates.\n")
+    pecho("You will not receive beta updates.\n")
   end --if betaTester
   
   dontForgetToSave() --remind player to save
@@ -6004,7 +6256,7 @@ if not PlayerDev then PlayerDev = {} end</script>
     end --if mode
   end --for pairs(packageTable)
   if not mode then --if uninstalling packages
-    cecho("Packages removed. If changes are not saved, packages will reinstall with next update.\n")
+    pecho("Packages removed. If changes are not saved, packages will reinstall with next update.\n")
     dontForgetToSave() --tell player to save
   end --if not mode
 end --function PlayerDev.SetPackages(mode)</script>
@@ -6158,11 +6410,11 @@ end --function PlayerDev.Get()</script>
 function PlayerDev.Update(displayToScreen)
   displayToScreen = fuzzyBoolean(displayToScreen)
   if PlayerDev.GetEnabled() then --if player dev space is enabled
-    if displayToScreen then cecho("Checking if player development modules need to be installed.\n") end
+    if displayToScreen then pecho("Checking if player development modules need to be installed.\n") end
     PlayerDev.SetPackages(true) --Install modules if they do not already exist.
-    if displayToScreen then cecho("Installing new player development triggers.\n") end
+    if displayToScreen then pecho("Installing new player development triggers.\n") end
     PlayerDev.Triggers() --create player triggers
-    if displayToScreen then cecho("Completed updating player development folders.\n") end
+    if displayToScreen then pecho("Completed updating player development folders.\n") end
   end --if PlayerDev.GetEnabled()
 end --function PlayerDev.runUpdate()</script>
 						<eventHandlerList />
@@ -6175,16 +6427,16 @@ function PlayerDev.SetEnabled(mode)
   mode = fuzzyBoolean(mode) --make certain correct boolean sent.
   tecSettings.PlayerDevelopmentSpaceEnabled = mode --make certain this setting can be saved
   if mode then --player wants the player development space created.
-    cecho("Creating folders for you in the script editor. Each section will have a folder "
+    pecho("Creating folders for you in the script editor. Each section will have a folder "
       .."starting with Your_. Save your code to these folders.\nWe will never remove "
       .."code from these folders. With updates we may add code to these folders. "
       .."Only if it will not replace code you have created. In mudlet\'s editor "
       .."folders are called groups.\n")
     PlayerDev.Update() --installed player modules and code, or updates it
-    cecho("Player development folders have been created. "
+    pecho("Player development folders have been created. "
       .."Press alt\+e to open the script editor.\n")
   else --player does not want to contine to receive updates.
-    cecho("If you save changes, you will no longer receive updates to the player "
+    pecho("If you save changes, you will no longer receive updates to the player "
       .."Your_ folders in the editor. This will not remove those folders.\n")
   end --if mode
   dontForgetToSave()
@@ -6321,6 +6573,14 @@ if not debugToDisplay then
   end --end displayToDebug function
 end --if not debugToDisplay
 
+if not pecho then
+  pecho = cecho
+end
+
+if not pechoLink then
+  pechoLink = cechoLink
+end
+
 --Displays a yellow notice to debug console
 if not tecWarningNotification then
   --fully notifies user when an error is found.
@@ -6367,13 +6627,23 @@ local function updateAvailable(updateBody)
     GitUpdate.repairInstall = false --reset so it will not run if player checks for updates
   else --this is not a repair install prompt the user if they would like to update.
     enableAlias(GitUpdate.aliasName) --enable alias so user can run update with command
-    cecho("An update is available. The new features it offers are: \n\t")
-    cecho(updateBody)
-    cecho("\n&lt;:maroon&gt;To update now, please run: ")
-    cechoLink("&lt;:blue&gt;"..GitUpdate.aliasName, --link text to display
-      [[expandAlias(GitUpdate.aliasName)]], --link command to run
-      "Update game client", true) --link tool tip for mouse hover
-    echo("\n") --cechoLinks don't cause the window to autoscroll.
+    if pecho then --if parthia echo exists
+      pecho("An update is available. The new features it offers are: \n\t")
+      pecho(updateBody)
+      pecho("\n&lt;:maroon&gt;To update now, run command ")
+      pechoLink("&lt;:blue&gt;"..GitUpdate.aliasName, --link text to display
+        [[expandAlias(GitUpdate.aliasName)]], --link command to run
+        "Update game client", true) --link tool tip for mouse hover
+      echo("\n") --cechoLinks don't cause the window to autoscroll.
+    else --parthia echo does not exist
+      cecho("An update is available. The new features it offers are: \n\t")
+      cecho(updateBody)
+      cecho("\n&lt;:maroon&gt;To update now, please run: ")
+      cechoLink("&lt;:blue&gt;"..GitUpdate.aliasName, --link text to display
+        [[expandAlias(GitUpdate.aliasName)]], --link command to run
+        "Update game client", true) --link tool tip for mouse hover
+      echo("\n") --cechoLinks don't cause the window to autoscroll.
+    end --if pecho
   end --if GitUpdate.repairInstall
 end --function updateAvailable
 
@@ -6432,7 +6702,8 @@ local function releaseSearch()
               return --end releaseSearch
             end --if errorFound
           else --this is not a repair install. So let the player know no update is available.
-            cecho("Parthia is up to date.\n")
+            if pecho then pecho("Parthia is up to date.\n")
+            else cecho("Parthia is up to date.\n") end
             return --end releaseSearch()
           end 
         end --if releaseData.prerelease.tag_name ~= GitUpdate.localVersion
@@ -6615,7 +6886,8 @@ local function compareVersions()
           return --end releaseSearch
         end --if errorFound
       else --this is not a repair install. So let the player know no update is available.
-        cecho("Thank you for beta testing!\n\tNo new releases at this time.\n")
+        if pecho then pecho("Thank you for beta testing!\n\tNo new releases at this time.\n")
+        else cecho("Thank you for beta testing!\n\tNo new releases at this time.\n") end
       end --if GitUpdate.repairInstall
     end --if beta tester is not using latest release
   else --The user is not a beta tester.
@@ -6647,12 +6919,21 @@ function DownloadGitScripts()
 
   --check if an installation is in progress.
   if GitUpdate.installationInProgress then
-    echo("An update is currently processing. Please wait for it to complete.\n"
-      .."Once the update is done you will need to check if an update is still "
-      .."required by running: ")
-    cechoLink("&lt;:"..GitUpdate.cmdHighlight.."&gt;"..GitUpdate.updateCheckAlias, 
-      [[DownloadGitReleaseJSON()]],
-      "Check for updates", true)
+    if pecho then
+      pecho("An update is currently processing. Please wait for it to complete.\n"
+        .."Once the update is done you will need to check if an update is still "
+        .."required by running: ")
+      pechoLink("&lt;:"..GitUpdate.cmdHighlight.."&gt;"..GitUpdate.updateCheckAlias, 
+        [[DownloadGitReleaseJSON()]],
+        "Check for updates", true)
+    else
+      echo("An update is currently processing. Please wait for it to complete.\n"
+        .."Once the update is done you will need to check if an update is still "
+        .."required by running: ")
+      cechoLink("&lt;:"..GitUpdate.cmdHighlight.."&gt;"..GitUpdate.updateCheckAlias, 
+        [[DownloadGitReleaseJSON()]],
+        "Check for updates", true)
+    end
     return
   end
   GitUpdate.installationInProgress = true --notify Parthia an update is in progress
@@ -6700,7 +6981,7 @@ end --function GitUpdate.downloadScripts()
 
 local function InstallGitUpdates()
   if GitUpdate.downloadError then --if a download error occured.
-    cecho("Download error occured. Update can not be processed.\n")
+    tecErrorNotification("function InstallGitUpdates, Download error occured. Update can not be processed.\n")
     GitUpdate.downloadError = false --Reset now that we have caught the error.
   end --if GitUpdate.downloadError
   local localSourceDirectory = GitUpdate.localRespitory --Keep required data outside of GitUpdate
@@ -6723,9 +7004,9 @@ local function InstallGitUpdates()
       local errorFound = packageName..", is installed as a module. Having one script installed as "
         .."both a module and a package is not supported."
       tecWarningNotification("function InstallGitUpdates, "..errorFound)
-      cecho(errorFound.." If you are not a developer player installation instructions "
+      pecho(errorFound.." If you are not a developer player installation instructions "
         .."can be found ")
-      cechoLink("&lt;:"..GitUpdate.cmdHighlight.."&gt;here", 
+      pechoLink("&lt;:"..GitUpdate.cmdHighlight.."&gt;here", 
         [[openUrl("]]..GitUpdate.installationURL..[[")]],
         "Player installation site", true)
       cecho("\n")
@@ -6759,7 +7040,7 @@ local function InstallGitUpdates()
   end --for InstallGitUpdates
   
   if GitUpdate.installationError then --there were errors during installation.
-    cecho("Errors during installation. Please report issues using the report issues button "
+    pecho("Errors during installation. Please report issues using the report issues button "
       .."in the settings window.\n")
     GitUpdate.installationInProgress = false --notify Parthia installation not running.
       --if events were previously created, kill them.
@@ -6795,10 +7076,10 @@ local function InstallGitUpdates()
   end --for pairs(GitUpdate.removePackages, GitUpdate.removeModules)
   
   --resetProfile() --reset to profile so UI will properly reset.
-  cecho("Loading display please wait.\n")
+  pecho("Loading display please wait.\n")
   UIManagerSetTheme("PlayersTheme", false) --reset the display
   debugToDisplay("Updates completed.\n")
-  cecho("Updates completed.\n")
+  pecho("Updates completed.\n")
   GitUpdate.installationInProgress = false --notify Parthia installation not running.
     --if events were previously created, kill them.
   if GitUpdate.downloadDoneID then
@@ -6871,6 +7152,276 @@ function GitUpdateEventHandler(event, ...)
 end --function tecUpdate.eventHandler()</script>
 					<eventHandlerList />
 				</Script>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>parthia talk</name>
+					<packageName></packageName>
+					<script>--functions to manage the tts system.</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaTalkSetVoice(voiceName, displayToScreen)</name>
+						<packageName></packageName>
+						<script>--set the voice the player wants to use.
+function parthiaTalkSetVoice(voiceName, displayToScreen)
+  
+  displayToScreen = fuzzyBoolean(displayToScreen) --verify boolean is good.  
+  --make certain variable passed is a string or a number.
+  if not type(voiceName) == "string" or not type(voiceName) == "number" then
+    tecErrorNotification("function parthiaTalkSetVoice, sent a non string variable for name.")
+  end --if not type(voiceName) == "string"
+
+  local ttsVoicesSupported = ttsGetVoices() --get list of voice types the player's system supports.
+  local voiceNameCorrect = false --used to check if name sent matches one supported by the players computer.
+  
+  --check if voiceName is a supproted voice or index for ttsVoicesSupported table
+  for integer, ttsName in ipairs(ttsVoicesSupported) do --loop through supported ttsnames table
+    if type(voiceName) == "string" then --if voice name is a string
+      if voiceName == ttsName then --if the voiceName sent matches a name supported by this system
+        ttsSetVoiceByName(voiceName) --set the voice to voiceName
+        voiceNameCorrect = true --the name was correct
+        tecSettings.parthiaTalkVoice = ttsName --set voice name for startup
+        if displayToScreen then
+          pecho("Parthia talk voice set to "..ttsName..".\n")
+          dontForgetToSave() --remind player to save
+        end --if displayToScreen
+      end --if voiceName == ttsName then
+    elseif type(voiceName) == "number" then --if voice name is a number
+      if voiceName == integer then --argument number passed is smaller or same size as ttsVoicesSupported table
+        ttsSetVoiceByIndex(voiceName) --set the voice to index voiceName
+        voiceNameCorrect = true --the name was correct
+        tecSettings.parthiaTalkVoice = ttsName --set voice name for startup
+        if displayToScreen then --if player ran command remind them to save
+          pecho("Parthia talk voice set to "..ttsName..".\n")
+          dontForgetToSave() --remind player to save
+        end --if displayToScreen
+      end --if voiceName == integer then
+    end --if type(voiceName) == "string"
+  end --of ipairs(ttsVoicesSupported)
+  
+  if not voiceNameCorrect then --if voiceName was incorrect show player correct usage
+    if displayToScreen then --if player ran command send messages to screen
+      pecho("Supported voice commands are ")
+      for index, ttsName in ipairs(ttsVoicesSupported) do --loop through supported ttsnames table
+        cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk voice "..ttsName, --show clickable command
+          [[ parthiaTalkSetVoice("]]..ttsName..[[", true)]],
+          "Set parthia talk name to "..ttsName, true)
+        pecho("parthia talk voice "..ttsName, true) --speak message only if parthia talk is enabled
+        pecho(" whose numbered version is ")
+        cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk voice "..tostring(index), 
+        [[ parthiaTalkSetVoice("]]..ttsName..[[", true)]],
+        "Set parthia talk name to "..ttsName, true)
+        pecho("parthia talk voice "..index, true) --speak message only if parthia talk is enabled
+        pecho(". ")
+      end --of ipairs(ttsVoicesSupported)
+      pecho("\n")
+    else
+      tecWarningNotfication("function parthiaTalkSetVoice, autmated call sent incorrect name or number. "
+        .." function sent "..tostring(voiceName))
+    end --if displayToScreen
+  end --if not voiceNameCorrect then
+
+end --function parthiaTalkSetVoice(name)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaTalkGetVoice()</name>
+						<packageName></packageName>
+						<script>function parthiaTalkGetVoice()
+  return tecSettings.parthiaTalkVoice
+end --function parthiaTalkGetVoice()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaTalkGetThoughts()</name>
+						<packageName></packageName>
+						<script>--get the enabled or disabled state of ParthiaTalkThoughts
+function parthiaTalkGetThoughts()
+  return tecSettings.parthiaTalkThoughts
+end --function function parthiaTalkGetThoughts</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaTalkSetThoughts(displayToScreen, mode)</name>
+						<packageName></packageName>
+						<script>--set if thoughts speak even if parthia talk is disabled
+--mode is optional, normally it will toggle
+function parthiaTalkSetThoughts(displayToScreen, mode)
+
+  displayToScreen = fuzzyBoolean(displayToScreen) --should messages be displayed to player
+  mode = fuzzyBoolean(mode) --set mode if it is not being toggled
+
+  if mode == nil then --if mode was not passed at all
+    if parthiaTalkGetThoughts() then --if parthia talk thoughts only is enabled
+      tecSettings.parthiaTalkThoughts = false --switch parthia talk thoughts to off
+      if displayToScreen then pecho("Parthia talk thoughts disabled\n") end
+    else --if parthia talk thoughts is not enabled
+      tecSettings.parthiaTalkThoughts = true --switch parthia talk thoughts to on
+      if displayToScreen then pecho("Parthia talk thoughts enabled\n") end
+    end --if parthiaTalkGetThoughts()
+  else --if mode was passed
+    tecSettings.parthiaTalkThoughts = mode --set variable to the mode passed
+    if displayToScreen then pecho("Parthia talk thoughts set to "..tostring(mode).."\n") end
+  end --if mode == nil
+  
+  if displayToScreen then dontForgetToSave() end --if player ran command remind them to save
+
+end --parthiaTalkSetThoughts(displayToScreen)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaTalkGetSpeech()</name>
+						<packageName></packageName>
+						<script>--get the enabled or disabled state of parthia talk speech
+function parthiaTalkGetSpeech()
+  return tecSettings.parthiaTalkSpeech
+end --function function parthiaTalkGetSpeech</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaTalkSetSpeech(displayToScreen, mode)</name>
+						<packageName></packageName>
+						<script>--set if game speech speaks even if parthia talk is disabled
+--mode is optional, normally it will toggle
+function parthiaTalkSetSpeech(displayToScreen, mode)
+
+  displayToScreen = fuzzyBoolean(displayToScreen) --should messages be displayed to player
+  mode = fuzzyBoolean(mode) --set mode if it is not being toggled
+
+  if mode == nil then --if mode was not passed at all
+    if parthiaTalkGetSpeech() then --if parthia talk speech is enabled
+      tecSettings.parthiaTalkSpeech = false --switch parthia talk speech to off
+      if displayToScreen then pecho("Parthia talk speech disabled.\n") end
+    else --if parthia talk speech is not enabled
+      tecSettings.parthiaTalkSpeech = true --switch parthia talk speech to on
+      if displayToScreen then pecho("Parthia talk speech enabled.\n") end
+    end --if parthiaTalkGetSpeech()
+  else --if mode was passed
+    tecSettings.parthiaTalkSpeech = mode --set variable to the mode passed
+    if displayToScreen then pecho("Parthia talk speech set to "..tostring(mode)..".\n") end
+  end --if mode == nil
+  
+  if displayToScreen then dontForgetToSave() end --if player ran command remind them to save
+
+end --parthiaTalkSetSpeech(displayToScreen)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaTalkSetSpeed(speed, displayToScreen)</name>
+						<packageName></packageName>
+						<script>--set speed parthia talks speaks at
+function parthiaTalkSetSpeed(speed, displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  speed = tonumber(speed) --convert speed to number incase it is a string
+  if not speed then speed = 12 end --if speed was not a number, set it out of supported range to display supported commands
+  
+  if displayToScreen then --player called funtion, send messages to screen
+    if speed &gt; 11 or speed &lt; 1 then --speed is out of supported range
+      pecho("Supported parthia talk speed commands are\n")
+      for i=1,11 do --loop from 1 to 11
+        cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk speed "..i, --display clickable link to screen
+          [[ parthitaTalkSetSpeed("]]..i..[[", true)]],
+          "Set parthia talk speech rate to "..i, true)
+        pecho(", set the speed parthia talk speeks at to "..tostring(i)..".")
+        if i &lt; 3 then --show player lower numbers mean slower, higher means faster.
+          pecho(" very slow\n")
+        elseif i &gt; 2 and i &lt; 6 then 
+          pecho(" slow\n")
+        elseif i == 6 then
+          pecho("&lt;green&gt; Default\n")
+        elseif i &gt; 6 and i &lt; 10 then
+          pecho(" fast\n")
+        elseif i &gt; 9 and i &lt; 12 then
+          pecho(" very fast\n")
+        else 
+          cecho("\n") 
+        end --if i &lt; 3
+      end --for i=1,10
+      pecho("Click a command above or type it into the command line.\n")
+      return --exit function
+    end --if speed &gt; 11 or speed &lt; 1
+  end --if displayToScreen
+  
+  --mudlets supported speech rates range is -1 to 1
+  local speechRate = (speed - 6) * .2 
+  debugToDisplay("function parthitaTalkSetSpeed, speech rate is "..tostring(speechRate))
+  --pecho("Setting speech rate to "..tostring(speechRate).."\n")
+  ttsSetRate(speechRate)
+  tecSettings.parthiaTalkSpeed = speed --store speed setting for startup
+  if displayToScreen then
+    pecho("Parthia talk speed set to "..tostring(speed)..".\n")
+    dontForgetToSave()
+  end --if displayToScreen
+end --parthitaTalkSetSpeed(speed)
+</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaTalkGetSpeed()</name>
+						<packageName></packageName>
+						<script>function parthiaTalkGetSpeed()
+  return tecSettings.parthiaTalkSpeed
+end --function parthiaTalkGetSpeed()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaTalkSetPitch(pitch, displayToScreen)</name>
+						<packageName></packageName>
+						<script>--set Pitch parthia talks speaks in
+function parthiaTalkSetPitch(pitch, displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen) --will messages be displayed
+  pitch = tonumber(pitch) --convert pitch to number incase it is a string
+  if not pitch then pitch = 12 end --if pitch was not a number, set it out of supported range to display supported commands
+  
+  
+  if displayToScreen then 
+    if pitch &gt; 11 or pitch &lt; 1 then --if pitch is out of supported range
+      pecho("Supported parthia talk pitch commands are\n")
+      for i=1,11 do --loop from 1 to 11
+        cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk pitch "..i, 
+          [[ parthitaTalkSetPitch("]]..i..[[", true)]],
+          "Set the pitch parthia talk speaks in to "..i, true)
+        pecho(", set the speed parthia talk speeks at to "..tostring(i)..".")
+        if i &lt; 3 then
+          pecho(" very deep\n")
+        elseif i &gt; 2 and i &lt; 6 then 
+          pecho(" deep\n")
+        elseif i == 6 then
+          pecho("&lt;green&gt; Default\n")
+        elseif i &gt; 6 and i &lt; 10 then
+          pecho(" high\n")
+        elseif i &gt; 9 and i &lt; 12 then
+          pecho(" very high\n")
+        else 
+          cecho("\n")
+        end --if i &lt; 3
+      end --for i=1,10
+      pecho("Click a command above or type it into the command line.\n")
+      return --exit function
+    end --if speed &gt; 11 or speed &lt; 1
+  end --if displayToScreen
+  
+  --mudlets supported pitch range is -1 to 1
+  local pitchLevel = (pitch - 6) * .2 
+  debugToDisplay("function parthitaTalkSetSpeed, pitch level is "..tostring(pitchLevel)
+    .." function was sent pitch number "..tostring(pitch))
+  ttsSetPitch(pitchLevel) --set the pitch level
+  tecSettings.parthiaTalkPitch = pitch --store pitch setting for startup
+  if displayToScreen then
+    pecho("Parthia talk pitch set to "..tostring(pitch)..".\n")
+    dontForgetToSave() --remind player to save
+  end --if displayToScreen
+end --parthitaTalkSetSpeed(speed)
+</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaTalkGetPitch()</name>
+						<packageName></packageName>
+						<script>function parthiaTalkGetPitch()
+  return tecSettings.parthiaTalkPitch
+end --function parthiaTalkGetPitch()</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>Room Characters</name>
@@ -8266,8 +8817,9 @@ function controlInput(_, tecPassword)
     local tecMainLastLine = (getLastLineNumber("main") - 1)
     moveCursor(1,tecMainLastLine) --Move cursor to second from the newest line in main console
     selectString(tecPassword,1) --Select the password in main.
-    replace("Password Entered\n") --Replaced the selected password with.
+    replace("") --Replaced the selected password with.
     deselect() --Don't forget your deselects!
+    pecho("Password Entered\n")
     
     tecPassword = nil --Just in case, lets make certain the password is cleared out.
     command = nil --
@@ -8304,8 +8856,18 @@ tecResetRoomCharacterWindow() --fill room characters window with text
 --Enable or disable scroll bars. Dependant on user preference.
 tecSetScrollBars(tecSettings.showScrollBars, false)
 
+
 --set proper state for numpad navigation
-setNumpadNavigation(getNumpadNavigation)</script>
+setNumpadNavigation(getNumpadNavigation)
+
+--set tts to players preferences
+if getParthiaTalk() then
+  parthiaTalkSetVoice(parthiaTalkGetVoice(), false) --set voice
+  parthiaTalkSetSpeed(parthiaTalkGetSpeed(), false) --set talking speed
+  parthiaTalkSetPitch(parthiaTalkGetPitch(), false) --set pitch voice speaks in
+  ttsSpeak(" ") --Start the queue after startup
+end
+--if getParthiaTalk() then ttsClearQueue() end</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
