@@ -5108,9 +5108,6 @@ end --end function tecDebugHelp</script>
   [[expandAlias("parthia numpad navigation")]],
   "Toggle numpad navigation", true)
   echo(", turn navigation using the numberpad on or off.\n")
-  
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia tab font size", 
-  [[printCmdLine("parthia tab font size ")]],
 
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia tab font size fontsize", 
   [[printCmdLine("parthia tab font size ");
@@ -6518,7 +6515,7 @@ function GitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if GitUpdate.localRespitory not exist
   GitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  GitUpdate.localVersion = "0.1.32" --Must match the tag in your github release
+  GitUpdate.localVersion = "0.1.33" --Must match the tag in your github release
   GitUpdate.aliasName = "parthia update" --Name of alias user runs to process update
   --Name of the alias to check if an update is available.
   GitUpdate.updateCheckAlias = "parthia update check" 
