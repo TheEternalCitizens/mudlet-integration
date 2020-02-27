@@ -1047,11 +1047,39 @@ deleteLine() --remove line from main console. line variable remains unchanged.</
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>&lt;hr&gt;</string>
 					<string>&lt;/pre&gt;</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>3</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>&lt;hr&gt;</name>
+				<script>myFormatter = demonnic.TextFormatter:new( {
+  width = (getColumnCount() - 1), 
+  cap = "---------",
+  capColor = "&lt;gray&gt;",
+  textColor = "&lt;gray&gt;"
+})
+selectCurrentLine() --select current line in main.
+replace("") --Erase text from main. Otherwise variable line will apear on console.
+deselect() --Don't forget your deselects!
+echo("\n")
+cecho(myFormatter:format("---------"))</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>&lt;hr&gt;</string>
+				</regexCodeList>
+				<regexCodePropertyList>
 					<integer>3</integer>
 				</regexCodePropertyList>
 			</Trigger>
