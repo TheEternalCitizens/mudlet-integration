@@ -603,19 +603,19 @@ parthiaEcho("parthia talk disabled.")</script>
 					<regex>^parthia talk disable$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>parthia talk stop</name>
+					<name>parthia talk clear</name>
 					<script>ttsClearQueue() --clear out the message queue
 ttsSkip() --skip the current message so it stops reading</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^parthia talk stop$</regex>
+					<regex>^parthia talk clear$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>parthia talk st</name>
-					<script>expandAlias("parthia talk stop")</script>
+					<name>parthia talk cl</name>
+					<script>expandAlias("parthia talk clear")</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^parthia talk st$</regex>
+					<regex>^parthia talk cl$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia talk skip</name>
@@ -670,13 +670,6 @@ ttsSpeak(" ") --sometimes the queue stops this will unstop it</script>
 					<regex>^parthia talk resume$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>parthia talk clear</name>
-					<script>ttsClearQueue() --remove all messages from tts queue</script>
-					<command></command>
-					<packageName></packageName>
-					<regex>^parthia talk clear$</regex>
-				</Alias>
-				<Alias isActive="yes" isFolder="no">
 					<name>parthia talk pause</name>
 					<script>ttsPause() --pause speech</script>
 					<command></command>
@@ -722,6 +715,28 @@ parthiaTalkSetPitch(matches[2], true)</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia talk pitch (.*)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk debug</name>
+					<script>local message = ttsGetCurrentLine() --collect the current message in queue
+local state = ttsGetState()
+if message then --if there was a message in the tts queue
+  message = "parthia talk current line: "..message.."&lt;reset&gt;\nparthia talk state: "..state
+  debugToDisplay(message)
+  cecho(message.."\n") --get the current message in the ttsQueue
+  ttsSkip() --skip the current message
+  cecho("Message queue collected restarting queue.\n")
+  ttsSpeak("Debug data above, restarting parthia talk queue.")
+else --there is no message in the tts queue
+  message = "No message in the parthia talk queue."
+  message = message .. " parthia talk state "..state
+  debugToDisplay(message)
+  cecho(message.."\n")
+  ttsSpeak(message)
+end --if message</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk debug$</regex>
 				</Alias>
 			</AliasGroup>
 		</AliasGroup>

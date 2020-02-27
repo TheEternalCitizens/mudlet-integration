@@ -5306,25 +5306,25 @@ function parthiaTalkHelp()
     "Skip current message", true)
   pecho(", skip the current message in the talk queue.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk stop", 
-    [[expandAlias("parthia talk stop")]],
-    "Stop current messages", true)
-  pecho(", stop current message and clear speech queue.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk clear", 
+    [[expandAlias("parthia talk clear")]],
+    "Clear talk queue", true)
+  pecho(", clear parthia talk's message queue.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk st", 
-    [[expandAlias("parthia talk st")]],
-    "Stop current messages", true)
-  pecho(", stop current message and clear speech queue.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk cl", 
+    [[expandAlias("parthia talk cl")]],
+    "Clear talk queue", true)
+  pecho(", clear parthia talk's message queue.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk debug", 
+    [[expandAlias("parthia talk debug")]],
+    "Collect tts debug data", true)
+  pecho(", collect parthia talk debug data for developers.\n")
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk voice list", 
     [[expandAlias("parthia talk voice list")]],
     "Choose talk voice", true)
   pecho(", change voice parthia talk speaks in.\n")
-  
---  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk clear", 
---    [[expandAlias("parthia talk clear")]],
---    "Clear talk queue", true)
---  pecho(", clear parthia talk's message queue.\n")
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk speed list", 
     [[expandAlias("parthia talk speed list")]],
