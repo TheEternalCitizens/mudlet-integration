@@ -5334,12 +5334,12 @@ function parthiaTalkHelp()
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk pitch list", 
     [[expandAlias("parthia talk pitch list")]],
     "List talk pitch commands", true)
-  pecho(", speak game speech even if parthia talk is disabled.\n")
+  pecho(", speak in game speech even if parthia talk is disabled.\n")
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk thoughts", 
     [[expandAlias("parthia talk thoughts")]],
     "Speak thoughts always", true)
-  pecho(", speak thoughts even if parthia talk is disabled.\n")
+  pecho(", speak in game thoughts even if parthia talk is disabled.\n")
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk speech", 
     [[expandAlias("parthia talk speech")]],

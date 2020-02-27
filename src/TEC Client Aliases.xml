@@ -721,11 +721,11 @@ parthiaTalkSetPitch(matches[2], true)</script>
 					<script>local message = ttsGetCurrentLine() --collect the current message in queue
 local state = ttsGetState()
 if message then --if there was a message in the tts queue
-  message = "parthia talk current line: "..message.."&lt;reset&gt;\nparthia talk state: "..state
+  message = "parthia talk current line: "..message.."&lt;reset&gt;parthia talk state: "..state
   debugToDisplay(message)
   cecho(message.."\n") --get the current message in the ttsQueue
   ttsSkip() --skip the current message
-  cecho("Message queue collected restarting queue.\n")
+  cecho("Debug data above, restarting parthia talk queue.\n")
   ttsSpeak("Debug data above, restarting parthia talk queue.")
 else --there is no message in the tts queue
   message = "No message in the parthia talk queue."
