@@ -257,7 +257,10 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   mapZoom = 1
   
   --used to keep track of characters in current room.
-  	tecRoomObjects = {characters = {}, checkActive = false, lc = 1}
+  tecRoomObjects = {characters = {}, checkActive = false, lc = 1}
+  
+  --used to filters data from stats command 
+  statsFilter = {}
   
   --stores a command list for the room character window
   --Done this way so it can be customized. 
@@ -6515,7 +6518,7 @@ function GitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if GitUpdate.localRespitory not exist
   GitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  GitUpdate.localVersion = "0.1.35" --Must match the tag in your github release
+  GitUpdate.localVersion = "0.1.36" --Must match the tag in your github release
   GitUpdate.aliasName = "parthia update" --Name of alias user runs to process update
   --Name of the alias to check if an update is available.
   GitUpdate.updateCheckAlias = "parthia update check" 
@@ -7421,41 +7424,49 @@ end --function parthiaTalkGetPitch()</script>
 				</ScriptGroup>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>Room Characters</name>
+				<name>Command Filters</name>
 				<packageName></packageName>
 				<script>--[[
-Scripts for working with filtering the approach check command 
+filters to collect data from in game commands.
+like using ac . to populate room characters window.
 ]]--</script>
 				<eventHandlerList />
-				<Script isActive="yes" isFolder="no">
-					<name>getTECRoomCheckActive()</name>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>Room Characters ac .</name>
 					<packageName></packageName>
-					<script>function getTECRoomCheckActive()
+					<script>--[[
+Scripts for working with filtering the approach check command 
+]]--</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>getTECRoomCheckActive()</name>
+						<packageName></packageName>
+						<script>function getTECRoomCheckActive()
 	return tecRoomObjects.checkActive
 end --end function getRoomCharactersActive</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>setTECRoomCheckActive(tecRoomCheckActive, displayToScreen)</name>
-					<packageName></packageName>
-					<script>function setTECRoomCheckActive(tecRoomCheckActive, displayToScreen)
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>setTECRoomCheckActive(tecRoomCheckActive, displayToScreen)</name>
+						<packageName></packageName>
+						<script>function setTECRoomCheckActive(tecRoomCheckActive, displayToScreen)
   displayToScreen = fuzzyBoolean(displayToScreen) --verify good boolean sent
   tecRoomCheckActive = fuzzyBoolean(tecRoomCheckActive) --verify good boolean sent
 	tecRoomObjects.checkActive = tecRoomCheckActive --tell triggers to expect a room check
   tecRoomObjects.displayToScreen = displayToScreen --will ac . display to main?
 end --end function setRoomCharactersActive</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="no" isFolder="no">
-					<name>clearTECRoomObjects()</name>
-					<packageName></packageName>
-					<script>--Moved to variables Data Themese - Variables script</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>runTECRoomObjectCheck(displayToScreen)</name>
-					<packageName></packageName>
-					<script>--used for functions that track objects in the current room.
+						<eventHandlerList />
+					</Script>
+					<Script isActive="no" isFolder="no">
+						<name>clearTECRoomObjects()</name>
+						<packageName></packageName>
+						<script>--Moved to variables Data Themese - Variables script</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>runTECRoomObjectCheck(displayToScreen)</name>
+						<packageName></packageName>
+						<script>--used for functions that track objects in the current room.
 function runTECRoomObjectCheck(displayToScreen)
 
   displayToScreen = displayToScreen or false --if not declared default is false
@@ -7469,12 +7480,12 @@ function runTECRoomObjectCheck(displayToScreen)
   send("ac .", false) --send an ac . command to list characters in the room.
 
 end --function runRoomCharacterCheck()</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>echoLeftRoomCharacterWindows(message)</name>
-					<packageName></packageName>
-					<script>--display text to left side of all Room Character Windows
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>echoLeftRoomCharacterWindows(message)</name>
+						<packageName></packageName>
+						<script>--display text to left side of all Room Character Windows
 function echoLeftRoomCharacterWindows(message)
   if type(message) ~= "string" then --if the type is incorrect
     tecErrorNotification("function echoLeftRoomCharacterWindows, sent a none string variable.")
@@ -7484,12 +7495,12 @@ function echoLeftRoomCharacterWindows(message)
   hecho(roomCharacters.console.name,message) --send message or standard room character window
   hecho(MultiWindow.roomCharacters.console.name,message) --send message to room character multi window
 end --function echoLeftRoomCharacterWindows()</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>echoRightRoomCharacterWindows(message)</name>
-					<packageName></packageName>
-					<script>function echoRightRoomCharacterWindows(message)
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>echoRightRoomCharacterWindows(message)</name>
+						<packageName></packageName>
+						<script>function echoRightRoomCharacterWindows(message)
   if type(message) ~= "string" then --if the type is incorrect
     tecErrorNotification("function echoRightRoomCharacterWindows, sent a none string variable.")
   end --if type(message) ~= "string"
@@ -7498,24 +7509,24 @@ end --function echoLeftRoomCharacterWindows()</script>
   hecho(roomCharacters.rightConsole.name,message) --send message or standard room character window
   hecho(MultiWindow.roomCharacters.rightConsole.name,message) --send message to room character multi window
 end --function echoLeftRoomCharacterWindows()</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>clearRoomCharacterWindow()</name>
-					<packageName></packageName>
-					<script>function clearRoomCharacterWindow()
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>clearRoomCharacterWindow()</name>
+						<packageName></packageName>
+						<script>function clearRoomCharacterWindow()
 	clearWindow(roomCharacters.console.name) --clear left side standard room characters window
   clearWindow(MultiWindow.roomCharacters.console.name) --clear left side of the MultiWindow room characters console
   clearWindow(MultiWindow.roomCharacters.rightConsole.name) --clear right side of standard room character window
   clearWindow(roomCharacters.rightConsole.name) --clear the right side of the multi window room characters console
   tecRoomObjects.refreshMessageDisplayed = false --tell Parthia refresh message has not been shown
 end --clearRoomCharacterWindow</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>tecRoomCharRefreshNotification()</name>
-					<packageName></packageName>
-					<script>--Show notification to the player than something has changed and a room check is needed
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>tecRoomCharRefreshNotification()</name>
+						<packageName></packageName>
+						<script>--Show notification to the player than something has changed and a room check is needed
 local function tecRoomCharRefreshMessage()
   --displaying to right panel, because it will have very little text in it
   echoRightRoomCharacterWindows("Refresh Recommended ")
@@ -7536,12 +7547,12 @@ function tecRoomCharRefreshNotification()
   end --if tecRefreshNotification is needed
   
 end --function recRoomCharRefreshNotification()</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>tecResetRoomCharacterWindow()</name>
-					<packageName></packageName>
-					<script>--clear out the room character windows and tell player how to refresh
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>tecResetRoomCharacterWindow()</name>
+						<packageName></packageName>
+						<script>--clear out the room character windows and tell player how to refresh
 function tecResetRoomCharacterWindow()
   clearRoomCharacterWindow() --Room characters window no longer accurate, clear it.
   echoLeftRoomCharacterWindows("Populate this space with characters in this room by:")
@@ -7555,8 +7566,44 @@ function tecResetRoomCharacterWindow()
   echoRightRoomCharacterWindows(" or pressing ctrl+r.\n")
   tecRoomObjects.refreshMessageDisplayed = true --tell client no further refreshes needed
 end --function tecResetRoomCharacterWindow</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>stats</name>
+					<packageName></packageName>
+					<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external scripts --
+-------------------------------------------------
+</script>
 					<eventHandlerList />
-				</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>getStatsCheckActive()</name>
+						<packageName></packageName>
+						<script>function getStatsCheckActive()
+  return statsFilter.checkActive
+end --function getStatsCheckState()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>setStatsCheckActive(mode)</name>
+						<packageName></packageName>
+						<script>function setStatsCheckActive(mode)
+  mode = fuzzyBoolean(mode)
+end --function setStatsCheckActive(mode)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>runStatsCollection()</name>
+						<packageName></packageName>
+						<script>function runStatsCollection()
+  setStatsCheckActive(true) --tell Parthia we will be collecting stats data
+end --function runStatsCollection()</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>Game commands</name>

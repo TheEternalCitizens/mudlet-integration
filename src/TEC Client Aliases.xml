@@ -343,7 +343,7 @@ tecClientReset(true)</script>
 				<packageName></packageName>
 				<regex>^parthia tab font size (.*)$</regex>
 			</Alias>
-			<Alias isActive="yes" isFolder="no">
+			<Alias isActive="no" isFolder="no">
 				<name>parthia update</name>
 				<script>DownloadGitScripts() --Begin downloading updates</script>
 				<command></command>
@@ -596,7 +596,7 @@ parthiaEcho("parthia talk enabled.")</script>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia talk disable</name>
 					<script>setParthiaTalk(false) --enable parthia talk
-expandAlias("parthia talk stop") --stop parthia talk's current speech.
+expandAlias("parthia talk clear") --stop parthia talk's current speech.
 parthiaEcho("parthia talk disabled.")</script>
 					<command></command>
 					<packageName></packageName>
