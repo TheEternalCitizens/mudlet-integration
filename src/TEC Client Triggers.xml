@@ -428,7 +428,7 @@ end --if vote skoot appears else just delete</script>
 			</Trigger>
 		</TriggerGroup>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-			<name>Command Filters</name>
+			<name>data collection</name>
 			<script>--[[
 For automated checks the client runs.
 ]]--</script>
@@ -704,6 +704,8 @@ elseif line == "&lt;hr&gt;" then
 elseif line == "&lt;/pre&gt;" then --end of stats command found.
 	setStatsCheckActive(false)--disable stats filter, it is done
   deleteLine() --Make is so line does not appear in main console.
+elseif line:match("This command is only available in the world of Midlight. Please enter the game to use it.") then
+  if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
 else --all other lines we will want to look for data to collect
   if line:match("^Name:") then --line starts with Name:
     parthiaPlayer.CurrentCharacter.name, parthiaPlayer.CurrentCharacter.homeLand = 
@@ -803,6 +805,85 @@ end</script>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
 					<string>return getStatsCheckActive()</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>4</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>condition</name>
+				<script>--[[
+count number of lines that has shown since sending stats command.
+it should only be 34 lines. If it is more than 35 there is an error.
+Stop the filter to avoid issues.
+
+example output of condition command
+You have assumed a wary combat posture.
+You are fighting with everything you have.
+You are unwounded.
+Your right hand is bandaged.
+&lt;/font&gt;&lt;font color="#00cd20"&gt;You feel well-rested.&lt;/font&gt;
+You are famished.
+Your mouth is rather dry.
+You are bearing a significant load.
+]]--
+
+--keep track of how many lines have displayed since runn command, end check if it has gone too long.
+conditionFilter.lineCount = conditionFilter.lineCount + 1
+if conditionFilter.lineCount &gt; 8 then --if loop count higher than number of lines a stats message should be
+  setConditionCheckActive(false) --disable the stats check
+  tecWarningNotification("trigger condition, run for more 8 lines.")
+end --if statsFilter.lineCount &gt; 8
+
+if conditionFilter.lineCount == 1 and
+   line:match("^You have assumed a") then --if line number and line contents are correct
+  parthiaPlayer.CurrentCharacter.combatPosture =  line:match("^You have assumed a (%a+)") --collect combat posture
+  if not conditionFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+elseif conditionFilter.lineCount == 2 and 
+       line:match("^You are fighting") then --if line number and line contents are correct
+  if not conditionFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+elseif conditionFilter.lineCount == 3 and
+       line:match("^You ") then
+  parthiaPlayer.CurrentCharacter.wounds = line:match("^(.*)$") --if line number and line contents are correct
+  if not conditionFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+elseif conditionFilter.lineCount == 4 and
+       (line:match("^Your ")  or line == "") then --if line number and line contents are correct
+  if line == "" then --if line is empty
+    parthiaPlayer.CurrentCharacter.stitchedOrBandaged = "none"
+  else --line does not == ""
+    parthiaPlayer.CurrentCharacter.stitchedOrBandaged = line:match("^(.*)$")
+  end --if line == ""
+  if not conditionFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+elseif conditionFilter.lineCount == 5 and 
+       line:match("&gt;You ") then --if line number and line contents are correct
+  parthiaPlayer.CurrentCharacter.rested = line:match("&gt;(You .*)&lt;\/font&gt;$")
+  if not conditionFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+elseif conditionFilter.lineCount == 6 and
+       line:match("^You ") then --if line number and line contents are correct
+  parthiaPlayer.CurrentCharacter.hunger = line:match("^(.*)$")
+  if not conditionFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+elseif conditionFilter.lineCount == 7 and 
+       line:match("^You") then --if line number and line contents are correct
+  parthiaPlayer.CurrentCharacter.thirst = line:match("^(.*)$")
+  if not conditionFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+elseif conditionFilter.lineCount == 8 and
+       line:match("^You are bearing") then --if line number and line contents are correct
+  parthiaPlayer.CurrentCharacter.encumbrance = line:match("^You are bearing a (%a+) load.$")
+  if not conditionFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+  setConditionCheckActive(false) --last line reached, disable check
+end --if conditionFilter.lineCount == 1</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>return getConditionCheckActive()</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>4</integer>
@@ -1757,7 +1838,12 @@ tecRoomCharRefreshNotification()</script>
 local gitUpdate_timer = tempTimer(1, [[DownloadGitReleaseJSON()]])
 
 --Set default text in room characters window
-tecResetRoomCharacterWindow()</script>
+tecResetRoomCharacterWindow()
+
+--collect player data, 1 second wait due to one command per second limitation
+--runConditionCollection(false)
+parthiaPlayer.CurrentCharacter = { }
+local statsCollectionTimer = tempTimer(1.1, [[runStatsCollection(false)]])</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>

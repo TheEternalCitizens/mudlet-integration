@@ -261,6 +261,8 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   
   --used to filters data from stats command 
   statsFilter = {}
+  --used to filter data from the condition command 
+  conditionFilter = {}
   
   --Stores player related data
   parthiaPlayer = {}
@@ -3151,6 +3153,30 @@ end</script>
 end --function parthiaRoomCharactersWrap()</script>
 					<eventHandlerList />
 				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>replaceDoubleSpaces(message)</name>
+					<packageName></packageName>
+					<script>--replace double spaces in message with a single space.
+function replaceDoubleSpaces(message)
+  if not type(message) == "string" then --if message is not a string variable
+    tecWarningNotification("function replaceDoubleSpaces, sent not string variable as message. Message = "..tostring(message))
+  end --if not type(message) == "string"
+  return message:gsub("%s%s", " ") --remove all double spaces and return it.
+end --removeDoubleSpaces(message)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>removeEndSpace(message)</name>
+					<packageName></packageName>
+					<script>--if message ends with a space character, remove it.
+function removeEndSpace(message)
+  if not type(message) == "string" then --if message is not a string variable
+    tecWarningNotification("function removeEndSpace, sent not string variable as message. Message = "..tostring(message))
+  end --if not type(message) == "string"
+  return message:gsub("%s$", "") --remove all double spaces and return it.
+end --removeDoubleSpaces(message)</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>GUI</name>
@@ -4917,6 +4943,7 @@ where number is less than 101 and more than 0
 ]]--
 function parthiaSetFatigueGauges(fatigue)
   fatigue = tonumber(fatigue)
+  --make certain fatigue is good
   if fatigue == nil then tecWarningNotification("parthiaSetFatigueGauges, non number variable received.")
   elseif fatigue &gt; 100 then tecWarningNotification("parthiaSetFatigueGauges, fatigue higher than 100")
   elseif fatigue &lt; 0 then tecWarningNotification("parthiaSetFatigueGauges, fatigue less than 0")
@@ -4978,13 +5005,18 @@ function parthiaStatusClick(clickType)
     --show load
     if parthiaPlayer.CurrentCharacter.load then --if load collected correctly
       local load = parthiaPlayer.CurrentCharacter.load
-      if clickType == "load" or clickType == "encumbrance" then --if load or encumbrance was passed
-        pecho("carrying: "..tostring(load).." pounds\n")
+      if clickType == "load" or clickType == "encumbrance" then --if load or encumbrance was passed to function
+        pecho("Carrying: "..tostring(load).." pounds\n")
       end --if clickType == "load" or clickType == "encumberance"
     end --if parthiaPlayer.CurrentCharacter.load
   end --if table.contains(stasTypeTable, clickType:lower())
   
-  if clickType == "hunger" then --if hunger was passed
+  if clickType == "hunger" then --if hunger was passed to function
+    runConditionCollection(false) --collect data from condition command do not show command to screen
+    if parthiaPlayer.CurrentCharacter.hunger then
+      local hunger = parthiaPlayer.CurrentCharacter.hunger
+      pecho("Hunger: "..tostring(hunger).."\n")
+    end --if parthiaPlayer.CurrentCharacter.hunger
   end --if clickType == "hunger"
 end --function parthiaStatusClick(clickType)
 --parthiaStatusClick("load")</script>
@@ -6638,7 +6670,7 @@ function GitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if GitUpdate.localRespitory not exist
   GitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  GitUpdate.localVersion = "0.1.36" --Must match the tag in your github release
+  GitUpdate.localVersion = "0.1.37" --Must match the tag in your github release
   GitUpdate.aliasName = "parthia update" --Name of alias user runs to process update
   --Name of the alias to check if an update is available.
   GitUpdate.updateCheckAlias = "parthia update check" 
@@ -7711,7 +7743,18 @@ end --function getStatsCheckState()</script>
 						<script>function setStatsCheckActive(mode)
   mode = fuzzyBoolean(mode)
   statsFilter.checkActive = mode --a stats check is active
-  if not mode then statsFilter.displayToScreen = true end --if the check is done make certain displayToScreen is true
+  if not statsFilter.checkActive then --if disabeling
+    debugToDisplay("function setStatsCheckActive, settings statsFilter.checkActive to false.")
+    statsFilter.displayToScreen = true --if the check is done make certain displayToScreen is true
+    for variableName, variable in pairs(parthiaPlayer.CurrentCharacter) do
+      if type(variable) == "string" then --if the variable is a string
+        variable = replaceDoubleSpaces(variable) --replace double blanks spaces with 1 space
+        variable = removeEndSpace(variable) --remove blank spaces at the end of a variable
+        parthiaPlayer.CurrentCharacter[variableName] = variable
+        debugToDisplay("function setStatsCheckActive, CurrentCharacter."..variableName.." adjusted to ".."\""..parthiaPlayer.CurrentCharacter[variableName].."\"") 
+      end --if type(variable) == "string"
+    end --for pairs(parthiaPlayer.CurrentCharacter)
+  end --if not mode
 end --function setStatsCheckActive(mode)</script>
 						<eventHandlerList />
 					</Script>
@@ -7725,6 +7768,47 @@ end --function setStatsCheckActive(mode)</script>
   statsFilter.displayToScreen = displayToScreen --tell stats filter not to display command to pecho
   statsFilter.lineCount = 0 --counts lines shown, to stop infinite runs on error
 end --function runStatsCollection()</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>condition</name>
+					<packageName></packageName>
+					<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external scripts --
+-------------------------------------------------
+</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>getConditionCheckActive()</name>
+						<packageName></packageName>
+						<script>function getConditionCheckActive()
+  return conditionFilter.checkActive
+end --function getStatsCheckState()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>setConditionCheckActive(mode)</name>
+						<packageName></packageName>
+						<script>function setConditionCheckActive(mode)
+  mode = fuzzyBoolean(mode)
+  conditionFilter.checkActive = mode --a stats check is active
+  if not mode then conditionFilter.displayToScreen = true end --if the check is done make certain displayToScreen is true
+end --function setConditionCheckActive(mode)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>runConditionCollection(displayToScreen)</name>
+						<packageName></packageName>
+						<script>function runConditionCollection(displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen) 
+  setConditionCheckActive(true) --tell Parthia we will be collecting stats data
+  send("condition",displayToScreen) --send command do not echo
+  conditionFilter.displayToScreen = displayToScreen --tell stats filter not to display command to pecho
+  conditionFilter.lineCount = 0 --counts lines shown, to stop infinite runs on error
+end --function runConditionCollection(displayToScreen)</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
@@ -7845,7 +7929,8 @@ hpbar.backStyleSheet = [[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0,
     padding: 3px;]]                                             
 hpbar.back:setStyleSheet(hpbar.backStyleSheet) --set the background gradiant
 
-hpbar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Health&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])</script>
+hpbar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Health&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
+hpbar.text:setClickCallback("parthiaStatusClick","health") --collect stats and show load to screen on click</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
@@ -7874,7 +7959,7 @@ fatiguebar.backStyleSheet = [[background-color: QLinearGradient( x1: 0, y1: 0, x
 fatiguebar.back:setStyleSheet(fatiguebar.backStyleSheet)
 
 fatiguebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Fatigue&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
-</script>
+fatiguebar.text:setClickCallback("parthiaStatusClick","fatigue") --collect stats and show load to screen on click</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
@@ -7899,7 +7984,8 @@ hungerbar.backStyleSheet = [[background-color: QLinearGradient( x1: 0, y1: 0, x2
     border-radius: 7;
     padding: 3px;]]
 hungerbar.back:setStyleSheet(hungerbar.backStyleSheet)
-hungerbar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Hunger&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])</script>
+hungerbar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Hunger&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
+hungerbar.text:setClickCallback("parthiaStatusClick","hunger") --collect stats and show load to screen on click</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
@@ -7924,7 +8010,8 @@ encumbrancebar.backStyleSheet = [[background-color: QLinearGradient( x1: 0, y1: 
     border-radius: 7;
     padding: 3px;]]
 encumbrancebar.back:setStyleSheet(encumbrancebar.backStyleSheet)
-encumbrancebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Encumbrance&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])</script>
+encumbrancebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Encumbrance&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
+encumbrancebar.text:setClickCallback("parthiaStatusClick","encumbrance") --collect stats and show load to screen on click</script>
 					<eventHandlerList />
 				</Script>
 			</Script>

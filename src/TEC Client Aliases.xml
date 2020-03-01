@@ -915,6 +915,55 @@ tecRoomCharRefreshNotification()</script>
 					<regex>^stat$</regex>
 				</Alias>
 			</AliasGroup>
+			<AliasGroup isActive="yes" isFolder="yes">
+				<name>condition</name>
+				<script>runConditionCollection(true) --collect data from condition command, show command to screen</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^condition$</regex>
+				<Alias isActive="yes" isFolder="no">
+					<name>condition hide</name>
+					<script>runConditionCollection(false)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^condition hide$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>conditio</name>
+					<script>runConditionCollection(true) --collect data from condition command, show command to screen</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^conditio$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>conditi</name>
+					<script>runConditionCollection(true) --collect data from condition command, show command to screen</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^conditi$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>condit</name>
+					<script>runConditionCollection(true) --collect data from condition command, show command to screen</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^condit$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>condi</name>
+					<script>runConditionCollection(true) --collect data from condition command, show command to screen</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^condi$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>cond</name>
+					<script>runConditionCollection(true) --collect data from condition command, show command to screen</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^cond$</regex>
+				</Alias>
+			</AliasGroup>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>login</name>
