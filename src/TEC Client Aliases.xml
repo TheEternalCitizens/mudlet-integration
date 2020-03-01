@@ -566,17 +566,6 @@ dontForgetToSave() --remind the player to save their changes.</script>
 				<packageName></packageName>
 				<regex>^parthia numpad navigation$</regex>
 			</Alias>
-			<Alias isActive="yes" isFolder="no">
-				<name>parthia prepare release</name>
-				<script>setNumpadNavigation(true) --tell parthia to enable numpad navigation
-cecho("Number pad navigation enabled.\n")
-
-disableAlias("parthia update") --make certain update command is disabled
-pecho("Update command disabled.\n")</script>
-				<command></command>
-				<packageName></packageName>
-				<regex>^parthia prepare release$</regex>
-			</Alias>
 			<AliasGroup isActive="yes" isFolder="yes">
 				<name>parthia talk</name>
 				<script>--Reference https://wiki.mudlet.org/w/Manual:Text_to_Speech_Functions
@@ -588,7 +577,8 @@ parthiaTalkHelp() --display parthia talk help</script>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia talk enable</name>
 					<script>setParthiaTalk(true) --enable parthia talk
-parthiaEcho("parthia talk enabled.")</script>
+pecho("parthia talk enabled.\n")
+dontForgetToSave()</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia talk enable$</regex>
@@ -597,7 +587,8 @@ parthiaEcho("parthia talk enabled.")</script>
 					<name>parthia talk disable</name>
 					<script>setParthiaTalk(false) --enable parthia talk
 expandAlias("parthia talk clear") --stop parthia talk's current speech.
-parthiaEcho("parthia talk disabled.")</script>
+pecho("parthia talk disabled.\n")
+dontForgetToSave()</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia talk disable$</regex>
@@ -739,6 +730,40 @@ end --if message</script>
 					<regex>^parthia talk debug$</regex>
 				</Alias>
 			</AliasGroup>
+			<AliasGroup isActive="yes" isFolder="yes">
+				<name>developer</name>
+				<script>--[[
+commands that would help developers only
+]]--</script>
+				<command></command>
+				<packageName></packageName>
+				<regex></regex>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia playerdata</name>
+					<script>if parthiaPlayer then
+  pecho("= {} is a table. and can be accessed with periods. IE parthiaPlayer.CurrentCharacter.variables, "
+    .."where variables are in the {}.\nSpecial characters in strings will have a \\ before them.\n")
+  pecho("parthiaPlayer = ")
+  display(parthiaPlayer)
+else 
+  pecho("parthiaPlayer table does not exist.")
+end --if parthiaPlayer</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia playerdata$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia prepare release</name>
+					<script>setNumpadNavigation(true) --tell parthia to enable numpad navigation
+cecho("Number pad navigation enabled.\n")
+
+disableAlias("parthia update") --make certain update command is disabled
+pecho("Update command disabled.\n")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia prepare release$</regex>
+				</Alias>
+			</AliasGroup>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Debug</name>
@@ -838,7 +863,7 @@ tecColorTest()</script>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
-			<name>atuo checks</name>
+			<name>data collection</name>
 			<script>--[[
 Commands that interact with auto checks the client does.
 Mostly these will be used to manually run a check for dev testing.
@@ -869,6 +894,27 @@ tecRoomCharRefreshNotification()</script>
 				<packageName></packageName>
 				<regex>^room refresh$</regex>
 			</Alias>
+			<AliasGroup isActive="yes" isFolder="yes">
+				<name>stats</name>
+				<script>runStatsCollection(true) --collect data from stats command showing command to screen</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^stats$</regex>
+				<Alias isActive="yes" isFolder="no">
+					<name>stats hide</name>
+					<script>runStatsCollection(false)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^stats hide$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>stat</name>
+					<script>runStatsCollection(true) --collect data from stats command showing command to screen</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^stat$</regex>
+				</Alias>
+			</AliasGroup>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>login</name>

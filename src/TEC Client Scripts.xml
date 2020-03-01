@@ -262,6 +262,11 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   --used to filters data from stats command 
   statsFilter = {}
   
+  --Stores player related data
+  parthiaPlayer = {}
+  --data for currently played character
+  parthiaPlayer.CurrentCharacter = {}
+  
   --stores a command list for the room character window
   --Done this way so it can be customized. 
   tecSettings.commandList = { 
@@ -4887,6 +4892,105 @@ end --function tecResizeDisplayHelp</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>status gauges</name>
+					<packageName></packageName>
+					<script></script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaSetHPGauges(health, maxHealth)</name>
+						<packageName></packageName>
+						<script>--set all of the hp gauges
+function parthiaSetHPGauges(health, maxHealth)
+  hpbar:setValue(tonumber(health),tonumber(maxHealth)) --set bar on screen
+  MultiWindow.hpbar:setValue(tonumber(health),tonumber(maxHealth)) --set bar in the MultiWindow
+end --function parthiaSetHPBars(health, maxHealth)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaSetFatigueGauges(fatigue)</name>
+						<packageName></packageName>
+						<script>--[[
+set all of the fatigue gauges 
+usage: parthiaSetFatigueGauges(number)
+where number is less than 101 and more than 0
+]]--
+function parthiaSetFatigueGauges(fatigue)
+  fatigue = tonumber(fatigue)
+  if fatigue == nil then tecWarningNotification("parthiaSetFatigueGauges, non number variable received.")
+  elseif fatigue &gt; 100 then tecWarningNotification("parthiaSetFatigueGauges, fatigue higher than 100")
+  elseif fatigue &lt; 0 then tecWarningNotification("parthiaSetFatigueGauges, fatigue less than 0")
+  else --fatigue looks good
+    fatiguebar:setValue(fatigue,100) --set bar on screen
+    MultiWindow.fatiguebar:setValue(fatigue,100) --set bar in the MultiWindow
+  end --if fatigue
+end --function parthiaSetHPBars(health, maxHealth)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaStatusClick()</name>
+						<packageName></packageName>
+						<script>--[[
+control a click on the status bar
+usage parthiaStatusClick("health") displays health only to screen on click or run
+clickType can be {"health", "fatigue", "encumbrance", "hunger", "load"}
+--references
+https://wiki.mudlet.org/w/Manual:Table_Functions#table.update table.contains
+]]--
+function parthiaStatusClick(clickType)
+  --make certain clickType is good
+  local clickTypeTable = {"health", "fatigue", "encumbrance", "hunger", "load"}
+  local errorFound = "function parthiaStatusClick, incorrect clickType sent "
+      ..tostring(clickType).." should match a string variable in table: "--..display(clickTypeTable)
+  if type(clickType) == "string" then
+    clickType = clickType:lower() --make certain case is all lower
+    if not table.contains(clickTypeTable, clickType:lower()) then
+      tecWarningNotification(errorFound)
+      clickType = false --we received an incorrect clickType, do not display to screen
+    end --if table.contains(clickTypeTable, clickType.lower())
+  else --if clickType is not a string
+    tecWarningNotification(errorFound)
+    clickType = false --we received an incorrect type, do not display to screen
+  end --if type(clickType) == "string"
+  
+  --check if checkType is within the stats command.
+  local stasTypeTable = {"health", "fatigue", "encumbrance", "load"}
+  if table.contains(stasTypeTable, clickType:lower()) then
+    runStatsCollection(false) --collect stats data, do not show stats command to screen
+    --update health
+    if parthiaPlayer.CurrentCharacter.health and 
+       parthiaPlayer.CurrentCharacter.maxHealth then --if health collected correctly
+      local health = parthiaPlayer.CurrentCharacter.health
+      local maxHealth = parthiaPlayer.CurrentCharacter.maxHealth
+      parthiaSetHPGauges(health, maxHealth) --update heath gauges
+      if clickType == "health" then --if health is the argument
+        pecho("Health: "..health.."\\"..maxHealth.."\n")
+      end --if clickType == "health"
+    end --if parthiaPlayer.CurrentCharacter.health
+    --update fatigue
+    if parthiaPlayer.CurrentCharacter.fatigue then --if fatigue collected correctly
+      local fatigue = parthiaPlayer.CurrentCharacter.fatigue
+      parthiaSetFatigueGauges(fatigue) --update fatigue gauges
+      if clickType == "fatigue" then
+        pecho("Fatigue: "..tostring(fatigue).."\%\n")
+      end --if clickType == "fatigue"
+    end --if parthiaPlayer.CurrentCharacter.fatigue
+    --show load
+    if parthiaPlayer.CurrentCharacter.load then --if load collected correctly
+      local load = parthiaPlayer.CurrentCharacter.load
+      if clickType == "load" or clickType == "encumbrance" then --if load or encumbrance was passed
+        pecho("carrying: "..tostring(load).." pounds\n")
+      end --if clickType == "load" or clickType == "encumberance"
+    end --if parthiaPlayer.CurrentCharacter.load
+  end --if table.contains(stasTypeTable, clickType:lower())
+  
+  if clickType == "hunger" then --if hunger was passed
+  end --if clickType == "hunger"
+end --function parthiaStatusClick(clickType)
+--parthiaStatusClick("load")</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>help</name>
@@ -5013,17 +5117,13 @@ end --end function tecDebugHelp</script>
 				<Script isActive="yes" isFolder="no">
 					<name>tecClientHelp()</name>
 					<packageName></packageName>
-					<script>function tecClientHelp()
-
-  echo("\nparthia developer commands:\n")
-  
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia prepare release", 
-  [[expandAlias("parthia prepare release")]],
-  "Prepare code for release", true)
-  echo(", set mudlet objects to default enable or disabled state.\n")
-  
-  echo("\nparthia player commands:\n")
+					<script>function tecClientHelp()  
   pecho("\nparthia command:\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia developer", 
+  [[parthiaDeveloperHelp()]],
+  "developer commands help", true)
+  echo(", developer commands help.\n")
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk", 
   [[parthiaTalkHelp()]],
@@ -5137,6 +5237,26 @@ end --end function tecDebugHelp</script>
   pecho("Click a command above or type it into the command line.\n")
 
 end --function tecClientHelp</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaDeveloperHelp()</name>
+					<packageName></packageName>
+					<script>function parthiaDeveloperHelp()
+
+  echo("\nparthia developer commands:\n")
+
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdata", 
+  [[expandAlias("parthia playerdata")]],
+  "View parthiaPlayer table", true)
+  echo(", View parthiaPlayer table.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia prepare release", 
+  [[expandAlias("parthia prepare release")]],
+  "Prepare code for release", true)
+  echo(", set mudlet objects to default enable or disabled state.\n")
+
+end --function parthiaDeveloperHelp()</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
@@ -7424,7 +7544,7 @@ end --function parthiaTalkGetPitch()</script>
 				</ScriptGroup>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>Command Filters</name>
+				<name>data collection</name>
 				<packageName></packageName>
 				<script>--[[
 filters to collect data from in game commands.
@@ -7572,12 +7692,10 @@ end --function tecResetRoomCharacterWindow</script>
 				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>stats</name>
 					<packageName></packageName>
-					<script>-------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external scripts --
--------------------------------------------------
-</script>
+					<script>--[[
+collect data from the stats command
+
+]]--</script>
 					<eventHandlerList />
 					<Script isActive="yes" isFolder="no">
 						<name>getStatsCheckActive()</name>
@@ -7592,14 +7710,20 @@ end --function getStatsCheckState()</script>
 						<packageName></packageName>
 						<script>function setStatsCheckActive(mode)
   mode = fuzzyBoolean(mode)
+  statsFilter.checkActive = mode --a stats check is active
+  if not mode then statsFilter.displayToScreen = true end --if the check is done make certain displayToScreen is true
 end --function setStatsCheckActive(mode)</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
-						<name>runStatsCollection()</name>
+						<name>runStatsCollection(displayToScreen)</name>
 						<packageName></packageName>
-						<script>function runStatsCollection()
+						<script>function runStatsCollection(displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen) 
   setStatsCheckActive(true) --tell Parthia we will be collecting stats data
+  send("stats",displayToScreen) --send command do not echo
+  statsFilter.displayToScreen = displayToScreen --tell stats filter not to display command to pecho
+  statsFilter.lineCount = 0 --counts lines shown, to stop infinite runs on error
 end --function runStatsCollection()</script>
 						<eventHandlerList />
 					</Script>
@@ -8731,8 +8855,9 @@ MultiWindow.hpbar = Geyser.Gauge:new({ --create HP bar
   name="hpbar",
   x=0, y=0, width="100%", height="25%", --position and size of container
 },MultiWindow.status_bar)
-MultiWindow.hpbar.front:setStyleSheet(hpbar.frontStyleSheet) --set the forground gradiant                                          
+MultiWindow.hpbar.front:setStyleSheet(hpbar.frontStyleSheet) --set the forground gradiant
 MultiWindow.hpbar.back:setStyleSheet(hpbar.backStyleSheet) --set the background gradiant
+MultiWindow.hpbar.text:setClickCallback("parthiaStatusClick","health") --collect stats and show health to screen
 MultiWindow.hpbar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Health&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
 MultiWindow.fatiguebar = Geyser.Gauge:new({ --create fatigue bar
   name="MultiWindow fatiguebar",
@@ -8740,6 +8865,7 @@ MultiWindow.fatiguebar = Geyser.Gauge:new({ --create fatigue bar
 },MultiWindow.status_bar)
 MultiWindow.fatiguebar.front:setStyleSheet(fatiguebar.frontStyleSheet)
 MultiWindow.fatiguebar.back:setStyleSheet(fatiguebar.backStyleSheet)
+MultiWindow.fatiguebar.text:setClickCallback("parthiaStatusClick","fatigue") --collect stats and show fatigue to screen
 MultiWindow.fatiguebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Fatigue&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
 MultiWindow.hungerbar = Geyser.Gauge:new({ --create hunger bar
   name="MultiWindow hungerbar",
@@ -8747,6 +8873,7 @@ MultiWindow.hungerbar = Geyser.Gauge:new({ --create hunger bar
 },MultiWindow.status_bar)
 MultiWindow.hungerbar.front:setStyleSheet(hungerbar.frontStyleSheet)
 MultiWindow.hungerbar.back:setStyleSheet(hungerbar.backStyleSheet)
+MultiWindow.hungerbar.text:setClickCallback("parthiaStatusClick","hunger") --collect condition and show hunger to screen
 MultiWindow.hungerbar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Hunger&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
 MultiWindow.encumbrancebar = Geyser.Gauge:new({ --make encumberance bar
   name="MultiWindow encumbrancebar",
@@ -8754,6 +8881,7 @@ MultiWindow.encumbrancebar = Geyser.Gauge:new({ --make encumberance bar
 },MultiWindow.status_bar)
 MultiWindow.encumbrancebar.front:setStyleSheet(encumbrancebar.frontStyleSheet)
 MultiWindow.encumbrancebar.back:setStyleSheet(encumbrancebar.backStyleSheet)
+MultiWindow.encumbrancebar.text:setClickCallback("parthiaStatusClick","encumbrance") --collect stats and show load to screen on click
 MultiWindow.encumbrancebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Encumbrance&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
 
 --redraw windows within MultiWindow so they fill spaces properly

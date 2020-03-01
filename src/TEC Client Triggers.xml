@@ -464,7 +464,10 @@ First user request was to make the command list on right click custamizale.
 if line == "&lt;/pre&gt;&lt;pre&gt;&lt;font size=+1&gt;&lt;b&gt;Checking the approach status of &amp;quot;.&amp;quot;&lt;/b&gt;&lt;/font&gt;&lt;/font&gt;"
 	or line == "&lt;hr&gt;" then
   --Delete main's line if we are not displaying it to screen
-  if not tecRoomObjects.displayToScreen then deleteLine() end
+  if not tecRoomObjects.displayToScreen then 
+    deleteLine() 
+    disableTrigger("&lt;hr&gt;") 
+  end
 	
 --pull character name from output.
 elseif line:match("^%d+:") then --if line starts with "#: "
@@ -656,6 +659,150 @@ end --if line has a ac . character in it.
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
 					<string>return getTECRoomCheckActive()</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>4</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>stats</name>
+				<script>--[[
+to collect data when the character runs the commands we will want aliases for all the ways
+the stats command can be run. Including short hand versions
+Those aliases will set statsCheckActive.
+A seporate bool will controll if the command is still shown to screen. statsFilter.displayToScreen
+Collect data into a table. parthiaPlayer.CurrentCharacter.name
+References
+https://www.lua.org/pil/20.2.html string patterns
+https://wiki.mudlet.org/w/Manual:String_Functions
+]]--
+
+--count number of lines that has shown since sending stats command.
+--it should only be 34 lines. If it is more than 35 there is an error.
+--Stop the filter to avoid issues.
+statsFilter.lineCount = statsFilter.lineCount + 1
+if statsFilter.lineCount &gt; 37 then --if loop count higher than number of lines a stats message should be
+  setStatsCheckActive(false) --disable the stats check
+  tecWarningNotification("trigger stats, run for more 37 lines.")
+end --if statsFilter.lineCount &gt; 37
+
+--Remove these to items if they are found.
+if line == ""
+or line == "Attributes:"
+or line == "Character Background"
+or line == "Physical Characteristics"
+or line == "To see a list of skills and actions your character knows, type: skills"
+or line == "You are currently sitting.  Stats are shown in real time.  Stand up to see your maximum stats."
+or line:match("^Character Sheet for")
+or line:match("&lt;/pre&gt;&lt;pre&gt;&lt;font size=%+1&gt;&lt;b&gt;Character Sheet for %w+%s?%w*&lt;/b&gt;&lt;/font&gt;&lt;/font&gt;") then
+  if not statsFilter.displayToScreen then deleteLine() end --Delete main's line if we are not displaying it to screen
+elseif line == "&lt;hr&gt;" then
+  if not statsFilter.displayToScreen then --if we do not want to display images to screen
+    deleteLine() --remove so it will not be displayed
+    disableTrigger("&lt;hr&gt;") --disable seporator trigger so it is not drawn
+  end --if not statsFilter.displayToScreen
+elseif line == "&lt;/pre&gt;" then --end of stats command found.
+	setStatsCheckActive(false)--disable stats filter, it is done
+  deleteLine() --Make is so line does not appear in main console.
+else --all other lines we will want to look for data to collect
+  if line:match("^Name:") then --line starts with Name:
+    parthiaPlayer.CurrentCharacter.name, parthiaPlayer.CurrentCharacter.homeLand = 
+    line:match("^Name: (%a+%s%a+%s?%a*)%s*Homeland: (%a+%s?%a*)") --collect name and homeland
+    if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+  elseif line:match("^Marital Status:") then
+    parthiaPlayer.CurrentCharacter.maritalStatus = line:match("Marital Status: (%a+)")
+    if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+  elseif line:match("^Citizenship Status:") then
+    parthiaPlayer.CurrentCharacter.citizenshipStatus = line:match("Citizenship Status: (%a+)")
+    if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+  elseif line:match("^Popularity: ") then
+    parthiaPlayer.CurrentCharacter.popularity = line:match("Popularity:%s+(%d+)")
+    if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+  elseif line:match("^Age: ") then
+    parthiaPlayer.CurrentCharacter.age = line:match("Age:%s+(%d+)")
+    if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+  elseif line:match("^Height:") then
+    parthiaPlayer.CurrentCharacter.height,
+    parthiaPlayer.CurrentCharacter.weight,
+    parthiaPlayer.CurrentCharacter.handed
+    = line:match("^Height:%s(%d%p%s%d+)&amp;quot;%s+Weight:%s(%d+%s%a+%p)%s+Handed:%s(%a+)")
+    if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+    --put " on the end of the string, we did not capture it.
+    parthiaPlayer.CurrentCharacter.height = parthiaPlayer.CurrentCharacter.height..[["]]
+  elseif line:match("^Eyes: ") then
+    parthiaPlayer.CurrentCharacter.eyes,
+    parthiaPlayer.CurrentCharacter.hair,
+    parthiaPlayer.CurrentCharacter.complextion
+    = line:match("^Eyes:%s(%a+)%s+Hair:%s(%a+)%s+Complexion:%s(%a+)")
+    if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+  elseif line:match("^Health Points: ") then
+    parthiaPlayer.CurrentCharacter.health,
+    parthiaPlayer.CurrentCharacter.maxHealth,
+    parthiaPlayer.CurrentCharacter.fatigue,
+    parthiaPlayer.CurrentCharacter.state
+    = line:match("^Health Points: (%d+)\/(%d+)%s+Fatigue:%s(%d+)%%%s+State:%s(%a+)")
+    if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+  elseif line:match("^Load: ") then
+    parthiaPlayer.CurrentCharacter.load
+    = line:match("Load:%s(%d+)%s%a+%.")
+    if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+  elseif line:match("^Encumbrance: ") then
+    parthiaPlayer.CurrentCharacter.encumbrance
+    = line:match("Encumbrance: You are bearing a (%a+) load%p")
+    if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+  elseif line:match("^Position: ") then
+    parthiaPlayer.CurrentCharacter.position
+    = line:match("Position: (%a+)")
+    if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+  elseif line:match("^Agility: ") then
+    parthiaPlayer.CurrentCharacter.agility,
+    parthiaPlayer.CurrentCharacter.appearance
+    = line:match("Agility:%s+(%a+%s%a*%s?%a*)%s+Appearance:%s+(%a+%s%a*%s?%a*)")
+    if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+  elseif line:match("^Charisma: ") then
+    parthiaPlayer.CurrentCharacter.charisma,
+    parthiaPlayer.CurrentCharacter.dexterity
+    = line:match("Charisma:%s+(%a+%s%a*%s?%a*)%s+Dexterity:%s+(%a+%s%a*%s?%a*)")
+    if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+  elseif line:match("^Empathy: ") then
+    parthiaPlayer.CurrentCharacter.empathy,
+    parthiaPlayer.CurrentCharacter.endurance
+    = line:match("Empathy:%s+(%a+%s%a*%s?%a*)%s+Endurance:%s+(%a+%s%a*%s?%a*)")
+    if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+  elseif line:match("^Judgement: ") then
+    parthiaPlayer.CurrentCharacter.judgement,
+    parthiaPlayer.CurrentCharacter.memory
+    = line:match("Judgement:%s+(%a+%s%a*%s?%a*)%s+Memory:%s+(%a+%s%a*%s?%a*)")
+    if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+  elseif line:match("^Perception: ") then
+    parthiaPlayer.CurrentCharacter.perception,
+    parthiaPlayer.CurrentCharacter.reasoning
+    = line:match("Perception:%s+(%a+%s%a*%s?%a*)%s+Reasoning:%s+(%a+%s%a*%s?%a*)")
+    if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+  elseif line:match("^Speed: ") then
+    parthiaPlayer.CurrentCharacter.speed,
+    parthiaPlayer.CurrentCharacter.strength
+    = line:match("Speed:%s+(%a+%s%a*%s?%a*)%s+Strength:%s+(%a+%s%a*%s?%a*)")
+    if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+  elseif line:match("^Willpower: ") then
+    parthiaPlayer.CurrentCharacter.willpower
+    = line:match("Willpower:%s+(%a+%s%a*%s?%a*)")
+    if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+--Willpower:  good
+  end --if line:match("^Name:")
+end</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>return getStatsCheckActive()</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>4</integer>
@@ -1055,17 +1202,17 @@ deleteLine() --remove line from main console. line variable remains unchanged.</
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>&lt;hr&gt;</name>
-				<script>myFormatter = demonnic.TextFormatter:new( {
-  width = (getColumnCount() - 1), 
-  cap = "---------",
-  capColor = "&lt;gray&gt;",
-  textColor = "&lt;gray&gt;"
-})
-selectCurrentLine() --select current line in main.
-replace("") --Erase text from main. Otherwise variable line will apear on console.
-deselect() --Don't forget your deselects!
-echo("\n")
-cecho(myFormatter:format("---------"))</script>
+				<script>  myFormatter = demonnic.TextFormatter:new( {
+    width = (getColumnCount() - 1), 
+    cap = "---------",
+    capColor = "&lt;gray&gt;",
+    textColor = "&lt;gray&gt;"
+  })
+  selectCurrentLine() --select current line in main.
+  replace("") --Erase text from main. Otherwise variable line will apear on console.
+  deselect() --Don't forget your deselects!
+  echo("\n")
+  cecho(myFormatter:format("---------"))</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1090,6 +1237,8 @@ cecho(myFormatter:format("---------"))</script>
 --^means start of line. Nothing after it means line with anything in it
 
 --hreplace Code provided by s/Mud/Game on mudletdiscord. THANK YOU s/Mud/Game!!!!
+
+enableTrigger("&lt;hr&gt;") --Some scripts disable trigger enable it if it is disabled
 
 selectCurrentLine() --select current line in main console.
 --pull the text from the current line in main into filteredLine variable.
