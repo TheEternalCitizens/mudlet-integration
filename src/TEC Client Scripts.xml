@@ -352,6 +352,16 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   tecSettings.parthiaTalkPitch = 6 --pitch parthia talk speaks in
   tecSettings.parthiaTalkVoice = "" --default voice parthia talk speaks in. No way to know what voices are supported
 
+  --save if player wants to collect data for developers.
+  tecSettings.helpDevelopers = false
+  --table to save data with
+  HelpDevsData = {}
+  HelpDevsData.RoomTypes = {}
+  HelpDevsData.NPCTypes = {}
+  
+  --used for data checks
+  parthiaDirectionsTable = {"north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest", "up", "down", "upwards", "downwards"}
+
 	if displayToScreen then pecho("Parthia settings set to default.\n") end
 
 end --function tecClientReset()
@@ -7809,6 +7819,30 @@ end --function setConditionCheckActive(mode)</script>
   conditionFilter.displayToScreen = displayToScreen --tell stats filter not to display command to pecho
   conditionFilter.lineCount = 0 --counts lines shown, to stop infinite runs on error
 end --function runConditionCollection(displayToScreen)</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>HelpTheDevelopers</name>
+					<packageName></packageName>
+					<script>--[[
+Functions to get NPC names and room types.
+]]--</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>getHelpDevs()</name>
+						<packageName></packageName>
+						<script>function getHelpDevs()
+  return tecSettings.helpDevelopers
+end --function getHelpDevs()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>setHelpDevs(mode)</name>
+						<packageName></packageName>
+						<script>function setHelpDevs(mode)
+  tecSettings.helpDevelopers = fuzzyBoolean(mode)
+end --function setHelpDevs(mode)</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>

@@ -343,7 +343,7 @@ tecClientReset(true)</script>
 				<packageName></packageName>
 				<regex>^parthia tab font size (.*)$</regex>
 			</Alias>
-			<Alias isActive="no" isFolder="no">
+			<Alias isActive="yes" isFolder="no">
 				<name>parthia update</name>
 				<script>DownloadGitScripts() --Begin downloading updates</script>
 				<command></command>
@@ -763,7 +763,45 @@ pecho("Update command disabled.\n")</script>
 					<packageName></packageName>
 					<regex>^parthia prepare release$</regex>
 				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia roomdata</name>
+					<script>if HelpDevsData.RoomTypes then
+  pecho("= {} is a table. and can be accessed with periods. IE parthiaPlayer.CurrentCharacter.variables, "
+    .."where variables are in the {}.\nSpecial characters in strings will have a \\ before them.\n")
+  pecho("HelpDevsData.RoomTypes = ")
+  display(HelpDevsData.RoomTypes)
+else 
+  pecho("HelpDevsData.RoomTypes table does not exist.")
+end --if parthiaPlayer</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia roomdata$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia roomdata clear</name>
+					<script>if HelpDevsData.RoomTypes then 
+  HelpDevsData.RoomTypes = {}
+ end --if HelpDevsData.RoomTypes</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia roomdata clear$</regex>
+				</Alias>
 			</AliasGroup>
+			<Alias isActive="yes" isFolder="no">
+				<name>parthia help developers</name>
+				<script>if getHelpDevs() then --helpdevs is enabled so disable it
+  setHelpDevs(false) --tell parthia to disable helpdevs
+  cecho("Help the developers data collection is disabled.\n")
+ else --helpdevs is disabled, so enable it
+  setHelpDevs(true) --tell parthia to enable helpdevs
+  cecho("Help the developers data collection is enabled.\n")
+end --if getNumpadNaviation() then
+
+dontForgetToSave() --remind the player to save their changes.</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^parthia help developers$</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Debug</name>
