@@ -203,6 +203,9 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   --in the text filter trigger.
   tecSettings.tecTextColor = "#c0c0c0"
   
+  --colors for compass highlighting
+  tecSettings.compassDefaultHighlight = "#AA6666ff"
+  
   --Changes colors because defaults have too much contrast.
   tecSettings.GreenTextColor = "#77dd77"
   tecSettings.BlueTextColor = "#8888ff"
@@ -212,13 +215,13 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   tecSettings.ApproachedCharactersColor = "#ff6666"
   
   --background color for labels.
-  tecSettings.labelBackgroundColor = "#537dC0"
+  tecSettings.labelBackgroundColor = "#000000"
   
   --background color for tabs.
-  tecSettings.tabsBackgroundColor = "#436db0"
+  tecSettings.tabsBackgroundColor = "#000000"
   
   --Color of label backgrounds and tabs as mouse hovers over them.
-  tecSettings.hoverColor = "#5e8eff"
+  tecSettings.hoverColor = "#ebebeb"
   
   --color that help text is highlighted in
   tecSettings.helpHighlightColor = "SteelBlue"
@@ -473,45 +476,28 @@ function tecConfigThemes() --configure and initalize settings for tabs.
   --Default tab height
   tabsHeight = 30
   
-  --QLabels are QTs label system
-  --Used here for easy hover affects
+  --set the style sheet for the tabs
   tabsStyle = [[
-  	QLabel{
-  		background-color: ]]..tecSettings.tabsBackgroundColor..[[;
-      border-width: 1px;
-      border-style: outset;
-      border-color: lightgray;
-      border-top-left-radius: 15px;
-      border-top-right-radius: 15px;
-      margin-right: 0px;
-      margin-left: 0px;
-  		font-size: ]]..tecSettings.tecTabsFontSize..[[px;
-      qproperty-alignment: 'AlignCenter | AlignCenter';
+    QLabel{
+      background-color: ]]..tecSettings.tabsBackgroundColor..[[;
+      border-image: url("]]..getMudletHomeDir()..[[/imgs/tabs/scroll.svg");
     }
-  	QLabel::hover{
-  		background-color: ]]..tecSettings.hoverColor..[[;
-      border-width: 1px;
-      border-style: outset;
-      border-color: gray;
-      border-top-left-radius: 15px;
-      border-top-right-radius: 15px;
-      margin-right: 0px;
-      margin-left: 0px;
-  		font-size: ]]..tecSettings.tecTabsFontSize..[[px;
-      qproperty-alignment: 'AlignCenter | AlignCenter';
+    QLabel::hover{
+      background-color: ]]..tecSettings.hoverColor..[[;
+      border-image: url("]]..getMudletHomeDir()..[[/imgs/tabs/scroll.svg");
     }
   ]]
   
   --This is now tabs text looks
   tabsFontStyle = [[&lt;center&gt;&lt;p style="font-size:]]
-    ..tecSettings.tecTabsFontSize..[[px; color:lightgray"&gt;]]
+    ..tecSettings.tecTabsFontSize..[[px; color:black"&gt;]]
 
   labelsStyle = [[
   	QLabel{
   		background-color: ]]..tecSettings.labelBackgroundColor..[[;
       border-width: 1px;
       border-style: outset;
-      border-color: lightgray;
+      border-color: gray;
       margin-right: 0px;
       margin-left: 0px;
   		font-size: 20px;
@@ -8155,16 +8141,26 @@ function tecCompass.click(name)
   send(name)
 end
 
+--border for up and down macros when a room is available in that direction
+tecCompass.styleSheetLitUpDown =
+  [[QLabel{
+  background-color: "]]..tecSettings.compassDefaultHighlight..[[";
+  border: 2px solid ;
+  border-color: #55FFFFFF}]]
+
 --Function that will put images to direction labels. name will be n nw so on in tecCompass under triggers
 function tecCompass.lit(name)
-  tecCompass[name]:setStyleSheet([[background-color: "#5577dd77";]])
-end
---when the space should be unlit change it back to white.
+  if name == "up" or name == "down" then --if it is overlay for up or down label
+    tecCompass[name]:setStyleSheet(tecCompass.styleSheetLitUpDown) --created a label with thick transparent border
+  else --if it is a direction other than up or down.
+    tecCompass[name]:setStyleSheet([[background-color: "]]..tecSettings.compassDefaultHighlight..[[";]])
+  end --if name == "up" or name == "down"
+end --function tecCompass.lit(name)
+
+--when the space should be unlit make it fully transparent
 function tecCompass.unlit(name)
-  tecCompass[name]:setStyleSheet([[
-    background-color: "#00000000";
-  ]])
-end
+  tecCompass[name]:setStyleSheet([[background-color: "#00000000";]])
+end --function tecCompass.unlit(name)
 
 --Each of the 9 labels need an image of an arrow.
 --Rather than setting each individually, we'll
@@ -8354,7 +8350,9 @@ function tecMapdrawKeepSquare()
     tecMap_back:move(centerAdjustment,0) --Move the map to the center of the map box
 	end --en if width is less than height.
 	
-	echo(mapRoom[150].name,"Map exits may be misaligned until you walk.")
+  local exitWarningFontStyle = [[&lt;center&gt;&lt;p style="font-size:]]
+    ..tecSettings.tecTabsFontSize..[[px; color:gray"&gt;]]
+	echo(mapRoom[150].name,exitWarningFontStyle.."Map exits may be misaligned until you walk.")
   mapRoom[150]:resize(tecMap_back:get_width(), (tecMap:get_height() * .1))
   mapRoom[150]:setStyleSheet(labelsStyle)
   mapRoom[150]:move(0,0)
@@ -8513,12 +8511,11 @@ for k,v in pairs(tecComWindows.tabs) do
 		width = "100%",
 		height = tabsHeight,
   },tecComWindows.header)
-	
+	tecComWindows[v.."tab"].styleSheet = tabsStyle
   tecComWindows[v.."tab"]:setStyleSheet(tabsStyle) --set style in themes
-	
 	tecComWindows[v.."tab"]:echo(tabsFontStyle..v) --lable the tabs, set style in themes
-
 	tecComWindows[v.."tab"]:setClickCallback("tecComWindows.click",v) --for charing tabs
+  tecComWindows[v.."tab"]:raise() --bring the tab above the background label.
 
 	--These are the miniconsoles that will hold the text
   tecComWindows[v] = Geyser.MiniConsole:new({ --tecComWindows v will be a tab name.
@@ -8955,7 +8952,11 @@ MultiWindow.Compass.se = Geyser.Label:new({ name = "MultiWindow.Compass.se", },M
 --function that occurs when a label above is clicked, 
 function MultiWindow.Compass.click(name) send(name) end --send the name of the 
 function MultiWindow.Compass.lit(name) --When a player can go in the direction, make the label an active image
-  MultiWindow.Compass[name]:setStyleSheet([[background-color: "#5577dd77";]])
+  if name == "up" or name == "down" then --if it is overlay for up or down label
+    MultiWindow.Compass[name]:setStyleSheet(tecCompass.styleSheetLitUpDown) --created a label with thick transparent border
+  else --if it is a direction other than up or down.
+    MultiWindow.Compass[name]:setStyleSheet([[background-color: "]]..tecSettings.compassDefaultHighlight..[[";]])
+  end --if name == "up" or name == "down"
 end --function MultiWindow.Compass.lit(name)
 --when the space should be unlit change it back to white.
 function MultiWindow.Compass.unlit(name) --When a player cannot go in the direction, make the label an active image
