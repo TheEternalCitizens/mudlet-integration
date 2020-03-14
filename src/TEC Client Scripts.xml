@@ -220,8 +220,40 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   --background color for tabs.
   tecSettings.tabsBackgroundColor = "#000000"
   
+  --Table to control settings to allow player to change images in parthia.
+  --This table is used in each window that has a customizeable image. By using the image variable to save that players custom choice.
+  --for example tecSettings.images.tabs.image or tecSettings.images["tabs"].image would be the image for tabs
+  --The images are changed with function parthiaSetImages()
+  tecSettings.images = {
+    tabs = {
+      folder = getMudletHomeDir()..[[/imgs/tabs/]], 
+      image = getMudletHomeDir()..[[/imgs/tabs/scroll.png]],
+      name = "tabs"
+    },
+    compassBackground = {
+      folder = getMudletHomeDir()..[[/imgs/backgrounds/]], 
+      image = getMudletHomeDir().. [[/imgs/backgrounds/StainedPaper.svg]],
+      name = "compass background"
+    },
+    compassOverlay = {
+      folder = getMudletHomeDir()..[[/imgs/compass/overlay/]], 
+      image = getMudletHomeDir()..[[/imgs/compass/overlay/GrayAndBlack.svg]],
+      name = "compass overlay"
+    },
+    mapBackground = {
+      folder = getMudletHomeDir()..[[/imgs/backgrounds/]],  
+      image = getMudletHomeDir()..[[/imgs/backgrounds/EveningForest.svg]],
+      name = "map background"
+    },
+    macroBackground = {
+      folder = getMudletHomeDir()..[[/imgs/backgrounds/]], 
+      image = getMudletHomeDir()..[[/imgs/backgrounds/MountainAtDusk.svg]],
+      name = "macro background"
+    },
+  } --tecSettings.imageSettings table
+  
   --Color of label backgrounds and tabs as mouse hovers over them.
-  tecSettings.hoverColor = "#ebebeb"
+  tecSettings.hoverColor = "#9b9b9b"
   
   --color that help text is highlighted in
   tecSettings.helpHighlightColor = "SteelBlue"
@@ -455,7 +487,7 @@ end --fuctoin clearTecRoomObjects</script>
 				</Script>
 			</ScriptGroup>
 			<Script isActive="yes" isFolder="no">
-				<name>Themes</name>
+				<name>tecConfigThemes()</name>
 				<packageName></packageName>
 				<script>--People expressed interest in having themes.
 
@@ -480,11 +512,11 @@ function tecConfigThemes() --configure and initalize settings for tabs.
   tabsStyle = [[
     QLabel{
       background-color: ]]..tecSettings.tabsBackgroundColor..[[;
-      border-image: url("]]..getMudletHomeDir()..[[/imgs/tabs/scroll.svg");
+      border-image: url("]]..tecSettings.images["tabs"].image..[[");
     }
     QLabel::hover{
       background-color: ]]..tecSettings.hoverColor..[[;
-      border-image: url("]]..getMudletHomeDir()..[[/imgs/tabs/scroll.svg");
+      border-image: url("]]..tecSettings.images["tabs"].image..[[");
     }
   ]]
   
@@ -3173,6 +3205,39 @@ function removeEndSpace(message)
 end --removeDoubleSpaces(message)</script>
 					<eventHandlerList />
 				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaFileList(path)</name>
+					<packageName></packageName>
+					<script>--returns a table containing files in a directory
+--returns false if no files found.
+--Will NOT return directories 
+--usage example: local fileTable = parthiaFileList(getMudletHomeDir()..[[/imgs/tabs]])
+
+function parthiaFileList(path)
+  if type(path) ~= "string" then tecErrorNotification("function parthiaFileList, argument 1 non string variable.") end
+  local localFileTable = {} --table to hold file names
+
+  for file in lfs.dir(path) do --look through directory
+      if file ~= "." and file ~= ".." then --skip . and .. folders
+          local f = path..'/'..file --get full path and file name
+          local attr = lfs.attributes (f) --collect attributes on file
+          if type(attr) == "table" then --make certain data collected
+            if attr.mode == "file" then --look for files only
+              table.insert(localFileTable, file)
+            end --if attr.mode == "file"
+          else --attribute collection filed
+            tecWarningMessage("function parthiaFileList, failed to collect attributes on "..f)
+          end --if type(attr) == "table"
+      end --if file ~= "." and file ~= ".."
+  end --for lfs.dir(path)
+  if table.is_empty(localFileTable) then --the table is empty, no files found
+    return false
+  else --table has some files in it
+    return localFileTable
+  end
+end --function parthiaFileList(path)</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>GUI</name>
@@ -3271,7 +3336,7 @@ end --function getInventoryFormater</script>
   --We assume first run if a table is not passed. So we created the table.
   objectTable = objectTable or
     {name={}, type={}, parentName={}, xPos={}, yPos={}
-    ,width={}, height={}}
+    ,width={}, height={}, styleSheet={}}
   
   --windowList reference: https://www.mudlet.org/geyser/files/geyser/GeyserContainer.html
   --Loop through all children of this container.
@@ -3299,6 +3364,12 @@ the last geyser object, and so on until we reach the parent that called the quer
   table.insert(objectTable.yPos, tostring(self:get_y()))
   table.insert(objectTable.width, tostring(self:get_width()))
   table.insert(objectTable.height, tostring(self:get_height()))
+  --if there is a custom style sheet. Record it.
+  if self.styleSheet then
+    table.insert(objectTable.styleSheet, tostring(self.styleSheet)) 
+  else
+    table.insert(objectTable.styleSheet, false)
+  end
 
   return objectTable --return the table to the object that called this object
   
@@ -3337,20 +3408,20 @@ function tecRedrawLabels()
     
   --Go through all the table we created above
   for key,cdt in pairs(ContainerDataTable) do
-    for k,v in pairs(cdt.type) do --Check the types of containers
+    for k,v in ipairs(cdt.type) do --Check the types of containers
       if v == "label" then --To see if it is a label
-        if "map" == cdt.name[k]:match("map") then --if map label is found, skip
-          --debugc("\t"..cdt.name[k].." is a map label no redraw logic in this client release.")
-          debugToDisplay("\t"..cdt.name[k].." is a map label no redraw logic in this client release.")
-          
+      --display(ContainerDataTable[key])
+        if cdt.styleSheet[k] then --if the label has a default styleSheet use it
+          setLabelStyleSheet(cdt.name[k], cdt.styleSheet[k]) --set this label to its custom styleSheet
+          debugToDisplay(cdt.name[k].." custom styleSheet used.\n\t"..cdt.styleSheet[k])
+        elseif "map" == cdt.name[k]:match("map") then --if map label is found, skip
+          --debugToDisplay("\t"..cdt.name[k].." is a map label no redraw logic in this client release.")
         elseif "Compass." == cdt.name[k]:match("Compass.") then
-          --debugc("\t"..cdt.name[k].." is a Compass label no redraw logic in this client release.")
-          debugToDisplay("\t"..cdt.name[k].." is a Compass label no redraw logic in this client release.")
-          if cdt.name[k] == "tecCompass.back" then --if the label is the background of the compass
-            setLabelStyleSheet(cdt.name[k], labelsStyle)
-            --debugc("\t"..cdt.name[k].." back of Compass applying standard label.")
-            debugToDisplay("\t"..cdt.name[k].." back of Compass applying standard label.")
-          end --if cdt.name[k] is tecCompass.back
+--          debugToDisplay("\t"..cdt.name[k].." is a Compass label no redraw logic in this client release.")
+--          if cdt.name[k] == "tecCompass.back" then --if the label is the background of the compass
+--            setLabelStyleSheet(cdt.name[k], labelsStyle)
+--            debugToDisplay("\t"..cdt.name[k].." back of Compass applying standard label.")
+--          end --if cdt.name[k] is tecCompass.back
         --if label has the word tab in it, we treat it as a tab  
         elseif "tab" == cdt.name[k]:match("tab") or "Tab" == cdt.name[k]:match("Tab") then
           local tabNameFound = false
@@ -3605,12 +3676,9 @@ end --function getPercentOfMainWindow</script>
 				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>UIManager</name>
 					<packageName></packageName>
-					<script>-------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external scripts --
--------------------------------------------------
-</script>
+					<script>--[[
+
+]]--</script>
 					<eventHandlerList />
 					<Script isActive="yes" isFolder="no">
 						<name>SetUIManager(UIManagerName, displayToScreen)</name>
@@ -3897,6 +3965,7 @@ function UIManagerShowWindow(objectName, mode, displayToScreen)
   if guiChange then --if the guiChange function has been created
     if displayToScreen then --displayToScreen is only true when ShowWindow is run by alias, if it is false it is run by SetTheme().
       guiChange() --resize windows.
+      --tecRedrawLabels() --apply style sheets to all labels
     end --if displayToScreen
   end--end if guiChange
 end --function setGUIframeObject</script>
@@ -4554,7 +4623,10 @@ end --function tecUILayoutManagerConfig</script>
     
     --redraw GUIframe with new layout.
     --GUIframe.eventHandler("sysWindowResizeEvent")
-    if guiChange then guiChange() end --Size windows to theme setting.
+    if guiChange then
+      guiChange() --resize windows
+      tecRedrawLabels() --reapply labels
+    end --Size windows to theme setting.
     
     if displayToScreen then
       pecho("Layout changed to theme, "..themeName.."\n")
@@ -4729,7 +4801,7 @@ function UIManagerFileLoad(displayToScreen)
     --load settings into UIManagerSettings table.
     UIManagerSettings = table.update(UIManagerSettings, tecTMPDisplayTable)
     if displayToScreen then 
-      cecho("[  OK  ]  - Parthia UI Manager settings successfully loaded from file.\n") 
+      pecho("[  OK  ]  - Parthia UI Manager settings successfully loaded from file.\n") 
     end --if displayToScreen
 	end --end if file exists else
 	
@@ -4822,6 +4894,12 @@ function UIManagerHelp()
     pecho("Click a command above to enable or disable a window.\n")]], 
   "List all window commands", true)
 	pecho(", show all windows that can be enabled or disabled.\n")
+
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display images list", 
+  [[parthiaSetImages("list", "list", true);]],
+  "List commands change images", true)
+	pecho(", change images in Parthia.\n")  
+  
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display layout list", 
   [[UIManagerSetTheme("list",true);
@@ -4911,6 +4989,140 @@ end --function UIManagerResizeHelp</script>
       .."No windows should show on screen to move.")
   end --if GetUIManager() == "GUIframe" and GUIframe.initialized
 end --function tecResizeDisplayHelp</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaSetImages()</name>
+						<packageName></packageName>
+						<script>--displays message that helps players easily find the image types that can be set with parthiaSetImages
+local function localImageTypeHelp()
+  pecho("Supported commands to change images in Parthia are:\n")
+  for _, imageTypeValue in pairs(tecSettings.images) do
+    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display images "..imageTypeValue.name.." list", 
+      [[parthiaSetImages("]]..imageTypeValue.name..[[","list", true)]],
+      "List images for "..imageTypeValue.name, true)
+    pecho(" list images available for "..imageTypeValue.name..".\n")
+  end --for pairs(tecSettings.images)
+end --function localImageTypeHelp()
+
+--allows player to change or add images throughout the client.
+--imageType is compassBackground compassOverlay and other windows with images 
+--fileName is the name of the file in the directory that is affiliated to the imageType
+--displayToScreen controls if the player sees a message when this is run
+function parthiaSetImages(imageType, fileName, displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen) --make certain data type is correct.
+  if imageType then --if a first argument was received
+    if type(imageType) ~= "string" then --if argument one is not a string
+      tecErrorNotification("function parthiaSetImages, imageType argument one is a non string variable.")
+    end --if type(imageType) ~= "string"
+  else --not sent an imageType
+    tecWarningNotification("function parthiaSetImages, incorrect image type.")
+    if displayToScreen then localImageTypeHelp() end --show help message if displayToScreen is true
+  end --if imageType
+  if fileName then --if a second argument was received
+    if type(fileName) ~= "string" then --if argument two is not a string
+      tecErrorNotification("function parthiaSetImages, fileName argument two is a non string variable.")
+    end --if type(fileName) ~= "string"
+  else --was not sent a fileName
+    fileName = "list" --set it to anything really so it displays a help message
+  end --if fileName
+  
+  imageType = imageType:lower() --make certain imageType is lower case.
+  local imageFolder = "" --will contain file path to images for the imageType
+  local imageTypeCorrect = false --used to verify that a useable imageType was passed
+  local imageTableKey = "" --used to record the key for the tecSettings.images for the imageType needed
+  
+  --check if imageType is correct
+  --tecSettings.images is in the variables script, stores default settings and directories for imageTypes
+  for imageTableName, imageTable in pairs(tecSettings.images) do
+    --if the image type is correct make an ifelse series, to set imageFolder variable
+    debugToDisplay("function parthiaSetImages, checking imageTypeKey.name: "..imageTable.name.." against imageType: "..imageType.."\n")
+    if imageTable.name == imageType then --found a match for imageTType in tecSettings.images table
+      debugToDisplay("function parthiaSetImages, image type match found.")
+      imageFolder = imageTable.folder
+      imageTypeCorrect = true --used to tell function the correct imageType was found
+      imageTableKey = imageTableName --keep track of the key to use when checking what window to update the styleSheet for
+      break --found what we are looping for break loop and move on.
+    end --if imageTypeKey.name == imageType
+  end --for pairs(tecSettings.images)
+
+  --if the image type is incorrect we can not continue. Show message to screen if player sent command.
+  if not imageTypeCorrect then --imageType argument one is incorrect
+    tecWarningNotification("function parthiaSetImages, incorrect image type.")
+    if displayToScreen then localImageTypeHelp() end --show help message if displayToScreen is true
+    return --stop function a correct imageType is required
+  end --if not imageTypeCorrect
+  
+  local localFilesFound = parthiaFileList(imageFolder) --collect list of files in the directory
+  
+  if localFilesFound then --if files are found in tabs directory
+    if table.contains(localFilesFound, fileName) then --check if fileName is in the tabs folder
+      debugToDisplay("function parthiaSetImages, setting tecSettings.images."..imageTableKey..".image to "..imageFolder..fileName)
+      tecSettings.images[imageTableKey].image = imageFolder..fileName --allows settings to be saved to file. Will also allows tabs to be drawn with tecRedrawLabels
+      if imageTableKey == "compassBackground" then --if the tecSettings.images key is compass background set the styleSheet for the compass backgrounds
+        tecCompass.back.styleSheet = [[border-image: url("]]..tecSettings.images["compassBackground"].image..[[");]]
+        MultiWindow.Compass.back.styleSheet = [[border-image: url("]]..tecSettings.images["compassBackground"].image..[[");]]
+      elseif imageTableKey == "compassOverlay" then --if the tecSettings.images key is for the compass overlay then set the stylSheets for the compass overlays
+        tecCompass.overlay.styleSheet = [[border-image: url("]]..tecSettings.images["compassOverlay"].image..[[");]]
+        MultiWindow.Compass.overlay.styleSheet = [[border-image: url("]]..tecSettings.images["compassOverlay"].image..[[");]]
+      elseif imageTableKey == "mapBackground" then --if the tecSetting.images key is for the tec man background then set the styleSheet for it.
+        tecMap_back.styleSheet = [[border-image: url("]]..tecSettings.images["mapBackground"].image..[[");]]
+      elseif imageTableKey == "macroBackground" then --if the tecSetting.images key is for the
+        if macroMenu.back then --for some reason macroMenu is empting. This checks for that
+          macroMenu.back.styleSheet = [[border-image: url("]]..tecSettings.images["macroBackground"].image..[[");]]
+        else --macro menu.container is disappearing right now, this catches that error
+          if not tecGeyserWindows["Macros"].disabled then --if the macros window is enabled
+            pecho("Currently a restart of mudlet is required to apply a new background to the Macros window.\n")
+          end --if not tecGeyserWindows["Macros"].disabled
+        end --if macroMenu.back
+        MultiWindow.macroMenu.back.styleSheet = [[border-image: url("]]..tecSettings.images["macroBackground"].image..[[");]]
+      end --if imageType ==
+      tecRedrawLabels() --redraw labels so changes show.
+      dontForgetToSave()
+    else --fileName is not in tabs directory, list correct commands
+      if fileName:lower() == "add" then --player sent add as argument
+        pecho("If your image looks poor, try lowering the compression level of the image.\n"
+          .."To open svg files use ")
+        pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;inkscape.", 
+          [[openUrl("https://inkscape.org/")]], --runs on click.
+          "Open inkscape website. ", true)
+        pecho("\nFor all other image types use ")
+        pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;GIMP.", 
+          [[openUrl("https://www.gimp.org/")]], --runs on click.
+          "Open GIMP website. ", true)
+        pecho("\nChanges you make to existing images will be removed with each Parthia update. If you would like to update an existing image, create a copy and make changes on the copy.")
+        tecOpenDirectory(imageFolder) --opens folder of the image type the player is tring to add to
+      else --unsupported argument sent. Display list of supported commands for this imageType
+        pecho("Supported commands to change "..imageType.." image are:\n")
+        for i,file in ipairs(localFilesFound) do --loop through files found in imageType's folder
+          --make command for cechoLink
+          local cmdToSend = [[parthiaSetImages("]]..imageType..[[","]]..file..[[")]] --command to send when player clicks echoLink
+          pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display images "..imageType.." "..file, 
+            cmdToSend, --runs on click.
+            "Set "..imageType.." image to "..file, true)
+          pecho(", set "..imageType.." image to "..file.."\n")
+        end --for ipairs(localFilesFound)
+        
+        pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display images "..imageType.." add", 
+          [[parthiaSetImages("]]..imageType..[[","add")]],
+          "Open "..imageType.." images folder", true)
+        pecho(" open the folder for "..imageType.." to add your custom images to.\n")
+        pecho("Click a command above or type it into the command line.\n")
+      end --if fileName:lower() == "add"
+    end --table.contains(localFilesFound, fileName)
+  else --not files found in the imageType's folder, provide an option to repair
+    pecho("No files found in the "..imageType.." directory.\n"
+      .."This can likely be resolved by running ")
+    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia repair", 
+      [[expandAlias("parthia repair")]],
+      "Repair Parthia", true)
+    pecho("\nIf the issue continues please report it with ")
+    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug report issue", 
+  	 [[tecReportIssues()]], 
+  	 "Report client issues", true)
+     echo("\n")
+  end --if localFilesFound
+end --parthiaSetImages()</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
@@ -7905,7 +8117,7 @@ end --function getNumpadNaviation()</script>
 		<ScriptGroup isActive="yes" isFolder="yes">
 			<name>Windows</name>
 			<packageName></packageName>
-			<script></script>
+			<script>--Windows throughout Parthia, like compass or the multi window</script>
 			<eventHandlerList />
 			<Script isActive="yes" isFolder="no">
 				<name>status bar</name>
@@ -8063,13 +8275,16 @@ tecCompass.back = Geyser.Label:new({
 },tecCompass.window) --The parent of this label. Main is main window.
 
 --set background image for compass
-tecCompass.back:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/compass/background.svg");]])
+tecCompass.back.styleSheet = [[border-image: url("]]..tecSettings.images["compassBackground"].image..[[");]]
+tecCompass.back:setStyleSheet(tecCompass.back.styleSheet) --set the background label
     
 tecCompass.overlay = Geyser.Label:new({
   name = "tecCompass.overlay",
   x = "0%", y = "0%", width = "100%", height = "100%", --position and size of background
   },tecCompass.back) --put the label into the Compass container
-tecCompass.overlay:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/compass/CompassOverlay.svg");]]) --set the background label
+tecCompass.overlay.styleSheet = [[border-image: url("]]..tecSettings.images["compassOverlay"].image..[[");]]
+tecCompass.overlay:setStyleSheet(tecCompass.overlay.styleSheet) --set the background label
+--tecCompass.overlay:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/compass/CompassOverlay.svg");]]) --set the background label
 
 --Horizontal box
 tecCompass.hbox = Geyser.HBox:new({
@@ -8314,7 +8529,8 @@ tecMap_back = Geyser.Label:new({
 },tecMap) --The parent of this label.
 
 --set the appearance of what is behind the map
-tecMap_back:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/map/background.svg");]])
+tecMap_back.styleSheet = [[border-image: url("]]..tecSettings.images["mapBackground"].image..[[");]]
+tecMap_back:setStyleSheet(tecMap_back.styleSheet)
 
 --rgba(25, 50, 150)
 
@@ -8511,7 +8727,7 @@ for k,v in pairs(tecComWindows.tabs) do
 		width = "100%",
 		height = tabsHeight,
   },tecComWindows.header)
-	tecComWindows[v.."tab"].styleSheet = tabsStyle
+	--tecComWindows[v.."tab"].styleSheet = tabsStyle
   tecComWindows[v.."tab"]:setStyleSheet(tabsStyle) --set style in themes
 	tecComWindows[v.."tab"]:echo(tabsFontStyle..v) --lable the tabs, set style in themes
 	tecComWindows[v.."tab"]:setClickCallback("tecComWindows.click",v) --for charing tabs
@@ -8590,164 +8806,58 @@ UIManagerRegisterWindow(tecComWindows.container)</script>
 			<Script isActive="yes" isFolder="no">
 				<name>Macro Menu</name>
 				<packageName></packageName>
-				<script> --If no UI mananger is in use, do not draw the window.
---if GetUIManager() == "none" then return end
-
---[[
-Tec uses a macro system that players can set within the game.
-The command they use is @macro.
-To avoid additional time for now we can piggy back of their system.
-They support 15 gui buttons that can be macroed in the game.
-All we need to do, is when the button is clicked it sends command fe#
-so button 1 send("fe1")
-After that TECs macro system will take over.
-For formating you could set the grid style setup for labels in compasbar
-In 5 rows of 3 columns.
-Normally does 5 columns of 3 rows. Tec has a combat rotation that requires three unique moves 
-in a row or if you are attacking a person you receive a major debuff.
-The 5 is while training. You need to do 5 unique moves to get the most skill points.
-I like the 3 columns because it gives us big chunky buttons that will work well with touch
-screens.
-]]--
-
---Create a global table or namespace
---Creating a global table will make each of our variables unique. Our namespace will be called
---macroMenu and everything we make from here on out will be stored within the macroMenu table.
-
-macroMenu = macroMenu or {}
-
---Create the container
---Containers are windows that can contain other windows. Actually, since all other Geyser windows
---subclass container, every window can do that. But containers do not have any visible content by
---themselves. Our tabbed "Macros" window will need a container. This will be the bottom layer.
---Containers are invisible, so no need to set a stylesheet. At the end of the file, we will add this
---container as a "window".
-macroMenu.container = Geyser.Container:new({
-  name = "Macros",
-})
-
---Create the parent label
---The 'parent label' refers to the label on the bottom layer. The entire macro menu will be created 
---within this label.
-macroMenu.back = Geyser.Label:new({
+				<script>--create the window that holds the macros.
+macroMenu = macroMenu or {} --table to hold the windows variables
+macroMenu.window = Geyser.Container:new({ name = "Macros", })
+macroMenu.back = Geyser.Label:new({ --Create a label that could be used as a background
   name = "macroMenu.back",
-  x = 0,
-  y = 0,
-  width = "100%",
-}, macroMenu.container)
-macroMenu.back:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/macro/background.svg");]])
-
---Create a 3x5 grid
---The macro menu is split into 15 sections, one for each macro. This 3x5 grid is created by 5 HBoxes
---that sit within a single VBox (or vice versa, it doesn't matter). So first off, we create the VBox.
---It will be the same size as its parent, macroMenu.back.
-
-macroMenu.box = Geyser.VBox:new({
+  x = 0,y = 0, width = "100%", height = "100%" --Position and size of window
+  }, macroMenu.window) --end of macroMenu.back
+macroMenu.back.styleSheet = [[border-image: url("]]..tecSettings.images["macroBackground"].image..[[");]]
+macroMenu.back:setStyleSheet(macroMenu.back.styleSheet)
+macroMenu.box = Geyser.VBox:new({ --creates the verticle window breaks
   name = "macroMenu.box",
-  x = 0,
-  y = 0,
-  width = "100%",
-}, macroMenu.back)
-
---Next, we create our 5 HBoxes. We don't need to specify position or size because these are placed
---within macroMenu.box, a VBox.
+  x = 0, y = 0, width = "100%", height = "100%"
+  }, macroMenu.back) --end macroMenu.box
+--Create the five rows of buttons
 macroMenu.row1 = Geyser.HBox:new({
   name = "macroMenu.row1",
-}, macroMenu.box)
+  }, macroMenu.box)
 macroMenu.row2 = Geyser.HBox:new({
   name = "macroMenu.row2",
-},macroMenu.box)
+  },macroMenu.box)
 macroMenu.row3 = Geyser.HBox:new({
   name = "macroMenu.row3",
-}, macroMenu.box)
+  }, macroMenu.box)
 macroMenu.row4 = Geyser.HBox:new({
   name = "macroMenu.row4",
-}, macroMenu.box)
+  }, macroMenu.box)
 macroMenu.row5 = Geyser.HBox:new({
   name = "macroMenu.row5",
-}, macroMenu.box)
+  }, macroMenu.box)
 macroMenu.row5:hide()
-
---Finally, we add our 15 labels. Take note that they are split up into five groups of three. Each group
---is placed into a different "macroMenu.row" number.
+--create table to hold data for macro buttons.
 local tecMacroMappings = {
   {
     name = "fe1", --name of label that will be created. Will be passed to setClickCallBack function
     label = "I", --What will be on the label
     row = macroMenu.row1, --the geyser box we want this label to go in
   },
-  {
-    name = "fe2",
-    label = "II",
-    row = macroMenu.row1,
-  },
-  {
-    name = "fe3",
-    label = "III",
-    row = macroMenu.row1,
-  },
-  {
-    name = "fe4",
-    label = "IV",
-    row = macroMenu.row2,
-  },
-  {
-    name = "fe5",
-    label = "V",
-    row = macroMenu.row2,
-  },
-  {
-    name = "fe6",
-    label = "VI",
-    row = macroMenu.row2,
-  },
-  {
-    name = "fe7",
-    label = "VII",
-    row = macroMenu.row3,
-  },
-  {
-    name = "fe8",
-    label = "VIII",
-    row = macroMenu.row3,
-  },
-  {
-    name = "fe9",
-    label = "IX",
-    row = macroMenu.row3,
-  },
-  {
-    name = "fe10",
-    label = "X",
-    row = macroMenu.row4,
-  },
-  {
-    name = "fe11",
-    label = "XI",
-    row = macroMenu.row4,
-  },
-  {
-    name = "fe12",
-    label = "XII",
-    row = macroMenu.row4,
-  },
-  {
-    name = "fe13",
-    label = "XIII",
-    row = macroMenu.row5,
-  },
-  {
-    name = "fe14",
-    label = "XIV",
-    row = macroMenu.row5,
-  },
-  {
-    name = "fe15",
-    label = "XV",
-    row = macroMenu.row5,
-  },
-}
-
+  { name = "fe2", label = "II", row = macroMenu.row1, },
+  { name = "fe3", label = "III", row = macroMenu.row1, },
+  { name = "fe4", label = "IV", row = macroMenu.row2, },
+  { name = "fe5", label = "V", row = macroMenu.row2, },
+  { name = "fe6", label = "VI", row = macroMenu.row2, },
+  { name = "fe7", label = "VII", row = macroMenu.row3, },
+  { name = "fe8", label = "VIII", row = macroMenu.row3, },
+  { name = "fe9", label = "IX", row = macroMenu.row3, },
+  { name = "fe10", label = "X", row = macroMenu.row4, },
+  { name = "fe11", label = "XI", row = macroMenu.row4, },
+  { name = "fe12", label = "XII", row = macroMenu.row4, },
+  { name = "fe13", label = "XIII", row = macroMenu.row5, },
+  { name = "fe14", label = "XIV", row = macroMenu.row5, },
+  { name = "fe15", label = "XV", row = macroMenu.row5, },
+} --tecMacroMappings table
 --add onto standard label. We want a small margin for this label.								
 --macroLabelStyle = labelsStyle.."margin: 1px\n"; 537dC0
 macroLabelStyle = [[
@@ -8774,33 +8884,22 @@ macroLabelStyle = [[
       qproperty-alignment: 'AlignCenter | AlignCenter';
     }
   ]]
-
 for _, tecMacroMap in pairs(tecMacroMappings) do --loop trough mappings table using data within
   macroMenu[tecMacroMap.name] = Geyser.Label:new({
     name = "macroMenu." .. tecMacroMap.name, --name label fe# so it is easy to pass
 	  message = "&lt;center&gt;" .. tecMacroMap.label .. "&lt;/center&gt;", --puts roman numerals on label
   }, tecMacroMap.row) --parent is gettings passed via mapping table row reference
-    local localMacroTooltip = "run macro "..tecMacroMap.name:match("(%d%d?)$").."  "
+  local localMacroTooltip = "run macro "..tecMacroMap.name:match("(%d%d?)$").."  "
   SetTooltip(macroMenu[tecMacroMap.name].name, localMacroTooltip) --create hover tooltip
   macroMenu[tecMacroMap.name]:setClickCallback("onMacroClick", tecMacroMap.name)
-  macroMenu[tecMacroMap.name]:setStyleSheet(macroLabelStyle) --create window layout
-end
-
---Create a callback function
---When the user clicks a macro button, this function will send the button name to the server. For
---example, when the user clicks the first button, we will send "fe1" to the server.
-function onMacroClick(name)
-  send(name, false)
-end
-
-function tecMacroMenuResize()
-  --macroMenu.back:move(0,0)
-end --function tecMacroMenuResize
+  macroMenu[tecMacroMap.name].styleSheet = macroLabelStyle
+  macroMenu[tecMacroMap.name]:setStyleSheet(macroLabelStyle)
+end --for pairs(tecMacroMappings)
+function onMacroClick(name) send(name, false) end --Create a click callback function
 
 --set location for container in GUIframe.
-macroMenu.container.GUIframeLocation = "bottomleft"
-UIManagerRegisterWindow(macroMenu.container)
-</script>
+macroMenu.window.GUIframeLocation = "bottomleft"
+UIManagerRegisterWindow(macroMenu.window)</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
@@ -8847,7 +8946,8 @@ MultiWindow.macroMenu.back = Geyser.Label:new({ --Create a label that could be u
   name = "MultiWindow.macroMenu.back",
   x = 0,y = 0, width = "100%", height = "100%" --Position and size of window
   }, MultiWindow.macroMenu.container) --end of MultiWindow.macroMenu.back
-MultiWindow.macroMenu.back:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/macro/background.svg");]])
+MultiWindow.macroMenu.back.styleSheet = [[border-image: url("]]..tecSettings.images["macroBackground"].image..[[");]]
+MultiWindow.macroMenu.back:setStyleSheet(MultiWindow.macroMenu.back.styleSheet)
 MultiWindow.macroMenu.box = Geyser.VBox:new({ --creates the verticle window breaks
   name = "MultiWindow.macroMenu.box",
   x = 0, y = 0, width = "100%", height = "100%"
@@ -8900,6 +9000,7 @@ for _, tecMacroMap in pairs(tecMacroMappings) do --loop trough mappings table us
   local localMacroTooltip = "run macro "..tecMacroMap.name:match("(%d%d?)$").."  "
   SetTooltip(MultiWindow.macroMenu[tecMacroMap.name].name, localMacroTooltip) --create hover tooltip
   MultiWindow.macroMenu[tecMacroMap.name]:setClickCallback("onMacroClick", tecMacroMap.name)
+  MultiWindow.macroMenu[tecMacroMap.name].styleSheet = macroLabelStyle
   MultiWindow.macroMenu[tecMacroMap.name]:setStyleSheet(macroLabelStyle)
 end --for pairs(tecMacroMappings)
 function onMacroClick(name) send(name, false) end --Create a click callback function
@@ -8920,14 +9021,16 @@ MultiWindow.Compass.back = Geyser.Label:new({
   name = "MultiWindow.Compass.back",
   x = "0%", y = "0%", width = "100%", height = "100%", --position and size of background
   },MultiWindow.Compass.window) --put the label into the Compass container
-MultiWindow.Compass.back:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/compass/background.svg");]]) --set the background label
+--MultiWindow.Compass.back.styleSheet = [[border-image: url("]]..tecSettings.compassBackgroundImage..[[");]]
+MultiWindow.Compass.back.styleSheet = [[border-image: url("]]..tecSettings.images["compassBackground"].image..[[");]]
+MultiWindow.Compass.back:setStyleSheet(MultiWindow.Compass.back.styleSheet) --set the background label
 --MultiWindow.Compass.back:setStyleSheet(labelsStyle) --set the background label
 MultiWindow.Compass.overlay = Geyser.Label:new({
   name = "MultiWindow.Compass.overlay",
   x = "0%", y = "0%", width = "100%", height = "100%", --position and size of background
   },MultiWindow.Compass.back) --put the label into the Compass container
-MultiWindow.Compass.overlay:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/compass/CompassOverlay.svg");]]) --set the background label
---MultiWindow.Compass.overlay:setStyleSheet([[border-image: url("]]..getMudletHomeDir()..[[/imgs/compass/vectorcompass.svg");]]) --set the background label
+MultiWindow.Compass.overlay.styleSheet = [[border-image: url("]]..tecSettings.images["compassOverlay"].image..[[");]]
+MultiWindow.Compass.overlay:setStyleSheet(MultiWindow.Compass.overlay.styleSheet) --set the background label
 --MultiWindow.Compass.overlay:raise()
 MultiWindow.Compass.hbox = Geyser.HBox:new({ --container to make columns
     name = "MultiWindow.Compass.box",
