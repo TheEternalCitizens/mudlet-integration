@@ -227,27 +227,27 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   tecSettings.images = {
     tabs = {
       folder = getMudletHomeDir()..[[/imgs/tabs/]], 
-      image = getMudletHomeDir()..[[/imgs/tabs/scroll.png]],
+      image = getMudletHomeDir()..[[/imgs/tabs/scroll dark.png]],
       name = "tabs"
     },
     compassBackground = {
       folder = getMudletHomeDir()..[[/imgs/backgrounds/]], 
-      image = getMudletHomeDir().. [[/imgs/backgrounds/StainedPaper.svg]],
+      image = getMudletHomeDir().. [[/imgs/backgrounds/old canvas light.jpg]],
       name = "compass background"
     },
     compassOverlay = {
       folder = getMudletHomeDir()..[[/imgs/compass/overlay/]], 
-      image = getMudletHomeDir()..[[/imgs/compass/overlay/GrayAndBlack.svg]],
+      image = getMudletHomeDir()..[[/imgs/compass/overlay/gray and black compass.svg]],
       name = "compass overlay"
     },
     mapBackground = {
       folder = getMudletHomeDir()..[[/imgs/backgrounds/]],  
-      image = getMudletHomeDir()..[[/imgs/backgrounds/EveningForest.svg]],
+      image = getMudletHomeDir()..[[/imgs/backgrounds/desk bottom.jpg]],
       name = "map background"
     },
     macroBackground = {
       folder = getMudletHomeDir()..[[/imgs/backgrounds/]], 
-      image = getMudletHomeDir()..[[/imgs/backgrounds/MountainAtDusk.svg]],
+      image = getMudletHomeDir()..[[/imgs/backgrounds/mountains.svg]],
       name = "macro background"
     },
   } --tecSettings.imageSettings table
@@ -5036,7 +5036,7 @@ function parthiaSetImages(imageType, fileName, displayToScreen)
   --tecSettings.images is in the variables script, stores default settings and directories for imageTypes
   for imageTableName, imageTable in pairs(tecSettings.images) do
     --if the image type is correct make an ifelse series, to set imageFolder variable
-    debugToDisplay("function parthiaSetImages, checking imageTypeKey.name: "..imageTable.name.." against imageType: "..imageType.."\n")
+    debugToDisplay("function parthiaSetImages, checking imageTypeKey.name: "..imageTable.name.." against imageType: "..imageType)
     if imageTable.name == imageType then --found a match for imageTType in tecSettings.images table
       debugToDisplay("function parthiaSetImages, image type match found.")
       imageFolder = imageTable.folder
@@ -6878,7 +6878,7 @@ function GitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if GitUpdate.localRespitory not exist
   GitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  GitUpdate.localVersion = "0.1.37" --Must match the tag in your github release
+  GitUpdate.localVersion = "0.1.38" --Must match the tag in your github release
   GitUpdate.aliasName = "parthia update" --Name of alias user runs to process update
   --Name of the alias to check if an update is available.
   GitUpdate.updateCheckAlias = "parthia update check" 
@@ -9021,7 +9021,7 @@ MultiWindow.Compass.back = Geyser.Label:new({
   name = "MultiWindow.Compass.back",
   x = "0%", y = "0%", width = "100%", height = "100%", --position and size of background
   },MultiWindow.Compass.window) --put the label into the Compass container
---MultiWindow.Compass.back.styleSheet = [[border-image: url("]]..tecSettings.compassBackgroundImage..[[");]]
+--MultiWindow.Compass.back.styleSheet = getMudletHomeDir().. [[/imgs/backgrounds/old canvas.jpg]]
 MultiWindow.Compass.back.styleSheet = [[border-image: url("]]..tecSettings.images["compassBackground"].image..[[");]]
 MultiWindow.Compass.back:setStyleSheet(MultiWindow.Compass.back.styleSheet) --set the background label
 --MultiWindow.Compass.back:setStyleSheet(labelsStyle) --set the background label
