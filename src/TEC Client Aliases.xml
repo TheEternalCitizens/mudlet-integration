@@ -268,61 +268,25 @@ UIManagerEnableSide("list",false,true)</script>
 				<regex>^display help$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>display image</name>
-				<script>--list help for display image command
-parthiaSetImages("list", "list", true)
-displayImageCmdCatch = true --display image command was caught by an aliase</script>
+				<name>display images</name>
+				<script>imagesCmdFound = false --used to tell aliase if incorrect cmd was found
+--check if imageType is correct
+--tecSettings.images is in the variables script, stores default settings and directories for imageTypes
+for imageTableName, imageTable in pairs(tecSettings.images) do
+  if matches[2]:starts(imageTable.name) then --if a correct command was found
+    imagesCmdFound = true --good images command found
+    local imagesFileName = matches[2]:gsub(imageTable.name.." ", "") --return everything after image type argument
+    debugToDisplay("aliase display images catch, imagesFileName "..imagesFileName)
+    parthiaSetImages(imageTable.name, imagesFileName, true) --run the command. If file name is wrong a help message will display
+  end --if matches[2]:starts(imageTable.name)
+end --for pairs(tecSettings.images)
+
+if not imagesCmdFound then --if the command does not match an image type name
+  parthiaSetImages("list", "list", true) --display help command to screen
+end</script>
 				<command></command>
 				<packageName></packageName>
-				<regex></regex>
-				<Alias isActive="yes" isFolder="no">
-					<name>display images compass background</name>
-					<script>--run parthiaSetImages changing compass's background
-parthiaSetImages("compass background", matches[2], true)
-displayImageCmdCatch = true --display image command was caught by an aliase</script>
-					<command></command>
-					<packageName></packageName>
-					<regex>^display images compass background\s?(.*)</regex>
-				</Alias>
-				<Alias isActive="yes" isFolder="no">
-					<name>display images compass overlay</name>
-					<script>--change compass overlay, so the metal looking compass on top
-parthiaSetImages("compass overlay", matches[2], true)
-displayImageCmdCatch = true --display image command was caught by an aliase</script>
-					<command></command>
-					<packageName></packageName>
-					<regex>^display images compass overlay\s?(.*)</regex>
-				</Alias>
-				<Alias isActive="yes" isFolder="no">
-					<name>display images macro background</name>
-					<script>--change the image for the background of the compass
-parthiaSetImages("macro background", matches[2], true)
-displayImageCmdCatch = true --display image command was caught by an aliase</script>
-					<command></command>
-					<packageName></packageName>
-					<regex>^display images macro background\s?(.*)</regex>
-				</Alias>
-				<Alias isActive="yes" isFolder="no">
-					<name>display images map background</name>
-					<script>--change background image for map
-parthiaSetImages("map background", matches[2], true)
-displayImageCmdCatch = true --display image command was caught by an aliase</script>
-					<command></command>
-					<packageName></packageName>
-					<regex>^display images map background\s?(.*)</regex>
-				</Alias>
-				<Alias isActive="yes" isFolder="no">
-					<name>display images catch</name>
-					<script>--if an incorrect display image command was sent catch it and display help to the player.
-if displayImageCmdCatch then --if the message was caught by another aliase.
-  displayImageCmdCatch = nil --ONLY remove the displayImageCmdCatch variable for the next run.
-else --the maleformed command was not caught by another aliase 
-  parthiaSetImages("list", "list", true) --display help command to screen
-end --if displayImageCmdCatch then</script>
-					<command></command>
-					<packageName></packageName>
-					<regex>^display images(.*)$</regex>
-				</Alias>
+				<regex>^display images\s?(.*)$</regex>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">

@@ -228,28 +228,70 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
     tabs = {
       folder = getMudletHomeDir()..[[/imgs/tabs/]], 
       image = getMudletHomeDir()..[[/imgs/tabs/scroll dark.png]],
-      name = "tabs"
+      name = "tabs",
     },
     compassBackground = {
       folder = getMudletHomeDir()..[[/imgs/backgrounds/]], 
       image = getMudletHomeDir().. [[/imgs/backgrounds/old canvas light.jpg]],
-      name = "compass background"
+      name = "compass background",
     },
     compassOverlay = {
       folder = getMudletHomeDir()..[[/imgs/compass/overlay/]], 
       image = getMudletHomeDir()..[[/imgs/compass/overlay/gray and black compass.svg]],
-      name = "compass overlay"
+      name = "compass overlay",
     },
     mapBackground = {
       folder = getMudletHomeDir()..[[/imgs/backgrounds/]],  
       image = getMudletHomeDir()..[[/imgs/backgrounds/desk bottom.jpg]],
-      name = "map background"
+      name = "map background",
     },
     macroBackground = {
       folder = getMudletHomeDir()..[[/imgs/backgrounds/]], 
       image = getMudletHomeDir()..[[/imgs/backgrounds/mountains.svg]],
-      name = "macro background"
+      name = "macro background",
     },
+    healthBackground = {
+      folder = getMudletHomeDir()..[[/imgs/status/]], 
+      image = getMudletHomeDir()..[[/imgs/status/plank.svg]],
+      name = "health bar background",
+    },
+    healthBar = {
+      folder = getMudletHomeDir()..[[/imgs/status/]], 
+      image = getMudletHomeDir()..[[/imgs/status/red gradient.svg]],
+      name = "health bar",
+    },
+    fatigueBackground = {
+      folder = getMudletHomeDir()..[[/imgs/status/]], 
+      image = getMudletHomeDir()..[[/imgs/status/plank.svg]],
+      name = "fatigue bar background",
+    },
+    fatigueBar = {
+      folder = getMudletHomeDir()..[[/imgs/status/]], 
+      image = getMudletHomeDir()..[[/imgs/status/yellow gradient.svg]],
+      name = "fatigue bar",
+    },
+    hungerBackground = {
+      folder = getMudletHomeDir()..[[/imgs/status/]], 
+      image = getMudletHomeDir()..[[/imgs/status/plank.svg]],
+      name = "hunger bar background",
+    },
+    hungerBar = {
+      folder = getMudletHomeDir()..[[/imgs/status/]], 
+      image = getMudletHomeDir()..[[/imgs/status/green gradient.svg]],
+      name = "hunger bar",
+    },
+    encumbranceBackground = {
+      folder = getMudletHomeDir()..[[/imgs/status/]], 
+      image = getMudletHomeDir()..[[/imgs/status/plank.svg]],
+      name = "encumbrance bar background",
+    },
+    encumbranceBar = {
+      folder = getMudletHomeDir()..[[/imgs/status/]], 
+      image = getMudletHomeDir()..[[/imgs/status/blue gradient.svg]],
+      name = "encumbrance bar",
+    },
+    
+    
   } --tecSettings.imageSettings table
   
   --Color of label backgrounds and tabs as mouse hovers over them.
@@ -424,7 +466,8 @@ function tecFileSaveSettings(displayToScreen)
 	
 	--display save to screen
 	if displayToScreen then pecho("Client settings saved.\n") end
-end</script>
+
+end --function tecFileSaveSettings(displayToScreen)</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
@@ -3673,6 +3716,225 @@ local function getPercentOfMainWindow(percent)
 end --function getPercentOfMainWindow</script>
 					<eventHandlerList />
 				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaSetImages()</name>
+					<packageName></packageName>
+					<script>--displays message that helps players easily find the image types that can be set with parthiaSetImages
+local function localImageTypeHelp()
+  pecho("Supported commands to change images in Parthia are:\n")
+  for _, imageTypeValue in pairs(tecSettings.images) do
+    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display images "..imageTypeValue.name.." list", 
+      [[parthiaSetImages("]]..imageTypeValue.name..[[","list", true)]],
+      "List images for "..imageTypeValue.name, true)
+    pecho(" list images available for "..imageTypeValue.name..".\n")
+  end --for pairs(tecSettings.images)
+end --function localImageTypeHelp()
+
+--allows player to change or add images throughout the client.
+--imageType is compassBackground compassOverlay and other windows with images 
+--fileName is the name of the file in the directory that is affiliated to the imageType
+--displayToScreen controls if the player sees a message when this is run
+function parthiaSetImages(imageType, fileName, displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen) --make certain data type is correct.
+  if imageType then --if a first argument was received
+    if type(imageType) ~= "string" then --if argument one is not a string
+      tecErrorNotification("function parthiaSetImages, imageType argument one is a non string variable.")
+    end --if type(imageType) ~= "string"
+  else --not sent an imageType
+    if displayToScreen then localImageTypeHelp() end --show help message if displayToScreen is true
+  end --if imageType
+  if fileName then --if a second argument was received
+    if type(fileName) ~= "string" then --if argument two is not a string
+      tecErrorNotification("function parthiaSetImages, fileName argument two is a non string variable.")
+    end --if type(fileName) ~= "string"
+  else --was not sent a fileName
+    fileName = "list" --set it to anything really so it displays a help message
+  end --if fileName
+  
+  imageType = imageType:lower() --make certain imageType is lower case.
+  local imageFolder = "" --will contain file path to images for the imageType
+  local imageTypeCorrect = false --used to verify that a useable imageType was passed
+  local imageTableKey = "" --used to record the key for the tecSettings.images for the imageType needed
+
+  --now create a table to hold references to windows we want to work with.
+  --We do this so we can call functions like :setStyleSheet with ease.
+  --If we store 
+  local imageWindowsReferenceTable = {} --table to hold references to windows that this function may need to work with.
+  for imageTableName, imageTable in pairs(tecSettings.images) do --create sub tables to organize the windows
+    imageWindowsReferenceTable[imageTableName] = {}
+    imageWindowsReferenceTable[imageTableName].windows = {}
+  end
+    
+  --add references to windows if the windows exist.
+  if tecCompass.back then --if the label exists add a reference to it to the windows table
+    table.insert(imageWindowsReferenceTable.compassBackground.windows, tecCompass.back) 
+  end --if tecCompass.back then
+  if MultiWindow.Compass.back then
+    table.insert(imageWindowsReferenceTable.compassBackground.windows, MultiWindow.Compass.back)
+  end --if tecCompass.back then
+   
+  if tecCompass.overlay then --if the label exists add a reference to it to the windows table
+    table.insert(imageWindowsReferenceTable.compassOverlay.windows, tecCompass.overlay)
+  end --if tecCompass.back then
+  if MultiWindow.Compass.overlay then
+    table.insert(imageWindowsReferenceTable.compassOverlay.windows, MultiWindow.Compass.overlay)
+  end --if tecCompass.back then
+  
+  if tecMap_back then --if the label exists add a reference to it to the windows table
+    table.insert(imageWindowsReferenceTable.mapBackground.windows, tecMap_back)
+  end --if tecMap_back then
+  
+  if MultiWindow.macroMenu.back then --if the label exists add a reference to it to the windows table
+    table.insert(imageWindowsReferenceTable.macroBackground.windows, MultiWindow.macroMenu.back)
+  end --if MultiWindow.macroMenu.back then
+
+  if hpbar.front then --if the label exists add a reference to it to the windows table
+    table.insert(imageWindowsReferenceTable.healthBar.windows, hpbar.front)
+  end --if hpbar.front then
+  if MultiWindow.hpbar.front then
+    table.insert(imageWindowsReferenceTable.healthBar.windows, MultiWindow.hpbar.front)
+  end --if MultiWindow.hpbar.front then  
+  if hpbar.back then --if the label exists add a reference to it to the windows table
+    table.insert(imageWindowsReferenceTable.healthBackground.windows, hpbar.back)
+  end --if hpbar.back then
+  if MultiWindow.hpbar.back then
+    table.insert(imageWindowsReferenceTable.healthBackground.windows, MultiWindow.hpbar.back)
+  end --if MultiWindow.hpbar.back then
+  
+  if fatiguebar.back then --if the label exists add a reference to it to the windows table
+    table.insert(imageWindowsReferenceTable.fatigueBackground.windows, fatiguebar.back)
+  end --if fatiguebar.back then
+  if MultiWindow.fatiguebar.back then
+      table.insert(imageWindowsReferenceTable.fatigueBackground, MultiWindow.fatiguebar.back)
+  end --if MultiWindow.fatiguebar.back then
+  
+  if fatiguebar.front then --if the label exists add a reference to it to the windows table
+    table.insert(imageWindowsReferenceTable.fatigueBar.windows, fatiguebar.front)
+  end --if fatiguebar.front then
+  if MultiWindow.fatiguebar.front then
+    table.insert(imageWindowsReferenceTable.fatigueBar.windows, MultiWindow.fatiguebar.front)
+  end --if MultiWindow.fatiguebar.front then
+  
+  if hungerbar.back then --if the label exists add a reference to it to the windows table
+    table.insert(imageWindowsReferenceTable.hungerBackground.windows, hungerbar.back)
+  end --if hungerbar.back then
+  if MultiWindow.hungerbar.back then
+    table.insert(imageWindowsReferenceTable.hungerBackground.windows, MultiWindow.hungerbar.back)
+  end --if MultiWindow.hungerbar.back then
+  
+  if hungerbar.front then --if the label exists add a reference to it to the windows table
+    table.insert(imageWindowsReferenceTable.hungerBar.windows, hungerbar.front)
+  end --if hungerbar.front then
+  if MultiWindow.hungerbar.front then
+    table.insert(imageWindowsReferenceTable.hungerBar.windows, MultiWindow.hungerbar.front)
+  end --if MultiWindow.hungerbar.front then
+  
+  if encumbrancebar.back then --if the label exists add a reference to it to the windows table
+    table.insert(imageWindowsReferenceTable.encumbranceBackground.windows, encumbrancebar.back)
+  end --if encumbrancebar.back then
+  if MultiWindow.encumbrancebar.back then
+    table.insert(imageWindowsReferenceTable.encumbranceBackground.windows, MultiWindow.encumbrancebar.back)
+  end --if MultiWindow.encumbrancebar.back then
+  
+  if encumbrancebar.front then --if the label exists add a reference to it to the windows table
+    table.insert(imageWindowsReferenceTable.encumbranceBar.windows, encumbrancebar.front)
+  end --if encumbrancebar.front then
+  if MultiWindow.encumbrancebar.front then
+    table.insert(imageWindowsReferenceTable.encumbranceBar.windows, MultiWindow.encumbrancebar.front)
+  end --if MultiWindow.encumbrancebar.front then
+
+  --check if imageType is correct
+  --tecSettings.images is in the variables script, stores default settings and directories for imageTypes
+  for imageTableName, imageTable in pairs(tecSettings.images) do
+    --if the image type is correct make an ifelse series, to set imageFolder variable
+    debugToDisplay("function parthiaSetImages, checking imageTypeKey.name: "..imageTable.name.." against imageType: "..imageType)
+    if imageTable.name == imageType then --found a match for imageTType in tecSettings.images table
+      debugToDisplay("function parthiaSetImages, image type match found.")
+      imageFolder = imageTable.folder
+      imageTypeCorrect = true --used to tell function the correct imageType was found
+      imageTableKey = imageTableName --keep track of the key to use when checking what window to update the styleSheet for
+      break --found what we are looping for break loop and move on.
+    end --if imageTypeKey.name == imageType
+  end --for pairs(tecSettings.images)
+  
+  --if the image type is incorrect we can not continue. Show message to screen if player sent command.
+  if not imageTypeCorrect then --imageType argument one is incorrect
+    if displayToScreen then localImageTypeHelp() end --show help message if displayToScreen is true
+    return --stop function a correct imageType is required
+  end --if not imageTypeCorrect
+  
+  local localFilesFound = parthiaFileList(imageFolder) --collect list of files in the directory
+  
+  if localFilesFound then --if files are found in imageType's directory
+    if table.contains(localFilesFound, fileName) then --check if fileName is in the imageType's directory
+      debugToDisplay("function parthiaSetImages, setting tecSettings.images."..imageTableKey..".image to "..imageFolder..fileName)
+      
+      if tecSettings.images[imageTableKey] then --if the images type exists in the images table
+        tecSettings.images[imageTableKey].image = imageFolder..fileName --allows settings to be saved to file.
+        
+        if imageTableKey == "tabs" then --no method to manually assemble tabs label references, letting tecRedrawLabels do tabs.
+          tecRedrawLabels() --redraw all labels in project.
+        else --for all other labels we can track them, so adjust for them specifically.
+          if not imageWindowsReferenceTable[imageTableKey] then tecErrorNotification("function parthiaSetImages, "..imageTableKey" missing from  imageWindowsReferenceTable.") end
+          for _, imageLabel in pairs(imageWindowsReferenceTable[imageTableKey].windows) do
+            if imageLabel.styleSheet then --if this label has an existing styleSheet
+              imageLabel.styleSheet = imageLabel.styleSheet:gsub("[^;]-;",[[border-image: url("]]..tecSettings.images[imageTableKey].image..[[");]],1) --repace the first line of the style sheet with border image for this label
+            else --this label lacks an existing styleSheet
+              imageLabel.styleSheet = [[border-image: url("]]..tecSettings.images[imageTableKey].image..[[");]]
+            end --if imageLabel.styleSheet
+            imageLabel:setStyleSheet(imageLabel.styleSheet) --set the new styleSheet for this label
+          end --for pairs(tecSettings.images[imageTableKey].windows)
+        end --if imageTableKey == "tabs"
+      else --image label is not in the tecSettings.images table
+        tecErrorNotification("function parthiaSetImages, table tecSettings.images missing imageType after initial error checking.")
+      end --tecSettings.images[imageTableKey]
+      dontForgetToSave()
+    else --fileName is not in tabs directory, check for commands that are not image names or display help message
+      if fileName:lower() == "add" then --player sent add as argument
+        pecho("If your image looks poor, try lowering the compression level of the image.\n"
+          .."To open svg files use ")
+        pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;inkscape.", 
+          [[openUrl("https://inkscape.org/")]], --runs on click.
+          "Open inkscape website. ", true)
+        pecho("\nFor all other image types use ")
+        pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;GIMP.", 
+          [[openUrl("https://www.gimp.org/")]], --runs on click.
+          "Open GIMP website. ", true)
+        pecho("\nChanges you make to existing images will be removed with each Parthia update. If you would like to update an existing image, create a copy and make changes on the copy.")
+        tecOpenDirectory(imageFolder) --opens folder of the image type the player is tring to add to
+      else --unsupported argument sent. Display list of supported commands for this imageType
+        pecho("Supported commands to change "..imageType.." image are:\n")
+        for i,file in ipairs(localFilesFound) do --loop through files found in imageType's folder
+          --make command for cechoLink
+          local cmdToSend = [[parthiaSetImages("]]..imageType..[[","]]..file..[[")]] --command to send when player clicks echoLink
+          pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display images "..imageType.." "..file, 
+            cmdToSend, --runs on click.
+            "Set "..imageType.." image to "..file, true)
+          pecho("\n\t^Set "..imageType.." image to "..file.."\n")
+        end --for ipairs(localFilesFound)
+        
+        pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display images "..imageType.." add", 
+          [[parthiaSetImages("]]..imageType..[[","add")]],
+          "Open "..imageType.." images folder", true)
+        pecho(" open the folder for "..imageType.." to add your custom images to.\n")
+        pecho("Click a command above or type it into the command line.\n")
+      end --if fileName:lower() == "add"
+    end --table.contains(localFilesFound, fileName)
+  else --not files found in the imageType's folder, provide an option to repair
+    pecho("No files found in the "..imageType.." directory.\n"
+      .."This can likely be resolved by running ")
+    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia repair", 
+      [[expandAlias("parthia repair")]],
+      "Repair Parthia", true)
+    pecho("\nIf the issue continues please report it with ")
+    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug report issue", 
+  	 [[tecReportIssues()]], 
+  	 "Report client issues", true)
+     echo("\n")
+  end --if localFilesFound
+end --parthiaSetImages()</script>
+					<eventHandlerList />
+				</Script>
 				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>UIManager</name>
 					<packageName></packageName>
@@ -4989,140 +5251,6 @@ end --function UIManagerResizeHelp</script>
       .."No windows should show on screen to move.")
   end --if GetUIManager() == "GUIframe" and GUIframe.initialized
 end --function tecResizeDisplayHelp</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>parthiaSetImages()</name>
-						<packageName></packageName>
-						<script>--displays message that helps players easily find the image types that can be set with parthiaSetImages
-local function localImageTypeHelp()
-  pecho("Supported commands to change images in Parthia are:\n")
-  for _, imageTypeValue in pairs(tecSettings.images) do
-    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display images "..imageTypeValue.name.." list", 
-      [[parthiaSetImages("]]..imageTypeValue.name..[[","list", true)]],
-      "List images for "..imageTypeValue.name, true)
-    pecho(" list images available for "..imageTypeValue.name..".\n")
-  end --for pairs(tecSettings.images)
-end --function localImageTypeHelp()
-
---allows player to change or add images throughout the client.
---imageType is compassBackground compassOverlay and other windows with images 
---fileName is the name of the file in the directory that is affiliated to the imageType
---displayToScreen controls if the player sees a message when this is run
-function parthiaSetImages(imageType, fileName, displayToScreen)
-  displayToScreen = fuzzyBoolean(displayToScreen) --make certain data type is correct.
-  if imageType then --if a first argument was received
-    if type(imageType) ~= "string" then --if argument one is not a string
-      tecErrorNotification("function parthiaSetImages, imageType argument one is a non string variable.")
-    end --if type(imageType) ~= "string"
-  else --not sent an imageType
-    tecWarningNotification("function parthiaSetImages, incorrect image type.")
-    if displayToScreen then localImageTypeHelp() end --show help message if displayToScreen is true
-  end --if imageType
-  if fileName then --if a second argument was received
-    if type(fileName) ~= "string" then --if argument two is not a string
-      tecErrorNotification("function parthiaSetImages, fileName argument two is a non string variable.")
-    end --if type(fileName) ~= "string"
-  else --was not sent a fileName
-    fileName = "list" --set it to anything really so it displays a help message
-  end --if fileName
-  
-  imageType = imageType:lower() --make certain imageType is lower case.
-  local imageFolder = "" --will contain file path to images for the imageType
-  local imageTypeCorrect = false --used to verify that a useable imageType was passed
-  local imageTableKey = "" --used to record the key for the tecSettings.images for the imageType needed
-  
-  --check if imageType is correct
-  --tecSettings.images is in the variables script, stores default settings and directories for imageTypes
-  for imageTableName, imageTable in pairs(tecSettings.images) do
-    --if the image type is correct make an ifelse series, to set imageFolder variable
-    debugToDisplay("function parthiaSetImages, checking imageTypeKey.name: "..imageTable.name.." against imageType: "..imageType)
-    if imageTable.name == imageType then --found a match for imageTType in tecSettings.images table
-      debugToDisplay("function parthiaSetImages, image type match found.")
-      imageFolder = imageTable.folder
-      imageTypeCorrect = true --used to tell function the correct imageType was found
-      imageTableKey = imageTableName --keep track of the key to use when checking what window to update the styleSheet for
-      break --found what we are looping for break loop and move on.
-    end --if imageTypeKey.name == imageType
-  end --for pairs(tecSettings.images)
-
-  --if the image type is incorrect we can not continue. Show message to screen if player sent command.
-  if not imageTypeCorrect then --imageType argument one is incorrect
-    tecWarningNotification("function parthiaSetImages, incorrect image type.")
-    if displayToScreen then localImageTypeHelp() end --show help message if displayToScreen is true
-    return --stop function a correct imageType is required
-  end --if not imageTypeCorrect
-  
-  local localFilesFound = parthiaFileList(imageFolder) --collect list of files in the directory
-  
-  if localFilesFound then --if files are found in tabs directory
-    if table.contains(localFilesFound, fileName) then --check if fileName is in the tabs folder
-      debugToDisplay("function parthiaSetImages, setting tecSettings.images."..imageTableKey..".image to "..imageFolder..fileName)
-      tecSettings.images[imageTableKey].image = imageFolder..fileName --allows settings to be saved to file. Will also allows tabs to be drawn with tecRedrawLabels
-      if imageTableKey == "compassBackground" then --if the tecSettings.images key is compass background set the styleSheet for the compass backgrounds
-        tecCompass.back.styleSheet = [[border-image: url("]]..tecSettings.images["compassBackground"].image..[[");]]
-        MultiWindow.Compass.back.styleSheet = [[border-image: url("]]..tecSettings.images["compassBackground"].image..[[");]]
-      elseif imageTableKey == "compassOverlay" then --if the tecSettings.images key is for the compass overlay then set the stylSheets for the compass overlays
-        tecCompass.overlay.styleSheet = [[border-image: url("]]..tecSettings.images["compassOverlay"].image..[[");]]
-        MultiWindow.Compass.overlay.styleSheet = [[border-image: url("]]..tecSettings.images["compassOverlay"].image..[[");]]
-      elseif imageTableKey == "mapBackground" then --if the tecSetting.images key is for the tec man background then set the styleSheet for it.
-        tecMap_back.styleSheet = [[border-image: url("]]..tecSettings.images["mapBackground"].image..[[");]]
-      elseif imageTableKey == "macroBackground" then --if the tecSetting.images key is for the
-        if macroMenu.back then --for some reason macroMenu is empting. This checks for that
-          macroMenu.back.styleSheet = [[border-image: url("]]..tecSettings.images["macroBackground"].image..[[");]]
-        else --macro menu.container is disappearing right now, this catches that error
-          if not tecGeyserWindows["Macros"].disabled then --if the macros window is enabled
-            pecho("Currently a restart of mudlet is required to apply a new background to the Macros window.\n")
-          end --if not tecGeyserWindows["Macros"].disabled
-        end --if macroMenu.back
-        MultiWindow.macroMenu.back.styleSheet = [[border-image: url("]]..tecSettings.images["macroBackground"].image..[[");]]
-      end --if imageType ==
-      tecRedrawLabels() --redraw labels so changes show.
-      dontForgetToSave()
-    else --fileName is not in tabs directory, list correct commands
-      if fileName:lower() == "add" then --player sent add as argument
-        pecho("If your image looks poor, try lowering the compression level of the image.\n"
-          .."To open svg files use ")
-        pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;inkscape.", 
-          [[openUrl("https://inkscape.org/")]], --runs on click.
-          "Open inkscape website. ", true)
-        pecho("\nFor all other image types use ")
-        pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;GIMP.", 
-          [[openUrl("https://www.gimp.org/")]], --runs on click.
-          "Open GIMP website. ", true)
-        pecho("\nChanges you make to existing images will be removed with each Parthia update. If you would like to update an existing image, create a copy and make changes on the copy.")
-        tecOpenDirectory(imageFolder) --opens folder of the image type the player is tring to add to
-      else --unsupported argument sent. Display list of supported commands for this imageType
-        pecho("Supported commands to change "..imageType.." image are:\n")
-        for i,file in ipairs(localFilesFound) do --loop through files found in imageType's folder
-          --make command for cechoLink
-          local cmdToSend = [[parthiaSetImages("]]..imageType..[[","]]..file..[[")]] --command to send when player clicks echoLink
-          pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display images "..imageType.." "..file, 
-            cmdToSend, --runs on click.
-            "Set "..imageType.." image to "..file, true)
-          pecho(", set "..imageType.." image to "..file.."\n")
-        end --for ipairs(localFilesFound)
-        
-        pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display images "..imageType.." add", 
-          [[parthiaSetImages("]]..imageType..[[","add")]],
-          "Open "..imageType.." images folder", true)
-        pecho(" open the folder for "..imageType.." to add your custom images to.\n")
-        pecho("Click a command above or type it into the command line.\n")
-      end --if fileName:lower() == "add"
-    end --table.contains(localFilesFound, fileName)
-  else --not files found in the imageType's folder, provide an option to repair
-    pecho("No files found in the "..imageType.." directory.\n"
-      .."This can likely be resolved by running ")
-    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia repair", 
-      [[expandAlias("parthia repair")]],
-      "Repair Parthia", true)
-    pecho("\nIf the issue continues please report it with ")
-    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug report issue", 
-  	 [[tecReportIssues()]], 
-  	 "Report client issues", true)
-     echo("\n")
-  end --if localFilesFound
-end --parthiaSetImages()</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
@@ -6878,7 +7006,7 @@ function GitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if GitUpdate.localRespitory not exist
   GitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  GitUpdate.localVersion = "0.1.38" --Must match the tag in your github release
+  GitUpdate.localVersion = "0.1.39" --Must match the tag in your github release
   GitUpdate.aliasName = "parthia update" --Name of alias user runs to process update
   --Name of the alias to check if an update is available.
   GitUpdate.updateCheckAlias = "parthia update check" 
@@ -8145,23 +8273,23 @@ UIManagerRegisterWindow(status_bar)</script>
   width="50%", height="50%",
 },status_bar)
 
-hpbar.frontStyleSheet = [[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffdcdc, stop: 0.1 #ff8c8c, stop: 0.49 #ff4c4c, stop: 0.5 #ff4c4c, stop: 1 #ff6666);
-    border-top: 1px black solid;
-    border-left: 1px black solid;
-    border-bottom: 1px black solid;
-    border-radius: 7;
-    padding: 3px;]]
-hpbar.front:setStyleSheet(hpbar.frontStyleSheet) --set the forground gradiant
+hpbar.frontStyleSheet = [[
+    border-image: url("]]..tecSettings.images["healthBar"].image..[[");
+    border-radius: 5;
+    margin: 5px;
+]]
+hpbar.front.styleSheet = hpbar.frontStyleSheet
+hpbar.front:setStyleSheet(hpbar.front.styleSheet) --set the forground gradiant
 
-hpbar.backStyleSheet = [[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ff6666, stop: 0.1 #F05050, stop: 0.49 #E03030, stop: 0.5 #E03030, stop: 1 #E03030);
-    border-width: 1px;
-    border-color: black;
-    border-style: solid;
-    border-radius: 7;
-    padding: 3px;]]                                             
-hpbar.back:setStyleSheet(hpbar.backStyleSheet) --set the background gradiant
+hpbar.backStyleSheet = [[
+    border-image: url("]]..tecSettings.images["healthBackground"].image..[[");
+    border-radius: 5;
+]]
+hpbar.back.styleSheet = hpbar.backStyleSheet                            
+hpbar.back:setStyleSheet(hpbar.back.styleSheet) --set the background gradiant
 
-hpbar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Health&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
+hpbar:setValue(100,100)
+hpbar.text:echo("Health","black","cb14") --put writing on bar
 hpbar.text:setClickCallback("parthiaStatusClick","health") --collect stats and show load to screen on click</script>
 					<eventHandlerList />
 				</Script>
@@ -8174,23 +8302,25 @@ hpbar.text:setClickCallback("parthiaStatusClick","health") --collect stats and s
   width="50%", height="50%",
 },status_bar)
 
-fatiguebar.frontStyleSheet = [[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f0fff0, stop: 0.1 #f0ffca, stop: 0.49 #f0d09a, stop: 0.5 #f0d09a, stop: 1 #f0d09a);
-    border-top: 1px black solid;
-    border-left: 1px black solid;
-    border-bottom: 1px black solid;
-    border-radius: 7;
-    padding: 3px;]]
-fatiguebar.front:setStyleSheet(fatiguebar.frontStyleSheet)
+fatiguebar.frontStyleSheet = [[
+    border-image: url("]]..tecSettings.images["fatigueBar"].image..[[");
+    border-style: double;
+    border-radius: 5;
+    margin: 5px;
+]]
+fatiguebar.front.styleSheet = fatiguebar.frontStyleSheet
+fatiguebar.front:setStyleSheet(fatiguebar.front.styleSheet)
 
-fatiguebar.backStyleSheet = [[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f0d09a, stop: 0.1 #e0c08a, stop: 0.49 #d0b07a, stop: 0.5 #d0b07a, stop: 1 #d0b07a);
-    border-width: 1px;
-    border-color: black;
-    border-style: solid;
-    border-radius: 7;
-    padding: 3px;]]
-fatiguebar.back:setStyleSheet(fatiguebar.backStyleSheet)
+fatiguebar.backStyleSheet = [[
+    border-image: url("]]..tecSettings.images["fatigueBackground"].image..[[");
+    border-style: double;
+    border-radius: 5;
+]]
+fatiguebar.back.styleSheet = fatiguebar.backStyleSheet
+fatiguebar.back:setStyleSheet(fatiguebar.back.styleSheet)
 
-fatiguebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Fatigue&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
+fatiguebar:setValue(100,100)
+fatiguebar.text:echo("Fatigue","black","cb14") --put writing on bar
 fatiguebar.text:setClickCallback("parthiaStatusClick","fatigue") --collect stats and show load to screen on click</script>
 					<eventHandlerList />
 				</Script>
@@ -8202,21 +8332,24 @@ fatiguebar.text:setClickCallback("parthiaStatusClick","fatigue") --collect stats
   x="50%", y=0,
   width="50%", height="50%",
 },status_bar)
-hungerbar.frontStyleSheet = [[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #F0FEe0, stop: 0.1 #E6FDe0, stop: 0.49 #A0E070, stop: 0.5 #A0E070, stop: 1 #A0E070);
-    border-top: 1px black solid;
-    border-left: 1px black solid;
-    border-bottom: 1px black solid;
-    border-radius: 7;
-    padding: 3px;]]
-hungerbar.front:setStyleSheet(hungerbar.frontStyleSheet)
-hungerbar.backStyleSheet = [[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #A0E070, stop: 0.1 #99d869, stop: 0.49 #60c830, stop: 0.5 #60c830, stop: 1 #60c830);
-    border-width: 1px;
-    border-color: black;
-    border-style: solid;
-    border-radius: 7;
-    padding: 3px;]]
-hungerbar.back:setStyleSheet(hungerbar.backStyleSheet)
-hungerbar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Hunger&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
+
+hungerbar.frontStyleSheet = [[
+    border-image: url("]]..tecSettings.images["hungerBar"].image..[[");
+    border-radius: 5;
+    margin: 5px;
+]]
+hungerbar.front.styleSheet = hungerbar.frontStyleSheet
+hungerbar.front:setStyleSheet(hungerbar.front.styleSheet)
+
+hungerbar.backStyleSheet = [[
+    border-image: url("]]..tecSettings.images["hungerBackground"].image..[[");
+    border-radius: 5;
+]]
+hungerbar.back.styleSheet = hungerbar.backStyleSheet
+hungerbar.back:setStyleSheet(hungerbar.back.styleSheet)
+
+hungerbar:setValue(100,100)
+hungerbar.text:echo("Hunger","black","cb14") --put writing on bar
 hungerbar.text:setClickCallback("parthiaStatusClick","hunger") --collect stats and show load to screen on click</script>
 					<eventHandlerList />
 				</Script>
@@ -8228,21 +8361,22 @@ hungerbar.text:setClickCallback("parthiaStatusClick","hunger") --collect stats a
   x="50%", y="50%",
   width="50%", height="50%",
 },status_bar)
-encumbrancebar.frontStyleSheet = [[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #F0FBFE, stop: 0.1 #E6F8FD, stop: 0.49 #AFDDED, stop: 0.5 #AFDDED, stop: 1 #AFDDED);
-    border-top: 1px black solid;
-    border-left: 1px black solid;
-    border-bottom: 1px black solid;
-    border-radius: 7;
-    padding: 3px;]]
+encumbrancebar.frontStyleSheet = [[
+    border-image: url("]]..tecSettings.images["encumbranceBar"].image..[[");
+    border-radius: 5;
+    margin: 5px;
+]]
+encumbrancebar.front.styleSheet = encumbrancebar.frontStyleSheet
 encumbrancebar.front:setStyleSheet(encumbrancebar.frontStyleSheet)
-encumbrancebar.backStyleSheet = [[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #AFDDED, stop: 0.1 #A7D7E9, stop: 0.49 #80AEC7, stop: 0.5 #80AEC7, stop: 1 #80AEC7);
-    border-width: 1px;
-    border-color: black;
-    border-style: solid;
-    border-radius: 7;
-    padding: 3px;]]
-encumbrancebar.back:setStyleSheet(encumbrancebar.backStyleSheet)
-encumbrancebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Encumbrance&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
+encumbrancebar.backStyleSheet = [[
+    border-image: url("]]..tecSettings.images["encumbranceBackground"].image..[[");
+    border-radius: 5;
+]]
+encumbrancebar.back.styleSheet = encumbrancebar.backStyleSheet
+encumbrancebar.back:setStyleSheet(encumbrancebar.back.styleSheet)
+
+encumbrancebar:setValue(100,100)
+encumbrancebar.text:echo("Encumbrance","black","cb14") --put writing on bar
 encumbrancebar.text:setClickCallback("parthiaStatusClick","encumbrance") --collect stats and show load to screen on click</script>
 					<eventHandlerList />
 				</Script>
@@ -9080,34 +9214,46 @@ MultiWindow.hpbar = Geyser.Gauge:new({ --create HP bar
   name="hpbar",
   x=0, y=0, width="100%", height="25%", --position and size of container
 },MultiWindow.status_bar)
-MultiWindow.hpbar.front:setStyleSheet(hpbar.frontStyleSheet) --set the forground gradiant
-MultiWindow.hpbar.back:setStyleSheet(hpbar.backStyleSheet) --set the background gradiant
+MultiWindow.hpbar.front.styleSheet = hpbar.frontStyleSheet
+MultiWindow.hpbar.front:setStyleSheet(MultiWindow.hpbar.front.styleSheet) --set the forground gradiant
+MultiWindow.hpbar.back.styleSheet = hpbar.backStyleSheet
+MultiWindow.hpbar.back:setStyleSheet(MultiWindow.hpbar.back.styleSheet) --set the background gradiant
 MultiWindow.hpbar.text:setClickCallback("parthiaStatusClick","health") --collect stats and show health to screen
-MultiWindow.hpbar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Health&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
+MultiWindow.hpbar.text:echo("Health","black","cb14") --put writing on bar
+MultiWindow.hpbar:setValue(100,100) --set the starting fill of the bar
 MultiWindow.fatiguebar = Geyser.Gauge:new({ --create fatigue bar
   name="MultiWindow fatiguebar",
   x=0, y="25%", width="100%", height="25%", --position and size of container
 },MultiWindow.status_bar)
-MultiWindow.fatiguebar.front:setStyleSheet(fatiguebar.frontStyleSheet)
-MultiWindow.fatiguebar.back:setStyleSheet(fatiguebar.backStyleSheet)
+MultiWindow.fatiguebar.front.styleSheet = fatiguebar.frontStyleSheet
+MultiWindow.fatiguebar.front:setStyleSheet(MultiWindow.fatiguebar.front.styleSheet)
+MultiWindow.fatiguebar.back.styleSheet = fatiguebar.backStyleSheet
+MultiWindow.fatiguebar.back:setStyleSheet(MultiWindow.fatiguebar.back.styleSheet)
 MultiWindow.fatiguebar.text:setClickCallback("parthiaStatusClick","fatigue") --collect stats and show fatigue to screen
-MultiWindow.fatiguebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Fatigue&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
+MultiWindow.fatiguebar.text:echo("Fatigue","black","cb14") --put writing on bar
+MultiWindow.fatiguebar:setValue(100,100) --set the starting fill of the bar
 MultiWindow.hungerbar = Geyser.Gauge:new({ --create hunger bar
   name="MultiWindow hungerbar",
   x=0, y="50%", width="100%", height="25%", --position and size of container
 },MultiWindow.status_bar)
-MultiWindow.hungerbar.front:setStyleSheet(hungerbar.frontStyleSheet)
-MultiWindow.hungerbar.back:setStyleSheet(hungerbar.backStyleSheet)
+MultiWindow.hungerbar.front.styleSheet = hungerbar.frontStyleSheet
+MultiWindow.hungerbar.front:setStyleSheet(MultiWindow.hungerbar.front.styleSheet)
+MultiWindow.hungerbar.back.styleSheet = hungerbar.backStyleSheet
+MultiWindow.hungerbar.back:setStyleSheet(MultiWindow.hungerbar.back.styleSheet)
 MultiWindow.hungerbar.text:setClickCallback("parthiaStatusClick","hunger") --collect condition and show hunger to screen
-MultiWindow.hungerbar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Hunger&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
+MultiWindow.hungerbar:setValue(100,100)
+MultiWindow.hungerbar.text:echo("Hunger","black","cb14") --put writing on bar
 MultiWindow.encumbrancebar = Geyser.Gauge:new({ --make encumberance bar
   name="MultiWindow encumbrancebar",
   x=0, y="75%", width="100%", height="25%", --position and size of container
 },MultiWindow.status_bar)
-MultiWindow.encumbrancebar.front:setStyleSheet(encumbrancebar.frontStyleSheet)
-MultiWindow.encumbrancebar.back:setStyleSheet(encumbrancebar.backStyleSheet)
+MultiWindow.encumbrancebar.front.styleSheet = encumbrancebar.frontStyleSheet
+MultiWindow.encumbrancebar.front:setStyleSheet(MultiWindow.encumbrancebar.front.styleSheet)
+MultiWindow.encumbrancebar.back.styleSheet = encumbrancebar.backStyleSheet
+MultiWindow.encumbrancebar.back:setStyleSheet(MultiWindow.encumbrancebar.back.styleSheet)
 MultiWindow.encumbrancebar.text:setClickCallback("parthiaStatusClick","encumbrance") --collect stats and show load to screen on click
-MultiWindow.encumbrancebar:setValue(50,100,[[&lt;p style="font-size:18px"&gt;&lt;b&gt;&lt;left&gt;&lt;font color="black"&gt;Encumbrance&lt;/font&gt;&lt;/left&gt;&lt;/b&gt;&lt;/p&gt;]])
+MultiWindow.encumbrancebar:setValue(100,100)
+MultiWindow.encumbrancebar.text:echo("Encumbrance","black","cb14") --put writing on bar
 
 --redraw windows within MultiWindow so they fill spaces properly
 function MultiWindow.redrawWindows()
@@ -9252,7 +9398,6 @@ tecResetRoomCharacterWindow() --fill room characters window with text
 
 --Enable or disable scroll bars. Dependant on user preference.
 tecSetScrollBars(tecSettings.showScrollBars, false)
-
 
 --set proper state for numpad navigation
 setNumpadNavigation(getNumpadNavigation)
