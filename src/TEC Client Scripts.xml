@@ -435,9 +435,12 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   HelpDevsData = {}
   HelpDevsData.RoomTypes = {}
   HelpDevsData.NPCTypes = {}
+  HelpDevsData.NPCTypes.attacks = {}
   
   --used for data checks
   parthiaDirectionsTable = {"north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest", "up", "down", "upwards", "downwards"}
+  
+  lookRan = false --used to tell triggers when player has run the look command
 
 	if displayToScreen then pecho("Parthia settings set to default.\n") end
 
@@ -3279,6 +3282,204 @@ function parthiaFileList(path)
     return localFileTable
   end
 end --function parthiaFileList(path)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>addLinksToDirections()</name>
+					<packageName></packageName>
+					<script>--[[
+Finds room types and directions in the global line. They are between color codes.
+Using the directions and room types to turn that text into clickable links that sends a command to go to that description or direction.
+If player help developers is enabled these room descriptions are saved into table HelpDevsData.RoomTypes
+]]--
+function addLinksToDirections()
+
+  for tmpRoomType in string.gmatch( line, "0020ff\"&gt;(%P+%-?%P*)&lt;\/" ) do --detect surrounding room types that do not match players current room type
+    if getHelpDevs() then --if player has help devs set collect room types
+      if not table.contains(parthiaDirectionsTable, tmpRoomType) then --if tmpRoomType is not a direction
+        HelpDevsData.RoomTypes[tmpRoomType] = "" --collect name to table.
+      end --if not table.contains(parthiaDirectionsTable, tmpRoomType)
+    end --if getHelpDevs()
+    local iterator = 1 --create iterator to use in loop below
+    while selectString(tmpRoomType, iterator ) &gt; -1 do --select iterator detected room type
+      if tmpRoomType:lower() == "upwards" then tmpRoomType = "up" end --if upwards is room type detected, turn it to up
+      if tmpRoomType:lower() == "downwards" then tmpRoomType = "down" end --if downwards is room type detected, turn it to down
+      setLink( [[send("go ]]..tmpRoomType..[[")]], "walk here") --make the selected room type clickable by the player, so they can walk to that room
+      deselect() --dont forget your deselects
+      iterator = iterator + 1 --increase loop's iterator
+    end --if selectString(tmpRoomType, 1 ) &gt; -1
+  end --for string.gmatch( line, "0020ff\"&gt;(%P+)&lt;\/" )
+  
+  for tmpRoomType in string.gmatch( line, "00cd20\"&gt;(%P+%-?%P*)&lt;\/" ) do --detect surrounding room types that match players current room type
+    if getHelpDevs() then --if player has help devs set collect room types
+      if not table.contains(parthiaDirectionsTable, tmpRoomType) then --if tmpRoomType is not a direction
+        HelpDevsData.RoomTypes[tmpRoomType] = "" --collect name to table.
+      end --if not table.contains(parthiaDirectionsTable, tmpRoomType)
+    end --if getHelpDevs()
+    local iterator = 1 --create iterator to use in loop below
+    while selectString(tmpRoomType, iterator ) &gt; -1 do --select iterator detected room type
+      if tmpRoomType:lower() == "upwards" then tmpRoomType = "up" end --if upwards is room type detected, turn it to up
+      if tmpRoomType:lower() == "downwards" then tmpRoomType = "down" end --if downwards is room type detected, turn it to down
+      setLink( [[send("go ]]..tmpRoomType..[[")]], "walk here") --make the selected room type clickable by the player, so they can walk to that room
+      deselect() --dont forget your deselects
+      iterator = iterator + 1 --increase loop's iterator
+    end --if selectString(tmpRoomType, 1 ) &gt; -1
+  end --for string.gmatch( line, "00cd20"\"&gt;(%P+)&lt;\/" )
+  
+  --if player has help devs set 
+  if getHelpDevs() then
+    --collect current room types.
+    local tmpCurrentRoomType = line:match("^You arrive at (%P+)%p")
+    if tmpCurrentRoomType then --if something was found above.
+      if not table.contains(parthiaDirectionsTable, tmpCurrentRoomType) then --if tmpRoomType is not a direction
+        HelpDevsData.RoomTypes[tmpCurrentRoomType] = "" --collect name to table.
+      end --if not table.contains(parthiaDirectionsTable, tmpRoomType)
+      HelpDevsData.RoomTypes.currentRoom = tmpCurrentRoomType
+    end --if tmpCurrentRoomType
+  end --if getHelpDevs()
+  --[[Example 
+  You arrive at a windy bank. You are facing east. You see a &lt;/font&gt;&lt;font color="#0020ff"&gt;slight
+  gully&lt;/font&gt;&lt;font color="#000000"&gt; to the &lt;/font&gt;&lt;font color="#0020ff"&gt;north&lt;/font&gt;&lt;font 
+  color="#000000"&gt;, a &lt;/font&gt;&lt;font color="#0020ff"&gt;sandy slope&lt;/font&gt;&lt;font color="#000000"&gt; to 
+  the &lt;/font&gt;&lt;font color="#0020ff"&gt;northeast&lt;/font&gt;&lt;font color="#000000"&gt;, a &lt;/font&gt;&lt;font 
+  color="#0020ff"&gt;treacherous slope&lt;/font&gt;&lt;font color="#000000"&gt; to the &lt;/font&gt;&lt;font 
+  color="#0020ff"&gt;east&lt;/font&gt;&lt;font color="#000000"&gt;, the &lt;/font&gt;&lt;font color="#0020ff"&gt;deck of a 
+  large ship&lt;/font&gt;&lt;font color="#000000"&gt; to the &lt;/font&gt;&lt;font color="#0020ff"&gt;west&lt;/font&gt;&lt;font 
+  color="#000000"&gt;, and an &lt;/font&gt;&lt;font color="#0020ff"&gt;exposed bank&lt;/font&gt;&lt;font 
+  color="#000000"&gt; to the &lt;/font&gt;&lt;font color="#0020ff"&gt;northwest&lt;/font&gt;&lt;font 
+  color="#000000"&gt;.&lt;/font&gt;
+  
+  Filtered it looks like
+  You arrive at a windy bank. You are facing east. You see a slight gully to the north, a sandy
+  slope to the northeast, a treacherous slope to the east, the deck of a large ship to the 
+  west, and an exposed bank to the northwest.
+  ]]--
+end --function addLinksToDirections()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>addLinksToCharacters()</name>
+					<packageName></packageName>
+					<script>--[[
+add clickable links to NPCs and PCs as player walks into a room or looks.
+Collect NPC and PC names to help the developers database.
+]]--
+
+function addLinksToCharacters(checkType)
+  local characterLinkTypes = {"look", "walk"} --used to make certain argument is correct
+  local characterLinkTypesString = "" --holds a list of arguments for this function to show in error.
+  for _, v in ipairs(characterLinkTypes) do characterLinkTypesString = characterLinkTypesString..v..", " end --put good argument types in a single string
+  
+  if type(checkType) ~= "string" then --make certain argument is a string
+    tecErrorNotification("function addLinksToCharacters, was passed a non string variabe. Recieved: "..tostring(checkType)..", expected "..characterLinkTypesString..".")
+  end --if type(checkType) ~= "string"
+  if not table.contains(characterLinkTypes, checkType) then --make certain argument is of acceptable type
+    tecErrorNotification("function addLinksToCharacters, does not match a supported check type, supported check types are: "..characterLinkTypesString)
+  end --if not table.contains(characterLinkTypes, checkType)
+  
+  checkType = checkType:lower() --make certain argument is all lower case
+
+  if checkType == "look" then --if argument was "look" run selection for look command
+    local checkedCharactersTable = {}
+    for tmpCharacterType in string.gmatch( line, "0020ff\"&gt;(%P+%-?%P*)&lt;\/" ) do --detect characters as the player looks
+        tmpCharacterType = tmpCharacterType:gsub("^an ","") --remove from the begining of the string
+        tmpCharacterType = tmpCharacterType:gsub("^An ","") --remove from the begining of the string
+        tmpCharacterType = tmpCharacterType:gsub("^A ","") --remove from the begining of the string
+        tmpCharacterType = tmpCharacterType:gsub("^a ","") --remove from the begining of the string
+
+      if not table.contains(checkedCharactersTable, tmpCharacterType) then --if the character type has NOT been processed
+        debugToDisplay("function addLinksToCharacters, look passed, setting links for "..tmpCharacterType)
+        checkedCharactersTable[tmpCharacterType] = "" --add character type to the checkedCharactersTable
+        if getHelpDevs() then --if player has help devs set collect room types
+          if not table.contains(parthiaDirectionsTable, tmpCharacterType) then --if tmpCharacterType is not a direction
+            debugToDisplay("function addLinksToCharacters, look passed, adding "..tmpCharacterType.." to HelpDevsData.NPCTypes table.")
+            HelpDevsData.NPCTypes[tmpCharacterType] = "" --collect name to table.
+          end --if not table.contains(parthiaDirectionsTable, tmpCharacterType)
+        end --if getHelpDevs()
+        local iterator = 1 --create iterator to use in loop below
+        while selectString(tmpCharacterType, iterator ) &gt; -1 do --select iterator detected room type
+          --localCmdList = createCharacterCmdTable(tostring(iterator).." "..tmpCharacterType) --create a table of commands to send to setPopup
+          --setPopup("main", localCmdList, tecSettings.commandHelp) --make name clickable with a full list of options
+          local popupCmds, popupHelp = createCharacterCmdTable(tostring(iterator).." "..tmpCharacterType)
+          setPopup("main", popupCmds, popupHelp)
+          deselect() --dont forget your deselects
+          iterator = iterator + 1 --increase loop's iterator
+        end --if selectString(tmpCharacterType, 1 ) &gt; -1
+      end
+    end --for string.gmatch( line, "0020ff\"&gt;(%P+)&lt;\/" )
+  elseif checkType == "walk" then --if addLinksToCharacters was called with "walk"
+    local charactersInRoomList = string.match( line, "You arrive at [^%.]-%.([^%.]-%.)" ) --get list of characters in room after walking in
+    if charactersInRoomList:match("You are facing ") then charactersInRoomList = false end --There are no characters in this room, skip the next steps.
+    if charactersInRoomList then --there are characters in this room
+      charactersInRoomList = charactersInRoomList:gsub(" is here.","") --remove from list
+      charactersInRoomList = charactersInRoomList:gsub(" are here.","") --remove from list
+      charactersInRoomList = charactersInRoomList:gsub(" and ",", ") --replace and with a
+      charactersInRoomList = charactersInRoomList:gsub("%,%,",",") --the line above sometimes creats ,, if it did fix it.
+      debugToDisplay("function addLinksToCharacters, walk passed, temp Character list: "..charactersInRoomList)
+      local tmpCharacterTable = {} --will hold character types
+      for tmpCharacterType in string.gmatch( charactersInRoomList, " ([^,]+),?" ) do --detect characters as the player enters a room
+        tmpCharacterType = tmpCharacterType:gsub("^an ","") --remove from the begining of the string
+        tmpCharacterType = tmpCharacterType:gsub("^An ","") --remove from the begining of the string
+        tmpCharacterType = tmpCharacterType:gsub("^A ","") --remove from the begining of the string
+        tmpCharacterType = tmpCharacterType:gsub("^a ","") --remove from the begining of the string
+        if not table.contains(tmpCharacterTable, tmpCharacterType) then --if tmpCharacterType does not exist in tmpCharacterTable add it
+          debugToDisplay("function addLinksToCharacters, walk passed, adding "..tmpCharacterType.." to the tmpCharacterTable.")
+          tmpCharacterTable[tmpCharacterType] = "" --add character to tmpCharacterTable
+        end --if not table.contains(tmpCharacterTable, tmpCharacterType)
+      end --for tmpCharacterType
+      for k, v in pairs(tmpCharacterTable) do --loop through the tmpCharacterTable
+        debugToDisplay("function addLinksToCharacters, walk passed, adding links in main for "..k)
+        if getHelpDevs() then --if player has help devs set collect room types
+          if not table.contains(HelpDevsData.NPCTypes, k) then --if the NPCType is not already in the NPCType table
+            debugToDisplay("function addLinksToCharacters, walked passed, adding "..k.." to HelpDevsData.NPCTypes table.")
+            HelpDevsData.NPCTypes[k] = "" --collect NPC Type to table.
+          end --if not table.contains(HelpDevsData.NPCTypes, k then)
+        end --if getHelpDevs()
+        local iterator = 1 --create iterator to use in loop below
+        while selectString(k, iterator ) &gt; -1 do --select iterator detected room type
+          --localCmdList = createCharacterCmdTable(tostring(iterator).." "..k) --create a table of commands to send to setPopup
+          --setPopup("main", localCmdList, tecSettings.commandHelp) --make name clickable with a full list of optionspe clickable by the player, so they can walk to that room
+          local popupCmds, popupHelp = createCharacterCmdTable(tostring(iterator).." "..k)
+          setPopup("main", popupCmds, popupHelp)
+          deselect() --dont forget your deselects
+          iterator = iterator + 1 --increase loop's iterator
+        end --if selectString(tmpCharacterType, 1 ) &gt; -1
+      end --for pairs(tmpCharacterTable)
+    end --if charactersInRoomList
+  end --if checkType == series
+  
+end --function addLinksToCharacters()
+
+--[[HelpDevsData.NPCTypes
+walk into a room. NPCs and one PC
+You arrive at a large square. An Iridine soldier, an Iridine soldier, an Iridine soldier, and Constable Zout are here.
+
+look with multiple statuses
+   &lt;/font&gt;&lt;font color="#000000"&gt;&lt;/font&gt;&lt;font color="#0020ff"&gt;An Iridine soldier&lt;/font&gt;&lt;font color="#000000"&gt;, &lt;/font&gt;&lt;font
+color="#0020ff"&gt;an Iridine soldier&lt;/font&gt;&lt;font color="#000000"&gt;, and &lt;/font&gt;&lt;font color="#0020ff"&gt;an Iridine soldier&lt;/font&gt;&lt;font 
+color="#000000"&gt; are standing here. &lt;/font&gt;&lt;font color="#0020ff"&gt;Constable Zout&lt;/font&gt;&lt;font color="#000000"&gt; is asleep here.
+]]--</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>commandSuccessful()</name>
+					<packageName></packageName>
+					<script>function commandSuccessful(stringToCheck)
+  stringToCheck = stringTocheck or line --if user did not pass a string, check global line
+  if type(stringToCheck) ~= "string" then --make certain a string was passed
+    tecErrorNotification("function commandSuccessful, passed a non string variable. Received: "..tostring(stringToCheck).." expected a string.")
+  end --if type(stringToCheck) ~= "string"
+  
+  local successChance, rolled = stringToCheck:match("Success: (%d+), Roll: (%d+)") --collect success rate and number rolled
+  successChance = tonumber(successChance) --convert to a number
+  rolled = tonumber(rolled) ----convert to a number
+  debugToDisplay("function commandSuccessful, success chance: "..successChance.." Rolled: "..rolled)
+  if rolled &gt; successChance then --if rolled is greated than the success chance
+    return true --command successful
+  else
+    return false --comand failed
+  end --if rolled &gt; successChance
+end --function commandSuccessful()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -8054,6 +8255,22 @@ function tecResetRoomCharacterWindow()
   echoRightRoomCharacterWindows(" or pressing ctrl+r.\n")
   tecRoomObjects.refreshMessageDisplayed = true --tell client no further refreshes needed
 end --function tecResetRoomCharacterWindow</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>createCharacterCmdTable(stringToAdd)</name>
+						<packageName></packageName>
+						<script>--[[
+returns a table that can be used with popup functions
+]]--
+function createCharacterCmdTable(stringToAdd)
+  local characterCmdList = {}
+  for i,v in ipairs(tecSettings.commandList) do
+    table.insert(characterCmdList, v..stringToAdd..[["]])
+  end
+  
+  return characterCmdList, tecSettings.commandHelp
+end --function createCharacterCmdTable</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>

@@ -799,6 +799,20 @@ end --if parthiaPlayer</script>
 					<regex>^parthia roomdata$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
+					<name>parthia characterdata</name>
+					<script>if HelpDevsData.NPCTypes then
+  pecho("= {} is a table. and can be accessed with periods. IE parthiaPlayer.CurrentCharacter.variables, "
+    .."where variables are in the {}.\nSpecial characters in strings will have a \\ before them.\n")
+  pecho("HelpDevsData.NPCTypes = ")
+  display( HelpDevsData.NPCTypes )
+else 
+  pecho("HelpDevsData.NPCTypes table does not exist.")
+end --if parthiaPlayer</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia characterdata$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
 					<name>parthia roomdata clear</name>
 					<script>if HelpDevsData.RoomTypes then 
   HelpDevsData.RoomTypes = {}
@@ -1023,6 +1037,21 @@ tecRoomCharRefreshNotification()</script>
 					<regex>^cond$</regex>
 				</Alias>
 			</AliasGroup>
+			<Alias isActive="yes" isFolder="no">
+				<name>look</name>
+				<script>--[[
+l lo loo look
+
+]]--
+if matches[2]:len() &lt; 4 and (matches[2]:lower():starts("o") or matches[2]:lower():starts("oo") or matches[2]:lower():starts("ook") or matches[2] == "") then
+  lookRan = true --tell triggers player has run the look command
+end --if matches[2]:starts("o") or matches[2]:starts("oo") or matches[2]:starts("ook")
+
+send("l"..matches[2],false)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^[lL](.*)$</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>login</name>

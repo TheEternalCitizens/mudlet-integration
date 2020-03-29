@@ -58,7 +58,7 @@ runTECRoomObjectCheck()</script>
 			<Key isActive="yes" isFolder="no">
 				<name>KeyPad 5 -&gt; Look</name>
 				<packageName></packageName>
-				<script></script>
+				<script>lookRan = true --tell trigger system a look was run.</script>
 				<command>Look</command>
 				<keyCode>53</keyCode>
 				<keyModifier>536870912</keyModifier>
