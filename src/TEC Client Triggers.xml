@@ -1452,12 +1452,15 @@ else --text that does not need to be centered.
   
 end --if &lt;center&gt; in line else hreplace.
 
-  --now send to the tts system parthia talk
-  if getParthiaTalk() then --if parthiaTalk is enabled send filteredLine to it.
-    if parthiaTalkLine ~= "" then
-      ttsQueue(parthiaTalkLine) --send the filtered line to queue.
-    end --if not parthiaTalkLine == "" then
-  end --if getParthiaTalk() then
+--now send to the tts system parthia talk
+if getParthiaTalk() then --if parthiaTalk is enabled send filteredLine to it.
+  if parthiaTalkLine ~= "" then
+    ttsQueue(parthiaTalkLine) --send the filtered line to queue.
+  end --if not parthiaTalkLine == "" then
+end --if getParthiaTalk() then
+
+if getHelpDevs() then --if player has HelpTheDevs enabled
+end --if getHelpDevs()
 
 --displays unfiltered line to debug screen.
 --display with setTECDebugMode(true)
@@ -1790,63 +1793,9 @@ tecResetRoomCharacterWindow()
 --stop waiting for the drover, so it will not auto follow after a player has walked away while waiting for a drover.
 parthiaSetWaitForDrover(false)
 
-for tmpRoomType in string.gmatch( line, "0020ff\"&gt;(%P+%-?%P*)&lt;\/" ) do --detect surrounding room types that do not match players current room type
-  if getHelpDevs() then --if player has help devs set collect room types
-    if not table.contains(parthiaDirectionsTable, tmpRoomType) then --if tmpRoomType is not a direction
-      HelpDevsData.RoomTypes[tmpRoomType] = "" --collect name to table.
-    end --if not table.contains(parthiaDirectionsTable, tmpRoomType)
-  end --if getHelpDevs()
-  local iterator = 1 --create iterator to use in loop below
-  while selectString(tmpRoomType, iterator ) &gt; -1 do --select iterator detected room type
-    if tmpRoomType:lower() == "upwards" then tmpRoomType = "up" end --if upwards is room type detected, turn it to up
-    if tmpRoomType:lower() == "downwards" then tmpRoomType = "down" end --if downwards is room type detected, turn it to down
-    setLink( [[send("go ]]..tmpRoomType..[[")]], "walk here") --make the selected room type clickable by the player, so they can walk to that room
-    deselect() --dont forget your deselects
-    iterator = iterator + 1 --increase loop's iterator
-  end --if selectString(tmpRoomType, 1 ) &gt; -1
-end --for string.gmatch( line, "0020ff\"&gt;(%P+)&lt;\/" )
+addLinksToDirections() --add links to directions in main window. Collect room types for Help Developers commands.
 
-for tmpRoomType in string.gmatch( line, "00cd20\"&gt;(%P+%-?%P*)&lt;\/" ) do --detect surrounding room types that match players current room type
-  if getHelpDevs() then --if player has help devs set collect room types
-    if not table.contains(parthiaDirectionsTable, tmpRoomType) then --if tmpRoomType is not a direction
-      HelpDevsData.RoomTypes[tmpRoomType] = "" --collect name to table.
-    end --if not table.contains(parthiaDirectionsTable, tmpRoomType)
-  end --if getHelpDevs()
-  local iterator = 1 --create iterator to use in loop below
-  while selectString(tmpRoomType, iterator ) &gt; -1 do --select iterator detected room type
-    if tmpRoomType:lower() == "upwards" then tmpRoomType = "up" end --if upwards is room type detected, turn it to up
-    if tmpRoomType:lower() == "downwards" then tmpRoomType = "down" end --if downwards is room type detected, turn it to down
-    setLink( [[send("go ]]..tmpRoomType..[[")]], "walk here") --make the selected room type clickable by the player, so they can walk to that room
-    deselect() --dont forget your deselects
-    iterator = iterator + 1 --increase loop's iterator
-  end --if selectString(tmpRoomType, 1 ) &gt; -1
-end --for string.gmatch( line, "00cd20"\"&gt;(%P+)&lt;\/" )
-
---if player has help devs set 
-if getHelpDevs() then
-  --collect room types.
-  local tmpRoomType = line:match("^You arrive at (%P+)%p")
-  HelpDevsData.RoomTypes[tmpRoomType] = ""
-  HelpDevsData.RoomTypes.currentRoom = tmpRoomType
-  
-end --if getHelpDevs()
---[[Example 
-You arrive at a windy bank. You are facing east. You see a &lt;/font&gt;&lt;font color="#0020ff"&gt;slight
-gully&lt;/font&gt;&lt;font color="#000000"&gt; to the &lt;/font&gt;&lt;font color="#0020ff"&gt;north&lt;/font&gt;&lt;font 
-color="#000000"&gt;, a &lt;/font&gt;&lt;font color="#0020ff"&gt;sandy slope&lt;/font&gt;&lt;font color="#000000"&gt; to 
-the &lt;/font&gt;&lt;font color="#0020ff"&gt;northeast&lt;/font&gt;&lt;font color="#000000"&gt;, a &lt;/font&gt;&lt;font 
-color="#0020ff"&gt;treacherous slope&lt;/font&gt;&lt;font color="#000000"&gt; to the &lt;/font&gt;&lt;font 
-color="#0020ff"&gt;east&lt;/font&gt;&lt;font color="#000000"&gt;, the &lt;/font&gt;&lt;font color="#0020ff"&gt;deck of a 
-large ship&lt;/font&gt;&lt;font color="#000000"&gt; to the &lt;/font&gt;&lt;font color="#0020ff"&gt;west&lt;/font&gt;&lt;font 
-color="#000000"&gt;, and an &lt;/font&gt;&lt;font color="#0020ff"&gt;exposed bank&lt;/font&gt;&lt;font 
-color="#000000"&gt; to the &lt;/font&gt;&lt;font color="#0020ff"&gt;northwest&lt;/font&gt;&lt;font 
-color="#000000"&gt;.&lt;/font&gt;
-
-Filtered it looks like
-You arrive at a windy bank. You are facing east. You see a slight gully to the north, a sandy
-slope to the northeast, a treacherous slope to the east, the deck of a large ship to the 
-west, and an exposed bank to the northwest.
-]]--</script>
+addLinksToCharacters("walk") --add links to characters in main window. Collect character types for Help Developers command.</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1961,6 +1910,37 @@ end --if parthiaGetWaitForDrover()</script>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Player Looks</name>
+				<script>--[[
+runs when player uses the look command WITHOUT anything at the end of the look command.
+This trigger fires for 4 lines. Because we KNOW the look command will be 4 lines.
+]]--
+
+lookRan = false --set lookRan to false so this function does not continously run
+
+if line:match("You are facing") then --if line has "You are facing" in it we want to use the directions clicks.
+  addLinksToDirections() --add links to directions in main window. Collect room types for Help Developers commands.
+else --if the line does NOT have "You are facing" in it we want to use the character clicks.
+  addLinksToCharacters("look")
+end</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>3</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>return lookRan</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>4</integer>
 				</regexCodePropertyList>
 			</Trigger>
 		</TriggerGroup>
