@@ -19,10 +19,12 @@
 			<regexCodePropertyList />
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>SKOOT 9</name>
-				<script>--unfortunately I have no idea what SKOOT 9 lines are for.
---My GUESS is they are poorly maintaned room numbers?
---SKOOT 9 I hate you! Damn ninja number!
---lpeg.P("TestString")
+				<script>--[[
+notes provided by thric3blinded#0967
+var i= Math.min(Math.max(str*1, 0), 30); //0-30
+        i = Math.round((i / 30) * 100) / 100;    //No more than two decimal points
+        document.getElementById('light_indicator').style.opacity = i;
+]]--
 
 deleteLine() --remove line from main console. line variable remains unchanged.
 </script>
@@ -1941,6 +1943,33 @@ end</script>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>4</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>player involved in an action</name>
+				<script>--[[
+triggers when the player is involved in combat. Either attacking or beind attacked.
+text to trigger on &lt;/font&gt;&lt;font color="#00CD20"&gt;[Success: 5, Roll: 73] You punch at a practice dummy, and hit! It suffers a minor hit to its face.&lt;/font&gt;&lt;/font&gt;
+]]--
+
+if getHelpDevs() then --if player has help devs
+  sortActions() --sort and collects actions into Help The Devs tables
+end --if getHelpDevs()</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>[Success: </string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>0</integer>
 				</regexCodePropertyList>
 			</Trigger>
 		</TriggerGroup>

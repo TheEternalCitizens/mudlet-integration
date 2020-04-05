@@ -430,16 +430,30 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   tecSettings.parthiaTalkVoice = "" --default voice parthia talk speaks in. No way to know what voices are supported
 
   --save if player wants to collect data for developers.
+  helpDevDataFolder = getMudletHomeDir().."\/HelpDevelopers\/"
+  helpDevDataFile = helpDevDataFolder.."Help The Developers Data.txt"
   tecSettings.helpDevelopers = false
-  --table to save data with
-  HelpDevsData = {}
-  HelpDevsData.RoomTypes = {}
-  HelpDevsData.NPCTypes = {}
-  HelpDevsData.NPCTypes.attacks = {}
-  
+  HelpDevsData = {} --table to save data with
+  HelpDevsData.RoomTypes = {} --room types are the short description of a room, that appears after "You arrive" when you walk into a room.
+  HelpDevsData.NPCTypes = {} --names of characters in TEC
+  HelpDevsData.Combat = {} --holds combat data
+  HelpDevsData.Combat.AgainstPlayer = {} --attacks directed at the player
+  HelpDevsData.Combat.PlayerAttacks = {} --attacks the player is using
+  HelpDevsData.Combat.Unsorted = {} --attacks that we do not know if the player is using or someone is using against the player
+  HelpDevsData.NonCombatActions = {} --hold non combat actions
+  HelpDevsData.NonCombatActions.Unsorted = {} --hold unsorted non combat actions
+  HelpDevsData.NonCombatActions.Healing = {}
+  HelpDevsData.NonCombatActions.Hunting = {}
+  HelpDevsData.NonCombatActions.Locksmithing = {}
+  HelpDevsData.NonCombatActions.Tailoring = {}
+  HelpDevsData.NonCombatActions.Outdoors = {}
+  HelpDevsData.NonCombatActions.Pickpocket = {}
+  HelpDevsData.NonCombatActions.Setups = {}
+  HelpDevsData.NonCombatActions.StreetSmarts = {}
+
   --used for data checks
   parthiaDirectionsTable = {"north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest", "up", "down", "upwards", "downwards"}
-  
+
   lookRan = false --used to tell triggers when player has run the look command
 
 	if displayToScreen then pecho("Parthia settings set to default.\n") end
@@ -494,7 +508,7 @@ function tecFileLoadSettings(displayToScreen)
 		cecho("tecDebugWindow","tecFileLoadSettings: "..path.." file doesn't exist.") --TEC debug screen
 		--debugc("tecFileLoadSettings: "..path.." file doesn't exist.") --mudlets debug screen
 		if displayToScreen then
-      cecho("[ Info ]  - No settings file. Parthia using default settings.\n")
+      pecho("[ Info ]  - No settings file. Parthia using default settings.\n")
     end
 	return --kill the function before real errors occur
 	else
@@ -3386,6 +3400,7 @@ function addLinksToCharacters(checkType)
         tmpCharacterType = tmpCharacterType:gsub("^An ","") --remove from the begining of the string
         tmpCharacterType = tmpCharacterType:gsub("^A ","") --remove from the begining of the string
         tmpCharacterType = tmpCharacterType:gsub("^a ","") --remove from the begining of the string
+        tmpCharacterType = tmpCharacterType:gsub("%(unconscious%)","") --Removed the unconscious state from tmpCharacterType
 
       if not table.contains(checkedCharactersTable, tmpCharacterType) then --if the character type has NOT been processed
         debugToDisplay("function addLinksToCharacters, look passed, setting links for "..tmpCharacterType)
@@ -3462,7 +3477,7 @@ color="#000000"&gt; are standing here. &lt;/font&gt;&lt;font color="#0020ff"&gt;
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>commandSuccessful()</name>
+					<name>commandSuccessful(stringToCheck)</name>
 					<packageName></packageName>
 					<script>function commandSuccessful(stringToCheck)
   stringToCheck = stringTocheck or line --if user did not pass a string, check global line
@@ -5718,6 +5733,16 @@ end --end function tecDebugHelp</script>
   [[tecSetBetaTester(false)]],
   "Stop receiving beta updates", true)
   pecho(", No longer receive beta updates.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers", 
+  [[expandAlias("parthia help developers")]],
+  "Toggle help developers data collection", true)
+  pecho(", Toggle if you are collecting data to help developers.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers save", 
+  [[saveHelpDevs(true)]],
+  "Save Help Developer data", true)
+  pecho(", Save data collected by Help Developers to file.\n")
 
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save all", 
   [[tecClientSaveAll(true)]],
@@ -5820,10 +5845,55 @@ end --function tecClientHelp</script>
   "View parthiaPlayer table", true)
   echo(", View parthiaPlayer table.\n")
   
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers clear", 
+  [[expandAlias("parthia help developers clear")]],
+  "Clear data collected Help Developers data", true)
+  echo(", Clear data collected by Help Developers.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia room data", 
+  [[expandAlias("parthia room data")]],
+  "Display Help Developers room data", true)
+  echo(", Display Help Developers collected room data.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia room data clear", 
+  [[expandAlias("parthia room data clear")]],
+  "Clear Help Developers room data", true)
+  echo(", Clear Help Developers collected room data.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia character data", 
+  [[expandAlias("parthia character data")]],
+  "Display Help Developers character data", true)
+  echo(", Display Help Developers collected character data.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia character data clear", 
+  [[expandAlias("parthia character data clear")]],
+  "Clear Help Developers character data", true)
+  echo(", Clear Help Developers collected character data.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia player combat data", 
+  [[expandAlias("parthia player combat data")]],
+  "Display Help Developers player combat data", true)
+  echo(", Display Help Developers collected player combat data.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia player combat data clear", 
+  [[expandAlias("parthia player combat data clear")]],
+  "Clear Help Developers player combat data", true)
+  echo(", Clear Help Developers collected player combat data.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia player noncombat data", 
+  [[expandAlias("parthia player noncombat data")]],
+  "Display Help Developers player noncombat data", true)
+  echo(", Display Help Developers collected player noncombat data.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia player noncombat data clear", 
+  [[expandAlias("parthia player noncombat data clear")]],
+  "Clear Help Developers player noncombat data", true)
+  echo(", Clear Help Developers collected player noncombat data.\n")
+  
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia prepare release", 
   [[expandAlias("parthia prepare release")]],
   "Prepare code for release", true)
-  echo(", set mudlet objects to default enable or disabled state.\n")
+  echo(", prepare mudlet profile for a new github release.\n")
 
 end --function parthiaDeveloperHelp()</script>
 					<eventHandlerList />
@@ -6097,7 +6167,19 @@ end --end tecMapIconAdjustment</script>
 --y is vertical position of top left corner
 --size is the size of the room 
 --color is the color of the room 
---No fucking idea what the fucking number at the end is!
+--[[
+last variable notes provided by thric3blinded#0967
+
+var light = 25.4905;
+light = light - 25;
+var colourArray = [0, 255, 0]; // starts as whatever the 4th variable hex value is, in RGB
+
+colourArray[0] = Math.min(Math.max(Math.round(colourArray[0] * 1 + (light * 8)), 0), 255);
+colourArray[1] = Math.min(Math.max(Math.round(colourArray[1] * 1 + (light * 8)), 0), 255);
+colourArray[2] = Math.min(Math.max(Math.round(colourArray[2] * 1 + (light * 8)), 0), 255);
+
+// colourArray ends up being: [4, 255, 4] (green with light applied)
+]]--
 
 --This is going to be the games largest in drawn pixels and most common skoot message
 --SKOOT 6 -40,-40,80,#ff0000,117.624,40,-40,80,#00ff00,117.624,-120,-40,80,#00ff00,117.624,
@@ -8369,13 +8451,14 @@ end --function runConditionCollection(displayToScreen)</script>
 					<name>HelpTheDevelopers</name>
 					<packageName></packageName>
 					<script>--[[
-Functions to get NPC names and room types.
+Functions to collect information from data for future features
 ]]--</script>
 					<eventHandlerList />
 					<Script isActive="yes" isFolder="no">
 						<name>getHelpDevs()</name>
 						<packageName></packageName>
-						<script>function getHelpDevs()
+						<script>--get enabled or disabled state of Help Developers
+function getHelpDevs()
   return tecSettings.helpDevelopers
 end --function getHelpDevs()</script>
 						<eventHandlerList />
@@ -8383,9 +8466,211 @@ end --function getHelpDevs()</script>
 					<Script isActive="yes" isFolder="no">
 						<name>setHelpDevs(mode)</name>
 						<packageName></packageName>
-						<script>function setHelpDevs(mode)
+						<script>--set enabled or disabled state of Help Developers
+function setHelpDevs(mode)
   tecSettings.helpDevelopers = fuzzyBoolean(mode)
 end --function setHelpDevs(mode)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>saveHelpDevs(displayToScreen)</name>
+						<packageName></packageName>
+						<script>--[[
+save help developers table to file.
+If the command was run by the player prompt to open the save folder and send data to a developer
+]]--
+function saveHelpDevs(displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  
+  local helpDevFolderExist = lfs.chdir(helpDevDataFolder) --check if the help developers folder already exists
+  if not helpDevFolderExist then --if the help developers folder does not exist
+    local profileFolderExists = lfs.chdir(getMudletHomeDir()) --make certain the mudlet profile exists and change to that directory
+    if profileFolderExists then --The mudlet folder exists
+      lfs.mkdir(helpDevDataFolder) --make the help developers folder
+    end --if profileFolderExists
+  end --if not helpDevFolderExist
+
+  if getHelpDevs() then --if Help Devs is enabled save the data
+    --Save the table to file.
+    table.save(helpDevDataFile, HelpDevsData)
+  	if displayToScreen then --if player ran command
+      pecho("Help developers data saved.\n")
+      sendHelpDevs() --display message to help players submit Help Developers data
+    end --if displayToScreen
+  else --help the devs is not enabled.
+    if displayToScreen then
+      pecho("Help Developers is not enabled. Enable it with ")
+      pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers", 
+      [[expandAlias("parthia help developers")]],
+      "Toggle state of Help Developers", true)
+      pecho("\n")
+    end --if displayToScreen
+  end
+
+end --function saveHelpDevs()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>loadHelpDevs(displayToScreen)</name>
+						<packageName></packageName>
+						<script>function loadHelpDevs(displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  local tmpTable = {} --tmp table to hold data.	
+	local path = helpDevDataFile --name and folder of file
+	
+  if not io.exists(path) then --If the file does not exist let the user know.
+		tecWarningNotification("function loadHelpDevs, file "..path.." not found.")
+		if displayToScreen then
+      pecho("[  info  ]  - Help The Developers save file not found.\n")
+    end --if displayToScreen
+    return --kill the function before real errors occur
+	else --file was found
+    table.load(path, tmpTable) --Load the data in from file
+    HelpDevsData = table.update(HelpDevsData, tmpTable) --update the existing HelpDevsData table incase load is run after startup
+    if displayToScreen then 
+      pecho("[  OK  ]  - Help The Developers data successfully loaded from file.\n") 
+    end --if displayToScreen
+	end --end if file exists else
+  
+end --function loadHelpDevs(displayToScreen)
+</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>sendHelpDevs()</name>
+						<packageName></packageName>
+						<script>--displays a message to help players submit data collected by Help Developers
+function sendHelpDevs()
+  pecho("To submit Help Developers data open the folder containing it by running or clicking command ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers open", 
+    [[tecOpenDirectory(helpDevDataFolder)]], 
+    "Open help developers folder", true)
+  pecho("\n"..[[Please attach the file named Help The Developers Data.txt to:]])
+  pecho("\nAn issues report at Parthia's ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Github Issue Page", 
+    [[openUrl("https://github.com/TheEternalCitizens/mudlet-integration/issues")]], 
+    "Goto issues page", true)
+  pecho("\nA message on the Devs channel of ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Parthia's discord server", 
+    [[openUrl("https://discord.gg/SQtNmq9")]], 
+    "Goto issues page", true)
+  pecho("\nTo view data collected by Help Developers run:\n")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia room data", 
+  [[expandAlias("parthia room data")]],
+  "Display Help Developers room data", true)
+  echo(", Display Help Developers collected room data.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia character data", 
+  [[expandAlias("parthia character data")]],
+  "Display Help Developers character data", true)
+  echo(", Display Help Developers collected character data.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia player combat data", 
+  [[expandAlias("parthia player combat data")]],
+  "Display Help Developers player combat data", true)
+  echo(", Display Help Developers collected player combat data.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia player noncombat data", 
+  [[expandAlias("parthia player noncombat data")]],
+  "Display Help Developers player noncombat data", true)
+  echo(", Display Help Developers collected player noncombat data.\n")
+end --sendHelpDevs()</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>Actions</name>
+					<packageName></packageName>
+					<script></script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>sortActions(stringToCheck)</name>
+						<packageName></packageName>
+						<script>--[[
+Detects if actions player is involved in are combat or non combat actions.
+If no string is passed it looks for the action in the global line variable
+]]--
+function sortActions(stringToCheck)
+  stringToCheck = stringToCheck or line
+  if type(stringToCheck) ~= "string" then --make certain a string was passed
+    tecErrorNotification("function sortActions, passed a non string variable. Received: "..tostring(stringToCheck).." expected a string.")
+  end --if type(stringToCheck) ~= "string"
+  
+  if stringToCheck:match("^%[Success: %d+, Roll: %d+%]") then --if match is true this is a non combat action
+    debugToDisplay("function, sortActions non-combat action found.")
+    sortNonCombatActions() --sort and collect data from last action that appeared on screen
+  else --this is a combat action
+    debugToDisplay("function, sortActions combat action found.") 
+    sortCombatActions() --sort and collect data from last action that appeared on screen
+  end --if then  stringToCheck:match("(Success: %d+, Roll: %d+)")
+end --function sortActions</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>sortCombatActions(stringToCheck)</name>
+						<packageName></packageName>
+						<script>--[[
+Detects if combat action is against the player or if the player is running the action
+saves the action to the Help Developers table if the player has Help Developers enabled
+If a string is not passed 
+]]--
+function sortCombatActions(stringToCheck)
+  stringToCheck = stringTocheck or line --if user did not pass a string, check global line
+  if type(stringToCheck) ~= "string" then --make certain a string was passed
+    tecErrorNotification("function collectCombatActions, passed a non string variable. Received: "..tostring(stringToCheck).." expected a string.")
+  end --if type(stringToCheck) ~= "string"
+
+  if  stringToCheck:match("at you") or --if the attack is directed at the player.
+      stringToCheck:match("misses you") or
+      stringToCheck:match("towards you") or 
+      stringToCheck:match("slap you,") or
+      stringToCheck:match("head butt you") or 
+      stringToCheck:match("tries to distract you") or
+      stringToCheck:match("a knee into you") or 
+      stringToCheck:match("parthia playercombatdata") then
+    if getHelpDevs() then --if Help Developers is enabled
+      if not table.contains(HelpDevsData.Combat.AgainstPlayer, stringToCheck) then --if stringToCheck is not in the AgainstPlayer table
+        debugToDisplay("function collectCombatActions, adding "..stringToCheck.." to HelpDevsData.Combat.AgainstPlayer table.")
+        HelpDevsData.Combat.AgainstPlayer[stringToCheck] = "" --collect attack to table.
+      end --if not table.contains(HelpDevsData.Combat.AgainstPlayer, stringTocheck)
+    end --if getHelpDevs()
+  elseif  stringToCheck:match("%] You") or --if the attack is one the player is using
+          stringToCheck:match(", you") then
+    if getHelpDevs() then --if Help Developers is enabled
+      if not table.contains(HelpDevsData.Combat.PlayerAttacks, stringToCheck) then --if stringToCheck is not in the HelpDevsData.Combat.PlayerAttacks table
+        debugToDisplay("function collectCombatActions, adding "..stringToCheck.." to HelpDevsData.Combat.PlayerAttacks table.")
+        HelpDevsData.Combat.PlayerAttacks[stringToCheck] = "" --collect attack to table.
+      end --if not table.contains(HelpDevsData.Combat.PlayerAttacks, stringTocheck)
+    end --getHelpDevs()
+  else --we do not know where this attack belongs
+    if getHelpDevs() then --if Help Developers is enabled
+      if not table.contains(HelpDevsData.Combat.Unsorted, stringToCheck) then --if stringToCheck is not in the HelpDevsData.Combat.Unsorted table
+        debugToDisplay("function collectCombatActions, adding "..stringToCheck.." to HelpDevsData.Combat.Unsorted table.")
+        HelpDevsData.Combat.Unsorted[stringToCheck] = "" --collect attack to table.
+      end --if not table.contains(HelpDevsData.Combat.Unsorted, stringTocheck)
+    end --if getHelpDevs() then
+  end --if stringToCheck:match sort combat types if elseif series
+  
+end --function sortCombatActions(stringToCheck)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>sortNonCombatActions(stringToCheck)</name>
+						<packageName></packageName>
+						<script>function sortNonCombatActions(stringToCheck)
+  stringToCheck = stringTocheck or line --if user did not pass a string, check global line
+  if type(stringToCheck) ~= "string" then --make certain a string was passed
+    tecErrorNotification("function sortNonCombatActions, passed a non string variable. Received: "..tostring(stringToCheck).." expected a string.")
+  end --if type(stringToCheck) ~= "string"
+
+  if getHelpDevs() then --if Help Developers is enabled
+    if not table.contains(HelpDevsData.NonCombatActions.Unsorted, stringToCheck) then --if stringToCheck is not in the unsorted table
+      debugToDisplay("function sortNonCombatAction, adding "..stringToCheck.." to HelpDevsData.NonCombatActions.Unsorted table.")
+      HelpDevsData.NonCombatActions.Unsorted[stringToCheck] = "" --collect attack to table.
+    end --if not table.contains(HelpDevsData.Combat.AgainstPlayer, stringTocheck)
+  end --if getHelpDevs()
+
+end --function sortNonCombatActions</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
@@ -9626,7 +9911,11 @@ if getParthiaTalk() then
   parthiaTalkSetPitch(parthiaTalkGetPitch(), false) --set pitch voice speaks in
   ttsSpeak(" ") --Start the queue after startup
 end
---if getParthiaTalk() then ttsClearQueue() end</script>
+--if getParthiaTalk() then ttsClearQueue() end
+
+if getHelpDevs() then --if player has Help Developers enabled
+  loadHelpDevs(true) --load data saved from Help Developers
+end --if getHelpDevs()</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>

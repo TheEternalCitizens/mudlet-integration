@@ -752,13 +752,14 @@ end --if message</script>
 				</Alias>
 			</AliasGroup>
 			<AliasGroup isActive="yes" isFolder="yes">
-				<name>developer</name>
+				<name>parthia developer</name>
 				<script>--[[
 commands that would help developers only
-]]--</script>
+]]--
+parthiaDeveloperHelp()</script>
 				<command></command>
 				<packageName></packageName>
-				<regex></regex>
+				<regex>^parthia developer$</regex>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia playerdata</name>
 					<script>if parthiaPlayer then
@@ -785,7 +786,7 @@ pecho("Update command disabled.\n")</script>
 					<regex>^parthia prepare release$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>parthia roomdata</name>
+					<name>parthia room data</name>
 					<script>if HelpDevsData.RoomTypes then
   pecho("= {} is a table. and can be accessed with periods. IE parthiaPlayer.CurrentCharacter.variables, "
     .."where variables are in the {}.\nSpecial characters in strings will have a \\ before them.\n")
@@ -796,10 +797,27 @@ else
 end --if parthiaPlayer</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^parthia roomdata$</regex>
+					<regex>^parthia room data$</regex>
+					<Alias isActive="yes" isFolder="no">
+						<name>parthia room data clear</name>
+						<script>if HelpDevsData.RoomTypes then 
+  HelpDevsData.RoomTypes = {}
+  pecho("Help Developers room data cleared.\n")
+  pecho("If you would like to clear this data from the Help Developers file run ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers save", 
+    [[saveHelpDevs(true)]],
+    "Save Help Developer data", true)
+  echo("\n")
+else
+  tecErrorNotification("aliase parthia room data clear, RoomTypes table does not exist.")
+end --if HelpDevsData.RoomTypes</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^parthia room data clear$</regex>
+					</Alias>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>parthia characterdata</name>
+					<name>parthia character data</name>
 					<script>if HelpDevsData.NPCTypes then
   pecho("= {} is a table. and can be accessed with periods. IE parthiaPlayer.CurrentCharacter.variables, "
     .."where variables are in the {}.\nSpecial characters in strings will have a \\ before them.\n")
@@ -810,32 +828,160 @@ else
 end --if parthiaPlayer</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^parthia characterdata$</regex>
+					<regex>^parthia character data$</regex>
+					<Alias isActive="yes" isFolder="no">
+						<name>parthia character data clear</name>
+						<script>if HelpDevsData.NPCTypes then 
+  HelpDevsData.NPCTypes = {}
+  pecho("Help Developers character type data cleared.\n")
+  pecho("If you would like to clear this data from the Help Developers file run ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers save", 
+    [[saveHelpDevs(true)]],
+    "Save Help Developer data", true)
+  echo("\n")
+else
+  tecErrorNotification("aliase parthia character data clear, NPCTypes table does not exist.")
+end --if HelpDevsData.RoomTypes</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^parthia character data clear$</regex>
+					</Alias>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>parthia roomdata clear</name>
-					<script>if HelpDevsData.RoomTypes then 
-  HelpDevsData.RoomTypes = {}
- end --if HelpDevsData.RoomTypes</script>
+					<name>parthia player combat data</name>
+					<script> if HelpDevsData.Combat then
+  pecho("= {} is a table. and can be accessed with periods. IE parthiaPlayer.CurrentCharacter.variables, "
+    .."where variables are in the {}.\nSpecial characters in strings will have a \\ before them.\n")
+  pecho("HelpDevsData.Combat = ")
+  display(HelpDevsData.Combat)
+else 
+  pecho("HelpDevsData.Combat table does not exist.")
+end --if parthiaPlayer</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^parthia roomdata clear$</regex>
+					<regex>^parthia player combat data$</regex>
+					<Alias isActive="yes" isFolder="no">
+						<name>parthia player combat data clear</name>
+						<script>if HelpDevsData.Combat then 
+  HelpDevsData.Combat = {}
+  pecho("Help Developers player combat data cleared.\n")
+  pecho("If you would like to clear this data from the Help Developers file run ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers save", 
+    [[saveHelpDevs(true)]],
+    "Save Help Developer data", true)
+  echo("\n")
+else
+  tecErrorNotification("aliase parthia player combat data clear, Combat table does not exist.")
+end --if HelpDevsData.RoomTypes</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^parthia player combat data clear$</regex>
+					</Alias>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia player noncombat data</name>
+					<script>--HelpDevsData.NonCombatActions
+ if HelpDevsData.NonCombatActions then
+  pecho("= {} is a table. and can be accessed with periods. IE parthiaPlayer.CurrentCharacter.variables, "
+    .."where variables are in the {}.\nSpecial characters in strings will have a \\ before them.\n")
+  pecho("HelpDevsData.NonCombatActions = ")
+  display(HelpDevsData.NonCombatActions)
+else 
+  pecho("HelpDevsData.NonCombatActions table does not exist.")
+end --if parthiaPlayer</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia player noncombat data$</regex>
+					<Alias isActive="yes" isFolder="no">
+						<name>parthia player noncombat data clear</name>
+						<script>if HelpDevsData.Combat then 
+  HelpDevsData.Combat = {}
+  pecho("Help Developers player combat data cleared from memory.\n")
+  pecho("If you would like to clear this data from the Help Developers file run ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers save", 
+    [[saveHelpDevs(true)]],
+    "Save Help Developer data", true)
+  echo("\n")
+else
+  tecErrorNotification("aliase parthia player combat data clear, Combat table does not exist.")
+end --if HelpDevsData.RoomTypes</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^parthia player noncombat data clear$</regex>
+					</Alias>
 				</Alias>
 			</AliasGroup>
 			<Alias isActive="yes" isFolder="no">
 				<name>parthia help developers</name>
 				<script>if getHelpDevs() then --helpdevs is enabled so disable it
   setHelpDevs(false) --tell parthia to disable helpdevs
-  cecho("Help the developers data collection is disabled.\n")
+  pecho("Help the developers data collection is disabled.\n")
  else --helpdevs is disabled, so enable it
   setHelpDevs(true) --tell parthia to enable helpdevs
-  cecho("Help the developers data collection is enabled.\n")
+  pecho("Help the developers data collection is enabled.\n"
+  .."We will not automatically save this data to file or send it to developers.\n"
+  .."To save data collected by Help Developers run or click ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers save", 
+    [[expandAlias("parthia help developers save")]],
+    "Save Help Developers data", true)
+    pecho("\n")
+  sendHelpDevs() --display message to help players submit Help Developers data
 end --if getNumpadNaviation() then
 
 dontForgetToSave() --remind the player to save their changes.</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^parthia help developers$</regex>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia help developers save</name>
+					<script>saveHelpDevs(true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia help developers save$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia help developers load</name>
+					<script>loadHelpDevs(true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia help developers load$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia help developers open</name>
+					<script></script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia help developers open$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia help developers clear</name>
+					<script>--clears all data collected by Help Developers
+HelpDevsData = {} --table to save data with
+HelpDevsData.RoomTypes = {} --room types are the short description of a room, that appears after "You arrive" when you walk into a room.
+HelpDevsData.NPCTypes = {} --names of characters in TEC
+HelpDevsData.Combat = {} --holds combat data
+HelpDevsData.Combat.AgainstPlayer = {} --attacks directed at the player
+HelpDevsData.Combat.PlayerAttacks = {} --attacks the player is using
+HelpDevsData.Combat.Unsorted = {} --attacks that we do not know if the player is using or someone is using against the player
+HelpDevsData.NonCombatActions = {} --hold non combat actions
+HelpDevsData.NonCombatActions.Unsorted = {} --hold unsorted non combat actions
+HelpDevsData.NonCombatActions.Healing = {}
+HelpDevsData.NonCombatActions.Hunting = {}
+HelpDevsData.NonCombatActions.Locksmithing = {}
+HelpDevsData.NonCombatActions.Tailoring = {}
+HelpDevsData.NonCombatActions.Outdoors = {}
+HelpDevsData.NonCombatActions.Pickpocket = {}
+HelpDevsData.NonCombatActions.Setups = {}
+HelpDevsData.NonCombatActions.StreetSmarts = {}
+pecho("Help Developers data cleared from memory. If you would like to clear the Help Developers file run ")
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers save", 
+[[saveHelpDevs(true)]],
+"Save Help Developer data", true)
+echo("\n")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia help developers clear$</regex>
+				</Alias>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
