@@ -1920,14 +1920,21 @@ end --if parthiaGetWaitForDrover()</script>
 runs when player uses the look command WITHOUT anything at the end of the look command.
 This trigger fires for 4 lines. Because we KNOW the look command will be 4 lines.
 ]]--
-
-lookRan = false --set lookRan to false so this function does not continously run
+if lookRan then --if look ran is not false yet.
+  lookRan = false --set lookRan to false so this function does not continously run
+  lookIterator = 1 --set the look loop counter.
+  objectLinksAdded = false --tells function addLinksToObjects we have not added object links to this look
+end --if lookRan then
 
 if line:match("You are facing") then --if line has "You are facing" in it we want to use the directions clicks.
   addLinksToDirections() --add links to directions in main window. Collect room types for Help Developers commands.
 else --if the line does NOT have "You are facing" in it we want to use the character clicks.
   addLinksToCharacters("look")
-end</script>
+end --if line:match("You are facing")
+
+if lookIterator &gt; 2 then addLinksToObjects() end --if we are past the first two lines of the look command.
+
+lookIterator = lookIterator + 1 --add to the look loop counter.</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>3</mStayOpen>
