@@ -8638,6 +8638,12 @@ function sendHelpDevs()
   [[expandAlias("parthia player noncombat data")]],
   "Display Help Developers player noncombat data", true)
   echo(", Display Help Developers collected player noncombat data.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia object data", 
+  [[expandAlias("parthia object data")]],
+  "Display Help Developers object data", true)
+  echo(", Display Help Developers collected object data.\n")
+  
 end --sendHelpDevs()</script>
 						<eventHandlerList />
 					</Script>
