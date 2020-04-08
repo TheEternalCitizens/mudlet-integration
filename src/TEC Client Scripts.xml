@@ -5914,6 +5914,16 @@ end --function tecClientHelp</script>
   "Clear Help Developers room data", true)
   echo(", Clear Help Developers collected room data.\n")
   
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia object data", 
+  [[expandAlias("parthia object data")]],
+  "Display Help Developers object data", true)
+  echo(", Display Help Developers collected object data.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia object data clear", 
+  [[expandAlias("parthia object data clear")]],
+  "Clear Help Developers object data", true)
+  echo(", Clear Help Developers collected object data.\n")
+  
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia character data", 
   [[expandAlias("parthia character data")]],
   "Display Help Developers character data", true)

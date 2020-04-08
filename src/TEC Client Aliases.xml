@@ -794,7 +794,7 @@ pecho("Update command disabled.\n")</script>
   display(HelpDevsData.RoomTypes)
 else 
   pecho("HelpDevsData.RoomTypes table does not exist.")
-end --if parthiaPlayer</script>
+end --if HelpDevsData.RoomTypes</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia room data$</regex>
@@ -825,7 +825,7 @@ end --if HelpDevsData.RoomTypes</script>
   display( HelpDevsData.NPCTypes )
 else 
   pecho("HelpDevsData.NPCTypes table does not exist.")
-end --if parthiaPlayer</script>
+end --if HelpDevsData.NPCTypes</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia character data$</regex>
@@ -841,7 +841,7 @@ end --if parthiaPlayer</script>
   echo("\n")
 else
   tecErrorNotification("aliase parthia character data clear, NPCTypes table does not exist.")
-end --if HelpDevsData.RoomTypes</script>
+end --if HelpDevsData.NPCTypes</script>
 						<command></command>
 						<packageName></packageName>
 						<regex>^parthia character data clear$</regex>
@@ -856,7 +856,7 @@ end --if HelpDevsData.RoomTypes</script>
   display(HelpDevsData.Combat)
 else 
   pecho("HelpDevsData.Combat table does not exist.")
-end --if parthiaPlayer</script>
+end --if HelpDevsData.Combat</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia player combat data$</regex>
@@ -872,7 +872,7 @@ end --if parthiaPlayer</script>
   echo("\n")
 else
   tecErrorNotification("aliase parthia player combat data clear, Combat table does not exist.")
-end --if HelpDevsData.RoomTypes</script>
+end --if HelpDevsData.Combat</script>
 						<command></command>
 						<packageName></packageName>
 						<regex>^parthia player combat data clear$</regex>
@@ -904,10 +904,42 @@ end --if parthiaPlayer</script>
   echo("\n")
 else
   tecErrorNotification("aliase parthia player combat data clear, Combat table does not exist.")
-end --if HelpDevsData.RoomTypes</script>
+end --if HelpDevsData.Combat</script>
 						<command></command>
 						<packageName></packageName>
 						<regex>^parthia player noncombat data clear$</regex>
+					</Alias>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia object data</name>
+					<script>--HelpDevsData.NonCombatActions
+ if HelpDevsData.ObjectTypes then
+  pecho("= {} is a table. and can be accessed with periods. IE parthiaPlayer.CurrentCharacter.variables, "
+    .."where variables are in the {}.\nSpecial characters in strings will have a \\ before them.\n")
+  pecho("HelpDevsData.ObjectTypes = ")
+  display(HelpDevsData.ObjectTypes)
+else 
+  pecho("HelpDevsData.ObjectTypes table does not exist.")
+end --if HelpDevsData.ObjectTypes</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia object data$</regex>
+					<Alias isActive="yes" isFolder="no">
+						<name>parthia object data clear</name>
+						<script>if HelpDevsData.ObjectTypes then 
+  HelpDevsData.ObjectTypes = {}
+  pecho("Help Developers object data cleared from memory.\n")
+  pecho("If you would like to clear this data from the Help Developers file run ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers save", 
+    [[saveHelpDevs(true)]],
+    "Save Help Developer data", true)
+  echo("\n")
+else
+  tecErrorNotification("aliase parthia object data clear, Combat table does not exist.")
+end --HelpDevsData.ObjectTypes</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^parthia object data clear$</regex>
 					</Alias>
 				</Alias>
 			</AliasGroup>
