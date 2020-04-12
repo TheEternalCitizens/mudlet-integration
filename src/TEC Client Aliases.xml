@@ -1015,6 +1015,15 @@ echo("\n")</script>
 					<regex>^parthia help developers clear$</regex>
 				</Alias>
 			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display</name>
+				<script>--Please make changes to the display alias group.
+--This alias will fordward to them.
+expandAlias("display"..matches[2])</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^parthia display(\s?.*)$</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Debug</name>

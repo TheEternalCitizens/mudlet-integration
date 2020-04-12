@@ -4205,6 +4205,84 @@ function parthiaSetImages(imageType, fileName, displayToScreen)
 end --parthiaSetImages()</script>
 					<eventHandlerList />
 				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>findLabelMaxFontSize(labelToCheck)</name>
+					<packageName></packageName>
+					<script>--[[
+Retreives the max font size that will fit into a label. According to height.
+
+Usage pass a label and it returns a itiger
+fontsize = findLabelMaxFontSize(labelGeyserContainer)
+]]--
+function findLabelMaxFontSize(labelToCheck)
+  if type(labelToCheck) ~= "table" then
+    tecErrorNotification("function findLabelMaxFontSize, expected a label receive a "..type(labelToCheck))
+  end --if type(labelToCheck) ~= "table"
+  
+  local labelHeight = labelToCheck:get_height() --collect height of label
+  local textFontSize = 4 --set a starting font size
+  local _, textHeight = calcFontSize(textFontSize, "Arial") --get height of font in pexels
+  
+  while textHeight &lt; labelHeight do --loop until the text height is larger than the label height
+    debugToDisplay("function findLabelMaxFontSize, checking font size "..textFontSize
+      ..", text height: "..textHeight..", label height: "..labelHeight)
+    textFontSize = textFontSize + 1
+    _, textHeight = calcFontSize(textFontSize, "Arial") --get height of font in pexels
+    if textFontSize &gt; 40 then --stop checking if we reach font 40
+      tecWarningNotification("function findLabelMaxFontSize, reached max font size of 40. Loop stopped.") 
+      break --stop this loop
+    end --if textFontSize &gt; 40
+  end --while textHeight &lt; labelHeight
+  
+  debugToDisplay("function findLabelMaxFontSize, returning font size "..textFontSize)
+  return textFontSize --return the max font size function found
+end --function findLabelMaxFontSize(lableName)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>resizeLabelText(labelToCheck, maxFontSize, textColor, textFormat)</name>
+					<packageName></packageName>
+					<script>--[[
+Resizes text on a label according to the label's height
+intended for labels with text that are being resized.
+
+required argument labelToCheck, a reference of the getMapLabels
+optional argument maxFontSize is maximum font size 20 is used if none is present
+optional argument textColor, the color of the text. If non is specified black is used
+optional argument text format a label echo compatible text format reference at: https://www.mudlet.org/geyser/files/geyser/GeyserLabel.html#Geyser.Label:echo
+
+Usage example
+resizeLabelText(encumbrancebar, 14, "black", "cb")
+]]--
+function resizeLabelText(labelToCheck, maxFontSize, textColor, textFormat)
+  --make certain the arguments passed are good.
+  if type(labelToCheck) ~= "table" then
+    tecErrorNotification("function resizeLabelText, argument 1 expected a label receive a "..type(labelToCheck))
+  end --if type(labelToCheck) ~= "table"
+  maxFontSize = maxFontSize or 20
+  if type(maxFontSize) ~= "number" then
+    tecErrorNotification("function resizeLabelText, argument 2 expected a number receive a "..type(maxFontSize))
+  end --if type(maxFontSize) ~= "number"
+  textColor = textColor or "black"
+  if type(textColor) ~= "string" then
+    tecErrorNotification("function resizeLabelText, argument 3 expected a string receive a "..type(textColor))
+  end --if type(textColor) ~= "string"
+  textFormat = textFormat or ""
+  if type(textFormat) ~= "string" then
+    tecErrorNotification("function resizeLabelText, argument 4 expected a string receive a "..type(textFormat))
+  end --if type(textColor) ~= "string"
+  if labelToCheck.text then labelToCheck = labelToCheck.text end --if this is a guage 
+  if not labelToCheck.message then
+    tecErrorNotification("function resizeLabelText, label requires the label have a message none was found.")
+  end --if not labelToCheck
+  
+  local labelFontSize = findLabelMaxFontSize(labelToCheck) --get the max font size that can fit the height of this label
+  if labelFontSize &gt; maxFontSize then labelFontSize = maxFontSize end --if the font size would be larger than the desired max, set it to max size
+  labelToCheck:echo(labelToCheck.message,textColor,textFormat..labelFontSize) --write name on the label
+  
+end --function resizeStatusText(statusBars)</script>
+					<eventHandlerList />
+				</Script>
 				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>UIManager</name>
 					<packageName></packageName>
@@ -5875,12 +5953,17 @@ end --end function tecDebugHelp</script>
   [[printCmdLine("parthia font size ");
     pecho("Now enter the font size at the end of the command and press enter.\n")]],
   "Change client font size", true)
-  pecho(", Change font size for all consoles.\n")
+  pecho(", Change font size for all text consoles.\n")
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia commands", 
   [[parthiaCommandsHelp()]],
   "List custom parthia commands", true)
   pecho(", game commands that exist in parthia only.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display", 
+  [[expandAlias("display")]],
+  "List Parthia's display commands", true)
+  pecho(", list commands to customize display layout, images and scrollbars in Parthia.\n")
   
   pecho("Click a command above or type it into the command line.\n")
 
@@ -7353,7 +7436,7 @@ function GitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if GitUpdate.localRespitory not exist
   GitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  GitUpdate.localVersion = "0.1.41" --Must match the tag in your github release
+  GitUpdate.localVersion = "0.1.42" --Must match the tag in your github release
   GitUpdate.aliasName = "parthia update" --Name of alias user runs to process update
   --Name of the alias to check if an update is available.
   GitUpdate.updateCheckAlias = "parthia update check" 
@@ -8952,6 +9035,18 @@ encumbrancebar.text:echo("Encumbrance","black","cb14") --put writing on bar
 encumbrancebar.text:setClickCallback("parthiaStatusClick","encumbrance") --collect stats and show load to screen on click</script>
 					<eventHandlerList />
 				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>resizeStatusWindow()</name>
+					<packageName></packageName>
+					<script>function resizeStatusWindow()
+  displayDebug("resizeStatusWindow function, ran")
+  resizeLabelText(encumbrancebar, 14, "black", "cb") --resize text according to label's height
+  resizeLabelText(hungerbar, 14, "black", "cb") --resize text according to label's height
+  resizeLabelText(fatiguebar, 14, "black", "cb") --resize text according to label's height
+  resizeLabelText(hpbar, 14, "black", "cb") --resize text according to label's height
+end --function resizeStatusWindow()</script>
+					<eventHandlerList />
+				</Script>
 			</Script>
 			<Script isActive="yes" isFolder="no">
 				<name>compasbar</name>
@@ -9791,7 +9886,7 @@ MultiWindow.hpbar.front:setStyleSheet(MultiWindow.hpbar.front.styleSheet) --set 
 MultiWindow.hpbar.back.styleSheet = hpbar.backStyleSheet
 MultiWindow.hpbar.back:setStyleSheet(MultiWindow.hpbar.back.styleSheet) --set the background gradiant
 MultiWindow.hpbar.text:setClickCallback("parthiaStatusClick","health") --collect stats and show health to screen
-MultiWindow.hpbar.text:echo("Health","black","cb14") --put writing on bar
+MultiWindow.hpbar:echo("Health","black","cb14") --put writing on bar
 MultiWindow.hpbar:setValue(100,100) --set the starting fill of the bar
 MultiWindow.fatiguebar = Geyser.Gauge:new({ --create fatigue bar
   name="MultiWindow fatiguebar",
@@ -9802,7 +9897,7 @@ MultiWindow.fatiguebar.front:setStyleSheet(MultiWindow.fatiguebar.front.styleShe
 MultiWindow.fatiguebar.back.styleSheet = fatiguebar.backStyleSheet
 MultiWindow.fatiguebar.back:setStyleSheet(MultiWindow.fatiguebar.back.styleSheet)
 MultiWindow.fatiguebar.text:setClickCallback("parthiaStatusClick","fatigue") --collect stats and show fatigue to screen
-MultiWindow.fatiguebar.text:echo("Fatigue","black","cb14") --put writing on bar
+MultiWindow.fatiguebar:echo("Fatigue","black","cb14") --put writing on bar
 MultiWindow.fatiguebar:setValue(100,100) --set the starting fill of the bar
 MultiWindow.hungerbar = Geyser.Gauge:new({ --create hunger bar
   name="MultiWindow hungerbar",
@@ -9814,7 +9909,7 @@ MultiWindow.hungerbar.back.styleSheet = hungerbar.backStyleSheet
 MultiWindow.hungerbar.back:setStyleSheet(MultiWindow.hungerbar.back.styleSheet)
 MultiWindow.hungerbar.text:setClickCallback("parthiaStatusClick","hunger") --collect condition and show hunger to screen
 MultiWindow.hungerbar:setValue(100,100)
-MultiWindow.hungerbar.text:echo("Hunger","black","cb14") --put writing on bar
+MultiWindow.hungerbar:echo("Hunger","black","cb14") --put writing on bar
 MultiWindow.encumbrancebar = Geyser.Gauge:new({ --make encumberance bar
   name="MultiWindow encumbrancebar",
   x=0, y="75%", width="100%", height="25%", --position and size of container
@@ -9825,7 +9920,7 @@ MultiWindow.encumbrancebar.back.styleSheet = encumbrancebar.backStyleSheet
 MultiWindow.encumbrancebar.back:setStyleSheet(MultiWindow.encumbrancebar.back.styleSheet)
 MultiWindow.encumbrancebar.text:setClickCallback("parthiaStatusClick","encumbrance") --collect stats and show load to screen on click
 MultiWindow.encumbrancebar:setValue(100,100)
-MultiWindow.encumbrancebar.text:echo("Encumbrance","black","cb14") --put writing on bar
+MultiWindow.encumbrancebar:echo("Encumbrance","black","cb14") --put writing on bar
 
 --redraw windows within MultiWindow so they fill spaces properly
 function MultiWindow.redrawWindows()
@@ -9855,6 +9950,10 @@ function MultiWindow.redrawWindows()
   	end --if elseif window is not square
     MultiWindow.status_bar:move(localCompassWidth) --move the status bar past the compass
     MultiWindow.status_bar:resize(localMultiWindowWidth - localCompassWidth) --changed the width to fill space to the right of the compass
+    resizeLabelText(MultiWindow.encumbrancebar, 14, "black", "cb") --resize text according to label's height
+    resizeLabelText(MultiWindow.hungerbar, 14, "black", "cb") --resize text according to label's height
+    resizeLabelText(MultiWindow.fatiguebar, 14, "black", "cb") --resize text according to label's height
+    resizeLabelText(MultiWindow.hpbar, 14, "black", "cb") --resize text according to label's height
     MultiWindow.lastResizeWidth = localMultiWindowWidth --record the current width, to only run resizing when needed
     MultiWindow.lastResizeHeight = localMultiWindowHeight --record the current height, to only run resizing when needed
     displayDebug("Multi window resize run.\n")
@@ -9904,6 +10003,9 @@ function guiChange()
   if UIManagerSettings[tecSettingsBar.name] then --if window exists chek if it is enabled
 	 if not UIManagerSettings[tecSettingsBar.name].disabled then tecSettingsWindowResize() end--resize the Room Character window now
   end --if UIManagerSettings[tecSettingsBar.name]
+  if UIManagerSettings[status_bar.name] then --if window exists chek if it is enabled
+	 if not UIManagerSettings[status_bar.name].disabled then resizeStatusWindow() end--resize the status bar window
+  end --if UIManagerSettings[status_bar]
 end --end function guiChange
 
 --whenever event sysWindowReizeEvent occurs run setMainWindowAutowrap.
