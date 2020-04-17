@@ -132,7 +132,35 @@ mapRoom[150]:lower()
 if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
 
 deleteLine() --remove line from main console. line variable remains unchanged.
-</script>
+echo("\n")
+--SKOOT 10 is our last room data message. Use data collected from TEC to manage parthiaMap
+parthiaMap.currentAreaID = 1
+local roomFound = getRoomsByPosition(parthiaMap.currentAreaID,parthiaMap.Move()) --move and check if there is a room here
+pecho("roomFound: ")
+display(roomFound)
+parthiaMap.currentRoomID = roomFound[0]
+if parthiaMap.currentRoomID then
+  pecho("Found a room here: "..parthiaMap.currentRoomID.."\n")
+  parthiaMap.room.id = parthiaMap.currentRoomID --set the room id
+  centerview(parthiaMap.room.id) --center on the new room.
+else
+    pecho("No room found here.\n")
+  if parthiaMap.mapping then
+    pecho("adding room: ")
+    display(parthiaMap.room)
+    parthiaMap.addRoom(parthiaMap.room.name, parthiaMap.room.exits)
+  end --if parthiaMap.mapping
+end
+
+--prepare for next movement
+parthiaMap.previousRoom = {}
+parthiaMap.previousRoom = table.deepcopy(parthiaMap.room) --keep track of what the previous room was
+if parthiaMap.previousRoom.id then
+  pecho("Previous room id after deep copy: "..parthiaMap.previousRoom.id.."\n")
+else
+  tecWarningNotification("trigger TEC map exits, no previous room ID.")
+end --if parthiaMap.previousRoom.id
+parthiaMap.resetRoom() --clear the room table</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1976,6 +2004,53 @@ end --if getHelpDevs()</script>
 					<string>[Success: </string>
 				</regexCodeList>
 				<regexCodePropertyList>
+					<integer>0</integer>
+				</regexCodePropertyList>
+			</Trigger>
+		</TriggerGroup>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>parthia mapper</name>
+			<script></script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
+			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>parthia mapper walk detected</name>
+				<script>--[[
+triggers when player leave a room
+examples of line when this triggers 
+You crawl away to the creature controller room to the north.
+You walk to a walkway, to the south.
+You walk through a shimmering golden doorway.
+]]--
+parthiaMap.directionWalked = matches[2] 
+pecho("\nMoved direction "..matches[2].."\n")
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^You \w+\s?\w* to .+ to the (\w+)\.$</string>
+					<string>^You through a</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
 					<integer>0</integer>
 				</regexCodePropertyList>
 			</Trigger>
