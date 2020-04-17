@@ -6,53 +6,53 @@
 	<AliasPackage>
 		<Alias isActive="yes" isFolder="no">
 			<name>help</name>
-			<script>echo("\nYour vision blurs as a sudden wealth of information becomes available with a touch you can gain access to:\n")
-cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Newbie guide", 
+			<script>pecho("\nYour vision blurs as a sudden wealth of information becomes available with a touch you can gain access to:\n")
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Newbie guide", 
 [[openUrl("http://eternal-city.wikidot.com/newbie-guides")]], 
 "Guide explaining this games basic interworkings", true)
 echo("        ") --There is a bug with cechoLink tabs cause issues
 
-cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Character creation guide", 
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Character creation guide", 
 [[openUrl("http://eternal-city.wikidot.com/character-generator")]], 
 "Character creation tutorial", true)
 echo("\n\n")
 
-cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Help Anything", 
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Help Anything", 
 [[printCmdLine("help ")]], 
 "wiki search", true)
-echo(" Type help followed by anything. "
+pecho(" Type help followed by anything. "
 	.."You will be given a clickable link to search for your question on TEC's wiki.\n\n")
 
-cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;World maps", 
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;World maps", 
 [[openUrl("http://eternal-city.wikidot.com/maps")]], 
 "Maps of all major areas in this game", true)
 echo("          ") --There is a bug with cechoLink tabs cause issues
 
-cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Hunting grounds", 
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Hunting grounds", 
 [[openUrl("http://eternal-city.wikidot.com/hunting-grounds")]], 
 "Maps and explanation of hunting areas", true)
 echo("\n\n")
 
-cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Commands", 
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Commands", 
 [[openUrl("http://eternal-city.wikidot.com/commands")]], 
 "Full list of game commands", true)
 echo("            ")
 
-cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Commune with mortals", 
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Commune with mortals", 
 [[openUrl("https://discord.gg/fevBA8j")]], 
 "TEC Discord", true)
 echo("\n\n")
 
-cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Full respitory of this worlds interworkings", 
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Full respitory of this worlds interworkings", 
 [[openUrl("http://eternal-city.wikidot.com/")]], 
 "wiki site home", true)
 echo("\n\n")
 
-cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;help client", 
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;help client", 
 [[tecClientFullHelp(false, "main")]], 
 "wiki site home", true)
 
-echo("\nWith some effort you are able focus your mind and clear your vision back to reality.\n\n")</script>
+pecho("\nWith some effort you are able focus your mind and clear your vision back to reality.\n\n")</script>
 			<command></command>
 			<packageName></packageName>
 			<regex>^help$</regex>
@@ -267,6 +267,27 @@ UIManagerEnableSide("list",false,true)</script>
 				<packageName></packageName>
 				<regex>^display help$</regex>
 			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display images</name>
+				<script>imagesCmdFound = false --used to tell aliase if incorrect cmd was found
+--check if imageType is correct
+--tecSettings.images is in the variables script, stores default settings and directories for imageTypes
+for imageTableName, imageTable in pairs(tecSettings.images) do
+  if matches[2]:starts(imageTable.name) then --if a correct command was found
+    imagesCmdFound = true --good images command found
+    local imagesFileName = matches[2]:gsub(imageTable.name.." ", "") --return everything after image type argument
+    debugToDisplay("aliase display images catch, imagesFileName "..imagesFileName)
+    parthiaSetImages(imageTable.name, imagesFileName, true) --run the command. If file name is wrong a help message will display
+  end --if matches[2]:starts(imageTable.name)
+end --for pairs(tecSettings.images)
+
+if not imagesCmdFound then --if the command does not match an image type name
+  parthiaSetImages("list", "list", true) --display help command to screen
+end</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^display images\s?(.*)$</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>parthia</name>
@@ -447,6 +468,20 @@ DownloadGitReleaseJSON() --start the update process</script>
 					<regex>^parthia bluetext color (.*)</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
+					<name>parthia gray color</name>
+					<script>tecSetGrayTextColor(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia gray color (.*)</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia purple color</name>
+					<script>tecSetPurpleTextColor(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia purple color (.*)</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
 					<name>parthia text color</name>
 					<script>tecSetTextColor(matches[2])</script>
 					<command></command>
@@ -552,16 +587,442 @@ dontForgetToSave() --remind the player to save their changes.</script>
 				<packageName></packageName>
 				<regex>^parthia numpad navigation$</regex>
 			</Alias>
-			<Alias isActive="yes" isFolder="no">
-				<name>parthia prepare release</name>
-				<script>setNumpadNavigation(true) --tell parthia to enable numpad navigation
+			<AliasGroup isActive="yes" isFolder="yes">
+				<name>parthia talk</name>
+				<script>--Reference https://wiki.mudlet.org/w/Manual:Text_to_Speech_Functions
+
+parthiaTalkHelp() --display parthia talk help</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^parthia talk$</regex>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk enable</name>
+					<script>setParthiaTalk(true) --enable parthia talk
+pecho("parthia talk enabled.\n")
+dontForgetToSave()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk enable$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk disable</name>
+					<script>setParthiaTalk(false) --enable parthia talk
+expandAlias("parthia talk clear") --stop parthia talk's current speech.
+pecho("parthia talk disabled.\n")
+dontForgetToSave()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk disable$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk clear</name>
+					<script>ttsClearQueue() --clear out the message queue
+ttsSkip() --skip the current message so it stops reading</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk clear$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk cl</name>
+					<script>expandAlias("parthia talk clear")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk cl$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk skip</name>
+					<script>ttsSkip() --skip the current message</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk skip$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk sk</name>
+					<script>expandAlias("parthia talk skip")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk sk$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>pt *</name>
+					<script>--create shorter version of parthia talk command
+expandAlias("parthia talk "..tostring(matches[2]))
+</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^pt (.*)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>pt</name>
+					<script>expandAlias("parthia talk")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^pt$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk test</name>
+					<script>ttsSpeak("Parthia talk test.")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk test$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk voice</name>
+					<script>parthiaTalkSetVoice(matches[2], true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk voice (\w+)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk resume</name>
+					<script>ttsResume() --resume talking through tts queue
+ttsSpeak(" ") --sometimes the queue stops this will unstop it</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk resume$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk pause</name>
+					<script>ttsPause() --pause speech</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk pause$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk speed</name>
+					<script>--set speed parthia talk speeks at, and display messages to screen
+parthiaTalkSetSpeed(matches[2], true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk speed (.*)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk show</name>
+					<script>display(ttsGetQueue())
+ttsSpeak(" ") --sometimes GetQueue stop the queue, this prevents that.</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk show$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk thoughts</name>
+					<script>--Toggle state of parthia talk thoughts, and display a message to screen
+parthiaTalkSetThoughts(true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk thoughts$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk speech</name>
+					<script>--Toggle state of parthia talk speech, and display a message to screen
+parthiaTalkSetSpeech(true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk speech$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk pitch</name>
+					<script>--Set pitch of the voice parthia talk uses, displaying messages to screen
+parthiaTalkSetPitch(matches[2], true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk pitch (.*)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia talk debug</name>
+					<script>local message = ttsGetCurrentLine() --collect the current message in queue
+local state = ttsGetState()
+if message then --if there was a message in the tts queue
+  message = "parthia talk current line: "..message.."&lt;reset&gt;parthia talk state: "..state
+  debugToDisplay(message)
+  cecho(message.."\n") --get the current message in the ttsQueue
+  ttsSkip() --skip the current message
+  cecho("Debug data above, restarting parthia talk queue.\n")
+  ttsSpeak("Debug data above, restarting parthia talk queue.")
+else --there is no message in the tts queue
+  message = "No message in the parthia talk queue."
+  message = message .. " parthia talk state "..state
+  debugToDisplay(message)
+  cecho(message.."\n")
+  ttsSpeak(message)
+end --if message</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia talk debug$</regex>
+				</Alias>
+			</AliasGroup>
+			<AliasGroup isActive="yes" isFolder="yes">
+				<name>parthia developer</name>
+				<script>--[[
+commands that would help developers only
+]]--
+parthiaDeveloperHelp()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^parthia developer$</regex>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia playerdata</name>
+					<script>if parthiaPlayer then
+  pecho("= {} is a table. and can be accessed with periods. IE parthiaPlayer.CurrentCharacter.variables, "
+    .."where variables are in the {}.\nSpecial characters in strings will have a \\ before them.\n")
+  pecho("parthiaPlayer = ")
+  display(parthiaPlayer)
+else 
+  pecho("parthiaPlayer table does not exist.")
+end --if parthiaPlayer</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia playerdata$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia prepare release</name>
+					<script>setNumpadNavigation(true) --tell parthia to enable numpad navigation
 cecho("Number pad navigation enabled.\n")
 
 disableAlias("parthia update") --make certain update command is disabled
-cecho("Update command disabled.\n")</script>
+pecho("Update command disabled.\n")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia prepare release$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia room data</name>
+					<script>if HelpDevsData.RoomTypes then
+  pecho("= {} is a table. and can be accessed with periods. IE parthiaPlayer.CurrentCharacter.variables, "
+    .."where variables are in the {}.\nSpecial characters in strings will have a \\ before them.\n")
+  pecho("HelpDevsData.RoomTypes = ")
+  display(HelpDevsData.RoomTypes)
+else 
+  pecho("HelpDevsData.RoomTypes table does not exist.")
+end --if HelpDevsData.RoomTypes</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia room data$</regex>
+					<Alias isActive="yes" isFolder="no">
+						<name>parthia room data clear</name>
+						<script>if HelpDevsData.RoomTypes then 
+  HelpDevsData.RoomTypes = {}
+  pecho("Help Developers room data cleared.\n")
+  pecho("If you would like to clear this data from the Help Developers file run ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers save", 
+    [[saveHelpDevs(true)]],
+    "Save Help Developer data", true)
+  echo("\n")
+else
+  tecErrorNotification("aliase parthia room data clear, RoomTypes table does not exist.")
+end --if HelpDevsData.RoomTypes</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^parthia room data clear$</regex>
+					</Alias>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia character data</name>
+					<script>if HelpDevsData.NPCTypes then
+  pecho("= {} is a table. and can be accessed with periods. IE parthiaPlayer.CurrentCharacter.variables, "
+    .."where variables are in the {}.\nSpecial characters in strings will have a \\ before them.\n")
+  pecho("HelpDevsData.NPCTypes = ")
+  display( HelpDevsData.NPCTypes )
+else 
+  pecho("HelpDevsData.NPCTypes table does not exist.")
+end --if HelpDevsData.NPCTypes</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia character data$</regex>
+					<Alias isActive="yes" isFolder="no">
+						<name>parthia character data clear</name>
+						<script>if HelpDevsData.NPCTypes then 
+  HelpDevsData.NPCTypes = {}
+  pecho("Help Developers character type data cleared.\n")
+  pecho("If you would like to clear this data from the Help Developers file run ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers save", 
+    [[saveHelpDevs(true)]],
+    "Save Help Developer data", true)
+  echo("\n")
+else
+  tecErrorNotification("aliase parthia character data clear, NPCTypes table does not exist.")
+end --if HelpDevsData.NPCTypes</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^parthia character data clear$</regex>
+					</Alias>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia player combat data</name>
+					<script> if HelpDevsData.Combat then
+  pecho("= {} is a table. and can be accessed with periods. IE parthiaPlayer.CurrentCharacter.variables, "
+    .."where variables are in the {}.\nSpecial characters in strings will have a \\ before them.\n")
+  pecho("HelpDevsData.Combat = ")
+  display(HelpDevsData.Combat)
+else 
+  pecho("HelpDevsData.Combat table does not exist.")
+end --if HelpDevsData.Combat</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia player combat data$</regex>
+					<Alias isActive="yes" isFolder="no">
+						<name>parthia player combat data clear</name>
+						<script>if HelpDevsData.Combat then 
+  HelpDevsData.Combat = {}
+  pecho("Help Developers player combat data cleared.\n")
+  pecho("If you would like to clear this data from the Help Developers file run ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers save", 
+    [[saveHelpDevs(true)]],
+    "Save Help Developer data", true)
+  echo("\n")
+else
+  tecErrorNotification("aliase parthia player combat data clear, Combat table does not exist.")
+end --if HelpDevsData.Combat</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^parthia player combat data clear$</regex>
+					</Alias>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia player noncombat data</name>
+					<script>--HelpDevsData.NonCombatActions
+ if HelpDevsData.NonCombatActions then
+  pecho("= {} is a table. and can be accessed with periods. IE parthiaPlayer.CurrentCharacter.variables, "
+    .."where variables are in the {}.\nSpecial characters in strings will have a \\ before them.\n")
+  pecho("HelpDevsData.NonCombatActions = ")
+  display(HelpDevsData.NonCombatActions)
+else 
+  pecho("HelpDevsData.NonCombatActions table does not exist.")
+end --if parthiaPlayer</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia player noncombat data$</regex>
+					<Alias isActive="yes" isFolder="no">
+						<name>parthia player noncombat data clear</name>
+						<script>if HelpDevsData.Combat then 
+  HelpDevsData.Combat = {}
+  pecho("Help Developers player combat data cleared from memory.\n")
+  pecho("If you would like to clear this data from the Help Developers file run ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers save", 
+    [[saveHelpDevs(true)]],
+    "Save Help Developer data", true)
+  echo("\n")
+else
+  tecErrorNotification("aliase parthia player combat data clear, Combat table does not exist.")
+end --if HelpDevsData.Combat</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^parthia player noncombat data clear$</regex>
+					</Alias>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia object data</name>
+					<script>--HelpDevsData.NonCombatActions
+ if HelpDevsData.ObjectTypes then
+  pecho("= {} is a table. and can be accessed with periods. IE parthiaPlayer.CurrentCharacter.variables, "
+    .."where variables are in the {}.\nSpecial characters in strings will have a \\ before them.\n")
+  pecho("HelpDevsData.ObjectTypes = ")
+  display(HelpDevsData.ObjectTypes)
+else 
+  pecho("HelpDevsData.ObjectTypes table does not exist.")
+end --if HelpDevsData.ObjectTypes</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia object data$</regex>
+					<Alias isActive="yes" isFolder="no">
+						<name>parthia object data clear</name>
+						<script>if HelpDevsData.ObjectTypes then 
+  HelpDevsData.ObjectTypes = {}
+  pecho("Help Developers object data cleared from memory.\n")
+  pecho("If you would like to clear this data from the Help Developers file run ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers save", 
+    [[saveHelpDevs(true)]],
+    "Save Help Developer data", true)
+  echo("\n")
+else
+  tecErrorNotification("aliase parthia object data clear, Combat table does not exist.")
+end --HelpDevsData.ObjectTypes</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^parthia object data clear$</regex>
+					</Alias>
+				</Alias>
+			</AliasGroup>
+			<Alias isActive="yes" isFolder="no">
+				<name>parthia help developers</name>
+				<script>if getHelpDevs() then --helpdevs is enabled so disable it
+  setHelpDevs(false) --tell parthia to disable helpdevs
+  pecho("Help the developers data collection is disabled.\n")
+ else --helpdevs is disabled, so enable it
+  setHelpDevs(true) --tell parthia to enable helpdevs
+  pecho("Help the developers data collection is enabled.\n"
+  .."We will not automatically save this data to file or send it to developers.\n"
+  .."To save data collected by Help Developers run or click ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers save", 
+    [[expandAlias("parthia help developers save")]],
+    "Save Help Developers data", true)
+    pecho("\n")
+  sendHelpDevs() --display message to help players submit Help Developers data
+end --if getNumpadNaviation() then
+
+dontForgetToSave() --remind the player to save their changes.</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^parthia prepare release$</regex>
+				<regex>^parthia help developers$</regex>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia help developers save</name>
+					<script>saveHelpDevs(true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia help developers save$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia help developers load</name>
+					<script>loadHelpDevs(true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia help developers load$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia help developers open</name>
+					<script></script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia help developers open$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia help developers clear</name>
+					<script>--clears all data collected by Help Developers
+HelpDevsData = {} --table to save data with
+HelpDevsData.RoomTypes = {} --room types are the short description of a room, that appears after "You arrive" when you walk into a room.
+HelpDevsData.NPCTypes = {} --names of characters in TEC
+HelpDevsData.Combat = {} --holds combat data
+HelpDevsData.Combat.AgainstPlayer = {} --attacks directed at the player
+HelpDevsData.Combat.PlayerAttacks = {} --attacks the player is using
+HelpDevsData.Combat.Unsorted = {} --attacks that we do not know if the player is using or someone is using against the player
+HelpDevsData.NonCombatActions = {} --hold non combat actions
+HelpDevsData.NonCombatActions.Unsorted = {} --hold unsorted non combat actions
+HelpDevsData.NonCombatActions.Healing = {}
+HelpDevsData.NonCombatActions.Hunting = {}
+HelpDevsData.NonCombatActions.Locksmithing = {}
+HelpDevsData.NonCombatActions.Tailoring = {}
+HelpDevsData.NonCombatActions.Outdoors = {}
+HelpDevsData.NonCombatActions.Pickpocket = {}
+HelpDevsData.NonCombatActions.Setups = {}
+HelpDevsData.NonCombatActions.StreetSmarts = {}
+pecho("Help Developers data cleared from memory. If you would like to clear the Help Developers file run ")
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers save", 
+[[saveHelpDevs(true)]],
+"Save Help Developer data", true)
+echo("\n")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia help developers clear$</regex>
+				</Alias>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>display</name>
+				<script>--Please make changes to the display alias group.
+--This alias will fordward to them.
+expandAlias("display"..matches[2])</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^parthia display(\s?.*)$</regex>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
@@ -592,7 +1053,7 @@ setTECMapDebugMode(false)
 --turn off timer debug mesages
 setTECTimerDebugMode(false)
 
-echo("\nAll debug modes off.\n")</script>
+pecho("\nAll debug modes off.\n")</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^debug off</regex>
@@ -662,7 +1123,7 @@ tecColorTest()</script>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
-			<name>atuo checks</name>
+			<name>data collection</name>
 			<script>--[[
 Commands that interact with auto checks the client does.
 Mostly these will be used to manually run a check for dev testing.
@@ -693,6 +1154,91 @@ tecRoomCharRefreshNotification()</script>
 				<packageName></packageName>
 				<regex>^room refresh$</regex>
 			</Alias>
+			<AliasGroup isActive="yes" isFolder="yes">
+				<name>stats</name>
+				<script>runStatsCollection(true) --collect data from stats command showing command to screen</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^stats$</regex>
+				<Alias isActive="yes" isFolder="no">
+					<name>stats hide</name>
+					<script>runStatsCollection(false)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^stats hide$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>stat</name>
+					<script>runStatsCollection(true) --collect data from stats command showing command to screen</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^stat$</regex>
+				</Alias>
+			</AliasGroup>
+			<AliasGroup isActive="yes" isFolder="yes">
+				<name>condition</name>
+				<script>runConditionCollection(true) --collect data from condition command, show command to screen</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^condition$</regex>
+				<Alias isActive="yes" isFolder="no">
+					<name>condition hide</name>
+					<script>runConditionCollection(false)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^condition hide$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>conditio</name>
+					<script>runConditionCollection(true) --collect data from condition command, show command to screen</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^conditio$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>conditi</name>
+					<script>runConditionCollection(true) --collect data from condition command, show command to screen</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^conditi$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>condit</name>
+					<script>runConditionCollection(true) --collect data from condition command, show command to screen</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^condit$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>condi</name>
+					<script>runConditionCollection(true) --collect data from condition command, show command to screen</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^condi$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>cond</name>
+					<script>runConditionCollection(true) --collect data from condition command, show command to screen</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^cond$</regex>
+				</Alias>
+			</AliasGroup>
+			<Alias isActive="yes" isFolder="no">
+				<name>look</name>
+				<script>--[[
+l lo loo look
+
+]]--
+if matches[2]:len() &lt; 4 and (matches[2]:lower():starts("o") or matches[2]:lower():starts("oo") or matches[2]:lower():starts("ook") or matches[2] == "") then
+  lookRan = true --tell triggers player has run the look command
+end --if matches[2]:starts("o") or matches[2]:starts("oo") or matches[2]:starts("ook")
+
+send("l"..matches[2],false)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^[lL](.*)$</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>login</name>
@@ -704,7 +1250,7 @@ tecRoomCharRefreshNotification()</script>
 				<name>Username:</name>
 				<script>-- This alias gets 'triggered' from triggers - login - secret trigger 
 tecUsername = matches[2] --the first item
-echo("\nPlease enter your password.\n")
+pecho("\nPlease enter your password.\n")
 clearCmdLine() --clear the text user entered from command line
 tecPasswordEntry = true --used to prevent the password entry from beind sent to servers.</script>
 				<command></command>
@@ -736,14 +1282,14 @@ tecPasswordEntry = true --used to prevent the password entry from beind sent to 
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>font</name>
-				<script>echo([[
+				<script>pecho([[
 The font command is used to change font settings.
 Currently you can change the size of the font.
 Uses are:
 font size, changes the size of the font to the size entered.
 IE: font 12, sets the font size to 12.
 Current font size: ]]..getTECFont()
-.."\nfont tab #, changes the size of window tabs.")</script>
+.."\nfont tab #, changes the size of window tabs.\n")</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^font$</regex>
@@ -763,9 +1309,9 @@ Example would be `wait for drover`
 				<name>wait for drover</name>
 				<script>if not parthiaGetWaitForDrover() then --if the player is not already waiting for the drover
   parthiaSetWaitForDrover(true) --wait for the drover. Uses trigger `Drover Arrives`
-  echo("You patiently wait for the drover to arrive.\n")
+  pecho("You patiently wait for the drover to arrive.\n")
 else --player is already waiting for drover
-  echo("You are already waiting for the drover.\n")
+  pecho("You are already waiting for the drover.\n")
 end --if not parthiaGetWaitForDrover()</script>
 				<command></command>
 				<packageName></packageName>
