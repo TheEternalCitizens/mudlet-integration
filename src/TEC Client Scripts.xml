@@ -2825,6 +2825,7 @@ end --end function getTECdebugMode</script>
 --main, where users can easily see it or mudlets debug, which is meant for true
 --blue errors.
 function debugToDisplay(textMessage)
+  textMessage = textMessage:gsub("%\n","") --remove new lines so they do not show in debug window.
 	if getTECDebugMode() then --Is debug mode on?
 		cecho("tecDebugWindow","\n"..textMessage) -- print message to screen
 	end --if debug mode if check
@@ -3319,7 +3320,7 @@ function addLinksToDirections()
           HelpDevsData.RoomTypes[tmpRoomType] = "" --collect name to table.
         end --if not table.contains(parthiaDirectionsTable, tmpRoomType)
       end --if getHelpDevs()
-      
+
       --create links in the main window.
       local iterator = 1 --create iterator to use in loop below
       while selectString(tmpRoomType, iterator ) &gt; -1 do --select iterator detected room type
@@ -3333,36 +3334,29 @@ function addLinksToDirections()
       --gather exits for mapper
       if table.contains(parthiaMap.directions, tmpRoomType) then
         local exitIsADoor = false
-        if previousRoomType:lower():match("door") or previousRoomType:lower():match("gate") then
-          exitIsADoor = true
+        --TEC displays exts in format of room descriptions than exit direction. Both room and exit description are colored text. The previousRoomType holds the quick description of the exit, if it was a door or gate that will appear in the description.
+        if previousRoomType:lower():match("door") or previousRoomType:lower():match("gate") then --check if this exit is a door or gate
+          exitIsADoor = true 
         end
-        parthiaMap.room.exits[tmpRoomType] = { door = exitIsADoor }
+        parthiaMap.room.exits[tmpRoomType] = { door = exitIsADoor } --mark that this direction is a door or a gate so the mapper can add a door later.
+        if tmpRoomType == "up" then --if this exit allows player to move up or down
+          parthiaMap.upAvailable = true --needed because go u could be short for something other than go up
+          parthiaMap.room.exits[tmpRoomType].description = previousRoomType --keep track of a description of the exit. Use this to compair against movement commands like go ladder
+        elseif tmpRoomType == "down" then
+          parthiaMap.downAvailable = true --needed because go d, could be used as short for go door
+          parthiaMap.room.exits[tmpRoomType].description = previousRoomType --keep track of a description of the exit. Use this to compair against movement commands like go ladder
+        end --if tmpRoomType == "up" or tmpRoomType == "down"
       end --if table.contains(parthiaMap.directions, tmpRoomType)
-      previousRoomType = tmpRoomType --collect the 
+      previousRoomType = tmpRoomType --Keep track of the last room type used.
     end --for string.gmatch( line, "0020ff\"&gt;(%P+)&lt;\/" )
   end --for ipairs({"0020ff\"&gt;(%P+%-?%P*)&lt;\/", "00cd20\"&gt;(%P+%-?%P*)&lt;\/" })
-  
---[=[
-  for tmpRoomType in string.gmatch( line, "00cd20\"&gt;(%P+%-?%P*)&lt;\/" ) do --detect surrounding room types that match players current room type
-    if getHelpDevs() then --if player has help devs set collect room types
-      if not table.contains(parthiaDirectionsTable, tmpRoomType) then --if tmpRoomType is not a direction
-        HelpDevsData.RoomTypes[tmpRoomType] = "" --collect name to table.
-      end --if not table.contains(parthiaDirectionsTable, tmpRoomType)
-    end --if getHelpDevs()
-    local iterator = 1 --create iterator to use in loop below
-    while selectString(tmpRoomType, iterator ) &gt; -1 do --select iterator detected room type
-      if tmpRoomType:lower() == "upwards" then tmpRoomType = "up" end --if upwards is room type detected, turn it to up
-      if tmpRoomType:lower() == "downwards" then tmpRoomType = "down" end --if downwards is room type detected, turn it to down
-      setLink( [[send("go ]]..tmpRoomType..[[")]], "walk here") --make the selected room type clickable by the player, so they can walk to that room
-      deselect() --dont forget your deselects
-      iterator = iterator + 1 --increase loop's iterator
-    end --if selectString(tmpRoomType, 1 ) &gt; -1
-  end --for string.gmatch( line, "00cd20"\"&gt;(%P+)&lt;\/" )
-]=]--
 
   --collection direction walked for mapper
-  parthiaMap.directionWalked = line:match(" You are facing (%a+)%.")
-  debugToDisplay("function addlinksToDirections, Direction walked: "..parthiaMap.directionWalked)
+  if not parthiaMap.dirtectionCollected then --if we have not collection a movement direction yet do so now.
+    parthiaMap.directionWalked = line:match(" You are facing (%a+)%.")
+    debugToDisplay("function addlinksToDirections, Direction walked: "..parthiaMap.directionWalked)
+  end --if not parthiaMap.dirtectionCollected
+  parthiaMap.dirtectionCollected = false --reset directionCollected for next movement.
 
   --collect current room type
   local tmpCurrentRoomType = line:match("^You arrive at (%P+)%p")
@@ -3375,23 +3369,6 @@ function addLinksToDirections()
       HelpDevsData.RoomTypes.currentRoom = tmpCurrentRoomType
     end --if getHelpDevs()
   end --if tmpCurrentRoomType
-  --[[Example 
-  You arrive at a windy bank. You are facing east. You see a &lt;/font&gt;&lt;font color="#0020ff"&gt;slight
-  gully&lt;/font&gt;&lt;font color="#000000"&gt; to the &lt;/font&gt;&lt;font color="#0020ff"&gt;north&lt;/font&gt;&lt;font 
-  color="#000000"&gt;, a &lt;/font&gt;&lt;font color="#0020ff"&gt;sandy slope&lt;/font&gt;&lt;font color="#000000"&gt; to 
-  the &lt;/font&gt;&lt;font color="#0020ff"&gt;northeast&lt;/font&gt;&lt;font color="#000000"&gt;, a &lt;/font&gt;&lt;font 
-  color="#0020ff"&gt;treacherous slope&lt;/font&gt;&lt;font color="#000000"&gt; to the &lt;/font&gt;&lt;font 
-  color="#0020ff"&gt;east&lt;/font&gt;&lt;font color="#000000"&gt;, the &lt;/font&gt;&lt;font color="#0020ff"&gt;deck of a 
-  large ship&lt;/font&gt;&lt;font color="#000000"&gt; to the &lt;/font&gt;&lt;font color="#0020ff"&gt;west&lt;/font&gt;&lt;font 
-  color="#000000"&gt;, and an &lt;/font&gt;&lt;font color="#0020ff"&gt;exposed bank&lt;/font&gt;&lt;font 
-  color="#000000"&gt; to the &lt;/font&gt;&lt;font color="#0020ff"&gt;northwest&lt;/font&gt;&lt;font 
-  color="#000000"&gt;.&lt;/font&gt;
-  
-  Filtered it looks like
-  You arrive at a windy bank. You are facing east. You see a slight gully to the north, a sandy
-  slope to the northeast, a treacherous slope to the east, the deck of a large ship to the 
-  west, and an exposed bank to the northwest.
-  ]]--
 end --function addLinksToDirections()</script>
 					<eventHandlerList />
 				</Script>
@@ -3572,6 +3549,24 @@ end --function commandSuccessful()</script>
   objectLinksAdded = true --tell function that objectsLinks where added to this look command run
 
 end --function addLinksToObjects()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>function string:matchPartial(pattern)</name>
+					<packageName></packageName>
+					<script>--add ^ to the begining of the string. Than do a match against the origional
+--Until you find a match or returns false if there is no match
+function string:matchPartial(pattern)
+  pattern = [[^]]..pattern
+    pecho("Matching "..self.." to string pattern "..pattern.."\n")
+    if self:match(pattern) then
+      pecho("function string:matchPartial, match found.\n")
+      return true
+    else
+      pecho("function string:matchPartial, no match found.\n")
+      return false
+    end --if self:match(pattern)
+end --function string:matchPartial(pattern)</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -8434,9 +8429,9 @@ function echoLeftRoomCharacterWindows(message)
     tecErrorNotification("function echoLeftRoomCharacterWindows, sent a none string variable.")
   end --if type(message) ~= "string"
   --display messages to side of the screen
-  debugToDisplay("function echoLeftRoomCharacterWindows, message: "..message)
   hecho(roomCharacters.console.name,message) --send message or standard room character window
   hecho(MultiWindow.roomCharacters.console.name,message) --send message to room character multi window
+  debugToDisplay("function echoLeftRoomCharacterWindows, message: "..message)
 end --function echoLeftRoomCharacterWindows()</script>
 						<eventHandlerList />
 					</Script>
@@ -8448,9 +8443,9 @@ end --function echoLeftRoomCharacterWindows()</script>
     tecErrorNotification("function echoRightRoomCharacterWindows, sent a none string variable.")
   end --if type(message) ~= "string"
   --display messages to side of the screen
-  debugToDisplay("function echoRightRoomCharacterWindows, message: "..message)
   hecho(roomCharacters.rightConsole.name,message) --send message or standard room character window
   hecho(MultiWindow.roomCharacters.rightConsole.name,message) --send message to room character multi window
+  debugToDisplay("function echoRightRoomCharacterWindows, message: "..message)
 end --function echoLeftRoomCharacterWindows()</script>
 						<eventHandlerList />
 					</Script>
@@ -8925,7 +8920,35 @@ end --function getNumpadNaviation()</script>
 				<name>Parthia Map</name>
 				<packageName></packageName>
 				<script>--[[
-Start mapping system create name a table to hold the map engine
+parthiaMap table that contains parthia mapping scripts and data types.
+
+vertical movement can not be collected from messages echoed in the game.
+An example of game echo moving vertically is: You climb a spiral stairway of steel grille steps.
+The key word climb can be used to detect if a player moved up or down if only one of those options are available. This works in dark rooms also.
+The keyword climb in the vertical movement echo can not be used to collect vertical movement if both up and down movement is available.
+To detect if a player has moved up or down when both options are available. We turn to the function addLinksToDirections.
+That function already works with detecting exits in the room description echo message.
+In a room echo exit directions and exit descriptions are colored. We detect when the words "upwards" or "downwards" appear in colored text. Just before a exit direction is echoed in color, that exit's description is also colored in text.
+We take that description and store it into parthiaMap.room.exits[tmpRoomType].description = previousRoomType where tmpRoomType is a direction. 
+From there we capture all movement commands that can make the player use a special exit like: go ladder
+This has been done in alias group "movement". If a command is run IE: climb up go down go ladder. The direction is passed to function parthiaMap.detectDirection(dir)
+detectDirection detects if this movement will send the player up or down. Including if they use a special command like go ladder or go 2 ladder
+if detectDirection detects vertical movement it sets: parthiaMap.directionWalked = "up" (or "down") and parthiaMap.dirtectionCollected = true and displays a message to parthias debug console.
+
+Reference for up and down movement detection when no light is available in trigger: parthia mapper room movement
+
+function addLinksToDirections needs to correctly detect when there are multiple room types that match. We want to collect what room type is in each direction. Currently it is not accurate.
+
+Detect horizontal room position.
+Keep position of Room 1 or room that has color #FF0000, that is the players current room.
+roomAreax = {}
+for i=0, roomSize do 
+  roomAreax[i] = true
+end
+
+parthiaMap.config() and parthiaMap.load function are called in script `Post Initilization`
+
+Create option to disable mapping if colored text is disabled. Then when it is found, notify the player the parthia map can not work with colored text disabled. 
 ]]--
 
 --tell mudlet we are going to create a maping script https://wiki.mudlet.org/w/Mapping_script#Making_your_own_mapping_script
@@ -8942,29 +8965,28 @@ function parthiaMap.resetRoom()
   parthiaMap.room.coords = {} --location in the current area
   parthiaMap.room.size = nil --size of the room, collection in function parthiaDrawMapRooms()
 end --function parthiaMap.resetRoom()
-parthiaMap.resetRoom()
 
-parthiaMap.previousRoom = nil --will contain a room table of the last room the payer was in
-parthiaMap.directionWalked = "" --direction player has walked. collected in trigger parthia mapper walk detected
+function parthiaMap.config()
+  parthiaMap.currentAreaID = nil --will hold the current area name
+  parthiaMap.mapping = false --is a map being created
+  
+  parthiaMap.directions = { --used to tell mapper acceptable directions. Used in addLinksToDirections to collect room exit directions
+    "north", "northeast", "east", "southeast", "south", "southwest",
+    "west", "northwest", "up", "down"
+  }
+  parthiaMap.resetRoom() --prepare table parthiaMap.room
+end --parthiaMap.config()
 
+--parthiaMap.previousRoom = nil --will contain a room table of the last room the payer was in
+--parthiaMap.directionWalked = "" --direction player has walked. collected in trigger parthia mapper walk detected
 --parthiaMap.roomID = nil --will hold the ID of the current room the player is in
 --parthiaMap.roomName = nil --will hold the short name of the room, collected in function addLinksToDirections()
 --parthiaMap.previousRoomID = nil --will hold the ID of the previous room the player is in
 --parthiaMap.exits = {} --holds the exits for the current room, collected in function addLinksToDirections()
 --parthiaMap.coords = {} --location in the current area
-
-parthiaMap.currentAreaID = nil --will hold the current area name
-parthiaMap.mapping = false --is a map being created
-
-parthiaMap.directions = { 
-  n = 'n', ne = 'ne', nw = 'nw', e = 'e', w = 'w', s = 's', se = 'se', sw = 'sw',
-  u = 'u', d = 'd', ["in"] = 'in', out = 'out', north = 'north', northeast = 'northeast',
-  east = 'east', west = 'west', south = 'south', southeast = 'southeast', southwest = 'southwest',
-  northwest = 'northwest', up = 'up', down = 'down',
-}
-
-
-</script>
+--parthiaMap.dirtectionCollected = false --used to tell mapper if a movement direction has been collected. Is used in function addLinksToDirections and parthiaMap.zMovementTracking
+--parthiaMap.upAvailable = false --keeps track of it player can move up in this area. Used to track movement commands like go ladder
+--parthiaMap.downAvailable = false --keeps track of it player can move up in this area. Used to track movement commands like go ladder</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
 					<name>parthiaMap.addArea(areaName)</name>
@@ -8992,60 +9014,70 @@ end --function parthiaMap.addArea</script>
   room = room or parthiaMap.room
   previousRoom = previousRoom or parthiaMap.previousRoom
   directionWalked = directionWalked or parthiaMap.directionWalked
-  
-  local x,y,z = 0,0,0
 
---[[  
-  if previousRoom == nil then --if we are mapping the first room.
-    pecho("function parthiaMap.Move, no previous room coords at 0\n")
-    previousRoom = {}
-    previousRoom.size = 0
-  else --if we are not mapping the first room
-    pecho("function parthiaMap.Move, gathering coordinates of previousRoom.id: "..previousRoom.id.."\n")
-    x,y,z = getRoomCoordinates(previousRoom.id)
-  end
-]]--
-  --getPlayerRoom()
+  local x,y,z = 0,0,0 --coordinates for current location
+  local dir = directionWalked --direction player walked
+
   if previousRoom then --if we are not mapping the first room
+  
+    --We are at a known location within the map data, use that to track location.
+    if previousRoom.id then --if we had a previous room
+      local previousExits = getRoomExits(previousRoom.id) --exits in previous room holds neighboring room IDs.
+      if previousExits[dir] then --The last room the character was in has this rooms ID in its exits table
+        room.coords = {getRoomCoordinates(previousExits[dir])}
+        room.id = previousExits[dir] --collect the current room's id
+        centerview(room.id) --center on the new room.
+        debugToDisplay("function parthiaMap.Move, able to get current room ID "..room.id.." from previous rooms exits table.")
+        return --stop the function
+      end --if previousExits[dir]
+    end --if previousRoom.id
+
+    tecWarningNotification("function parthiaMap.Move, Unable to find current room ID from previous room exits table. Calculating it now")
+
+    --character is moving into an unmapped space. 
     if previousRoom.size and previousRoom.id then
-      pecho("function parthiaMap.Move, gathering coordinates of previousRoom.id: "..previousRoom.id.."\n")
+      debugToDisplay("function parthiaMap.Move, previousRoom size and ID available gathering coordinates of previousRoom.id: "..previousRoom.id)
       x,y,z = getRoomCoordinates(previousRoom.id)
       if x == nil or y == nil or z == nil then --should be code here to handle being lost.
         tecWarningNotification("function parthiaMap.Move, previousRoom.id refers to room that no longer exists. Setting coordinates to 0,0,0.")
         x,y,z = 0,0,0
         previousRoom.size = 0 --previous room size should not be used.
         previousRoom.id = nil
-      end --if not x or y or z
-    else --if we are not mapping the first room
+      end --if x == nil or y == nil or z == nil
+    else --if previousRoom.size and previousRoom.id, data in previousRoom table is not useable
       if not previousRoom.size then
-        tecWarningNotification("function parthiaMap.Move, previous room size not available.")
+        tecWarningNotification("function parthiaMap.Move, previous room size not available. Using 0.")
         previousRoom.size = 0
       end --if not previousRoom.size
       if not previousRoom.id then
         tecWarningNotification("function parthiaMap.Move, previous room id not available.")
-        if previousRoom.coords then
+        if previousRoom.coords then --if we know the previous rooms coordinates use them
           x,y,z = unpack(previousRoom.coords)
+          if x == nil or y == nil or z == nil then
+            x,y,z = 0,0,0
+            tecWarningNotification("function parthiaMap.Move, found previous room coords but they did not unpack properly. Using 0,0,0.")
+          else --if x == nil or y == nil or z == nil
+            debugToDisplay("function parthiaMap.Move, previousRoom.coords available but NOT ID.")
+          end --if x == nil or y == nil or z == nil
         else --we do not know where we are.
-          tecWarningNotification("function parthiaMap.Move, previous room coords not available.")
+          tecWarningNotification("function parthiaMap.Move, previous room coords not available. Using 0,0,0.")
           x,y,z = 0,0,0
         end --if previousRoom.coords
       end --if not previousRoom.id
     end --if previousRoom.size and previousRoom.id
-  else --previous room does not exist
-    tecWarningNotification("function parthiaMap.Move, previous room table not available.")
+  else --if previousRoom, previous room does not exist
+    tecWarningNotification("function parthiaMap.Move, previous room table not available. Using size 0 coordinates 0,0,0")
     previousRoom = {}
     previousRoom.size = 0
     x,y,z = 0,0,0
   end --if previousRoom
 
-  local dir = directionWalked --direction player walked
-  
-  pecho("function parthiaMap.Move, getting room coordinates room.size: "..room.size)
-  pecho(" previousRoom.size: "..previousRoom.size)
-  pecho(" directionWalked: "..directionWalked.."\n")
-  
+  --Character is in an unmapped area. Find coordinates and create a room if
+  debugToDisplay("function parthiaMap.Move, getting room coordinates room.size: "..room.size
+    .." previousRoom.size: "..previousRoom.size
+    .." directionWalked: "..directionWalked.."\n")
+
   if dir == "north" then
-    --y = y+(1*((room.size*.5)+(previousRoom.size*.5)))
     y = y+(1*((room.size)+(previousRoom.size)))
   elseif dir == "northeast" then
     y = y+(1*((room.size)+(previousRoom.size)))
@@ -9066,15 +9098,35 @@ end --function parthiaMap.addArea</script>
     y = y+(1*((room.size)+(previousRoom.size)))
     x = x-(1*((room.size)+(previousRoom.size)))
   elseif dir == "u" or dir == "up" then
-    z = z+(1*((room.size)+(previousRoom.size)))
-  elseif dir == "down" then
-    z = z-(1*((room.size)+(previousRoom.size)))
+    --z = z+(1*((room.size)+(previousRoom.size)))
+    z = z + 1
+  elseif dir == "down" or dir == "d" then
+    --z = z-(1*((room.size)+(previousRoom.size)))
+    z = z - 1
   end --if dir ==
-  
+
   room.coords = {x,y,z} --collect the coordinates we used we may never need it though
-  pecho("function parthiaMap.Move, room coords after move are: "..x..","..y..","..z.."\n")
-  return x,y,z
-end --parthiaMap.calcCoordinates(roomTable)</script>
+  debugToDisplay("function parthiaMap.Move, room coords after move are: "..x..","..y..","..z)
+
+  parthiaMap.currentAreaID = 1
+
+  local roomFound = getRoomsByPosition(parthiaMap.currentAreaID,x,y,z) --move and check if there is a room here
+  if roomFound[0] then --making certain there is not an unexpecrted room here
+    parthiaMap.room.id = roomFound[0] --set the room id
+    debugToDisplay("Lost room found ID: "..parthiaMap.room.id)
+    centerview(parthiaMap.room.id) --center on the new room.
+    --if mapping check if link to previous room is needed code goes here
+  else --no unexpected room found
+    if parthiaMap.mapping then
+      parthiaMap.addRoom() --we are mapping in a space with no previous room, add one.
+    else
+      debugToDisplay("function parthiaMap.Move, Mapping currently disabled. In unmapped area.")
+    end --if parthiaMap.mapping
+  end --if roomFound[0]
+  
+  debugToDisplay("function parthiaMap.Move, Completed mapping space that was previously unmapped.")
+
+end --parthiaMap.Move(room, previousRoom, directionWalked)</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
@@ -9107,36 +9159,52 @@ end </script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.addRoom(</name>
+					<name>parthiaMap.addRoom(room, previousRoom)</name>
 					<packageName></packageName>
-					<script>function parthiaMap.addRoom(name, exits, dir, coords)
-
+					<script>function parthiaMap.addRoom(room, previousRoom)
+  room = room or parthiaMap.room
+  previousRoom = previousRoom or parthiaMap.previousRoom
+  
   parthiaMap.currentAreaID = 1
 
   if parthiaMap.mapping then
     local newID = createRoomID()
-    pecho("\nCreating room name: "..name.." with ID "..newID.."\n")
-    addRoom(newID) --create new room
-    setRoomArea(newID, parthiaMap.currentAreaID) --set room to area currently being mapped.
-    setRoomName(newID, name) --give the room a name
-    parthiaMap.room.id = newID --collect used
+    debugToDisplay("Creating room name: "..room.name.." with ID "..newID)
+    room.id = newID --collect used
+    addRoom(room.id) --create new room
+    setRoomArea(room.id, parthiaMap.currentAreaID) --set room to area currently being mapped.
+    setRoomName(room.id, room.name) --give the room a name
     
     --create exits --https://wiki.mudlet.org/w/Manual:Mapper_Functions#setExitStub
-    for exitDirection,exit in pairs(exits) do
-      setExitStub(newID, exitDirection, true) --make the exit stubs
-      if exit.door then end --add code for adding doors
+    for exitDirection,exit in pairs(room.exits) do
+      debugToDisplay("function parthiaMap.addRoom, creating exit stub in direction "..exitDirection)
+      setExitStub(room.id, exitDirection, true) --make the exit stubs
+
+      if exit.door and exitDirection ~= "up" and exitDirection ~= "down" then --there is a door in one of the directions that setDoor supports
+        local doorMade = setDoor(room.id, parthiaMap.getShortDirection(exitDirection), 1) --create an open door. 
+        if doorMade then --if the door was created successfully
+          debugToDisplay("function parthiaMap.addRoom, created door in exit direction "..exitDirection)
+        else --if doorMade, the door failed to be made
+          tecWarningNotification("function parthiaMap.addRoom, failed to make door  in direction "..exitDirection)
+        end --if doorMade
+      end --if exit.door
+
     end --for pairs(exits)
     
+    --set room coordinates
     if parthiaMap.previousRoom then --if we are NOT mapping the first room
-      setRoomCoordinates(parthiaMap.room.id,unpack(parthiaMap.room.coords)) --set coordinates if we are mapping
-      if parthiaMap.previousRoom.id then --if we have a previous room ID, connect the rooms
-        pecho("function parthiaMap.addRoom, connecting previous room ID: "..parthiaMap.previousRoom.id.." to current room ID "..parthiaMap.room.id.." using current room exit "..parthiaMap.getEntranceDirection().."\n")
-        connectExitStub(parthiaMap.room.id, parthiaMap.getEntranceDirection()) --connect room and previous room
+      setRoomCoordinates(room.id,unpack(room.coords)) --set coordinates if we are mapping
+      if previousRoom.id then --if we have a previous room ID, connect the rooms
+        debugToDisplay("function parthiaMap.addRoom, connecting previous room ID: "..previousRoom.id.." to current room ID "..room.id.." using current room exit "..parthiaMap.getEntranceDirection())
+        connectExitStub(room.id, parthiaMap.getEntranceDirection()) --connect room and previous room
       end --if parthiaMap.previousRoom.id
     else --if this is the first room mapped
-      setRoomCoordinates(parthiaMap.room.id,0,0,0)
-    end
-    centerview(newID) --center the map on the new room
+      setRoomCoordinates(room.id,0,0,0)
+    end --if parthiaMap.previousRoom
+    
+    --setRoomUserData(341, "some table", yajl.to_string({name = "bub", age = 23}))
+    
+    centerview(room.id) --center the map on the new room
   end --if parthiaMap.mapping
 end --function parthiaMap.addRoom()
 
@@ -9218,6 +9286,168 @@ function parthiaMap.clearAreaRooms(areaID)
   end --for i=0, #areaTable
   
 end --function parthiaMap.resetAreaRooms(areaID)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.trackPreviousRoom()</name>
+					<packageName></packageName>
+					<script>--used to track what the previous room was
+function parthiaMap.trackPreviousRoom()
+
+  --prepare for next movement
+  parthiaMap.previousRoom = {}
+  parthiaMap.previousRoom = table.deepcopy(parthiaMap.room) --keep track of what the previous room was
+  if parthiaMap.previousRoom.id then
+    debugToDisplay("function parthiaMap.trackPreviousRoom(),  migrated room to previousRoom previousRoom ID now: "..parthiaMap.previousRoom.id)
+  else
+    tecWarningNotification("function parthiaMap.trackPreviousRoom(), no previousRoom.id after migration .")
+  end --if parthiaMap.previousRoom.id
+  
+  parthiaMap.resetRoom() --clear the room table
+  
+end --function parthiaMap.trackPreviousRoom()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.load()</name>
+					<packageName></packageName>
+					<script>function parthiaMap.load()
+
+  parthiaMap.room.id = getPlayerRoom()
+
+end</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.getShortDirection(dir)</name>
+					<packageName></packageName>
+					<script>function parthiaMap.getShortDirection(dir)
+  if dir then
+    if type(dir) ~= "string" then
+      tecErrorNotification("parthiaMap.getShortDirection, sent a non string variable for argument 1. Expected string, receive a "..type(dir))
+    end
+  else
+    tecErrorNotification("parthiaMap.getShortDirection, requires a string for argument 1.")
+  end
+  
+  
+  if dir == "north" then --return the oposite of the direction walked in to find where player entered this room
+    return "n"
+  elseif dir == "northeast" then
+    return "ne"
+  elseif dir == "east" then
+    return "e"
+  elseif dir == "southeast" then
+    return "se"
+  elseif dir == "south" then
+    return "s"
+  elseif dir == "southwest" then
+    return "sw"
+  elseif dir == "west" then
+    return "w"
+  elseif dir == "northwest" then
+    return "nw"
+  elseif dir == "u" or dir == "up" then
+    return "u"
+  elseif dir == "down" or dir == "d" then
+    return "d"
+  end --if dir ==
+
+end</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.detectDirection(dir)</name>
+					<packageName></packageName>
+					<script>--[[
+use to track up and down movement. This can not be tracked from game data.
+We have to track this by player input.
+
+We need to track
+  compass clicks
+  hot key usage
+  command imput IE: go up, go down
+
+Useage
+parthiaMap.detectDirection("up")
+parthiaMap.detectDirection("down")
+]]--
+
+--used to tell detectDirection what is NOT going to be z movement.
+--Made outside the function so it is not recreated each time the function is called. Wasting processing time.
+parthiaMap.notZMovement = {
+  "east", "eas", "ea", "e",
+  "southeast", "southeas", "southea", "southe",
+  "south", "sout", "sou", "so", "s",
+  "southwest", "southwes", "southwe", "southw",
+  "west", "wes", "we", "w",
+  "northwest", "northwes", "northwe", "northw",
+  "north", "nort", "nor", "no", "n",
+}
+
+local function specialExitMatch(exitDescription, exitUsed)
+  if exitDescription then
+    if type(exitDescription) ~= "string" then
+      tecErrorNotification("function specialExitMatch, argument 1 expected string variable receive a "..type(exitDescription))
+      return
+    end --if type(exitDescriptionUsed) ~= "string"
+  else 
+    tecErrorNotification("function specialExitMatch, argument 1 expected received nil")
+  end --if exitDescription
+  if exitUsed then
+    if type(exitUsed) ~= "string" then
+      tecErrorNotification("function specialExitMatch, argument 2 expected string variable receive a "..type(exitUsed))
+      return
+    end --if type(exitDescriptionUsed) ~= "string"
+  else 
+    tecErrorNotification("function specialExitMatch, argument 2 expected received nil")
+  end --if exitUsed
+  
+  exitDescription = exitDescription:lower() --make certain variables are lower case, so matching will be more accurate
+  exitUsed = exitUsed:lower()
+
+  if exitUsed:match("^%d") then --if the command the player sent starts with a number.
+    --get number from the start of the string.
+  end
+
+end --local function specialExitMatch(exit)
+
+function parthiaMap.detectDirection(dir)
+  dir = dir or parthiaMap.directionWalked
+  dir = dir:lower()
+  
+  --if this does not have a chance of z movement, stop the function.
+  if table.contains(parthiaMap.notZMovement, dir) then return end
+
+  if parthiaMap.upAvailable then 
+    if dir == "up" then --player is going up
+      parthiaMap.directionWalked = "up"
+      parthiaMap.dirtectionCollected = true
+      debugToDisplay("function detectDirection, directionWalked up found.")
+      return
+    elseif parthiaMap.room.exits["up"].description:match(dir) then
+      parthiaMap.directionWalked = "up"
+      parthiaMap.dirtectionCollected = true
+      debugToDisplay("function detectDirection, directionWalked up found.")
+      return
+    end --if parthiaMap.room.exits["up"].description:match(dir)
+  end --if parthiaMap.upAvailable
+  
+  if parthiaMap.downAvailable then 
+    if dir == "down" then --player is going down
+      parthiaMap.directionWalked = "down"
+      parthiaMap.dirtectionCollected = true
+      debugToDisplay("function parthiaMap.horizontalTracking, directionWalked down found.")
+      return
+    elseif parthiaMap.room.exits["down"].description:match(dir) then
+      parthiaMap.directionWalked = "down"
+      parthiaMap.dirtectionCollected = true
+      debugToDisplay("function parthiaMap.horizontalTracking, directionWalked down found.")
+      return
+    end --if parthiaMap.room.exits["down"].description:match(dir)
+  end --if parthiaMap.downAvailable
+  
+end --parthiaMap.horizontalTracking</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -9479,8 +9709,9 @@ tecCompass.se = Geyser.Label:new({
 --when a label is clicked we want to
 --go in that direction
 function tecCompass.click(name)
+  parthiaMap.detectDirection(name) --track up and down movement
   send(name)
-end
+end --tecCompass.click
 
 --border for up and down macros when a room is available in that direction
 tecCompass.styleSheetLitUpDown =
@@ -10185,7 +10416,8 @@ MultiWindow.Compass.ne = Geyser.Label:new({ name = "MultiWindow.Compass.ne", },M
 MultiWindow.Compass.e = Geyser.Label:new({ name = "MultiWindow.Compass.e", },MultiWindow.Compass.row3)
 MultiWindow.Compass.se = Geyser.Label:new({ name = "MultiWindow.Compass.se", },MultiWindow.Compass.row3)
 --function that occurs when a label above is clicked, 
-function MultiWindow.Compass.click(name) send(name) end --send the name of the 
+--function MultiWindow.Compass.click(name) send(name) end --send the name of the
+MultiWindow.Compass.click = tecCompass.click --send the name of the 
 function MultiWindow.Compass.lit(name) --When a player can go in the direction, make the label an active image
   if name == "up" or name == "down" then --if it is overlay for up or down label
     MultiWindow.Compass[name]:setStyleSheet(tecCompass.styleSheetLitUpDown) --created a label with thick transparent border
@@ -10418,7 +10650,10 @@ end
 
 if getHelpDevs() then --if player has Help Developers enabled
   loadHelpDevs(true) --load data saved from Help Developers
-end --if getHelpDevs()</script>
+end --if getHelpDevs()
+
+parthiaMap.config() --load default settings for mapping system
+parthiaMap.load() --load mapping data from file.</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
