@@ -1798,6 +1798,7 @@ tecRoomCharRefreshNotification()</script>
 
 parthiaMap.upAvailable = false
 parthiaMap.downAvailable = false
+parthiaMap.TECMapRooms = {} --clear the rooms table so it will not overlap
 parthiaMap.trackPreviousRoom() --movement complete keep track of what the previous room was
 
 --Set default text in room characters window
