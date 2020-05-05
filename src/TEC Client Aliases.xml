@@ -1246,17 +1246,6 @@ send("l"..matches[2],false)</script>
 			<command></command>
 			<packageName></packageName>
 			<regex></regex>
-			<Alias isActive="yes" isFolder="no">
-				<name>Username:</name>
-				<script>-- This alias gets 'triggered' from triggers - login - secret trigger 
-tecUsername = matches[2] --the first item
-pecho("\nPlease enter your password.\n")
-clearCmdLine() --clear the text user entered from command line
-tecPasswordEntry = true --used to prevent the password entry from beind sent to servers.</script>
-				<command></command>
-				<packageName></packageName>
-				<regex>^Username: (.+)$</regex>
-			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>font</name>

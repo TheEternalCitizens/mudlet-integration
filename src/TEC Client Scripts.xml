@@ -457,6 +457,13 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
 
   lookRan = false --used to tell triggers when player has run the look command
 
+  windowsCurlFile = tecSettingsFolder..[[curl.exe]] --used as local file for curl.
+  windowsCurlDownloaded = false --used to verify the curl file has downloaded
+  downloadcURLEventID = false --used to tell parthia it needs to download windows curl
+  passwordInputEventID = false --will hold the event ID used to listen for username and password at command line
+  tecUsernameEntry = false --used to tell parthia when the user is entering their username.
+  tecUsername = "" --used store user's name during login process. Gets removed when login was successful.
+
 	if displayToScreen then pecho("Parthia settings set to default.\n") end
 
 end --function tecClientReset()
@@ -544,6 +551,40 @@ end --function tecClientSaveAll</script>
 function clearTECRoomObjects()
 	tecRoomObjects = {characters = {}, checkActive = false, lc = 1}
 end --fuctoin clearTecRoomObjects</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>downloadcURL()</name>
+					<packageName></packageName>
+					<script>function downloadcURL(reconnectWhenDone)
+  reconnectWhenDone = fuzzyBoolean(reconnectWhenDone)
+  if getOS() == "windows" then --if the OS is windows built in curl will not work
+    if not io.exists(windowsCurlFile) then --if file windowsCurlFile does not exists. windowsCurlFile declared in tecClientReset
+      pecho("[ Info ]  - downloading cURL for secure authentication.\n")
+      downloadcURLReconnectWhenDone = reconnectWhenDone
+      downloadcURLEventID = registerAnonymousEventHandler("sysDownloadDone", "downloadcURLEventHandler") --track the download
+      downloadFile(windowsCurlFile, [[https://github.com/TheEternalCitizens/mudlet-integration/releases/download/tecLatest/curl.exe]])
+    end 
+  end
+end
+
+function downloadcURLEventHandler(event, ...)
+  if event == "sysDownloadDone" then --if it is a downloadDone event.
+    --arg[1] is full file including directory
+    local file = arg[1]
+    debugToDisplay("function downloadcURLEventHandler, found download "..file)
+    
+    if windowsCurlFile == file then 
+      debugToDisplay("function downloadcURLEventHandler, found a match for windowsCurlFile.")
+      windowsCurlDownloaded = true
+      killAnonymousEventHandler(downloadcURLEventID)
+      downloadcURLEventID = false
+      if downloadcURLReconnectWhenDone then
+        pecho("cURL download completed. Please wait, reconnecting.")
+      end --if downloadcURLDisplayToScreen
+    end
+  end
+end</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -736,6 +777,8 @@ tecClientReset(false) --create default settings.
 
 --remove all messages from tts queue
 if getParthiaTalk() then ttsClearQueue() end
+
+downloadcURL() --cURL is needed for login. Windows cURL can not be seen from an os.execute or io.open so we have to download one and run it from the settings directory
 
 --Call the function so data loads when mudlet starts.
 tecFileLoadSettings(true)
@@ -3549,6 +3592,67 @@ end --function commandSuccessful()</script>
   objectLinksAdded = true --tell function that objectsLinks where added to this look command run
 
 end --function addLinksToObjects()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaFileToString(path, remove)</name>
+					<packageName></packageName>
+					<script>--[[
+This function opens a file and returns the contents of the file as a string.
+Usage:
+  parthiaFileToString(path, remove)
+  path is the path and name of the file to open.
+  remove is boolean if the file should be removed when completed.
+Example: 
+  
+  myFriends, errorFound = parthiaFileToString("C:\My friends list.txt")
+  if erroFound then
+    pecho("Error found in data read: "..errorFound")
+  end
+  Above would read in file C:\My friends list.txt into variable myFriends
+  If an error was found it would display the error to screen and myFriends variable will be nil.
+    
+  myFriends, errorFound = parthiaFileToString("C:\My friends list.txt", true)
+  if erroFound then
+    pecho("Error found in data read: "..errorFound")
+  end
+    Above would read in file C:\My friends list.txt into variable myFriends AND delte the file if the read was successful.
+    If an error was found it would display the error to screen and myFriends variable will be nil.
+    
+  myFriends = parthiaFileToString("C:\My friends list.txt")
+    Above would read in file C:\My friends list.txt into variable myFriends
+    If an error was found myFriends will be nil.
+]]--
+function parthiaFileToString(path, remove)
+
+  --make certain the arguments are correct
+  remove = fuzzyBoolean(remove)
+  if type(path) ~= "string" then --make certain a string was passed
+    return "", "function parthiaFileToString, argument 1 is a non string variable. Received: "..tostring(stringToCheck).." expected a string."
+  end --if type(path) ~= "string" then
+
+  --open the file
+  local fileOpened, errorFound = io.open(path, "r") --open the file as read
+  if not fileOpened then --file was not created error occured.
+    fileOpened:close() --incase of partial failure, close file.
+    fileOpened = nil
+    return  nil, "function parthiaFileToString: "..errorFound--error found stop function
+  end --if not fileOpened
+  
+  --read from the file
+  local fileString = fileOpened:read("*a") --read the entire file to a string
+  fileOpened:close() --close the file
+  fileOpened = nil
+  
+  --verify read was correct and return the file as a string
+  if fileString then --file read correctly
+    if remove then os.remove(path) end --remove the file
+    return fileString --return it as a string
+  else --File had read error
+    return nil, "function parthiaFileToString, failure converting file: "..path.." to string"--error found stop the function
+  end --if fileString
+
+end --parthiaFileToString</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -7436,7 +7540,7 @@ function GitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if GitUpdate.localRespitory not exist
   GitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  GitUpdate.localVersion = "0.1.42" --Must match the tag in your github release
+  GitUpdate.localVersion = "0.1.43" --Must match the tag in your github release
   GitUpdate.aliasName = "parthia update" --Name of alias user runs to process update
   --Name of the alias to check if an update is available.
   GitUpdate.updateCheckAlias = "parthia update check" 
@@ -7875,24 +7979,6 @@ function DownloadGitScripts()
     downloadFile(GitUpdate.localRespitory..trackedDownloads.files[index], trackedDownload)
   end --for GitUpdate.trackedURLs
 
---[[
-  --this code can be used to test trackedDownloads without using sysDownloadDone function
-  for index, trackedDownload in ipairs(GitUpdate.trackedURLs) do
-    debugToDisplay("function GitUpdate.downloadScripts downloading "
-      ..trackedDownload.."\n\tto "
-      ..GitUpdate.localFileStore..trackedDownloads.files[index])
-    boolOrErrorMessage = trackDownloads(trackedDownloads.files[index])
-    local tmpString = GitUpdate.localFileStore..trackedDownloads.files[index]
-    cecho("File name: "..tmpString:match(GitUpdate.filePattern).."\n")
-    cecho("fileList is: "..trackedDownloads.fileList.."\n")
-    cecho("Found match in fileList for file downloaded: "..
-      trackedDownloads.fileList:match(tmpString:match(GitUpdate.filePattern)).."\n")
-    if boolOrErrorMessage then
-      debugToDisplay("Downloads completed!!!")
-    end
-  end --for GitUpdate.trackedURLs
-]]--
-
 end --function GitUpdate.downloadScripts()
 
 --After all files have been downloaded GitUpdateEventHandler will call InstallGitUpdates
@@ -7999,6 +8085,11 @@ local function InstallGitUpdates()
   debugToDisplay("Updates completed.\n")
   pecho("Updates completed.\n")
   GitUpdate.installationInProgress = false --notify Parthia installation not running.
+  if (tecUsernameEntry or tecPasswordEntry) and passwordInputEventID then --if the user is in the middle of a login.
+    tecUsernameEntry = true
+    tecPasswordEntry = false
+    cecho("\nPlease enter your username.\n")
+  end --if (tecUsernameEntry or tecPasswordEntry) and passwordInputEventID
     --if events were previously created, kill them.
   if GitUpdate.downloadDoneID then
     killAnonymousEventHandler(GitUpdate.downloadDoneID)
@@ -9636,7 +9727,7 @@ macroMenu.row4 = Geyser.HBox:new({
 macroMenu.row5 = Geyser.HBox:new({
   name = "macroMenu.row5",
   }, macroMenu.box)
-macroMenu.row5:hide()
+  
 --create table to hold data for macro buttons.
 local tecMacroMappings = {
   {
@@ -9769,7 +9860,6 @@ MultiWindow.macroMenu.row4 = Geyser.HBox:new({
 MultiWindow.macroMenu.row5 = Geyser.HBox:new({
   name = "MultiWindow.macroMenu.row5",
   }, MultiWindow.macroMenu.box)
-MultiWindow.macroMenu.row5:hide()
 --create table to hold data for macro buttons.
 local tecMacroMappings = {
   {
@@ -10015,20 +10105,38 @@ registerAnonymousEventHandler("sysWindowResizeEvent", "guiChange")</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
-				<name>controlInput(_, command)</name>
+				<name>authenticationInput(_, command)</name>
 				<packageName></packageName>
-				<script>--use bool checks to control user input.
---Use this when you do not know what will be entered but DO know a trigger that will
---occur before the command that will be sent.
-function controlInput(_, tecPassword) 
-  if tecPasswordEntry then --if password entry is set, we expect a password.
-  	tecPasswordEntry = false --set this if check to false to it doesn't occur every input.
-    --Log into the game. md5.sumhexa converts user ID and password to md5 hash.
-    sendAll("USER " .. tecUsername:lower() .. "\n", "SECRET NONE", "HASH "
-  	 .. md5.sumhexa(tecUsername:lower() .. tecPassword .. "NONE") .. "\n", false)
-    tecUsername = nil --Clear out the username.
-    clearCmdLine() --clear password from command input bar.
+				<script>--[[
+https://wiki.mudlet.org/w/Manual:Event_Engine#sysDataSendRequest
+Loin process is:
+TEC sends line "Login: " mudlet trigger "Login" remove the Login: line from screen then sends the Zealous handshake to TEC
+TEC then sends line "SECRET NONE" we capure this with trigger "SECRET Triger" that trigger prompts the user for their username.
+  It registers function authenticationInput(_, command) in the scripts section group Events as a sysDataSendRequest event
+  Trigger also sets bool tecUsernameEntry to true so the authenticationInput function nows it will receive a username
+  If the user entered their user name at mudlet's connect screen it will automatically be captured by authenticationInput as the username.
+When authenticationInput receives a user name it sets tecUsernameEntry to false, tecPasswordEntry and prompts the user for their password.
+  If the user entered their password at mudlet's connection screen it will automatically be captured by this event.
+  After reciving a password the function authenticationInput sends the ID and password to a TEC server requesting an authorization key.
+  This request is done with a http post, header "Cookie" variable "biscuit=test". Over a secure ssl or tls https connection. Currently using a shell call that uses cURL.
+  If the username or password is incorrect authenticationInput restarts the login process. Requiring the user to enter ID and password at mudlet's command prompt.
+  When a good key is received that key is sent inplace of the password over the unsecure telnet connection encrypted as a md5 hash.
+  When a successful login occurs the sysDataSendRequest event that registered authenticationIput is unregistered.
+]]--
+function authenticationInput(_, userInput) 
+  
+  if tecUsernameEntry then --If we need to acept user name from command line
+    tecUsernameEntry = false --Make certain we do not liste for username again.
+    tecPasswordEntry = true --we know the next command needs to be the password.
     denyCurrentSend() --Deny the origional command, in this case the password.
+    tecUsername = userInput --the first item
+    pecho("\nPlease enter your password.\n")
+    clearCmdLine() --clear the text user entered from command line
+  
+  elseif tecPasswordEntry then --if password entry is set, we expect a password.
+  	tecPasswordEntry = false --set this if check to false to it doesn't occur every input.
+    local tecPassword = userInput --copy argument 2 to local variable
+    userInput = nil --make certain this variable has been removed. It contains player password and is no longer needed.
     
     --clear the password off the screen.
     local tecMainLastLine = (getLastLineNumber("main") - 1)
@@ -10036,15 +10144,68 @@ function controlInput(_, tecPassword)
     selectString(tecPassword,1) --Select the password in main.
     replace("") --Replaced the selected password with.
     deselect() --Don't forget your deselects!
-    pecho("Password Entered\n")
+    pecho("Sending login request to The Eternal City.\n"
+          .."A black command window will appear which sends the request.\n")
     
-    tecPassword = nil --Just in case, lets make certain the password is cleared out.
-    command = nil --
+    local cURLCommand = "curl" --command to run cURL
+  
+    if getOS() == "windows" then --if the OS is windows built in curl will not work
+        if not io.exists(windowsCurlFile, true) then --if curl.exe is missing windowsCurlFile declared in tecClientReset()
+          if downloadcURLEventID then --A dowload for cURL was started but has not completed
+          else --a download has not been started, start one now.
+            downloadcURL(true) --download cURL and reconnect once it has completed
+          end --if downloadcURLEventID
+        end --if not io.exists(winCurl)
+        cURLCommand = [[echo Sending encrypted authentication request to TEC. Please wait for an authentication key. &amp; "]]..windowsCurlFile..[["]]
+    end --if getOS() == "windows"
+    
+    --download autherization cookie
+    local cookieFile = tecSettingsFolder.."Auth Key.html" --directory and file name of authentication cookie
+    if io.exists(cookieFile) then --if an old authentication cookie exists
+      debugToDisplay("function authenticationInput, found cookie file at the start of login, attempting to delete.")
+      os.remove(cookieFile) --remove the authentication cookie
+    end --if io.exists(cookieFile)
+    cURLCommand = cURLCommand..[[ -X POST https://login.eternalcitygame.com/login.php -b biscuit=test -c "]]..cookieFile..[[" -d "submit=true&amp;uname=]]..tecUsername:lower()..[[&amp;pwd=]]..tecPassword..[["]]
+    tecPassword = nil --remove the password it is not longer needed
+    --if debug message for cURLCommand added, remove password first
+    
+    os.execute (cURLCommand) --execute the curl command
+    cURLCommand = nil --this variable has a copy of the password and is no longer needed
+    
+    --Use the data in the cookie to login
+    if io.exists(cookieFile) then --if the cookie file exists
+      debugToDisplay("function authenticationInput, cookie file found. Attempting login.")
+      local authKey, errorFound = parthiaFileToString(cookieFile, true) --convert the downloaded authentication cookie to a string, delete the file when done
+      if errorFound then --something went wrong. Attempt again.
+        if io.exists(cookieFile) then --if the cookie file exists.
+          debugToDisplay("function authenticationInput, failure converting cookie file to string. Requesting new cookie.")
+          os.remove(cookieFile) --delete the cookie file.
+        end --if errorFound then
+          authKey, errorFound = parthiaFileToString(cookieFile, true) --convert the downloaded authentication cookie to a string, delete the file when done
+        if errorFound then --failed to convert the authentication cookie file to a string
+          tecErrorNotification("function authenticationInput found error attempting to convert autherization key to a data string. Error Found: "..errorFound)
+        end --if errorFound --second attempt
+      end --if errorFound
+      authKey = authKey:match("pass%s+(%d+)") --find the key at the end of the cookie authentication file.
+      debugToDisplay("function authenticationInput, sending login request. tecUsername:lower(): "..tecUsername:lower().." authKey: "..authKey)
+      --Log into the game. md5.sumhexa converts user ID and TEC provided authentication key to md5 hash.
+      sendAll("USER " .. tecUsername:lower() .. "\n", "SECRET NONE", "HASH ".. md5.sumhexa(tecUsername:lower() .. authKey .. "NONE") .. "\n", false)
+      clearCmdLine() --clear password from command input bar.
+    else --if the cookie file does not exist.
+      pecho("Username or password incorrect. Please attempt again.\n")
+      cecho("Create an ID or test login at ")
+      cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://login.eternalcitygame.com/login.php", 
+      [[openUrl("https://login.eternalcitygame.com/login.php")]], 
+      "Create user ID for TEC", true)
+      cecho("\nPlease enter your username.\n")
+      clearCmdLine() --clear the text user entered from command line
+      tecUsernameEntry = true --Listen for user name from next input
+    end --if io.exists(cookieFile)
+    
+    denyCurrentSend() --Deny the origional command, in this case the password. this needs to 
+    
 	end --tecPasswordEntry
-end --function tecPasswordPrompt
-
---https://wiki.mudlet.org/w/Manual:Event_Engine#sysDataSendRequest
-registerAnonymousEventHandler("sysDataSendRequest", "controlInput")</script>
+end --function tecPasswordPrompt</script>
 				<eventHandlerList />
 			</Script>
 			<Script isActive="yes" isFolder="no">
