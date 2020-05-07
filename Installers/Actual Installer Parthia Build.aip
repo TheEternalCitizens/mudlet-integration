@@ -1,9 +1,9 @@
 ﻿[Setup]
-Version=7.5
+Version=7.6
 Edition=1
 GUID={143DE204-C574-4F1B-9870-B5528959BC4C}
 AppName=Parthia Installation
-AppVersion=0.1.13
+AppVersion=0.1.43
 AppDescription=Mudlet Scripts for The Eternal City
 CompanyName=The Eternal Citizens
 WebSite=https://github.com/TheEternalCitizens/mudlet-integration
@@ -103,6 +103,7 @@ AltInstallDir=<AppData>\<AppName>
 DataExtractParam=-o"<InstallDir>" -aoa
 ImageSettings=0000
 UninstallFileName=Uninstall.exe
+LangIDMethod=0
 WizardBitmap=C:\Program Files (x86)\Actual Installer\Bitmaps\Wizard\01.bmp
 HeaderBitmap=C:\Program Files (x86)\Actual Installer\Bitmaps\Header\01.bmp
 LogoBitmap=C:\Program Files (x86)\Actual Installer\Bitmaps\Logo\01.bmp
@@ -169,6 +170,6 @@ English=
 
 [Shortcuts]
 0=<StartMenu>\Parthia*?Uninstall <AppName>*?<InstallDir>\Uninstall.exe*?Removed parthia, leaving mudlet installed.*?*?<InstallDir>*?*?0*?Normal
-1=<StartMenu>\Parthia*?Parthia - The Eternal City*?<UserProfile>\AppData\Local\Mudlet\mudlet.exe*?Play The Eternal City*?*?*?*?0*?Normal
-2=<Desktop>*?The Eternal City - Parthia*?<UserProfile>\AppData\Local\Mudlet\mudlet.exe*?Play The Eternal City*?*?*?*?0*?Normal
+1=<StartMenu>\Parthia*?Parthia - The Eternal City*?<UserProfile>\AppData\Local\Mudlet\mudlet.exe*?Play The Eternal City*?--profile="The Eternal City"*?*?<InstallDir>\parthia_icon.ico*?0*?Normal
+2=<Desktop>*?The Eternal City - Parthia*?<UserProfile>\AppData\Local\Mudlet\mudlet.exe*?Play The Eternal City*?--profile="The Eternal City"*?*?<InstallDir>\parthia_icon.ico*?0*?Normal
 
