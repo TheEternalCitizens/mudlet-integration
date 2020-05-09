@@ -89,9 +89,19 @@ end --function setParthiaTalk(mode)</script>
     message = string.gsub(message, "#%x+", "")
 	  message = string.gsub(message, "&lt;center&gt;", "")
 	  message = string.gsub(message, "&lt;/center&gt;", "")
+    --below are some filters that I attempted appling to troubleshoot how the queue hangs on some computers.
+    --message = string.gsub(message, "%(", "")
+    --message = string.gsub(message, "%)", "")
+    --message = string.gsub(message, "%*", "")
+    --message = string.gsub(message, ":", "")
+    --message = string.gsub(message, "\n", "")
+    --message = string.gsub(message, "^%s+", "")
+    --message = string.gsub(message, "%s+$", "")
+    --message = string.gsub(message, "^%p+", "")
+    --message = string.gsub(message, "&lt;%a&gt;", "")
     if message:match("think") then --if there is a thought remove &lt;&gt;
-      message = string.gsub(message, [[&lt;]], '') --remove or thoughts will not read
-      message = string.gsub(message, [[&gt;]], '') --remove or thoughts will not read
+      message = string.gsub(message, [[^&lt;]], '') --remove or thoughts will not read
+      message = string.gsub(message, [[&gt;$]], '') --remove or thoughts will not read
     end --if message:match("think")
     if not message:match("%S") then message = "" end
     --remove all multiple spaces from the talk like.
@@ -122,9 +132,15 @@ end --function parthiaTalkFilter(message)</script>
   else --message is a string, display it
     if not talkOnly then cecho(message) end
     if getParthiaTalk() or forceSpeech then --if parthia talk is enabled, or forceSpeech is set
-      ttsSpeak(" ") --sometimes the queue stops, this prevents that.
       message = parthiaTalkFilter(message) --filter message for tts
-      if message ~= "" then ttsQueue(message) end --If there is a message send it to the tts queue
+      if message ~= "" then
+        if tecSettings.parthiaTalkQueueEnabled then --if the player wants the queue enabled
+          --ttsSpeak(" ") --sometimes the queue stops, this prevents that. Disabled to queue stops the abrupt pausing when something new is sent. Also does not appear to resolve que stopping.
+          ttsQueue(message)
+        else --if parthia talk queue is disabled
+          ttsSpeak(message)
+        end --if tecSettings.parthiaTalkQueueEnabled
+      end --If there is a message send it to the tts queue
     end --if Parthia talk is enabled que the message
   end --if not type(message) == "string" then
 
@@ -134,7 +150,7 @@ pecho = parthiaEcho --make pecho a reference of parthiaEcho so it can be used as
 			<eventHandlerList />
 		</Script>
 		<Script isActive="yes" isFolder="no">
-			<name>pechoLink(linkTable)</name>
+			<name>pechoLink(message, command, hint, bool)</name>
 			<packageName></packageName>
 			<script>function pechoLink(message, command, hint, bool)
 
@@ -164,9 +180,15 @@ pecho = parthiaEcho --make pecho a reference of parthiaEcho so it can be used as
 
   cechoLink(message, command, hint, bool) --show echo to screen
   if getParthiaTalk() then --if parthia talk is enabled
-    ttsSpeak(" ") --the queue stops somewhat frequently ttsSpeak starts it again
     message = parthiaTalkFilter(message) --filter message for tts
-    if message ~= "" then ttsQueue(message) end --If there is a message send it to the tts queue
+    if message ~= "" then 
+      if tecSettings.parthiaTalkQueueEnabled then --if the player has enabled the parthia talke queue
+          --ttsSpeak(" ") --sometimes the queue stops, this prevents that.
+          ttsQueue(message) --que the message
+        else --parthia talk queue is disabled
+          ttsSpeak(message) --speak the message right now.
+        end --if tecSettings.parthiaTalkQueueEnabled
+    end --If there is a message send it to the tts queue
   end --if Parthia talk is enabled que the message
 end --function pechoLink(linkTable)</script>
 			<eventHandlerList />
@@ -423,10 +445,12 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   UIManagerSettings = UIManagerSettings or {}
   
   tecSettings.parthiaTalkEnabled = false --is parthia talk enabled
+  tecSettings.parthiaTalkQueueEnabled = false --decides if queue is used for tts.
   tecSettings.parthiaTalkThoughts = false --is parthia talk thoughts enabled
   tecSettings.parthiaTalkSpeech = false --is parthia talk speech enabled
   tecSettings.parthiaTalkSpeed = 6 --speed parthia talk speaks at
   tecSettings.parthiaTalkPitch = 6 --pitch parthia talk speaks in
+  tecSettings.parthiaTalkVolume = 5 --volume parthia talk speaks in
   tecSettings.parthiaTalkVoice = "" --default voice parthia talk speaks in. No way to know what voices are supported
 
   --save if player wants to collect data for developers.
@@ -6299,6 +6323,11 @@ function parthiaTalkHelp()
     "Disable parthia talk", true)
   pecho(", disable parthia's text to speech system.\n")
   
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk queue", 
+    [[expandAlias("parthia talk queue")]],
+    "Disable parthia talk", true)
+  pecho(", toggles the state of the parthia talk queue. Queue is disabled by default.\n")
+  
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk pause", 
     [[expandAlias("parthia talk pause")]],
     "Pause parthia talk", true)
@@ -6347,7 +6376,12 @@ function parthiaTalkHelp()
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk pitch list", 
     [[expandAlias("parthia talk pitch list")]],
     "List talk pitch commands", true)
-  pecho(", speak in game speech even if parthia talk is disabled.\n")
+  pecho(", change the pitch that parthia talk speaks in.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk volume list", 
+    [[parthiaTalkSetVolume("list", true)]],
+    "List talk volume commands", true)
+  pecho(", change the volume that parthia talk speaks in.\n")
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk thoughts", 
     [[expandAlias("parthia talk thoughts")]],
@@ -6357,7 +6391,7 @@ function parthiaTalkHelp()
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk speech", 
     [[expandAlias("parthia talk speech")]],
     "Speak speech always", true)
-  pecho(", speak game speech even if parthia talk is disabled.\n")
+  pecho(", speak in game speech even if parthia talk is disabled.\n")
   
   pecho("\nparthia talk has a short hand version of pt. For example ")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;pt enable", 
@@ -7540,7 +7574,7 @@ function GitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if GitUpdate.localRespitory not exist
   GitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  GitUpdate.localVersion = "0.1.43" --Must match the tag in your github release
+  GitUpdate.localVersion = "0.1.44" --Must match the tag in your github release
   GitUpdate.aliasName = "parthia update" --Name of alias user runs to process update
   --Name of the alias to check if an update is available.
   GitUpdate.updateCheckAlias = "parthia update check" 
@@ -8223,8 +8257,11 @@ function parthiaTalkSetVoice(voiceName, displayToScreen)
       end --of ipairs(ttsVoicesSupported)
       pecho("\n")
     else
-      tecWarningNotfication("function parthiaTalkSetVoice, autmated call sent incorrect name or number. "
-        .." function sent "..tostring(voiceName))
+      --the default setting for tecSettings.parthiaTalkVoice is "" in function tecClientReset. Doing this allows parthia to use OS's default on startup after loading settings from file.
+      if not voiceName == "" then 
+        tecWarningNotification("function parthiaTalkSetVoice, automated call sent incorrect name or number. "
+          .." function sent "..tostring(voiceName))
+      end --if not voiceName == ""
     end --if displayToScreen
   end --if not voiceNameCorrect then
 
@@ -8327,7 +8364,7 @@ function parthiaTalkSetSpeed(speed, displayToScreen)
       pecho("Supported parthia talk speed commands are\n")
       for i=1,11 do --loop from 1 to 11
         cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk speed "..i, --display clickable link to screen
-          [[ parthitaTalkSetSpeed("]]..i..[[", true)]],
+          [[ parthiaTalkSetSpeed("]]..i..[[", true)]],
           "Set parthia talk speech rate to "..i, true)
         pecho(", set the speed parthia talk speeks at to "..tostring(i)..".")
         if i &lt; 3 then --show player lower numbers mean slower, higher means faster.
@@ -8351,7 +8388,7 @@ function parthiaTalkSetSpeed(speed, displayToScreen)
   
   --mudlets supported speech rates range is -1 to 1
   local speechRate = (speed - 6) * .2 
-  debugToDisplay("function parthitaTalkSetSpeed, speech rate is "..tostring(speechRate))
+  debugToDisplay("function parthiaTalkSetSpeed, speech rate is "..tostring(speechRate))
   --pecho("Setting speech rate to "..tostring(speechRate).."\n")
   ttsSetRate(speechRate)
   tecSettings.parthiaTalkSpeed = speed --store speed setting for startup
@@ -8359,7 +8396,7 @@ function parthiaTalkSetSpeed(speed, displayToScreen)
     pecho("Parthia talk speed set to "..tostring(speed)..".\n")
     dontForgetToSave()
   end --if displayToScreen
-end --parthitaTalkSetSpeed(speed)
+end --parthiaTalkSetSpeed(speed)
 </script>
 						<eventHandlerList />
 					</Script>
@@ -8386,9 +8423,9 @@ function parthiaTalkSetPitch(pitch, displayToScreen)
       pecho("Supported parthia talk pitch commands are\n")
       for i=1,11 do --loop from 1 to 11
         cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk pitch "..i, 
-          [[ parthitaTalkSetPitch("]]..i..[[", true)]],
+          [[ parthiaTalkSetPitch("]]..i..[[", true)]],
           "Set the pitch parthia talk speaks in to "..i, true)
-        pecho(", set the speed parthia talk speeks at to "..tostring(i)..".")
+        pecho(", set the pitch parthia talk speeks at to "..tostring(i)..".")
         if i &lt; 3 then
           pecho(" very deep\n")
         elseif i &gt; 2 and i &lt; 6 then 
@@ -8405,12 +8442,12 @@ function parthiaTalkSetPitch(pitch, displayToScreen)
       end --for i=1,10
       pecho("Click a command above or type it into the command line.\n")
       return --exit function
-    end --if speed &gt; 11 or speed &lt; 1
+    end --if pitch &gt; 11 or pitch &lt; 1 then
   end --if displayToScreen
   
   --mudlets supported pitch range is -1 to 1
   local pitchLevel = (pitch - 6) * .2 
-  debugToDisplay("function parthitaTalkSetSpeed, pitch level is "..tostring(pitchLevel)
+  debugToDisplay("function parthiaTalkSetPitch, pitch level is "..tostring(pitchLevel)
     .." function was sent pitch number "..tostring(pitch))
   ttsSetPitch(pitchLevel) --set the pitch level
   tecSettings.parthiaTalkPitch = pitch --store pitch setting for startup
@@ -8418,7 +8455,7 @@ function parthiaTalkSetPitch(pitch, displayToScreen)
     pecho("Parthia talk pitch set to "..tostring(pitch)..".\n")
     dontForgetToSave() --remind player to save
   end --if displayToScreen
-end --parthitaTalkSetSpeed(speed)
+end --parthiaTalkSetPitch(pitch, displayToScreen)
 </script>
 						<eventHandlerList />
 					</Script>
@@ -8428,6 +8465,97 @@ end --parthitaTalkSetSpeed(speed)
 						<script>function parthiaTalkGetPitch()
   return tecSettings.parthiaTalkPitch
 end --function parthiaTalkGetPitch()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaTalkGetQueueEnabled()</name>
+						<packageName></packageName>
+						<script>function parthiaTalkGetQueueEnabled()
+  return tecSettings.parthiaTalkQueueEnabled
+end --function parthiaTalkGetQueueEnabled()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaTalkSetQueueEnabled(displayToScreen, mode)</name>
+						<packageName></packageName>
+						<script>function parthiaTalkSetQueueEnabled(displayToScreen, mode)
+
+  displayToScreen = fuzzyBoolean(displayToScreen) --should messages be displayed to player
+  mode = fuzzyBoolean(mode) --set mode if it is not being toggled
+
+  if mode == nil then --if a mode was not passed. Toggle the queues state
+    if parthiaTalkGetQueueEnabled() then --queue is currently enabled.
+      tecSettings.parthiaTalkQueueEnabled = false 
+      if displayToScreen then pecho("Parthia Talk queue disabled, only most recent message will be spoken.\n") end
+    else --queue is currently disabled
+      tecSettings.parthiaTalkQueueEnabled = true 
+      if displayToScreen then pecho("Parthia Talk queue enabled. Message will wait in line to be spoken the turn they were sent into the queue. Some computers will not play more than two or three messages in their queue.\n") end
+    end --parthiaTalkGetQueueEnabled()
+  else 
+    tecSettings.parthiaTalkQueueEnabled = mode 
+    if displayToScreen then pecho("Parthia talk queue set to "..tostring(mode).."\n") end
+  end --if mode == nil
+  
+  dontForgetToSave() --remind player to save
+
+end --function parthiaTalkSetQueueEnabled()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaTalkGetVolume()</name>
+						<packageName></packageName>
+						<script>function parthiaTalkGetVolume()
+  return tecSettings.parthiaTalkVolume
+end --function parthiaTalkGetVolume()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaTalkSetVolume(volume, displayToScreen)</name>
+						<packageName></packageName>
+						<script>--set volume parthia talks speaks at
+function parthiaTalkSetVolume(volume, displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  volume = tonumber(volume) --convert volume to number incase it is a string
+  if not volume then volume = 11 end --if volume was not a number, set it out of supported range to display supported commands
+  
+  if displayToScreen then --player called funtion, send messages to screen
+    if volume &gt; 10 or volume &lt; 1 then --volume is out of supported range
+      pecho("Supported parthia talk volume commands are\n")
+      for i=1,10 do --loop from 1 to 11
+        cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk volume "..i, --display clickable link to screen
+          [[parthiaTalkSetVolume("]]..i..[[", true)]],
+          "Set the volume parthia talk speaks in to "..i, true)
+        pecho(", set the volume parthia talk speeks at to "..tostring(i)..".")
+        if i &lt; 3 then --show player lower numbers mean slower, higher means faster.
+          pecho(" very quiet\n")
+        elseif i &gt; 2 and i &lt; 5 then 
+          pecho(" quiet\n")
+        elseif i == 5 then
+          pecho("&lt;green&gt; Default\n")
+        elseif i &gt; 5 and i &lt; 9 then
+          pecho(" loud\n")
+        elseif i &gt; 8 and i &lt; 11 then
+          pecho(" very loud\n")
+        else 
+          cecho("\n") 
+        end --if i &lt; 3
+      end --for i=1,10
+      pecho("Click a command above or type it into the command line.\n")
+      return --exit function
+    end --if volume &gt; 11 or volume &lt; 1
+  end --if displayToScreen
+  
+  --mudlets supported volume range is 0 to 1
+  local volumeLevel = volume * .1
+  debugToDisplay("function parthiaTalkSetvolume, volume is "..tostring(speechRate))
+  ttsSetVolume(volumeLevel)
+  tecSettings.parthiaTalkvolume = volume --store volume setting for startup
+  if displayToScreen then
+    pecho("Parthia talk volume set to "..tostring(volume)..".\n")
+    dontForgetToSave()
+  end --if displayToScreen
+end --parthiaTalkSetvolume(volume, displayToScreen)
+</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
@@ -10223,16 +10351,9 @@ registerAnonymousEventHandler("sysExitEvent", "tecExitHandler")</script>
 			<Script isActive="yes" isFolder="no">
 				<name>Post Initilization</name>
 				<packageName></packageName>
-				<script>--For changing default settings that would be time consuming to change during
---also very helpful for GUI objects that did not have a size on creation.
-
-UIManagerFileLoad(true) --load display settings from file.
-UIManagerSetTheme("PlayersTheme", false) --load windows into display
-tecRefreshSettingsWindow() --Refreshes text in settings window.
-tecResetRoomCharacterWindow() --fill room characters window with text
-
---Enable or disable scroll bars. Dependant on user preference.
-tecSetScrollBars(tecSettings.showScrollBars, false)
+				<script>--[[
+functions that need to be called for setup after all scripts have initialized.
+]]--
 
 --set proper state for numpad navigation
 setNumpadNavigation(getNumpadNavigation)
@@ -10250,6 +10371,18 @@ if getHelpDevs() then --if player has Help Developers enabled
   loadHelpDevs(true) --load data saved from Help Developers
 end --if getHelpDevs()</script>
 				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>UIManager</name>
+					<packageName></packageName>
+					<script>UIManagerFileLoad(true) --load display settings from file.
+UIManagerSetTheme("PlayersTheme", false) --load windows into display
+tecRefreshSettingsWindow() --Refreshes text in settings window.
+tecResetRoomCharacterWindow() --fill room characters window with text
+
+--Enable or disable scroll bars. Dependant on user preference.
+tecSetScrollBars(tecSettings.showScrollBars, false)</script>
+					<eventHandlerList />
+				</Script>
 			</Script>
 		</ScriptGroup>
 	</ScriptPackage>

@@ -1517,7 +1517,7 @@ end --if &lt;center&gt; in line else hreplace.
 --now send to the tts system parthia talk
 if getParthiaTalk() then --if parthiaTalk is enabled send filteredLine to it.
   if parthiaTalkLine ~= "" then
-    ttsQueue(parthiaTalkLine) --send the filtered line to queue.
+    pecho(parthiaTalkLine, true) --send the filtered line to queue.
   end --if not parthiaTalkLine == "" then
 end --if getParthiaTalk() then
 
