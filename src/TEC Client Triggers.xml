@@ -897,7 +897,21 @@ end --if conditionFilter.lineCount == 1</script>
 		</TriggerGroup>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>Login</name>
-			<script></script>
+			<script>--[[
+Loin process is:
+TEC sends line "Login: " mudlet trigger "Login" remove the Login: line from screen then sends the Zealous handshake to TEC
+TEC then sends line "SECRET NONE" we capure this with trigger "SECRET Triger" that trigger prompts the user for their username.
+  It registers function authenticationInput(_, command) in the scripts section group Events as a sysDataSendRequest event
+  Trigger also sets bool tecUsernameEntry to true so the authenticationInput function nows it will receive a username
+  If the user entered their user name at mudlet's connect screen it will automatically be captured by authenticationInput as the username.
+When authenticationInput receives a user name it sets tecUsernameEntry to false, tecPasswordEntry and prompts the user for their password.
+  If the user entered their password at mudlet's connection screen it will automatically be captured by this event.
+  After reciving a password the function authenticationInput sends the ID and password to a TEC server requesting an authorization key.
+  This request is done with a http post, header "Cookie" variable "biscuit=test". Over a secure ssl or tls https connection. Currently using a shell call that uses cURL.
+  If the username or password is incorrect authenticationInput restarts the login process. Requiring the user to enter ID and password at mudlet's command prompt.
+  When a good key is received that key is sent inplace of the password over the unsecure telnet connection encrypted as a md5 hash.
+  When a successful login occurs the sysDataSendRequest event that registered authenticationIput is unregistered.
+]]--</script>
 			<triggerType>0</triggerType>
 			<conditonLineDelta>0</conditonLineDelta>
 			<mStayOpen>0</mStayOpen>
@@ -912,17 +926,25 @@ end --if conditionFilter.lineCount == 1</script>
 			<regexCodePropertyList />
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Login</name>
-				<script>--Triggers on game login prompt.
---This trigger WILL fail if the developers stop having a blank space
---after the login it is not [[login]] it is [[login ]]
+				<script>--[[
+Triggers when TEC sends login prompt.
+This trigger WILL fail if the developers stop having a blank space
+after the login it is not "Login:" it is "Login: "
+]]--
+
+DownloadGitReleaseJSON() --check if updates are needed
 
 --deleteLine() --remove line from main console. line variable remains unchanged.
 selectCurrentLine() --select current line in main.
 replace("") --Erase text from main. Otherwise variable line will apear on console.
 deselect() --Don't forget your deselects!
 
+pecho("Login delayed for one second while Parthia checks for updates.\n")
+
 --This trigger function does the client handshake for the user.
-send("SKOTOS Zealous 0.7.12.2", false) --sending the zealous handshake
+tempTimer(1, [[send("SKOTOS Zealous 0.7.12.2", false)]]) --sending the zealous handshake, wait for half a second so the update message appears first.
+
+debugToDisplay("trigger Login, sent command SKOTOS Zealous 0.7.12.2")
 
 --The login control continues in TEC CLient Triggers - login - Secret Triger</script>
 				<triggerType>0</triggerType>
@@ -952,25 +974,24 @@ if getParthiaTalk() then --if parthia talk is enabled
   selectCurrentLine() --select current line in main.
   replace("") --Erase text from main. Otherwise variable line will apear on console.
   deselect() --Don't forget your deselects!
-  cecho("Create an ID at https://www.skotos.net/user/create/start.php\n")
-  cecho("Login can be verified at : https://www.skotos.net/user/login.php\n")
+  cecho("Create an ID or test login at https://login.eternalcitygame.com/login.php\n")
 else --if parthia talk is not enabled
   deleteLine() --remove line from main console. line variable remains unchanged.
-  cecho("Create an ID at ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://www.skotos.net/user/create/start.php", 
-  [[openUrl("https://www.skotos.net/user/create/start.php")]], 
+  cecho("Create an ID or test login at ")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://login.eternalcitygame.com/login.php", 
+  [[openUrl("https://login.eternalcitygame.com/login.php")]], 
   "Create user ID for TEC", true)
   cecho("\n")
-  cecho("Login can be verified at : ")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://www.skotos.net/user/login.php", 
-  [[openUrl("https://www.skotos.net/user/login.php")]], 
-  "TEC Login page", true)
-  cecho("\n")
-end
-cecho("Please enter your username.\n")
-printCmdLine("Username: ") --insert into the command line.
+end --if getParthiaTalk()
 
---Login control continues in Aliases - TECCommandLineReplacement - USERLogin</script>
+if not passwordInputEventID then --if an authenticationInput event does not already exist.
+  debugToDisplay("trigger SECRET Triger, starting sysDataSendRequest event handler to function authenticationInput")
+  passwordInputEventID = registerAnonymousEventHandler("sysDataSendRequest", "authenticationInput") --capture user input.
+end --if not passwordInputEventID
+tecUsernameEntry = true --tell the event handler authenticationInput that the next command entered is the user's username
+pecho("Please enter your username.")
+
+--Login control continues in Scripts -&gt; Events -&gt; authenticationInput(_, command)</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1005,11 +1026,48 @@ printCmdLine("Username: ") --insert into the command line.
 					<string>If you still have difficulties, please contact tec-support@skotos.net.</string>
 					<string>Enter your password: </string>
 					<string>Either that user does not exist or has a different password.</string>
+					<string>Invalid user info.</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>3</integer>
 					<integer>3</integer>
 					<integer>3</integer>
+					<integer>0</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Successful login</name>
+				<script>--triggers after a successful login
+
+if passwordInputEventID then --we no longer need to listen for ID or password
+  killAnonymousEventHandler(passwordInputEventID) --remove the event that listens for ID and password
+  passwordInputEventID = false
+end
+
+if tecUsername then tecUsername = nil end --remove the username, it is no longer needed
+
+--Set default text in room characters window
+tecResetRoomCharacterWindow()
+
+--collect player data, 1 second wait due to one command per second limitation
+--runConditionCollection(false)
+parthiaPlayer.CurrentCharacter = { }
+local statsCollectionTimer = tempTimer(1.1, [[runStatsCollection(false)]])</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>&lt;center&gt;*** Login successful</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
 				</regexCodePropertyList>
 			</Trigger>
 			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
@@ -1464,7 +1522,7 @@ end --if &lt;center&gt; in line else hreplace.
 --now send to the tts system parthia talk
 if getParthiaTalk() then --if parthiaTalk is enabled send filteredLine to it.
   if parthiaTalkLine ~= "" then
-    ttsQueue(parthiaTalkLine) --send the filtered line to queue.
+    pecho(parthiaTalkLine, true) --send the filtered line to queue.
   end --if not parthiaTalkLine == "" then
 end --if getParthiaTalk() then
 
@@ -1848,38 +1906,6 @@ tecRoomCharRefreshNotification()</script>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>0</integer>
-				</regexCodePropertyList>
-			</Trigger>
-			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>Successful login</name>
-				<script>--triggers after a successful login
-
---Sort delay before processing update check. Without this the update request may be barried
---under login text.
-local gitUpdate_timer = tempTimer(1, [[DownloadGitReleaseJSON()]])
-
---Set default text in room characters window
-tecResetRoomCharacterWindow()
-
---collect player data, 1 second wait due to one command per second limitation
---runConditionCollection(false)
-parthiaPlayer.CurrentCharacter = { }
-local statsCollectionTimer = tempTimer(1.1, [[runStatsCollection(false)]])</script>
-				<triggerType>0</triggerType>
-				<conditonLineDelta>0</conditonLineDelta>
-				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
-				<mFgColor>#ff0000</mFgColor>
-				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
-				<colorTriggerFgColor>#000000</colorTriggerFgColor>
-				<colorTriggerBgColor>#000000</colorTriggerBgColor>
-				<regexCodeList>
-					<string>&lt;center&gt;*** Login successful</string>
-				</regexCodeList>
-				<regexCodePropertyList>
-					<integer>2</integer>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
