@@ -364,7 +364,7 @@ tecClientReset(true)</script>
 				<packageName></packageName>
 				<regex>^parthia tab font size (.*)$</regex>
 			</Alias>
-			<Alias isActive="yes" isFolder="no">
+			<Alias isActive="no" isFolder="no">
 				<name>parthia update</name>
 				<script>DownloadGitScripts() --Begin downloading updates</script>
 				<command></command>
@@ -1062,41 +1062,7 @@ expandAlias("display"..matches[2])</script>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia map mapping start</name>
 					<script>parthiaMap.mapping = true
-pecho("Mapping started.\n")
-
---[[
-
-function map.start_mapping(area_name)
-    -- starts mapping, and sets the current area to the given one, or uses the current one
-    if not map.currentName then
-        show_err("Room detection not yet working, see &lt;yellow&gt;map basics&lt;reset&gt; for guidance.")
-    end
-    local rooms
-    move_queue = {}
-    area_name = area_name ~= "" and area_name or nil
-    if map.currentArea and not area_name then
-        local areas = getAreaTableSwap()
-        area_name = areas[map.currentArea]
-    end
-    if not area_name then
-        show_err("You haven't started mapping yet, how should the first area be called? Set it with: &lt;yellow&gt;start mapping &lt;area name&gt;&lt;reset&gt;")
-    end
-    map.echo("Now mapping in area: " .. area_name)
-    map.set("mapping", true)
-    find_area(area_name)
-    rooms = find_room(map.currentName, map.currentArea)
-    if table.is_empty(rooms) then
-        if map.currentRoom and getRoomName(map.currentRoom) == map.currentName then
-            map.set_area(area_name)
-        else
-            create_room(map.currentName, map.currentExits, nil, {0,0,0})
-        end
-    elseif map.currentRoom and map.currentArea ~= getRoomArea(map.currentRoom) then
-        map.set_area(area_name)
-    end
-end
-
-]]--</script>
+pecho("Mapping started.\n")</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia map mapping start$</regex>
@@ -1112,12 +1078,25 @@ pecho("Mapping stopped.\n")</script>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia map location clear</name>
 					<script>parthiaMap.resetRoom() --clear the room table
---parthiaMap.trackPreviousRoom() --clear the previous room table
 parthiaMap.previousRoom = nil
 pecho("Cleared room and previousRoom tables.\n")</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia map location clear$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia map enable</name>
+					<script>parthiaMap.setEnabled(true, true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia map enable$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia map disable</name>
+					<script>parthiaMap.setEnabled(false, true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia map disable$</regex>
 				</Alias>
 			</AliasGroup>
 		</AliasGroup>

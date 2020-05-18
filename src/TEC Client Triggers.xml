@@ -134,8 +134,9 @@ if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
 deleteLine() --remove line from main console. line variable remains unchanged.
 
 --SKOOT 10 is our last room data message. Use data collected from TEC to manage parthiaMap
-parthiaMap.Move()
-</script>
+if parthiaMap.getEnabled() then --if player is using parthiaMap
+  parthiaMap.Move()
+end --if parthiaMap.getEnabled()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1854,10 +1855,12 @@ tecRoomCharRefreshNotification()</script>
 				<name>Player enters a room</name>
 				<script>--triggers when the player enters a new room.
 
-parthiaMap.upAvailable = false
-parthiaMap.downAvailable = false
-parthiaMap.TECMapRooms = {} --clear the rooms table so it will not overlap
-parthiaMap.trackPreviousRoom() --movement complete keep track of what the previous room was
+if parthiaMap.getEnabled() then --if player is using parthiaMap
+  parthiaMap.upAvailable = false
+  parthiaMap.downAvailable = false
+  parthiaMap.TECMapRooms = {} --clear the rooms table so it will not overlap
+  parthiaMap.trackPreviousRoom() --movement complete keep track of what the previous room was
+end --if parthiaMap.getEnabled()
 
 --Set default text in room characters window
 tecResetRoomCharacterWindow()
@@ -2019,8 +2022,10 @@ end --if getHelpDevs()</script>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>You are in the middle of something.</name>
-				<script>parthiaMap.dirtectionCollected = false
-debugToDisplay("trigger You are in the middle of something., possible failed movement found set directionCollected to false.")</script>
+				<script>if parthiaMap.getEnabled() then --if player is using parthiaMap
+  parthiaMap.dirtectionCollected = false
+  mapDebug("trigger You are in the middle of something., possible failed movement found set directionCollected to false.")
+end --if parthiaMap.getEnabled()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -2066,18 +2071,19 @@ this method may not be needed.
 This method would only function when light was not available.
 ]]--
 
-
-if not parthiaMap.dirtectionCollected then
-  if parthiaMap.upAvailable and (not parthiaMap.downAvailable) then --if only up is available.
-    parthiaMap.directionWalked = "up"
-    parthiaMap.dirtectionCollected = true
-  elseif (not parthiaMap.upAvailable) and parthiaMap.downAvailable then --if only down is available
-    parthiaMap.directionWalked = "down"
-    parthiaMap.dirtectionCollected = true
-  elseif parthiaMap.upAvailable and parthiaMap.downAvailable then --if both up and down are available.
-    --collect exit decription from map data.
-  end
-end --if not parthiaMap.dirtectionCollected</script>
+if parthiaMap.getEnabled() then --if player is using parthiaMap
+  if not parthiaMap.dirtectionCollected then
+    if parthiaMap.upAvailable and (not parthiaMap.downAvailable) then --if only up is available.
+      parthiaMap.directionWalked = "up"
+      parthiaMap.dirtectionCollected = true
+    elseif (not parthiaMap.upAvailable) and parthiaMap.downAvailable then --if only down is available
+      parthiaMap.directionWalked = "down"
+      parthiaMap.dirtectionCollected = true
+    elseif parthiaMap.upAvailable and parthiaMap.downAvailable then --if both up and down are available.
+      --collect exit decription from map data.
+    end
+  end --if not parthiaMap.dirtectionCollected
+end --if parthiaMap.getEnabled()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -2097,9 +2103,11 @@ end --if not parthiaMap.dirtectionCollected</script>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>failed movement</name>
-				<script>--in case player types go down when there is no go down. Than moves a different direction
-parthiaMap.dirtectionCollected = false
-debugToDisplay("trigger failed movement, possible failed movement found set directionCollected to false.")</script>
+				<script>--in case player types goes a direction that is not available than goes in a different direction
+if parthiaMap.getEnabled() then --if player is using parthiaMap
+  parthiaMap.dirtectionCollected = false
+  mapDebug("trigger failed movement, possible failed movement found set directionCollected to false.")
+end --if parthiaMap.getEnabled()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
