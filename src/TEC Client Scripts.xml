@@ -489,6 +489,7 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   tecUsername = "" --used store user's name during login process. Gets removed when login was successful.
 
   tecSettings.parthiaMapEnabled = false --tells parthia if it's mapping system should be running.
+  
 
 	if displayToScreen then pecho("Parthia settings set to default.\n") end
 
@@ -9223,7 +9224,9 @@ parthiaMap = parthiaMap or {} --table to hold the mapper data.
 --parthiaMap.coords = {} --location in the current area
 --parthiaMap.dirtectionCollected = false --used to tell mapper if a movement direction has been collected. Is used in function addLinksToDirections and parthiaMap.zMovementTracking
 --parthiaMap.upAvailable = false --keeps track of it player can move up in this area. Used to track movement commands like go ladder
---parthiaMap.downAvailable = false --keeps track of it player can move up in this area. Used to track movement commands like go ladder</script>
+--parthiaMap.downAvailable = false --keeps track of it player can move up in this area. Used to track movement commands like go ladder
+--parthiaMap.stepsGoUp = true --if true steps add 1 to Z. If false steps remove 1 from z
+--parthiaMap.playerClimbed = false --sets to true when a player climbs in trigger "player climbs"</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
 					<name>parthiaMap.resetRoom()</name>
@@ -9255,6 +9258,8 @@ It is called in script "Post Initilization"
 function parthiaMap.config()
   parthiaMap.currentAreaID = nil --will hold the current area name
   parthiaMap.mapping = false --is a map being created
+  parthiaMap.stepsGoUp = true --if true steps add 1 to Z. If false steps remove 1 from z
+  parthiaMap.playerClimbed = false --sets to true when a player climbs in trigger "player climbs"
   
   parthiaMap.directions = { --used to tell mapper acceptable directions. Used in addLinksToDirections to collect room exit directions
     "north", "northeast", "east", "southeast", "south", "southwest",
@@ -9386,12 +9391,14 @@ end</script>
   else --movement is not up or down
     if parthiaMap.previousRoom then --if this is not the first movement.
       if parthiaMap.previousRoom.confirmedExits[dir] then --verify there is a exit in the direction player is moving
-        local roomSizeAdjustment = parthiaMap.previousRoom.size * .5 --We need to adjust x and y by half the room's size
-        if roomSizeAdjustment &lt; 1 then roomSizeAdjustment = 0 end --if the previous room is size 1 we do not adjust by size
-        --the previous room kept track of all adjecent rooms that connected to exits. Use the direction the player walked to refer to the exit. .room. is the table that stores the location of that room on the Alice TEC Map
-        y = y + -(parthiaMap.previousRoom.confirmedExits[dir].room.ypos) - roomSizeAdjustment --use the location of the current room in reference to the previous room to decide the players coordinates
-        x = x + parthiaMap.previousRoom.confirmedExits[dir].room.xpos + roomSizeAdjustment ----use the location of the current room in reference to the previous room to decide the players coordinates
-      else --there was not exit for the direction moved
+        if parthiaMap.previousRoom.confirmedExits[dir].room then --verify there is a room on the map for this exit
+          local roomSizeAdjustment = parthiaMap.previousRoom.size * .5 --We need to adjust x and y by half the room's size
+          if roomSizeAdjustment &lt; 1 then roomSizeAdjustment = 0 end --if the previous room is size 1 we do not adjust by size
+          --the previous room kept track of all adjecent rooms that connected to exits. Use the direction the player walked to refer to the exit. .room. is the table that stores the location of that room on the Alice TEC Map
+          y = y + -(parthiaMap.previousRoom.confirmedExits[dir].room.ypos) - roomSizeAdjustment --use the location of the current room in reference to the previous room to decide the players coordinates
+          x = x + parthiaMap.previousRoom.confirmedExits[dir].room.xpos + roomSizeAdjustment ----use the location of the current room in reference to the previous room to decide the players coordinates
+        
+        else --The mapper did not show a room in this direction. Meaning vertical movement with horizonal directional command.
 --[[
 Prefface below. That code can not handle a large room with many smaller rooms exiting into it, or (vice versa) a direction with multiple exits.
 code to hangle movement that is vertical in game without the player going up or down goes here
@@ -9399,33 +9406,61 @@ A good place to test this is the stands in the colosseum.
 When you go up the benches it will not show rooms to the east or west.
 Another location that does this is the Iridine bank.
 Fix is probably using the two room sizes to resolve.
-if dir == "north" then
-    y = y+(1*((room.size)+(previousRoom.size)))
-  elseif dir == "northeast" then
-    y = y+(1*((room.size)+(previousRoom.size)))
-    x = x+(1*((room.size)+(previousRoom.size)))
-  elseif dir == "east" then
-    x = x+(1*((room.size)+(previousRoom.size)))
-  elseif dir == "southeast" then
-    y = y-(1*((room.size)+(previousRoom.size)))
-    x = x+(1*((room.size)+(previousRoom.size)))
-  elseif dir == "south" then
-    y = y-(1*((room.size)+(previousRoom.size)))
-  elseif dir == "southwest" then
-    y = y-(1*((room.size)+(previousRoom.size)))
-    x = x-(1*((room.size)+(previousRoom.size)))
-  elseif dir == "west" then
-    x = x-(1*((room.size)+(previousRoom.size)))
-  elseif dir == "northwest" then
-    y = y+(1*((room.size)+(previousRoom.size)))
-    x = x-(1*((room.size)+(previousRoom.size)))
-  end --if dir ==
 ]]--
-        
-        if parthiaMap.mapping then --player is mapping
-          mapDebug("Moved direction that mapping did not find an exit for.")
-        end --if parthiaMap.mapping
-      end --parthiaMap.previousRoom.confirmedExits[dir]
+          if dir == "north" then
+            y = y+(1*room.size)
+          elseif dir == "northeast" then
+            y = y+(1*room.size)
+            x = x+(1*previousRoom.size)
+          elseif dir == "east" then
+            x = x+(1*previousRoom.size)
+          elseif dir == "southeast" then
+            y = y-(1*previousRoom.size)
+            x = x+(1*previousRoom.size)
+          elseif dir == "south" then
+            y = y-(1*previousRoom.size)
+          elseif dir == "southwest" then
+            y = y-(1*previousRoom.size)
+            x = x-(1*room.size)
+          elseif dir == "west" then
+            x = x-(1*room.size)
+          elseif dir == "northwest" then
+            y = y+(1*room.size)
+            x = x-(1*room.size)
+          end --if dir ==
+          
+          if parthiaMap.mapping then
+            pecho("Movement through an exit that had no room on the TEC provided map occured.\n"..
+                  "Please verify this rooms position on the Parthia Map matches its position in the TEC Map. Room pips in Parthia map should be at the upper left corner of where that room appears on the TEC Map.\n"..
+                  "If it is incorrect room can be dragged and dropped into the correct location.\n")
+          end --if parthiaMap.mapping
+          if parthiaMap.playerClimbed then --If the player climb to get to the room they are in, we know veritcal and horizontal movement occured.
+            if parthiaMap.mapping then pecho("Movement that was both vertical and horizontal at the same time was detected. ") end
+            if parthiaMap.getStepsGoUp() then --if mapper has set steps to go up than increase Z
+              z = z + 1
+              if parthiaMap.mapping then
+                pecho("This movement was considerted to be upward movement. If it was downward movement please delete this room. Go back to your previous room and run command ")
+                pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map steps go down", 
+                          [[parthiaMap.setStepsGoUp(false, true)]],
+                          "Steps take you down while mapping", true)
+              end
+            else --if mapper has set steps to go down, than decrease z
+              z = z - 1
+              if parthiaMap.mapping then
+                pecho("This movement was considerted to be downward movement. If it was upward movement please delete this room. Go back to your previous room and run command ")
+                pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map steps go up", 
+                          [[parthiaMap.setStepsGoUp(true, true)]],
+                          "Steps take you up while mapping", true)
+              end
+            end --if parthiaMap.getStepsGoUp()
+          end --if parthiaMap.playerClimbed
+          
+          mapDebug("function parthiaMap.move vertical movement with horizontal command found.")
+          if parthiaMap.mapping then
+            
+          end --if parthiaMap.mapping
+        end --if parthiaMap.previousRoom.confirmedExits[dir].room
+      end --if parthiaMap.previousRoom.confirmedExits[dir]
     end --if parthiaMap.previousRoom
   end --if dir == "u" or dir == "up"
 
@@ -9449,6 +9484,9 @@ if dir == "north" then
       mapDebug("function parthiaMap.Move, Mapping currently disabled. In unmapped area.")
     end --if parthiaMap.mapping
   end --if roomFound[0]
+  
+  --reset movement variables to defaults
+  parthiaMap.playerClimbed = false
   
   mapDebug("function parthiaMap.Move, Completed mapping space that was previously unmapped.")
 
@@ -10136,18 +10174,77 @@ function parthiaMap.setEnabled(mode, displayToScreen)
   displayToScreen = fuzzyBoolean(displayToScreen)
   
   tecSettings.parthiaMapEnabled = mode --set the state for parthiaMap
+  debugToDisplay("function parthiaMap.setEnabled, set tecSettings.parthiaMapEnabled to "..tostring(mode))
   
   if displayToScreen then 
     if mode then --mapping was enabled
       pecho("Parthia map enabled.\n")
-      debugToDisplay("Parthia map enabled.")
     else --mapping was disabled
       pecho("Parthia map disabled.\n")
-      debugToDisplay("Parthia map disabled.")
     end --if mode
     dontForgetToSave() --remind player to save their changes
   end --if displayToScreen
+  
 end --parthiaMap.setEnabled(mode, displayToScreen)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.getStepsGoUp()</name>
+					<packageName></packageName>
+					<script>--[[
+Used to check if steps that go in non vertical directions go up or down.
+
+Useage: 
+if parthiaMap.getStepsGoUp() then
+  --code that adds to z movement here
+else
+  --code that removes from z movement here
+end
+
+This function is used in parthiaMap.Move function
+]]--
+function parthiaMap.getStepsGoUp()
+  return parthiaMap.stepsGoUp
+end --function parthiaMap.getStepsGo()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.setStepsGoUp(mode, displayToScreen)</name>
+					<packageName></packageName>
+					<script>--[[
+sets variable parthiaMap.stepsGoUp
+This variable is true by default. Seting is function parthiaMap.config
+if true steps go up, add to Z access
+if false steps go down, remove from Z access
+
+Usage:
+parthiaMap.setStepsGoUp(true, true) --would set steps to go up and display a message to screen
+parthiaMap.setStepsGoUp(false) --would set steps to go down
+parthiaMap.setStepsGoUp() --would set steps to go down
+
+This function is used in aliases:
+parthia map steps go down
+parthia map steps go up
+]]--
+function parthiaMap.setStepsGoUp(mode, displayToScreen)
+  --make certain variables passed are good
+  mode = fuzzyBoolean(mode)
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  
+  parthiaMap.stepsGoUp = mode --tell parthia map if steps go up or down
+  parthiaMap.playerClimbed = false --if true the player climbed during their last movement.
+  mapDebug("parthiaMap.setStepsGoUp, set parthiaMap.stepsGoUp to: "..tostring(mode))
+  
+  if displayToScreen then --if true display a message to screen
+    if mode then --if true steps go up, or z gets added to
+      pecho("When steps are used with horizontal movement methods they will be considered to go up. Z access will get added to when steps are used.\n")
+    else --false means steps go down, or z gets subtracted from
+      pecho("When steps are used with horizontal movement methods they will be considered to go down. Z access will get subtracted from when steps are used.\n")
+    end --if mode
+    pecho("This setting does not have a method to save to file.\n")
+  end --if displayToScreen
+  
+end --parthiaMap.setStepsGoUp(mode, displayToScreen)</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>

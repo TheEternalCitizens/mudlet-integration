@@ -1098,6 +1098,20 @@ pecho("Cleared room and previousRoom tables.\n")</script>
 					<packageName></packageName>
 					<regex>^parthia map disable$</regex>
 				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia map steps go up</name>
+					<script>parthiaMap.setStepsGoUp(true, true) --set steps to go up or add to z access. Display message to screen of this change.</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia map steps go up$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia map steps go down</name>
+					<script>parthiaMap.setStepsGoUp(false, true) --set steps to go down or subtract from z access. Display message to screen of this change.</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia map steps go down$</regex>
+				</Alias>
 			</AliasGroup>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">

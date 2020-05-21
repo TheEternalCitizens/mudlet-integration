@@ -2043,25 +2043,16 @@ end --if parthiaMap.getEnabled()</script>
 					<integer>3</integer>
 				</regexCodePropertyList>
 			</Trigger>
-		</TriggerGroup>
-		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-			<name>parthia mapper</name>
-			<script></script>
-			<triggerType>0</triggerType>
-			<conditonLineDelta>0</conditonLineDelta>
-			<mStayOpen>0</mStayOpen>
-			<mCommand></mCommand>
-			<packageName></packageName>
-			<mFgColor>#ff0000</mFgColor>
-			<mBgColor>#ffff00</mBgColor>
-			<mSoundFile></mSoundFile>
-			<colorTriggerFgColor>#000000</colorTriggerFgColor>
-			<colorTriggerBgColor>#000000</colorTriggerBgColor>
-			<regexCodeList />
-			<regexCodePropertyList />
-			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>parthia mapper room movement</name>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>player climbs</name>
 				<script>--[[
+If the key word climb appeared. There is a seperate pattern that parthiaMap.Move will look for.
+  That pattern is if a room has an exit but no room attached to it. We know the room that exit leads to is either a closed door, hidden room or both vertical and horizonal movement (normally steps)
+  If we see both a exit that has no room on the Alice TEC Map and the key words You climb are emoted during movement, we know vertical and horizontal movement in a single move is occuring (steps, a ramp or the like)
+]]--
+parthiaMap.playerClimbed = true --we know the player climbed during this movement.
+
+--[[
 We know know the player has climbed.
 If up and down are avilable and we have not already detected the movement direction from player input.
 We are going to see if up, down or both are avialable.
@@ -2069,7 +2060,7 @@ If only one is detected, we assume player has moved that direction.
 If both are available we will compare the exit descriptoinin the echo against the exit descriptions collected from previous mapping
 this method may not be needed.
 This method would only function when light was not available.
-]]--
+
 
 if parthiaMap.getEnabled() then --if player is using parthiaMap
   if not parthiaMap.dirtectionCollected then
@@ -2083,7 +2074,8 @@ if parthiaMap.getEnabled() then --if player is using parthiaMap
       --collect exit decription from map data.
     end
   end --if not parthiaMap.dirtectionCollected
-end --if parthiaMap.getEnabled()</script>
+end --if parthiaMap.getEnabled()
+]]--</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -2101,6 +2093,22 @@ end --if parthiaMap.getEnabled()</script>
 					<integer>2</integer>
 				</regexCodePropertyList>
 			</Trigger>
+		</TriggerGroup>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>parthia mapper</name>
+			<script></script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>failed movement</name>
 				<script>--in case player types goes a direction that is not available than goes in a different direction
