@@ -525,12 +525,8 @@ end --function tecFileSaveSettings(displayToScreen)</script>
 				<Script isActive="yes" isFolder="no">
 					<name>tecFileLoadSettings(displayToScreen)</name>
 					<packageName></packageName>
-					<script>--This perhaps should be in a sysLoadEvent
-
---This bugs on startup because it is calling debugToDisplay before it is declared.
-
---Loads variable and theme settings from file.
---Notify is boolean, to let the user know the event occured.
+					<script>--Loads variable and theme settings from file.
+--displayToScreen is boolean, to let the user know the event occured.
 --In this case it is also a to screen notification that it was 
 --successfull
 function tecFileLoadSettings(displayToScreen)
@@ -3221,15 +3217,30 @@ end --getTECTimerDebugMode</script>
 				<Script isActive="yes" isFolder="no">
 					<name>tecErrorNotification(errorFound)</name>
 					<packageName></packageName>
-					<script>--fully notifies user when an error is found.
-function tecErrorNotification(errorFound)
+					<script>--[[
+Used show messages when errors occur
+
+Usage:
+  tecErrorNotification(errorFound, displayToScreen)
+  erroFound, is a string describing the error
+  displayToScreen, is if the error should be displayed to main console. It is true by default. EVEN when nothing is passed as argument 2.
+examples:
+  tecErrorNotification("function functionName, error found failed something.", false) --would show error message to parthia debug console and mudlets error window
+  tecErrorNotification("function functionName, error found failed something.", true) --would show error message to parthia debug console and mudlets error window, and main console
+]]--
+function tecErrorNotification(errorFound, displayToScreen)
+  if displayToScreen == nil then displayToScreen = true end
+  displayToScreen = fuzzyBoolean(displayToScreen)
   debugc("Error: "..errorFound)
   debugToDisplay("&lt;red:&gt;Error: "..errorFound)
-  pecho("&lt;red:&gt;Error: "..errorFound.."\n\tPlease contact a developer with command ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
-    [[tecReportIssues()]],
-    "Report issues or bugs", true)
-  cecho("")
+
+  if displayToScreen then
+    pecho("&lt;red:&gt;Error: "..errorFound.."\n\tPlease contact a developer with command ")
+    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
+      [[tecReportIssues()]],
+      "Report issues or bugs", true)
+    cecho("")
+  end --if displayToScreen
 end --function tecErrorNotification</script>
 					<eventHandlerList />
 				</Script>
@@ -3247,6 +3258,237 @@ function tecWarningNotification(errorFound)
 --    "Report issues or bugs", true)
 --  cecho("")
 end --function tecErrorNotification</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>data</name>
+				<packageName></packageName>
+				<script>--[[
+Functions that write to file or socket
+]]--</script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaFileToString(path, remove)</name>
+					<packageName></packageName>
+					<script>--[[
+This function opens a file and returns the contents of the file as a string.
+Usage:
+  parthiaFileToString(path, remove)
+  path is the path and name of the file to open.
+  remove is boolean if the file should be removed when completed.
+
+Examples: 
+  
+  myFriends, errorFound = parthiaFileToString("C:\My friends list.txt")
+  if erroFound then
+    pecho("Error found in data read: "..errorFound")
+  end
+  Above would read in file C:\My friends list.txt into variable myFriends
+  If an error was found it would display the error to screen and myFriends variable will be nil.
+    
+  myFriends, errorFound = parthiaFileToString("C:\My friends list.txt", true)
+  if erroFound then
+    pecho("Error found in data read: "..errorFound")
+  end
+    Above would read in file C:\My friends list.txt into variable myFriends AND delte the file if the read was successful.
+    If an error was found it would display the error to screen and myFriends variable will be nil.
+    
+  myFriends = parthiaFileToString("C:\My friends list.txt")
+    Above would read in file C:\My friends list.txt into variable myFriends
+    If an error was found myFriends will be nil.
+]]--
+function parthiaFileToString(path, remove)
+
+  --make certain the arguments are correct
+  remove = fuzzyBoolean(remove)
+  if type(path) ~= "string" then --make certain a string was passed
+    return "", "function parthiaFileToString, argument 1 is a non string variable. Received: "..tostring(stringToCheck).." expected a string."
+  end --if type(path) ~= "string" then
+
+  --open the file
+  local fileOpened, errorFound = io.open(path, "r") --open the file as read
+  if not fileOpened then --file was not created error occured.
+    fileOpened:close() --incase of partial failure, close file.
+    fileOpened = nil
+    return  nil, "function parthiaFileToString: "..errorFound--error found stop function
+  end --if not fileOpened
+  
+  --read from the file
+  local fileString = fileOpened:read("*a") --read the entire file to a string
+  fileOpened:close() --close the file
+  fileOpened = nil
+  
+  --verify read was correct and return the file as a string
+  if fileString then --file read correctly
+    if remove then os.remove(path) end --remove the file
+    return fileString --return it as a string
+  else --File had read error
+    return nil, "function parthiaFileToString, failure converting file: "..path.." to string"--error found stop the function
+  end --if fileString
+
+end --parthiaFileToString</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaStringToFile(data,path,displayToScreen)</name>
+					<packageName></packageName>
+					<script>--[[
+saves a lua string to file
+in ANSI format
+
+Usage:
+  parthiaStringToFile(str,path,displayToScreen)
+  str, a string to be saved to file.
+  path, is the full directory and file name to save to
+  displayToScreen, if true display message to screen, false no messages will display to main console
+
+Examples:
+  errorFound = parthiaStringToFile("Write me to file.", "C:\users\dave\.config\testfile.txt", false)
+    writes string "Write me to file." to C:\users\dave\.config\testfile.txt. Not displaying any message to main console.
+  errorFound = parthiaStringToFile("Write me to file.", "/root/users/dave/.config/testfile.txt", false)
+    writes string "Write me to file." to /root/users/dave/.config/testfile.txt. Not displaying any message to main console.
+]]--
+function parthiaStringToFile(str,path,displayToScreen)
+  --make certain variables are good
+  if not type(str) == "string" then
+    local erroFound = "argument 1 needs to be a string to save. Received a "..type(str).." as argument 1."
+    if displayToScreen then
+      tecErrorNotification("function parthiaStringToFile, "..errorFound)
+    else
+      tecErrorNotification("function parthiaStringToFile, "..errorFound, false)
+    end
+    return errorFound
+  end --if not type(tbl) == "table"
+  if not type(path) == "string" then
+    local errorFound = "argument 2 needs to be a full path and file name as string variable. Received a "..type(path).." as argument 1."
+    if displayToScreen then
+      tecErrorNotification("function parthiaStringToFile, "..errorFound)
+    else
+      tecErrorNotification("function parthiaStringToFile, "..errorFound, false)
+    end
+    return errorFound
+  end --if not type(path) == "string"
+  displayToScreen = fuzzyBoolean(displayToScreen)
+
+  local f, errorFound = io.open(path, "w") --open in write mode or create file
+  if not f then --file was not created error occured.
+    f:close() --incase of partial failure, close file.
+    f = nil
+    if displayToScreen then
+      tecErrorNotification("function parthiaStringToFile, "..errorFound)
+    else
+      tecErrorNotification("function parthiaStringToFile, "..errorFound, false)
+    end
+    return  errorFound--error found stop write
+  end --if not f
+  f:write(str) --Write string to file
+  f:close() --close the file
+  f = nil
+  
+  if displayToScreen then pecho("String writen to "..path.." successful.\n") end
+  
+end --function parthiaStringToFile(str,path,displayToScreen)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaTableSave(tbl, path, jsonFormat, displayToScreen)</name>
+					<packageName></packageName>
+					<script>--[[
+Saves a lua table to file. Creating a thread to avoid locking main thread.
+Includes option to save table in json format
+File is in ANSI format
+
+Usage:
+  parthiaTableSave(table, path, jsonFormat, displayToScreen)
+  table, is a table to save
+  path, is the full directory and file name to save to
+  jsonFormat, boolean true if you want to save in json format false saves to standard lua table format
+  displayToScreen, if true display message to screen, false no messages will display to main console
+
+Examples:
+  errorFound = parthiaTableSave(aTableToSave, "/root/users/dave/.config/testfile.json", true, false)
+    will save aTableToSave to /root/users/dave/.config/testfile.json, in json format, and not display messages to screen. If there is a error errorFound will contain a string explaining the error.
+  parthiaTableSave(aTableToSave, "C:\users\dave\.config\testfile.lua", false, true)
+    will save aTableToSave to C:\users\dave\.config\testfile.lua, in standard lua table format, success or errors will display to screen
+  errorFound = parthiaTableSave(aTableToSave, "C:\users\dave\.config\testfile.lua", false, true)
+    will save aTableToSave to C:\users\dave\.config\testfile.lua, in standard lua table format, success or errors will display to screen. If there is a error errorFound will contain a string explaining the error.
+]]--
+
+--this function is used in a coroutine to save lua tables with table.save
+--includes error checking. table.save does not return an error message
+function saveLUATableThread(tbl, path, displayToScreen)
+  local dir = path:match("(.*\\)") --return the directory portion of path
+  local errorFound = false
+  if dir then --if path has a directory in it
+    if not io.exists(dir) then
+      errorFound = "directory: "..dir.." does not exist."
+    end --if not io.exists(dir)
+  else --windows directory not found in path
+    local dir = path:match("(.*/)") --check for mac and linux
+    if not dir then --no directory in path
+      errorFound = "no directory passed in argument 2."
+    end --if not dir
+  end --if dir
+	if errorFound then --if an error was found in the path
+    if displayToScreen then
+      tecErrorNotification("function parthiaTableSave, saving table to "..path.." failed. With error: "..tostring(errorFound))
+    else --do not show error to main console
+      tecErrorNotification("function parthiaTableSave, saving table to "..path.." failed. With error: "..tostring(errorFound), false)
+    end --if displayToScreen
+    tbl = nil
+    return errorFound
+  else --no errors with path found run the function
+    table.save(path, tbl)
+    tbl = nil
+    if displayToScreen then pecho("Table saved to "..path.." successfully.\n") end
+  end --if errorFound
+end --saveTableToJSON(tbl, path, displayToScreen)
+
+function parthiaTableSave(tbl, path, jsonFormat, displayToScreen)
+
+  --make certain variables are good
+  if not type(tbl) == "table" then
+    tecErrorNotification("function parthiaTableSave, argument 1 needs to be a table to save. Received a "..type(tbl).." as argument 1.")
+    return
+  end --if not type(tbl) == "table"
+  if not type(path) == "string" then
+    tecErrorNotification("function parthiaTableSave, argument 2 needs to be a full path and file name as string variable. Received a "..type(path).." as argument 1.")
+    return
+  end --if not type(path) == "string"
+  jsonFormat = fuzzyBoolean(jsonFormat)
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  
+  local copiedTable = table.deepcopy(tbl) --copy the table, incase the origional changes while a coroutine thread is saving the table
+
+  if jsonFormat then
+    local errorFound = parthiaStringToFile(yajl.to_string(copiedTable),path,false)
+    if errorFound then
+      if displayToScreen then
+        tecErrorNotification("function parthiaTableSave, function parthiaStringToFile returned: "..errorFound)
+      else --do not show error to main console
+        tecErrorNotification("function parthiaTableSave, function parthiaStringToFile returned: "..errorFound, false)
+      end --if displayToScreen
+      return errorFound
+    else
+      if displayToScreen then pecho("Table saved in json format to "..path.." successfully.\n") end
+    end --if errorFound
+  else --not saving to json format
+    --to avoid locking main thread write table to second thread
+    saveThread = coroutine.create(saveLUATableThread)
+    local threadRan = coroutine.resume(saveThread, copiedTable, path, displayToScreen)
+    if not threadRan then --if the coroutine failed to run
+      local errorFound = "table.save thread failed."
+      if displayToScreen then
+        tecErrorNotification("function parthiaTableSave, saving table to "..path.." failed. With error: "..tostring(errorFound))
+      else --do not show error to main console
+        tecErrorNotification("function parthiaTableSave, saving table to "..path.." failed. With error: "..tostring(errorFound), false)
+      end --if displayToScreen
+      return errorFound
+    end --if not threadRan
+  end -- if jsonFormat
+
+end --function parthiaTableSave(tbl, path, jsonFormat, displayToScreen)</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -3440,7 +3682,11 @@ function addLinksToDirections()
   if parthiaMap.getEnabled() then --if player is using parthiaMap
     if not parthiaMap.dirtectionCollected then --if we have not collection a movement direction yet do so now.
       parthiaMap.directionWalked = line:match(" You are facing (%a+)%.")
-      debugToDisplay("function addlinksToDirections, Direction walked: "..parthiaMap.directionWalked)
+      if parthiaMap.directionWalked then
+        mapDebug("function addlinksToDirections, Direction walked: "..parthiaMap.directionWalked)
+      else
+        mapDebug("function addlinksToDirections, could collect direction walked")
+      end --if parthiaMap.directionWalked
     end --if not parthiaMap.dirtectionCollected
     parthiaMap.dirtectionCollected = false --reset directionCollected for next movement.
   end --if parthiaMap.getEnabled()
@@ -3638,67 +3884,6 @@ end --function commandSuccessful()</script>
   objectLinksAdded = true --tell function that objectsLinks where added to this look command run
 
 end --function addLinksToObjects()</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaFileToString(path, remove)</name>
-					<packageName></packageName>
-					<script>--[[
-This function opens a file and returns the contents of the file as a string.
-Usage:
-  parthiaFileToString(path, remove)
-  path is the path and name of the file to open.
-  remove is boolean if the file should be removed when completed.
-Example: 
-  
-  myFriends, errorFound = parthiaFileToString("C:\My friends list.txt")
-  if erroFound then
-    pecho("Error found in data read: "..errorFound")
-  end
-  Above would read in file C:\My friends list.txt into variable myFriends
-  If an error was found it would display the error to screen and myFriends variable will be nil.
-    
-  myFriends, errorFound = parthiaFileToString("C:\My friends list.txt", true)
-  if erroFound then
-    pecho("Error found in data read: "..errorFound")
-  end
-    Above would read in file C:\My friends list.txt into variable myFriends AND delte the file if the read was successful.
-    If an error was found it would display the error to screen and myFriends variable will be nil.
-    
-  myFriends = parthiaFileToString("C:\My friends list.txt")
-    Above would read in file C:\My friends list.txt into variable myFriends
-    If an error was found myFriends will be nil.
-]]--
-function parthiaFileToString(path, remove)
-
-  --make certain the arguments are correct
-  remove = fuzzyBoolean(remove)
-  if type(path) ~= "string" then --make certain a string was passed
-    return "", "function parthiaFileToString, argument 1 is a non string variable. Received: "..tostring(stringToCheck).." expected a string."
-  end --if type(path) ~= "string" then
-
-  --open the file
-  local fileOpened, errorFound = io.open(path, "r") --open the file as read
-  if not fileOpened then --file was not created error occured.
-    fileOpened:close() --incase of partial failure, close file.
-    fileOpened = nil
-    return  nil, "function parthiaFileToString: "..errorFound--error found stop function
-  end --if not fileOpened
-  
-  --read from the file
-  local fileString = fileOpened:read("*a") --read the entire file to a string
-  fileOpened:close() --close the file
-  fileOpened = nil
-  
-  --verify read was correct and return the file as a string
-  if fileString then --file read correctly
-    if remove then os.remove(path) end --remove the file
-    return fileString --return it as a string
-  else --File had read error
-    return nil, "function parthiaFileToString, failure converting file: "..path.." to string"--error found stop the function
-  end --if fileString
-
-end --parthiaFileToString</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -9226,7 +9411,7 @@ parthiaMap = parthiaMap or {} --table to hold the mapper data.
 --parthiaMap.upAvailable = false --keeps track of it player can move up in this area. Used to track movement commands like go ladder
 --parthiaMap.downAvailable = false --keeps track of it player can move up in this area. Used to track movement commands like go ladder
 --parthiaMap.stepsGoUp = true --if true steps add 1 to Z. If false steps remove 1 from z
---parthiaMap.playerClimbed = false --sets to true when a player climbs in trigger "player climbs"</script>
+--parthiaMap.playerClimbed = false --sets to true when a player climbs in trigger "player climbed"</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
 					<name>parthiaMap.resetRoom()</name>
@@ -9259,13 +9444,15 @@ function parthiaMap.config()
   parthiaMap.currentAreaID = nil --will hold the current area name
   parthiaMap.mapping = false --is a map being created
   parthiaMap.stepsGoUp = true --if true steps add 1 to Z. If false steps remove 1 from z
-  parthiaMap.playerClimbed = false --sets to true when a player climbs in trigger "player climbs"
-  
+  parthiaMap.playerClimbed = false --sets to true when a player climbs in trigger "player climbed"
   parthiaMap.directions = { --used to tell mapper acceptable directions. Used in addLinksToDirections to collect room exit directions
     "north", "northeast", "east", "southeast", "south", "southwest",
     "west", "northwest", "up", "down"
   }
   parthiaMap.resetRoom() --prepare table parthiaMap.room
+  parthiaMap.saveTable = {} --table to collect data that needs to be saved to file
+  parthiaMap.savePath = tecSettingsFolder.."MapData.lua"
+  parthiaMap.load(true) --load map settings from file
 end --parthiaMap.config()</script>
 					<eventHandlerList />
 				</Script>
@@ -9335,7 +9522,7 @@ end</script>
       if previousExits[dir] then --The last room the character was in has this rooms ID in its exits table
         room.coords = {getRoomCoordinates(previousExits[dir])}
         room.id = previousExits[dir] --collect the current room's id
-        centerview(room.id) --center on the new room.
+        parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
         mapDebug("function parthiaMap.Move, able to get current room ID "..room.id.." from previous rooms exits table.")
         return --stop the function
       end --if previousExits[dir]
@@ -9476,7 +9663,7 @@ Fix is probably using the two room sizes to resolve.
     if parthiaMap.mapping then --if player is creating new maps
       parthiaMap.connectRooms() --connect the exit nodes for the room player is in and the one they moved from
     end --if parthiaMap.mapping
-    centerview(parthiaMap.room.id) --center on the new room.
+    parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
   else --no unexpected room found
     if parthiaMap.mapping then --if player is creating new maps
       parthiaMap.addRoom() --we are mapping in a space with no previous room, add one.
@@ -9484,6 +9671,8 @@ Fix is probably using the two room sizes to resolve.
       mapDebug("function parthiaMap.Move, Mapping currently disabled. In unmapped area.")
     end --if parthiaMap.mapping
   end --if roomFound[0]
+  
+  parthiaMap.save(false) --movement successful, save new room ID to file.
   
   --reset movement variables to defaults
   parthiaMap.playerClimbed = false
@@ -9570,7 +9759,7 @@ function parthiaMap.addRoom(room, previousRoom)
     --set room's user data
     --setRoomUserData(341, "some table", yajl.to_string({name = "bub", age = 23}))
     
-    centerview(room.id) --center the map on the new room
+    parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
   end --if parthiaMap.mapping
 end --function parthiaMap.addRoom()</script>
 					<eventHandlerList />
@@ -9629,14 +9818,30 @@ end --function parthiaMap.trackPreviousRoom()</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.load()</name>
+					<name>parthiaMap.load(displayToScreen)</name>
 					<packageName></packageName>
-					<script>--currently only supports getting where the player was when they exited the game.
-function parthiaMap.load()
+					<script>--load player character locations from file.
+function parthiaMap.load(displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen)
 
-  parthiaMap.room.id = getPlayerRoom()
+  if io.exists(parthiaMap.savePath) then --if the file exists, load it.
+    table.load(parthiaMap.savePath, parthiaMap.saveTable)
+    if displayToScreen then pecho("[  OK  ]  - Parthia map settings successfully loaded from file.\n") end
+  else --the save file does not exist
+    if displayToScreen then pecho("[ Info ]  - No map settings file.\n") end
+  end --if io.exists(parthiaMap.savePath)
 
-end</script>
+end --function parthiaMap.load(displayToScreen)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.save(displayToScreen)</name>
+					<packageName></packageName>
+					<script>--Save map settings to file
+function parthiaMap.save(displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  parthiaTableSave(parthiaMap.saveTable, parthiaMap.savePath, false, displayToScreen)
+end --function parthiaMap.save()</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
@@ -10245,6 +10450,65 @@ function parthiaMap.setStepsGoUp(mode, displayToScreen)
   end --if displayToScreen
   
 end --parthiaMap.setStepsGoUp(mode, displayToScreen)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.setCharacterLocation(id, displayToScreen)</name>
+					<packageName></packageName>
+					<script>--[[
+sets the room the current character is in, id is optional
+]]--
+function parthiaMap.setCharacterLocation(id, displayToScreen)
+  id = id or parthiaMap.room.id
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  
+  if id then
+    centerview(id) --highly characters room on the map
+    if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name] then
+      parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].roomID = id --record the id to the map settings save table
+      parthiaMap.room.id = id --record the ID to the mapper current room's id.
+      local errorFound = parthiaTableSave(parthiaMap.saveTable, parthiaMap.savePath, false, false) --save the location change to file. So location is know on startup.
+      if errorFound then --an error was found
+        if displayToScreen then --display error message to file
+          tecErrorNotification("function parthiaMap.setCharacterLocation, "..errorFound)
+        else --do not display error message to file.
+          tecErrorNotification("function parthiaMap.setCharacterLocation, "..errorFound, false)
+        end --if displayToScreen
+      end --if errorFound
+      if displayToScreen then pecho("Player in room id: "..tostring(id)..".\n") end
+    else
+      mapDebug("function parthiaMap.setCharacterLocation, table key parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name] unavailable.")
+    end --if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name]
+  else --no room id is available
+    if displayToScreen then pecho("Attempted to move character on map, but no room id was provided.\n") end
+    mapDebug("function parthiaMap.setCharacterLocation, no room id available.")
+  end --if id
+end --function parthiaMap.setCharacterLocation(id, displayToScreen)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.checkCharacter()</name>
+					<packageName></packageName>
+					<script>--[[
+This function changes the character that is currently logged in and on the map
+It is called in trigger: stats
+This function needs the character name to run. the stats filter is what collects the playername
+]]--
+function parthiaMap.checkCharacter()
+  local character = ""
+  if parthiaPlayer.CurrentCharacter.name then --if logged into a character account
+    character = parthiaPlayer.CurrentCharacter.name
+  else
+    character = "Welcome Room ID"
+    parthiaPlayer.CurrentCharacter.name = character
+  end
+  parthiaMap.saveTable[character] = parthiaMap.saveTable[character] or {}
+  
+  --parthiaMap.room.id
+  if parthiaMap.saveTable[character].roomID then --if the player had a previously saved location
+    parthiaMap.setCharacterLocation(parthiaMap.saveTable[character].roomID) --sets the current characters location and centers map view on that room
+  end --if parthiaMap.saveTable[character].roomID
+end --parthiaMap.loadCharater(character)</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>

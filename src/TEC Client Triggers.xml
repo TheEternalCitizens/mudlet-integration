@@ -693,7 +693,11 @@ if statsFilter.lineCount &gt; 37 then --if loop count higher than number of line
 end --if statsFilter.lineCount &gt; 37
 
 --Remove these to items if they are found.
-if line == ""
+if line:match("This command is only available in the world of Midlight. Please enter the game to use it.") then --if player is in welcome area
+  if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+  setStatsCheckActive(false) --tell Parthia we will not be collecting stats data
+  parthiaMap.checkCharacter() --check where the character is. For when login occurs.
+elseif line == ""
 or line == "Attributes:"
 or line == "Character Background"
 or line == "Physical Characteristics"
@@ -710,13 +714,12 @@ elseif line == "&lt;hr&gt;" then
 elseif line == "&lt;/pre&gt;" then --end of stats command found.
 	setStatsCheckActive(false)--disable stats filter, it is done
   deleteLine() --Make is so line does not appear in main console.
-elseif line:match("This command is only available in the world of Midlight. Please enter the game to use it.") then
-  if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
 else --all other lines we will want to look for data to collect
   if line:match("^Name:") then --line starts with Name:
     parthiaPlayer.CurrentCharacter.name, parthiaPlayer.CurrentCharacter.homeLand = 
     line:match("^Name: (%a+%s%a+%s?%a*)%s*Homeland: (%a+%s?%a*)") --collect name and homeland
     if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+    parthiaMap.checkCharacter() --check where the character is. For when login occurs. It uses the character name, that is why it is here
   elseif line:match("^Marital Status:") then
     parthiaPlayer.CurrentCharacter.maritalStatus = line:match("Marital Status: (%a+)")
     if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
@@ -796,7 +799,6 @@ else --all other lines we will want to look for data to collect
     parthiaPlayer.CurrentCharacter.willpower
     = line:match("Willpower:%s+(%a+%s%a*%s?%a*)")
     if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
---Willpower:  good
   end --if line:match("^Name:")
 end</script>
 				<triggerType>0</triggerType>
@@ -2044,7 +2046,7 @@ end --if parthiaMap.getEnabled()</script>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>player climbs</name>
+				<name>player climbed</name>
 				<script>--[[
 If the key word climb appeared. There is a seperate pattern that parthiaMap.Move will look for.
   That pattern is if a room has an exit but no room attached to it. We know the room that exit leads to is either a closed door, hidden room or both vertical and horizonal movement (normally steps)

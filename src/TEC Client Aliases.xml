@@ -1112,6 +1112,13 @@ pecho("Cleared room and previousRoom tables.\n")</script>
 					<packageName></packageName>
 					<regex>^parthia map steps go down$</regex>
 				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia map move character roomID</name>
+					<script>parthiaMap.setCharacterLocation(matches[2]) --move the room the player is in</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia map move character (\d+)$</regex>
+				</Alias>
 			</AliasGroup>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
