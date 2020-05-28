@@ -8981,6 +8981,7 @@ end --function getStatsCheckState()</script>
         debugToDisplay("function setStatsCheckActive, CurrentCharacter."..variableName.." adjusted to ".."\""..parthiaPlayer.CurrentCharacter[variableName].."\"") 
       end --if type(variable) == "string"
     end --for pairs(parthiaPlayer.CurrentCharacter)
+    parthiaMap.checkCharacter() --check where the character is. For when login occurs. It uses the character name, that is why it is here
   end --if not mode
 end --function setStatsCheckActive(mode)</script>
 						<eventHandlerList />
@@ -9411,7 +9412,8 @@ parthiaMap = parthiaMap or {} --table to hold the mapper data.
 --parthiaMap.upAvailable = false --keeps track of it player can move up in this area. Used to track movement commands like go ladder
 --parthiaMap.downAvailable = false --keeps track of it player can move up in this area. Used to track movement commands like go ladder
 --parthiaMap.stepsGoUp = true --if true steps add 1 to Z. If false steps remove 1 from z
---parthiaMap.playerClimbed = false --sets to true when a player climbs in trigger "player climbed"</script>
+--parthiaMap.playerClimbed = false --sets to true when a player climbs in trigger "player climbed"
+--parthiaMap.currentAreaID = 1 --the area id that the players current room is in</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
 					<name>parthiaMap.resetRoom()</name>
@@ -9453,6 +9455,8 @@ function parthiaMap.config()
   parthiaMap.saveTable = {} --table to collect data that needs to be saved to file
   parthiaMap.savePath = tecSettingsFolder.."MapData.lua"
   parthiaMap.load(true) --load map settings from file
+  parthiaMap.currentAreaID = 1 --set the default room to the welcome area
+  parthiaMap.notMovement = false --sets to true if login occured from trigger "Login Successful"
 end --parthiaMap.config()</script>
 					<eventHandlerList />
 				</Script>
@@ -9470,15 +9474,103 @@ function parthiaMap.addArea(areaName)
     tecErrorNotification("function parthiaMap.addArea, argument 1 expected string variable receive a "..type(areaName))
   end --if areaName ~= "string"
   
-  local newId, err = addAreaName(areaName) --creates a new area in the mapper https://wiki.mudlet.org/w/Manual:Mapper_Functions#addAreaName
+  local newID, err = addAreaName(areaName) --creates a new area in the mapper https://wiki.mudlet.org/w/Manual:Mapper_Functions#addAreaName
   
-  if newId == nil or newId &lt; 1 or err then --if the mapper errored on area creation
-    pecho("That area name could not be added - error is: ".. err.."\n")
-  else
-    pecho("&lt;green&gt;Created new area "..areaName.." with the ID of "..newId..".\n")
+  if newID == nil or newID &lt; 1 or err then --if the mapper errored on area creation
+    pecho("That area name could not be added.")
+    if err then --error message available
+      pecho(" - error is: ".. err.."\n")
+    else --there was an error but no error message
+      echo("\n")
+    end --if err
+  else --no error found
+    pecho("&lt;green&gt;Created new area "..areaName.." with the ID of "..newID..".&lt;reset&gt;\n")
     parthiaMap.coords = { 0,0,0 } --reset coordinates becuas
-  end --if newId == nil or newId &lt; 1 or err
+    parthiaMap.currentAreaID = newID --set the new ID for mapping in the new space
+  end --if newID == nil or newID &lt; 1 or err
 end --function parthiaMap.addArea</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.removeArea(areaName, displayToScreen)</name>
+					<packageName></packageName>
+					<script>--[[
+Used to remove an area with in mudlet's mapper, and all rooms in that area.
+This function is used in alias "parthia map area remove"
+Useage:
+parthiaMap.removeArea(areaName, displayToScreen)
+  areaName, is the full name of an area. With correct capitolization
+  displayToScreen, is if you would like messages displayed to screen
+Examples:
+  parthiaMap.removeArea("Name of area", true), removes area named "Name of area", and displays errors to screen
+  local errorFound parthiaMap.removeArea("Name of area", true), removes area named "Name of area", and displays errors to screen and sending errors to variable errorFound
+  parthiaMap.removeArea("Name of area"), removes area named "Name of area", error messages will only go to error consoles.
+]]--
+function parthiaMap.removeArea(areaName, displayToScreen)
+  if type(areaName) ~= "string" then
+    tecErrorNotification("function parthiaMap.removeArea, argument 1 expected string variable receive a "..type(areaName))
+  end --if areaName ~= "string"
+  displayToScreen = fuzzyBoolean(displayToScreen)
+
+  --verify the area exists than delete it
+  local areasTable = getAreaTable() --get a table that contains all the ids and names of of each area
+  for k,v in pairs(areasTable) do --loop through all the areas that have been created
+    if k == areaName then --if an area with the name passed exists
+      parthiaMap.clearAreaRooms(v) --empty the area
+      deleteArea(k) --remove the area
+      if displayToScreen then pecho("Area "..areaName.." removed.\n") end
+      return --stop function were able to do desired action
+    end --if k == areaName
+  end --for pairs(areasTable)
+
+  --Area with the name of the first argument does not exist
+  if displayToScreen then pecho("Could not find area "..areaName..".\n") end
+  local errorFound = "function parthiaMap.removeArea, failed could not find areaName."
+  tecWarningNotification(errorFound)
+  return errorFound
+
+end --function parthiaMap.removeArea(areaName)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.changeArea(areaName, displayToScreen)</name>
+					<packageName></packageName>
+					<script>--[[
+Changes character's current area.
+Function would only be useful for mappers. When they have to move between existing areas while mapping.
+Is used in alias `parthia map character area`
+Useage:
+  parthiaMap.changeArea(areaNameOrID, displayToScreen)
+  areaNameOrID, contains the full name or id of an area
+  displayToScreen, is if error messages get displayed to screen
+Examples:
+  parthiaMap.changeArea(1, false), changes current area to 1, displaying messages to error consoles only
+  parthiaMap.changeArea("Welcome Room", true), changes to area "Welcome Room", displaying errors to screen
+  local errorFound = parthiaMap.changeArea(2, false), changes area to 2, and fills variable errorFound with an error if found
+]]--
+function parthiaMap.changeArea(areaNameOrID, displayToScreen)
+  if type(areaNameOrID) ~= "string" then
+    tecErrorNotification("function parthiaMap.changeArea, argument 1 expected string variable receive a "..type(areaNameOrID))
+  end --if areaNameOrID ~= "string"
+  displayToScreen = fuzzyBoolean(displayToScreen)
+
+  --verify the area exists than change to that ID
+  local areasTable = getAreaTable() --get a table that contains all the ids and names of of each area
+  for k,v in pairs(areasTable) do --loop through all the areas that have been created
+    if k == areaNameOrID or v == tonumber(areaNameOrID) then --if an area with the name or ID passed exists
+      parthiaMap.currentAreaID = v
+      if displayToScreen then pecho("Changed to area "..k..", that has an ID of "..v..".\n") end
+      return --stop function were able to do desired action
+    end --if k == areaNameOrID
+  end --for pairs(areasTable)
+
+  --Area with the name of the first argument does not exist
+  if displayToScreen then pecho("Could not find area "..areaNameOrID..".\n") end
+  local errorFound = "function parthiaMap.changeArea, failed could not find areaName."
+  mapDebug(errorFound)
+  return errorFound
+
+end --function parthiaMap.changeArea(areaNameOrID)</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
@@ -9497,6 +9589,10 @@ end</script>
 					<name>parthiaMap.Move(room, previousRoom, directionWalked)</name>
 					<packageName></packageName>
 					<script>function parthiaMap.Move(room, previousRoom, directionWalked)
+  if parthiaMap.notMovement then --if the trigger that called this function was not from movement. Stop the function
+    parthiaMap.notMovement = false
+    return
+  end --if parthiaMap.notMovement
   room = room or parthiaMap.room
   previousRoom = previousRoom or parthiaMap.previousRoom
   directionWalked = directionWalked or parthiaMap.directionWalked
@@ -9515,17 +9611,19 @@ end</script>
   end --if room.xpos and room.ypos and room.size
 
   if previousRoom then --if we are not mapping the first room
-  
     --We are at a known location within the map data, use that to track location.
     if previousRoom.id then --if we had a previous room
-      local previousExits = getRoomExits(previousRoom.id) --exits in previous room holds neighboring room IDs.
-      if previousExits[dir] then --The last room the character was in has this rooms ID in its exits table
-        room.coords = {getRoomCoordinates(previousExits[dir])}
-        room.id = previousExits[dir] --collect the current room's id
-        parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
-        mapDebug("function parthiaMap.Move, able to get current room ID "..room.id.." from previous rooms exits table.")
-        return --stop the function
-      end --if previousExits[dir]
+      local previousArea = getRoomArea(previousRoom.id)
+      if parthiaMap.currentAreaID == previousArea then --supports creating new area where movement in previous area would have been legal. Like creating new area while in welcome area logging into a character than attempting to map the game world
+        local previousExits = getRoomExits(previousRoom.id) --exits in previous room holds neighboring room IDs.
+        if previousExits[dir] then --The last room the character was in has this rooms ID in its exits table
+          room.coords = {getRoomCoordinates(previousExits[dir])}
+          room.id = previousExits[dir] --collect the current room's id
+          parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
+          mapDebug("function parthiaMap.Move, able to get current room ID "..room.id.." from previous rooms exits table.")
+          return --stop the function
+        end --if previousExits[dir]
+      end --if parthiaMap.currentAreaID == previousArea then
     end --if previousRoom.id
 
     mapDebug("function parthiaMap.Move, Unable to find current room ID from previous room exits table. Calculating it now")
@@ -9654,8 +9752,6 @@ Fix is probably using the two room sizes to resolve.
   room.coords = {x,y,z} --collect the coordinates we used we may never need it though
   mapDebug("function parthiaMap.Move, room coords after move are: "..x..","..y..","..z)
 
-  parthiaMap.currentAreaID = 1 --currently mapping on supports mapping to ID 1
-
   local roomFound = getRoomsByPosition(parthiaMap.currentAreaID,x,y,z) --move and check if there is a room here
   if roomFound[0] then --making certain there is not an unexpecrted room here
     parthiaMap.room.id = roomFound[0] --set the room id
@@ -9719,8 +9815,6 @@ end </script>
 function parthiaMap.addRoom(room, previousRoom)
   room = room or parthiaMap.room
   previousRoom = previousRoom or parthiaMap.previousRoom
-  
-  parthiaMap.currentAreaID = 1 --currently mapper only supports area id of 1
 
   if parthiaMap.mapping then --if the player is creating new maps
     local newID = createRoomID() --create a new ID in the mudlet maping system
@@ -10456,15 +10550,34 @@ end --parthiaMap.setStepsGoUp(mode, displayToScreen)</script>
 					<name>parthiaMap.setCharacterLocation(id, displayToScreen)</name>
 					<packageName></packageName>
 					<script>--[[
-sets the room the current character is in, id is optional
+sets the room the current character is in
+This function is called in alias `parthia map character move`, functions parthiaMap.Move, parthiaMap.addRoom, and parthiaMap.checkCharacter
+usage:
+parthiaMap.setCharacterLocation(id, displayToScreen)
+  id, is a room id.
+  displayToScreen, controls if messages are shown on main console.
+examples:
+  parthiaMap.setCharacterLocation(3) --sets the characters location on the parthia map to room id 3. Messages on only displayed to debug and error consoles.
+  local errorFound = parthiaMap.setCharacterLocation(3) --sets the characters location on the parthia map to room id 3. Messages on only displayed to debug and error consoles. If errors are found a message describing them is put into variable errorFound
+  parthiaMap.setCharacterLocation(3, true) --sets the characters location on the parthia map to room id 3. Messages displayed on main console and all error and debug consoles.
 ]]--
 function parthiaMap.setCharacterLocation(id, displayToScreen)
-  id = id or parthiaMap.room.id
+  id = id or parthiaMap.room.id --set id to current rooms id
   displayToScreen = fuzzyBoolean(displayToScreen)
   
   if id then
+    local roomsAreaID = getRoomArea(id) --check if this room id has an area set.
+    if roomsAreaID then --all rooms are know to have areas. We are using this to verify this room exists.
+      parthiaMap.room.id = id --update the current room's id
+    else --the room does not exist
+      local errorFound = "Attempted to change character location to room id: "..id.." the room was not found."
+      if displayToScreen then pecho(errorFound) end
+      tecWarningNotification("function parthiaMap.setCharacterLocation, "..errorFound)
+      return roomsAreaID
+    end --if roomExists
     centerview(id) --highly characters room on the map
-    if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name] then
+    parthiaMap.currentAreaID = roomsAreaID --collect the area ID of the current room
+    if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name] then --if the current character has location in the map save table.
       parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].roomID = id --record the id to the map settings save table
       parthiaMap.room.id = id --record the ID to the mapper current room's id.
       local errorFound = parthiaTableSave(parthiaMap.saveTable, parthiaMap.savePath, false, false) --save the location change to file. So location is know on startup.
@@ -10477,11 +10590,13 @@ function parthiaMap.setCharacterLocation(id, displayToScreen)
       end --if errorFound
       if displayToScreen then pecho("Player in room id: "..tostring(id)..".\n") end
     else
-      mapDebug("function parthiaMap.setCharacterLocation, table key parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name] unavailable.")
+      tecWarningNotification("function parthiaMap.setCharacterLocation, table key parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name] unavailable.")
     end --if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name]
   else --no room id is available
-    if displayToScreen then pecho("Attempted to move character on map, but no room id was provided.\n") end
-    mapDebug("function parthiaMap.setCharacterLocation, no room id available.")
+    local errorFound = "No room ID after data verification.\n"
+    if displayToScreen then pecho(errorFound) end
+    tecWarningNotification("function parthiaMap.setCharacterLocation, "..errorFound)
+    return errorFound
   end --if id
 end --function parthiaMap.setCharacterLocation(id, displayToScreen)</script>
 					<eventHandlerList />
@@ -10491,22 +10606,36 @@ end --function parthiaMap.setCharacterLocation(id, displayToScreen)</script>
 					<packageName></packageName>
 					<script>--[[
 This function changes the character that is currently logged in and on the map
-It is called in trigger: stats
+It is called in trigger: `stats` within function setStatsCheckActive(false), only when it is sent false. Indicating stats collection and space filtering has completed
 This function needs the character name to run. the stats filter is what collects the playername
 ]]--
-function parthiaMap.checkCharacter()
+function parthiaMap.checkCharacter(displayToScreen)
   local character = ""
   if parthiaPlayer.CurrentCharacter.name then --if logged into a character account
     character = parthiaPlayer.CurrentCharacter.name
-  else
+  else --if the stats command does not work, the player is in the welcome room
     character = "Welcome Room ID"
     parthiaPlayer.CurrentCharacter.name = character
-  end
-  parthiaMap.saveTable[character] = parthiaMap.saveTable[character] or {}
+  end --if parthiaPlayer.CurrentCharacter.name
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  if not parthiaMap.saveTable[character] then --if this character does not exist in the table parthiaMap uses to save
+    parthiaMap.saveTable[character] = {}
+    if displayToScreen then pecho("A character name of \""..character.."\", was not found in save file.") end
+    mapDebug("function parthiaMap.checkCharacter, created table for character \""..character.."\" in the parthiaMap.saveTable table.")
+  end --if not parthiaMap.saveTable[character]
   
-  --parthiaMap.room.id
   if parthiaMap.saveTable[character].roomID then --if the player had a previously saved location
-    parthiaMap.setCharacterLocation(parthiaMap.saveTable[character].roomID) --sets the current characters location and centers map view on that room
+    local errorFound = parthiaMap.setCharacterLocation(parthiaMap.saveTable[character].roomID) --sets the current characters location and centers map view on that room
+    if errorFound then --if an error occured while attempting to set the current character's location
+      local errorMessage = "Unable to move character, error recived from setCharacterLocation is: "..errorFound
+      if displayToScreen then pecho(errorMessage) end
+      tecWarningNotification("function parthiaMap.checkCharacter, received error from parthiaMap.setCharacterLocation. Error was: "..errorMessage)
+    else --no errors found
+      local parthiaMessage = "Moved character "..character.." to room ID: "..parthiaMap.saveTable[character].roomID.."\n"
+      if displayToScreen then pecho(parthiaMessage) end
+      mapDebug("function parthiaMap.checkCharacter, "..parthiaMessage)
+    end --if errorFound
+--code for finding a room hash here
   end --if parthiaMap.saveTable[character].roomID
 end --parthiaMap.loadCharater(character)</script>
 					<eventHandlerList />

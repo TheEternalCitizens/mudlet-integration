@@ -696,13 +696,13 @@ end --if statsFilter.lineCount &gt; 37
 if line:match("This command is only available in the world of Midlight. Please enter the game to use it.") then --if player is in welcome area
   if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
   setStatsCheckActive(false) --tell Parthia we will not be collecting stats data
-  parthiaMap.checkCharacter() --check where the character is. For when login occurs.
 elseif line == ""
 or line == "Attributes:"
 or line == "Character Background"
 or line == "Physical Characteristics"
 or line == "To see a list of skills and actions your character knows, type: skills"
 or line == "You are currently sitting.  Stats are shown in real time.  Stand up to see your maximum stats."
+or line == "You are currently laying.  Stats are shown in real time.  Stand up to see your maximum stats."
 or line:match("^Character Sheet for")
 or line:match("&lt;/pre&gt;&lt;pre&gt;&lt;font size=%+1&gt;&lt;b&gt;Character Sheet for %w+%s?%w*&lt;/b&gt;&lt;/font&gt;&lt;/font&gt;") then
   if not statsFilter.displayToScreen then deleteLine() end --Delete main's line if we are not displaying it to screen
@@ -719,7 +719,6 @@ else --all other lines we will want to look for data to collect
     parthiaPlayer.CurrentCharacter.name, parthiaPlayer.CurrentCharacter.homeLand = 
     line:match("^Name: (%a+%s%a+%s?%a*)%s*Homeland: (%a+%s?%a*)") --collect name and homeland
     if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
-    parthiaMap.checkCharacter() --check where the character is. For when login occurs. It uses the character name, that is why it is here
   elseif line:match("^Marital Status:") then
     parthiaPlayer.CurrentCharacter.maritalStatus = line:match("Marital Status: (%a+)")
     if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
@@ -1055,7 +1054,9 @@ tecResetRoomCharacterWindow()
 --collect player data, 1 second wait due to one command per second limitation
 --runConditionCollection(false)
 parthiaPlayer.CurrentCharacter = { }
-local statsCollectionTimer = tempTimer(1.1, [[runStatsCollection(false)]])</script>
+local statsCollectionTimer = tempTimer(1.1, [[runStatsCollection(false)]])
+
+parthiaMap.notMovement = true --tell parthiaMap.Move function this is not actual movement.</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>

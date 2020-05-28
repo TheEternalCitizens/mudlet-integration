@@ -1053,6 +1053,13 @@ expandAlias("display"..matches[2])</script>
 					<regex>^parthia map area add (.*)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
+					<name>parthia map area remove</name>
+					<script>parthiaMap.removeArea(matches[2], true) --remove the area, display success or failure to screen</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia map area remove (.*)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
 					<name>parthia map area clear ID</name>
 					<script>parthiaMap.clearAreaRooms(matches[2])</script>
 					<command></command>
@@ -1113,11 +1120,25 @@ pecho("Cleared room and previousRoom tables.\n")</script>
 					<regex>^parthia map steps go down$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>parthia map move character roomID</name>
-					<script>parthiaMap.setCharacterLocation(matches[2]) --move the room the player is in</script>
+					<name>parthia map character move</name>
+					<script>parthiaMap.setCharacterLocation(matches[2], true) --move the room the player is in</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^parthia map move character (\d+)$</regex>
+					<regex>^parthia map character move (\d+)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia map character area</name>
+					<script>parthiaMap.changeArea(matches[2], true) --changes the area the character is in.</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia map character area (.+)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia map location check</name>
+					<script>parthiaMap.checkCharacter(true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia map location check$</regex>
 				</Alias>
 			</AliasGroup>
 		</AliasGroup>
