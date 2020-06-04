@@ -9578,7 +9578,7 @@ end --function parthiaMap.changeArea(areaNameOrID)</script>
 					<packageName></packageName>
 					<script>--call when mapping is ready to connect the exits of the players previous and current rooms
 function parthiaMap.connectRooms()
-  debugToDisplay("function parthiaMap.connectRooms, connecting previous room ID: "..parthiaMap.previousRoom.id.." to current room ID "..parthiaMap.room.id.." using current room exit "..parthiaMap.getEntranceDirection())
+  mapDebug("function parthiaMap.connectRooms, connecting previous room ID: "..parthiaMap.previousRoom.id.." to current room ID "..parthiaMap.room.id.." using current room exit "..parthiaMap.getEntranceDirection())
   setExit(parthiaMap.previousRoom.id, parthiaMap.room.id, parthiaMap.directionWalked)
   setExit(parthiaMap.room.id, parthiaMap.previousRoom.id, parthiaMap.getEntranceDirection())
   --connectExitStub(room.id, parthiaMap.getEntranceDirection()) --connect room and previous room

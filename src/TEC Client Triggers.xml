@@ -2135,6 +2135,8 @@ end --if parthiaMap.getEnabled()</script>
 					<string>You are not next to anything.</string>
 					<string>It is too dark to see where you are going.</string>
 					<string>^You don't see a &amp;quot;.+&amp;quot; here\.$</string>
+					<string>is closed\.$</string>
+					<string>You are not next to anything.</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>3</integer>
@@ -2142,6 +2144,8 @@ end --if parthiaMap.getEnabled()</script>
 					<integer>3</integer>
 					<integer>3</integer>
 					<integer>1</integer>
+					<integer>1</integer>
+					<integer>3</integer>
 				</regexCodePropertyList>
 			</Trigger>
 		</TriggerGroup>
