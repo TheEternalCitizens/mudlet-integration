@@ -67,7 +67,12 @@ parthiaDrawMapRooms()
 --We want the map zoom level, but not 100 times.
 if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
 
-deleteLine() --remove line from main console. line variable remains unchanged.</script>
+deleteLine() --remove line from main console. line variable remains unchanged.
+
+--SKOOT 10 is our last room data message. Use data collected from TEC to manage parthiaMap
+if parthiaMap.getEnabled() then --if player is using parthiaMap
+  tempTimer(.25, "parthiaMap.Move()")
+end --if parthiaMap.getEnabled()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -134,9 +139,9 @@ if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
 deleteLine() --remove line from main console. line variable remains unchanged.
 
 --SKOOT 10 is our last room data message. Use data collected from TEC to manage parthiaMap
-if parthiaMap.getEnabled() then --if player is using parthiaMap
-  parthiaMap.Move()
-end --if parthiaMap.getEnabled()</script>
+--if parthiaMap.getEnabled() then --if player is using parthiaMap
+--  parthiaMap.Move()
+--end --if parthiaMap.getEnabled()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1863,6 +1868,8 @@ if parthiaMap.getEnabled() then --if player is using parthiaMap
   parthiaMap.downAvailable = false
   parthiaMap.TECMapRooms = {} --clear the rooms table so it will not overlap
   parthiaMap.trackPreviousRoom() --movement complete keep track of what the previous room was
+  parthiaMap.room.exitEcho = line --record the echo to a variable to sort data from it at a later time.
+  parthiaMap.findSpecialExits() --find special exit names for this room and direction walked if not collected already
 end --if parthiaMap.getEnabled()
 
 --Set default text in room characters window

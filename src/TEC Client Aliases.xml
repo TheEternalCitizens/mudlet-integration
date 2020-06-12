@@ -1437,27 +1437,27 @@ parthiaMap to detect direction player has moved in.
 			<regex></regex>
 			<Alias isActive="yes" isFolder="no">
 				<name>go direction</name>
-				<script>debugToDisplay("alias go direction, called. Direction "..matches[2])
-parthiaMap.detectDirection(matches[2])
-send("go "..matches[2], false)</script>
+				<script>send("go "..matches[2], false)
+debugToDisplay("alias go direction, called. Direction "..matches[2])
+parthiaMap.detectDirection(matches[2])</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^go\s+(.+)$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>climb direction</name>
-				<script>debugToDisplay("alias climb direction, called. Direction "..matches[2])
-parthiaMap.detectDirection(matches[2])
-send("climb "..matches[2], false)</script>
+				<script>send("climb "..matches[2], false)
+debugToDisplay("alias climb direction, called. Direction "..matches[2])
+parthiaMap.detectDirection(matches[2])</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^cli(?:m|mb)?\s+(.+)$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>retreat direction</name>
-				<script>debugToDisplay("alias retreat direction, called. Direction: "..matches[2])
-parthiaMap.detectDirection(matches[2])
-send("retreat "..matches[2], false)</script>
+				<script>send("retreat "..matches[2], false)
+debugToDisplay("alias retreat direction, called. Direction: "..matches[2])
+parthiaMap.detectDirection(matches[2])</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^ret(?:r|re|rea|reat)?\s+(.+)$</regex>
@@ -1469,18 +1469,18 @@ command is only walk. Full word. No shorthand
 command will continue to allow the player to walk after it is initially called.
 we do not want to collect anything but "walk wordNoMoreSpaces" so we do not capture. Walk to location
 ]]--
+send("walk "..matches[2], false)
 debugToDisplay("alias walk direction, called. Direction: "..matches[2])
-parthiaMap.detectDirection(matches[2])
-send("walk "..matches[2], false)</script>
+parthiaMap.detectDirection(matches[2])</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^walk\s+(\w+)$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>movement input</name>
-				<script>mapDebug("alias movement input, called. Direction found: "..matches[2])
-parthiaMap.detectDirection(matches[2])
-send(matches[2], false)</script>
+				<script>send(matches[2], false)
+mapDebug("alias movement input, called. Direction found: "..matches[2])
+parthiaMap.detectDirection(matches[2])</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^((?i)(?:n(?:orth|ort|or|o)?|ne|e(?:ast|as|a)?|se|s(?:outh|out|ou|o)?|sw|w(?:est|es|e)?|nw|u(?:p)?|d(?:own)?|le(?:ave|av|a)?|1|2|3|4|6|7|8|9(?:\s.+)?))$</regex>
