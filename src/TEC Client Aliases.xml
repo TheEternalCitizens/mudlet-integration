@@ -1053,6 +1053,13 @@ expandAlias("display"..matches[2])</script>
 					<regex>^parthia map area add (.*)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
+					<name>parthia map area remove</name>
+					<script>parthiaMap.removeArea(matches[2], true) --remove the area, display success or failure to screen</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia map area remove (.*)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
 					<name>parthia map area clear ID</name>
 					<script>parthiaMap.clearAreaRooms(matches[2])</script>
 					<command></command>
@@ -1097,6 +1104,41 @@ pecho("Cleared room and previousRoom tables.\n")</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia map disable$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia map steps go up</name>
+					<script>parthiaMap.setStepsGoUp(true, true) --set steps to go up or add to z access. Display message to screen of this change.</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia map steps go up$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia map steps go down</name>
+					<script>parthiaMap.setStepsGoUp(false, true) --set steps to go down or subtract from z access. Display message to screen of this change.</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia map steps go down$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia map character move</name>
+					<script>parthiaMap.setCharacterLocation(matches[2], true) --move the room the player is in</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia map character move (\d+)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia map character area</name>
+					<script>parthiaMap.changeArea(matches[2], true) --changes the area the character is in.</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia map character area (.+)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia map location check</name>
+					<script>parthiaMap.checkCharacter(true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia map location check$</regex>
 				</Alias>
 			</AliasGroup>
 		</AliasGroup>
@@ -1395,27 +1437,27 @@ parthiaMap to detect direction player has moved in.
 			<regex></regex>
 			<Alias isActive="yes" isFolder="no">
 				<name>go direction</name>
-				<script>debugToDisplay("alias go direction, called. Direction "..matches[2])
-parthiaMap.detectDirection(matches[2])
-send("go "..matches[2], false)</script>
+				<script>send("go "..matches[2], false)
+debugToDisplay("alias go direction, called. Direction "..matches[2])
+parthiaMap.detectDirection(matches[2])</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^go\s+(.+)$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>climb direction</name>
-				<script>debugToDisplay("alias climb direction, called. Direction "..matches[2])
-parthiaMap.detectDirection(matches[2])
-send("climb "..matches[2], false)</script>
+				<script>send("climb "..matches[2], false)
+debugToDisplay("alias climb direction, called. Direction "..matches[2])
+parthiaMap.detectDirection(matches[2])</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^cli(?:m|mb)?\s+(.+)$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>retreat direction</name>
-				<script>debugToDisplay("alias retreat direction, called. Direction: "..matches[2])
-parthiaMap.detectDirection(matches[2])
-send("retreat "..matches[2], false)</script>
+				<script>send("retreat "..matches[2], false)
+debugToDisplay("alias retreat direction, called. Direction: "..matches[2])
+parthiaMap.detectDirection(matches[2])</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^ret(?:r|re|rea|reat)?\s+(.+)$</regex>
@@ -1427,174 +1469,21 @@ command is only walk. Full word. No shorthand
 command will continue to allow the player to walk after it is initially called.
 we do not want to collect anything but "walk wordNoMoreSpaces" so we do not capture. Walk to location
 ]]--
+send("walk "..matches[2], false)
 debugToDisplay("alias walk direction, called. Direction: "..matches[2])
-parthiaMap.detectDirection(matches[2])
-send("walk "..matches[2], false)</script>
+parthiaMap.detectDirection(matches[2])</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^walk\s+(\w+)$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>down</name>
-				<script>debugToDisplay("alias down, called.")
-parthiaMap.detectDirection("down")
-send("down",false)</script>
+				<name>movement input</name>
+				<script>send(matches[2], false)
+mapDebug("alias movement input, called. Direction found: "..matches[2])
+parthiaMap.detectDirection(matches[2])</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^d(?:own)?(?:\s.+)?$</regex>
-			</Alias>
-			<Alias isActive="yes" isFolder="no">
-				<name>up</name>
-				<script>debugToDisplay("alias up, called.")
-parthiaMap.detectDirection("up")
-send("up",false)</script>
-				<command></command>
-				<packageName></packageName>
-				<regex>^u(?:p)?(?:\s.+)?$</regex>
-			</Alias>
-			<Alias isActive="yes" isFolder="no">
-				<name>north</name>
-				<script>debugToDisplay("alias north, called.")
-parthiaMap.detectDirection("north")
-send("north", false)</script>
-				<command></command>
-				<packageName></packageName>
-				<regex>^n(?:orth|ort|or|o)?(?:\s.+)?$</regex>
-				<Alias isActive="yes" isFolder="no">
-					<name>8</name>
-					<script>debugToDisplay("alias 8, called.")
-parthiaMap.detectDirection("north")
-send("8", false)</script>
-					<command></command>
-					<packageName></packageName>
-					<regex>^8\s*$</regex>
-				</Alias>
-			</Alias>
-			<Alias isActive="yes" isFolder="no">
-				<name>ne</name>
-				<script>debugToDisplay("alias ne, called.")
-parthiaMap.detectDirection("ne")
-send("ne", false)</script>
-				<command></command>
-				<packageName></packageName>
-				<regex>^ne\s*$</regex>
-				<Alias isActive="yes" isFolder="no">
-					<name>9</name>
-					<script>debugToDisplay("alias 9, called.")
-parthiaMap.detectDirection("ne")
-send("9", false)</script>
-					<command></command>
-					<packageName></packageName>
-					<regex>^9\s*$</regex>
-				</Alias>
-			</Alias>
-			<Alias isActive="yes" isFolder="no">
-				<name>east</name>
-				<script>debugToDisplay("alias east, called.")
-parthiaMap.detectDirection("east")
-send("east", false)</script>
-				<command></command>
-				<packageName></packageName>
-				<regex>^e(?:ast|as|a)?(?:\s.+)?$</regex>
-				<Alias isActive="yes" isFolder="no">
-					<name>6</name>
-					<script>debugToDisplay("alias 6, called.")
-parthiaMap.detectDirection("east")
-send("6", false)</script>
-					<command></command>
-					<packageName></packageName>
-					<regex>^6\s*$</regex>
-				</Alias>
-			</Alias>
-			<Alias isActive="yes" isFolder="no">
-				<name>se</name>
-				<script>debugToDisplay("alias se, called.")
-parthiaMap.detectDirection("se")
-send("se", false)</script>
-				<command></command>
-				<packageName></packageName>
-				<regex>^se\s*$</regex>
-				<Alias isActive="yes" isFolder="no">
-					<name>3</name>
-					<script>debugToDisplay("alias 3, called.")
-parthiaMap.detectDirection("se")
-send("3", false)</script>
-					<command></command>
-					<packageName></packageName>
-					<regex>^3\s*$</regex>
-				</Alias>
-			</Alias>
-			<Alias isActive="yes" isFolder="no">
-				<name>south</name>
-				<script>debugToDisplay("alias south, called.")
-parthiaMap.detectDirection("south")
-send("south", false)</script>
-				<command></command>
-				<packageName></packageName>
-				<regex>^s(?:outh|out|ou|o)?(?:\s.+)?$</regex>
-				<Alias isActive="yes" isFolder="no">
-					<name>2</name>
-					<script>debugToDisplay("alias 2, called.")
-parthiaMap.detectDirection("south")
-send("2", false)</script>
-					<command></command>
-					<packageName></packageName>
-					<regex>^2\s*$</regex>
-				</Alias>
-			</Alias>
-			<Alias isActive="yes" isFolder="no">
-				<name>sw</name>
-				<script>debugToDisplay("alias sw, called.")
-parthiaMap.detectDirection("sw")
-send("sw", false)</script>
-				<command></command>
-				<packageName></packageName>
-				<regex>^sw\s*$</regex>
-				<Alias isActive="yes" isFolder="no">
-					<name>1</name>
-					<script>debugToDisplay("alias 1, called.")
-parthiaMap.detectDirection("sw")
-send("1", false)</script>
-					<command></command>
-					<packageName></packageName>
-					<regex>^1\s*$</regex>
-				</Alias>
-			</Alias>
-			<Alias isActive="yes" isFolder="no">
-				<name>west</name>
-				<script>debugToDisplay("alias west, called.")
-parthiaMap.detectDirection("west")
-send("west", false)</script>
-				<command></command>
-				<packageName></packageName>
-				<regex>^w(?:est|es|e)?(?:\s.+)?$</regex>
-				<Alias isActive="yes" isFolder="no">
-					<name>4</name>
-					<script>debugToDisplay("alias 4, called.")
-parthiaMap.detectDirection("west")
-send("4", false)</script>
-					<command></command>
-					<packageName></packageName>
-					<regex>^4\s*$</regex>
-				</Alias>
-			</Alias>
-			<Alias isActive="yes" isFolder="no">
-				<name>nw</name>
-				<script>debugToDisplay("alias nw, called.")
-parthiaMap.detectDirection("nw")
-send("nw", false)</script>
-				<command></command>
-				<packageName></packageName>
-				<regex>^nw\s*$</regex>
-				<Alias isActive="yes" isFolder="no">
-					<name>7</name>
-					<script>debugToDisplay("alias 7, called.")
-parthiaMap.detectDirection("nw")
-send("7", false)</script>
-					<command></command>
-					<packageName></packageName>
-					<regex>^7\s*$</regex>
-				</Alias>
+				<regex>^((?i)(?:n(?:orth|ort|or|o)?|ne|e(?:ast|as|a)?|se|s(?:outh|out|ou|o)?|sw|w(?:est|es|e)?|nw|u(?:p)?|d(?:own)?|le(?:ave|av|a)?|1|2|3|4|6|7|8|9(?:\s.+)?))$</regex>
 			</Alias>
 		</AliasGroup>
 	</AliasPackage>

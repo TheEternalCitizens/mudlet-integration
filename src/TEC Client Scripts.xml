@@ -489,6 +489,7 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   tecUsername = "" --used store user's name during login process. Gets removed when login was successful.
 
   tecSettings.parthiaMapEnabled = false --tells parthia if it's mapping system should be running.
+  
 
 	if displayToScreen then pecho("Parthia settings set to default.\n") end
 
@@ -524,12 +525,8 @@ end --function tecFileSaveSettings(displayToScreen)</script>
 				<Script isActive="yes" isFolder="no">
 					<name>tecFileLoadSettings(displayToScreen)</name>
 					<packageName></packageName>
-					<script>--This perhaps should be in a sysLoadEvent
-
---This bugs on startup because it is calling debugToDisplay before it is declared.
-
---Loads variable and theme settings from file.
---Notify is boolean, to let the user know the event occured.
+					<script>--Loads variable and theme settings from file.
+--displayToScreen is boolean, to let the user know the event occured.
 --In this case it is also a to screen notification that it was 
 --successfull
 function tecFileLoadSettings(displayToScreen)
@@ -3220,15 +3217,30 @@ end --getTECTimerDebugMode</script>
 				<Script isActive="yes" isFolder="no">
 					<name>tecErrorNotification(errorFound)</name>
 					<packageName></packageName>
-					<script>--fully notifies user when an error is found.
-function tecErrorNotification(errorFound)
+					<script>--[[
+Used show messages when errors occur
+
+Usage:
+  tecErrorNotification(errorFound, displayToScreen)
+  erroFound, is a string describing the error
+  displayToScreen, is if the error should be displayed to main console. It is true by default. EVEN when nothing is passed as argument 2.
+examples:
+  tecErrorNotification("function functionName, error found failed something.", false) --would show error message to parthia debug console and mudlets error window
+  tecErrorNotification("function functionName, error found failed something.", true) --would show error message to parthia debug console and mudlets error window, and main console
+]]--
+function tecErrorNotification(errorFound, displayToScreen)
+  if displayToScreen == nil then displayToScreen = true end
+  displayToScreen = fuzzyBoolean(displayToScreen)
   debugc("Error: "..errorFound)
   debugToDisplay("&lt;red:&gt;Error: "..errorFound)
-  pecho("&lt;red:&gt;Error: "..errorFound.."\n\tPlease contact a developer with command ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
-    [[tecReportIssues()]],
-    "Report issues or bugs", true)
-  cecho("")
+
+  if displayToScreen then
+    pecho("&lt;red:&gt;Error: "..errorFound.."\n\tPlease contact a developer with command ")
+    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Report Issues\n", 
+      [[tecReportIssues()]],
+      "Report issues or bugs", true)
+    cecho("")
+  end --if displayToScreen
 end --function tecErrorNotification</script>
 					<eventHandlerList />
 				</Script>
@@ -3246,6 +3258,237 @@ function tecWarningNotification(errorFound)
 --    "Report issues or bugs", true)
 --  cecho("")
 end --function tecErrorNotification</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>data</name>
+				<packageName></packageName>
+				<script>--[[
+Functions that write to file or socket
+]]--</script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaFileToString(path, remove)</name>
+					<packageName></packageName>
+					<script>--[[
+This function opens a file and returns the contents of the file as a string.
+Usage:
+  parthiaFileToString(path, remove)
+  path is the path and name of the file to open.
+  remove is boolean if the file should be removed when completed.
+
+Examples: 
+  
+  myFriends, errorFound = parthiaFileToString("C:\My friends list.txt")
+  if erroFound then
+    pecho("Error found in data read: "..errorFound")
+  end
+  Above would read in file C:\My friends list.txt into variable myFriends
+  If an error was found it would display the error to screen and myFriends variable will be nil.
+    
+  myFriends, errorFound = parthiaFileToString("C:\My friends list.txt", true)
+  if erroFound then
+    pecho("Error found in data read: "..errorFound")
+  end
+    Above would read in file C:\My friends list.txt into variable myFriends AND delte the file if the read was successful.
+    If an error was found it would display the error to screen and myFriends variable will be nil.
+    
+  myFriends = parthiaFileToString("C:\My friends list.txt")
+    Above would read in file C:\My friends list.txt into variable myFriends
+    If an error was found myFriends will be nil.
+]]--
+function parthiaFileToString(path, remove)
+
+  --make certain the arguments are correct
+  remove = fuzzyBoolean(remove)
+  if type(path) ~= "string" then --make certain a string was passed
+    return "", "function parthiaFileToString, argument 1 is a non string variable. Received: "..tostring(stringToCheck).." expected a string."
+  end --if type(path) ~= "string" then
+
+  --open the file
+  local fileOpened, errorFound = io.open(path, "r") --open the file as read
+  if not fileOpened then --file was not created error occured.
+    fileOpened:close() --incase of partial failure, close file.
+    fileOpened = nil
+    return  nil, "function parthiaFileToString: "..errorFound--error found stop function
+  end --if not fileOpened
+  
+  --read from the file
+  local fileString = fileOpened:read("*a") --read the entire file to a string
+  fileOpened:close() --close the file
+  fileOpened = nil
+  
+  --verify read was correct and return the file as a string
+  if fileString then --file read correctly
+    if remove then os.remove(path) end --remove the file
+    return fileString --return it as a string
+  else --File had read error
+    return nil, "function parthiaFileToString, failure converting file: "..path.." to string"--error found stop the function
+  end --if fileString
+
+end --parthiaFileToString</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaStringToFile(data,path,displayToScreen)</name>
+					<packageName></packageName>
+					<script>--[[
+saves a lua string to file
+in ANSI format
+
+Usage:
+  parthiaStringToFile(str,path,displayToScreen)
+  str, a string to be saved to file.
+  path, is the full directory and file name to save to
+  displayToScreen, if true display message to screen, false no messages will display to main console
+
+Examples:
+  errorFound = parthiaStringToFile("Write me to file.", "C:\users\dave\.config\testfile.txt", false)
+    writes string "Write me to file." to C:\users\dave\.config\testfile.txt. Not displaying any message to main console.
+  errorFound = parthiaStringToFile("Write me to file.", "/root/users/dave/.config/testfile.txt", false)
+    writes string "Write me to file." to /root/users/dave/.config/testfile.txt. Not displaying any message to main console.
+]]--
+function parthiaStringToFile(str,path,displayToScreen)
+  --make certain variables are good
+  if not type(str) == "string" then
+    local erroFound = "argument 1 needs to be a string to save. Received a "..type(str).." as argument 1."
+    if displayToScreen then
+      tecErrorNotification("function parthiaStringToFile, "..errorFound)
+    else
+      tecErrorNotification("function parthiaStringToFile, "..errorFound, false)
+    end
+    return errorFound
+  end --if not type(tbl) == "table"
+  if not type(path) == "string" then
+    local errorFound = "argument 2 needs to be a full path and file name as string variable. Received a "..type(path).." as argument 1."
+    if displayToScreen then
+      tecErrorNotification("function parthiaStringToFile, "..errorFound)
+    else
+      tecErrorNotification("function parthiaStringToFile, "..errorFound, false)
+    end
+    return errorFound
+  end --if not type(path) == "string"
+  displayToScreen = fuzzyBoolean(displayToScreen)
+
+  local f, errorFound = io.open(path, "w") --open in write mode or create file
+  if not f then --file was not created error occured.
+    f:close() --incase of partial failure, close file.
+    f = nil
+    if displayToScreen then
+      tecErrorNotification("function parthiaStringToFile, "..errorFound)
+    else
+      tecErrorNotification("function parthiaStringToFile, "..errorFound, false)
+    end
+    return  errorFound--error found stop write
+  end --if not f
+  f:write(str) --Write string to file
+  f:close() --close the file
+  f = nil
+  
+  if displayToScreen then pecho("String writen to "..path.." successful.\n") end
+  
+end --function parthiaStringToFile(str,path,displayToScreen)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaTableSave(tbl, path, jsonFormat, displayToScreen)</name>
+					<packageName></packageName>
+					<script>--[[
+Saves a lua table to file. Creating a thread to avoid locking main thread.
+Includes option to save table in json format
+File is in ANSI format
+
+Usage:
+  parthiaTableSave(table, path, jsonFormat, displayToScreen)
+  table, is a table to save
+  path, is the full directory and file name to save to
+  jsonFormat, boolean true if you want to save in json format false saves to standard lua table format
+  displayToScreen, if true display message to screen, false no messages will display to main console
+
+Examples:
+  errorFound = parthiaTableSave(aTableToSave, "/root/users/dave/.config/testfile.json", true, false)
+    will save aTableToSave to /root/users/dave/.config/testfile.json, in json format, and not display messages to screen. If there is a error errorFound will contain a string explaining the error.
+  parthiaTableSave(aTableToSave, "C:\users\dave\.config\testfile.lua", false, true)
+    will save aTableToSave to C:\users\dave\.config\testfile.lua, in standard lua table format, success or errors will display to screen
+  errorFound = parthiaTableSave(aTableToSave, "C:\users\dave\.config\testfile.lua", false, true)
+    will save aTableToSave to C:\users\dave\.config\testfile.lua, in standard lua table format, success or errors will display to screen. If there is a error errorFound will contain a string explaining the error.
+]]--
+
+--this function is used in a coroutine to save lua tables with table.save
+--includes error checking. table.save does not return an error message
+function saveLUATableThread(tbl, path, displayToScreen)
+  local dir = path:match("(.*\\)") --return the directory portion of path
+  local errorFound = false
+  if dir then --if path has a directory in it
+    if not io.exists(dir) then
+      errorFound = "directory: "..dir.." does not exist."
+    end --if not io.exists(dir)
+  else --windows directory not found in path
+    local dir = path:match("(.*/)") --check for mac and linux
+    if not dir then --no directory in path
+      errorFound = "no directory passed in argument 2."
+    end --if not dir
+  end --if dir
+	if errorFound then --if an error was found in the path
+    if displayToScreen then
+      tecErrorNotification("function parthiaTableSave, saving table to "..path.." failed. With error: "..tostring(errorFound))
+    else --do not show error to main console
+      tecErrorNotification("function parthiaTableSave, saving table to "..path.." failed. With error: "..tostring(errorFound), false)
+    end --if displayToScreen
+    tbl = nil
+    return errorFound
+  else --no errors with path found run the function
+    table.save(path, tbl)
+    tbl = nil
+    if displayToScreen then pecho("Table saved to "..path.." successfully.\n") end
+  end --if errorFound
+end --saveTableToJSON(tbl, path, displayToScreen)
+
+function parthiaTableSave(tbl, path, jsonFormat, displayToScreen)
+
+  --make certain variables are good
+  if not type(tbl) == "table" then
+    tecErrorNotification("function parthiaTableSave, argument 1 needs to be a table to save. Received a "..type(tbl).." as argument 1.")
+    return
+  end --if not type(tbl) == "table"
+  if not type(path) == "string" then
+    tecErrorNotification("function parthiaTableSave, argument 2 needs to be a full path and file name as string variable. Received a "..type(path).." as argument 1.")
+    return
+  end --if not type(path) == "string"
+  jsonFormat = fuzzyBoolean(jsonFormat)
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  
+  local copiedTable = table.deepcopy(tbl) --copy the table, incase the origional changes while a coroutine thread is saving the table
+
+  if jsonFormat then
+    local errorFound = parthiaStringToFile(yajl.to_string(copiedTable),path,false)
+    if errorFound then
+      if displayToScreen then
+        tecErrorNotification("function parthiaTableSave, function parthiaStringToFile returned: "..errorFound)
+      else --do not show error to main console
+        tecErrorNotification("function parthiaTableSave, function parthiaStringToFile returned: "..errorFound, false)
+      end --if displayToScreen
+      return errorFound
+    else
+      if displayToScreen then pecho("Table saved in json format to "..path.." successfully.\n") end
+    end --if errorFound
+  else --not saving to json format
+    --to avoid locking main thread write table to second thread
+    saveThread = coroutine.create(saveLUATableThread)
+    local threadRan = coroutine.resume(saveThread, copiedTable, path, displayToScreen)
+    if not threadRan then --if the coroutine failed to run
+      local errorFound = "table.save thread failed."
+      if displayToScreen then
+        tecErrorNotification("function parthiaTableSave, saving table to "..path.." failed. With error: "..tostring(errorFound))
+      else --do not show error to main console
+        tecErrorNotification("function parthiaTableSave, saving table to "..path.." failed. With error: "..tostring(errorFound), false)
+      end --if displayToScreen
+      return errorFound
+    end --if not threadRan
+  end -- if jsonFormat
+
+end --function parthiaTableSave(tbl, path, jsonFormat, displayToScreen)</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -3389,6 +3632,7 @@ Finds room types and directions in the global line. They are between color codes
 Using the directions and room types to turn that text into clickable links that sends a command to go to that description or direction.
 If player help developers is enabled these room descriptions are saved into table HelpDevsData.RoomTypes
 ]]--
+
 function addLinksToDirections()
   local previousRoomType = ""
   for _,exitPattern in ipairs({"0020ff\"&gt;(%P+%-?%P*)&lt;\/", "00cd20\"&gt;(%P+%-?%P*)&lt;\/" }) do --loop through exit patterns
@@ -3411,45 +3655,12 @@ function addLinksToDirections()
         deselect() --dont forget your deselects
         iterator = iterator + 1 --increase loop's iterator
       end --if selectString(tmpRoomType, 1 ) &gt; -1
-      
-      --gather exits for mapper
-      if parthiaMap.getEnabled() then --if player is using parthiaMap
-        if table.contains(parthiaMap.directions, tmpRoomType) then
-          local exitIsADoor = false
-          --TEC displays exts in format of room descriptions than exit direction. Both room and exit description are colored text. The previousRoomType holds the quick description of the exit, if it was a door or gate that will appear in the description.
-          if previousRoomType:lower():match("door") or previousRoomType:lower():match("gate") then --check if this exit is a door or gate
-            exitIsADoor = true 
-          end
-          parthiaMap.room.exits[tmpRoomType] = { door = exitIsADoor } --mark that this direction is a door or a gate so the mapper can add a door later.
-          if tmpRoomType == "up" then --if this exit allows player to move up or down
-            parthiaMap.upAvailable = true --needed because go u could be short for something other than go up
-            parthiaMap.room.exits[tmpRoomType].description = previousRoomType --keep track of a description of the exit. Use this to compair against movement commands like go ladder
-          elseif tmpRoomType == "down" then
-            parthiaMap.downAvailable = true --needed because go d, could be used as short for go door
-            parthiaMap.room.exits[tmpRoomType].description = previousRoomType --keep track of a description of the exit. Use this to compair against movement commands like go ladder
-          end --if tmpRoomType == "up" or tmpRoomType == "down"
-        end --if table.contains(parthiaMap.directions, tmpRoomType)
-      end --if parthiaMap.getEnabled()
-      
-      previousRoomType = tmpRoomType --Keep track of the last room type used.
     end --for string.gmatch( line, "0020ff\"&gt;(%P+)&lt;\/" )
   end --for ipairs({"0020ff\"&gt;(%P+%-?%P*)&lt;\/", "00cd20\"&gt;(%P+%-?%P*)&lt;\/" })
-
-  --collection direction walked for mapper
-  if parthiaMap.getEnabled() then --if player is using parthiaMap
-    if not parthiaMap.dirtectionCollected then --if we have not collection a movement direction yet do so now.
-      parthiaMap.directionWalked = line:match(" You are facing (%a+)%.")
-      debugToDisplay("function addlinksToDirections, Direction walked: "..parthiaMap.directionWalked)
-    end --if not parthiaMap.dirtectionCollected
-    parthiaMap.dirtectionCollected = false --reset directionCollected for next movement.
-  end --if parthiaMap.getEnabled()
 
   --collect current room type
   local tmpCurrentRoomType = line:match("^You arrive at (%P+)%p")
   if tmpCurrentRoomType then --if something was found above.
-    if parthiaMap.getEnabled() then --if player is using parthiaMap
-      parthiaMap.room.name = tmpCurrentRoomType --collect this description for a room name.
-    end --if parthiaMap.getEnabled()
     if getHelpDevs() then --if player has help devs enabled
       if not table.contains(parthiaDirectionsTable, tmpCurrentRoomType) then --if tmpRoomType is not a direction
         HelpDevsData.RoomTypes[tmpCurrentRoomType] = "" --collect name to table.
@@ -3457,6 +3668,7 @@ function addLinksToDirections()
       HelpDevsData.RoomTypes.currentRoom = tmpCurrentRoomType
     end --if getHelpDevs()
   end --if tmpCurrentRoomType
+  
 end --function addLinksToDirections()</script>
 					<eventHandlerList />
 				</Script>
@@ -3637,67 +3849,6 @@ end --function commandSuccessful()</script>
   objectLinksAdded = true --tell function that objectsLinks where added to this look command run
 
 end --function addLinksToObjects()</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaFileToString(path, remove)</name>
-					<packageName></packageName>
-					<script>--[[
-This function opens a file and returns the contents of the file as a string.
-Usage:
-  parthiaFileToString(path, remove)
-  path is the path and name of the file to open.
-  remove is boolean if the file should be removed when completed.
-Example: 
-  
-  myFriends, errorFound = parthiaFileToString("C:\My friends list.txt")
-  if erroFound then
-    pecho("Error found in data read: "..errorFound")
-  end
-  Above would read in file C:\My friends list.txt into variable myFriends
-  If an error was found it would display the error to screen and myFriends variable will be nil.
-    
-  myFriends, errorFound = parthiaFileToString("C:\My friends list.txt", true)
-  if erroFound then
-    pecho("Error found in data read: "..errorFound")
-  end
-    Above would read in file C:\My friends list.txt into variable myFriends AND delte the file if the read was successful.
-    If an error was found it would display the error to screen and myFriends variable will be nil.
-    
-  myFriends = parthiaFileToString("C:\My friends list.txt")
-    Above would read in file C:\My friends list.txt into variable myFriends
-    If an error was found myFriends will be nil.
-]]--
-function parthiaFileToString(path, remove)
-
-  --make certain the arguments are correct
-  remove = fuzzyBoolean(remove)
-  if type(path) ~= "string" then --make certain a string was passed
-    return "", "function parthiaFileToString, argument 1 is a non string variable. Received: "..tostring(stringToCheck).." expected a string."
-  end --if type(path) ~= "string" then
-
-  --open the file
-  local fileOpened, errorFound = io.open(path, "r") --open the file as read
-  if not fileOpened then --file was not created error occured.
-    fileOpened:close() --incase of partial failure, close file.
-    fileOpened = nil
-    return  nil, "function parthiaFileToString: "..errorFound--error found stop function
-  end --if not fileOpened
-  
-  --read from the file
-  local fileString = fileOpened:read("*a") --read the entire file to a string
-  fileOpened:close() --close the file
-  fileOpened = nil
-  
-  --verify read was correct and return the file as a string
-  if fileString then --file read correctly
-    if remove then os.remove(path) end --remove the file
-    return fileString --return it as a string
-  else --File had read error
-    return nil, "function parthiaFileToString, failure converting file: "..path.." to string"--error found stop the function
-  end --if fileString
-
-end --parthiaFileToString</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -7614,7 +7765,7 @@ function GitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if GitUpdate.localRespitory not exist
   GitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  GitUpdate.localVersion = "0.1.45" --Must match the tag in your github release
+  GitUpdate.localVersion = "0.1.46" --Must match the tag in your github release
   GitUpdate.aliasName = "parthia update" --Name of alias user runs to process update
   --Name of the alias to check if an update is available.
   GitUpdate.updateCheckAlias = "parthia update check" 
@@ -8795,6 +8946,7 @@ end --function getStatsCheckState()</script>
         debugToDisplay("function setStatsCheckActive, CurrentCharacter."..variableName.." adjusted to ".."\""..parthiaPlayer.CurrentCharacter[variableName].."\"") 
       end --if type(variable) == "string"
     end --for pairs(parthiaPlayer.CurrentCharacter)
+    parthiaMap.checkCharacter() --check where the character is. For when login occurs. It uses the character name, that is why it is here
   end --if not mode
 end --function setStatsCheckActive(mode)</script>
 						<eventHandlerList />
@@ -9161,7 +9313,7 @@ end --function getNumpadNaviation()</script>
 				<script>--[[
 Basic flow of mapping is:
 The player successfully moves. (Failed movement handled in trigger: "failed movement" and "You are in the middle of something.")
-That movement direction (IE east or west) is tracked with (alias group "movement", script "addLinksToDirections()")
+That movement direction (IE east or west) is tracked with (alias group "movement", script "parthiaMap.findSpecialExits")
 parthiaMap.room (table that holds data about players current room) gets copied to parthiaMap.previousRoom in trigger "Player enters a room". parthiaMap.room is then reset with parthiaMap.resetRoom
 trigger "TEC Map Rooms" calls function parthiaDrawMapRooms().
 parthiaDrawMapRooms() collects sizes and positions of near by rooms into table parthiaMap.room
@@ -9179,7 +9331,7 @@ parthiaMap.Move() uses mapping functions to find where near by rooms match to ex
     parthiaMap.Move created the new room mudlet's mapping system gives it an ID and tracks where it belongs
     parthiaMap.Move creates lines for all the exits in the room.
     parthiaMap.Move sets doors on each exit line if a door or gate exists.
-    parthiaMap.Move connects the exits for the room the player move from and the room the player is currently in
+    parthiaMap.Move connects the exits for the room the player move from and the room the player is currently in, including special and unique exits. 
 There is obviously a LOT more that needs to be done, but this is the start
       
 
@@ -9198,7 +9350,7 @@ This has been done in alias group "movement". If a command is run IE: climb up g
 detectDirection detects if this movement will send the player up or down. Including if they use a special command like go ladder or go 2 ladder
 if detectDirection detects vertical movement it sets: parthiaMap.directionWalked = "up" (or "down") and parthiaMap.dirtectionCollected = true and displays a message to parthias debug console.
 
-function addLinksToDirections needs to correctly detect when there are multiple room types that match. We want to collect what room type is in each direction. Currently it is not accurate.
+
 
 currently detection data is reset in trigger Player enters a room that will need to be changed to add support for movement when room is dark.
 
@@ -9215,15 +9367,22 @@ parthiaMap = parthiaMap or {} --table to hold the mapper data.
 
 --parthiaMap.TECMapRooms = {} table that holds the size, position, and area of nearby rooms
 --parthiaMap.previousRoom = nil --will contain a room table of the last room the payer was in
---parthiaMap.directionWalked = "" --direction player has walked. collected in trigger parthia mapper walk detected
+--parthiaMap.directionWalked = "" --direction player has walked. collected in trigger parthia mapper walk detected via function parthiaMap.findSpecialExits
 --parthiaMap.roomID = nil --will hold the ID of the current room the player is in
 --parthiaMap.roomName = nil --will hold the short name of the room, collected in function addLinksToDirections()
 --parthiaMap.previousRoomID = nil --will hold the ID of the previous room the player is in
 --parthiaMap.exits = {} --holds the exits for the current room, collected in function addLinksToDirections()
 --parthiaMap.coords = {} --location in the current area
---parthiaMap.dirtectionCollected = false --used to tell mapper if a movement direction has been collected. Is used in function addLinksToDirections and parthiaMap.zMovementTracking
+--parthiaMap.dirtectionCollected = false --used to tell mapper if a movement direction has been collected. Is collected in functions parthiaMap.findSpecialExits and parthiaMap.detectDirection. Used in parthiaMap.Move
 --parthiaMap.upAvailable = false --keeps track of it player can move up in this area. Used to track movement commands like go ladder
---parthiaMap.downAvailable = false --keeps track of it player can move up in this area. Used to track movement commands like go ladder</script>
+--parthiaMap.downAvailable = false --keeps track of it player can move up in this area. Used to track movement commands like go ladder
+--parthiaMap.stepsGoUp = true --if true steps add 1 to Z. If false steps remove 1 from z
+--parthiaMap.playerClimbed = false --sets to true when a player climbs in trigger "player climbed"
+--parthiaMap.currentAreaID = 1 --the area id that the players current room is in
+--parthiaMap.room.exitEcho = "" --the message that echos to screen as a player enters a room, that lists a description for this rooms exits
+--parthiaMap.specialExitMovement = false --sets to the room id the exit leads to when player runs a command that uses a special exit.
+--parthiaMap.specialExitAttempted = false --records if a special exit was attempted. Used to automatically create a special exit for mappers.
+--parthiaMap.playerCmd = false --the command the player used during this movement. be a carinal direction if player used a shorthand for one</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
 					<name>parthiaMap.resetRoom()</name>
@@ -9241,7 +9400,8 @@ function parthiaMap.resetRoom()
   end --if not parthiaMap.dirtectionCollected
   parthiaMap.TECMapRooms = {} --rooms that appear on the map
   parthiaMap.TECMapExits = {} --exits that appear on the map
-  parthiaMap.room.confirmedExits = {}
+  parthiaMap.room.confirmedExits = {} --exits that have been confirmed to be in this room.
+  parthiaMap.room.specialExits = {} --store special exit descriptions
 end --function parthiaMap.resetRoom()</script>
 					<eventHandlerList />
 				</Script>
@@ -9255,12 +9415,18 @@ It is called in script "Post Initilization"
 function parthiaMap.config()
   parthiaMap.currentAreaID = nil --will hold the current area name
   parthiaMap.mapping = false --is a map being created
-  
+  parthiaMap.stepsGoUp = true --if true steps add 1 to Z. If false steps remove 1 from z
+  parthiaMap.playerClimbed = false --sets to true when a player climbs in trigger "player climbed"
   parthiaMap.directions = { --used to tell mapper acceptable directions. Used in addLinksToDirections to collect room exit directions
     "north", "northeast", "east", "southeast", "south", "southwest",
     "west", "northwest", "up", "down"
   }
   parthiaMap.resetRoom() --prepare table parthiaMap.room
+  parthiaMap.saveTable = {} --table to collect data that needs to be saved to file
+  parthiaMap.savePath = tecSettingsFolder.."MapData.lua"
+  parthiaMap.load(true) --load map settings from file
+  parthiaMap.currentAreaID = 1 --set the default room to the welcome area
+  parthiaMap.notMovement = false --sets to true if login occured from trigger "Login Successful"
 end --parthiaMap.config()</script>
 					<eventHandlerList />
 				</Script>
@@ -9278,15 +9444,103 @@ function parthiaMap.addArea(areaName)
     tecErrorNotification("function parthiaMap.addArea, argument 1 expected string variable receive a "..type(areaName))
   end --if areaName ~= "string"
   
-  local newId, err = addAreaName(areaName) --creates a new area in the mapper https://wiki.mudlet.org/w/Manual:Mapper_Functions#addAreaName
+  local newID, err = addAreaName(areaName) --creates a new area in the mapper https://wiki.mudlet.org/w/Manual:Mapper_Functions#addAreaName
   
-  if newId == nil or newId &lt; 1 or err then --if the mapper errored on area creation
-    pecho("That area name could not be added - error is: ".. err.."\n")
-  else
-    pecho("&lt;green&gt;Created new area "..areaName.." with the ID of "..newId..".\n")
+  if newID == nil or newID &lt; 1 or err then --if the mapper errored on area creation
+    pecho("That area name could not be added.")
+    if err then --error message available
+      pecho(" - error is: ".. err.."\n")
+    else --there was an error but no error message
+      echo("\n")
+    end --if err
+  else --no error found
+    pecho("&lt;green&gt;Created new area "..areaName.." with the ID of "..newID..".&lt;reset&gt;\n")
     parthiaMap.coords = { 0,0,0 } --reset coordinates becuas
-  end --if newId == nil or newId &lt; 1 or err
+    parthiaMap.currentAreaID = newID --set the new ID for mapping in the new space
+  end --if newID == nil or newID &lt; 1 or err
 end --function parthiaMap.addArea</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.removeArea(areaName, displayToScreen)</name>
+					<packageName></packageName>
+					<script>--[[
+Used to remove an area with in mudlet's mapper, and all rooms in that area.
+This function is used in alias "parthia map area remove"
+Useage:
+parthiaMap.removeArea(areaName, displayToScreen)
+  areaName, is the full name of an area. With correct capitolization
+  displayToScreen, is if you would like messages displayed to screen
+Examples:
+  parthiaMap.removeArea("Name of area", true), removes area named "Name of area", and displays errors to screen
+  local errorFound parthiaMap.removeArea("Name of area", true), removes area named "Name of area", and displays errors to screen and sending errors to variable errorFound
+  parthiaMap.removeArea("Name of area"), removes area named "Name of area", error messages will only go to error consoles.
+]]--
+function parthiaMap.removeArea(areaName, displayToScreen)
+  if type(areaName) ~= "string" then
+    tecErrorNotification("function parthiaMap.removeArea, argument 1 expected string variable receive a "..type(areaName))
+  end --if areaName ~= "string"
+  displayToScreen = fuzzyBoolean(displayToScreen)
+
+  --verify the area exists than delete it
+  local areasTable = getAreaTable() --get a table that contains all the ids and names of of each area
+  for k,v in pairs(areasTable) do --loop through all the areas that have been created
+    if k == areaName then --if an area with the name passed exists
+      parthiaMap.clearAreaRooms(v) --empty the area
+      deleteArea(k) --remove the area
+      if displayToScreen then pecho("Area "..areaName.." removed.\n") end
+      return --stop function were able to do desired action
+    end --if k == areaName
+  end --for pairs(areasTable)
+
+  --Area with the name of the first argument does not exist
+  if displayToScreen then pecho("Could not find area "..areaName..".\n") end
+  local errorFound = "function parthiaMap.removeArea, failed could not find areaName."
+  tecWarningNotification(errorFound)
+  return errorFound
+
+end --function parthiaMap.removeArea(areaName)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.changeArea(areaName, displayToScreen)</name>
+					<packageName></packageName>
+					<script>--[[
+Changes character's current area.
+Function would only be useful for mappers. When they have to move between existing areas while mapping.
+Is used in alias `parthia map character area`
+Useage:
+  parthiaMap.changeArea(areaNameOrID, displayToScreen)
+  areaNameOrID, contains the full name or id of an area
+  displayToScreen, is if error messages get displayed to screen
+Examples:
+  parthiaMap.changeArea(1, false), changes current area to 1, displaying messages to error consoles only
+  parthiaMap.changeArea("Welcome Room", true), changes to area "Welcome Room", displaying errors to screen
+  local errorFound = parthiaMap.changeArea(2, false), changes area to 2, and fills variable errorFound with an error if found
+]]--
+function parthiaMap.changeArea(areaNameOrID, displayToScreen)
+  if type(areaNameOrID) ~= "string" then
+    tecErrorNotification("function parthiaMap.changeArea, argument 1 expected string variable receive a "..type(areaNameOrID))
+  end --if areaNameOrID ~= "string"
+  displayToScreen = fuzzyBoolean(displayToScreen)
+
+  --verify the area exists than change to that ID
+  local areasTable = getAreaTable() --get a table that contains all the ids and names of of each area
+  for k,v in pairs(areasTable) do --loop through all the areas that have been created
+    if k == areaNameOrID or v == tonumber(areaNameOrID) then --if an area with the name or ID passed exists
+      parthiaMap.currentAreaID = v
+      if displayToScreen then pecho("Changed to area "..k..", that has an ID of "..v..".\n") end
+      return --stop function were able to do desired action
+    end --if k == areaNameOrID
+  end --for pairs(areasTable)
+
+  --Area with the name of the first argument does not exist
+  if displayToScreen then pecho("Could not find area "..areaNameOrID..".\n") end
+  local errorFound = "function parthiaMap.changeArea, failed could not find areaName."
+  mapDebug(errorFound)
+  return errorFound
+
+end --function parthiaMap.changeArea(areaNameOrID)</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
@@ -9294,17 +9548,98 @@ end --function parthiaMap.addArea</script>
 					<packageName></packageName>
 					<script>--call when mapping is ready to connect the exits of the players previous and current rooms
 function parthiaMap.connectRooms()
-  debugToDisplay("function parthiaMap.connectRooms, connecting previous room ID: "..parthiaMap.previousRoom.id.." to current room ID "..parthiaMap.room.id.." using current room exit "..parthiaMap.getEntranceDirection())
+
+  --connect exit stubs that appear on map.
+  mapDebug("function parthiaMap.connectRooms, connecting previous room ID: "..parthiaMap.previousRoom.id.." to current room ID "..parthiaMap.room.id.." using current room exit "..parthiaMap.getEntranceDirection())
   setExit(parthiaMap.previousRoom.id, parthiaMap.room.id, parthiaMap.directionWalked)
   setExit(parthiaMap.room.id, parthiaMap.previousRoom.id, parthiaMap.getEntranceDirection())
-  --connectExitStub(room.id, parthiaMap.getEntranceDirection()) --connect room and previous room
-end</script>
+  
+  local entryDir = parthiaMap.getEntranceDirection()
+  local exitDir = parthiaMap.directionWalked
+  
+  --create the special exits that connect these two rooms
+
+  --get the special exit that leads to the previous room
+  local entrySpecialExit = "" --will store what special exit leads to previous room
+  for spExitName,spExitTbl in pairs(parthiaMap.room.specialExits) do --look through the special exits in this room
+    for k,spExDirection in ipairs(spExitTbl) do --list exits each special exit type leads in
+      if spExDirection == entryDir then --if this exit goes the direction entered
+        entrySpecialExit = spExitName:lower()
+        --change here for multi exit in single direction
+        break --stop as we found what we are looking for
+      end --if spExDirection == parthiaMap.getEntranceDirection()
+    end --ipairs(spExitTbl)
+  end --for pairs(parthiaMap.room.specialExits)
+  --get the special exit used to get to this room
+  local exitedSpecialExit = ""
+  for spExitName,spExitTbl in pairs(parthiaMap.previousRoom.specialExits) do --look through the special exits in this room
+    for k,spExDirection in ipairs(spExitTbl) do --list exits each special exit type leads in
+      if spExDirection == exitDir then --if this exit goes the direction entered
+        exitedSpecialExit = spExitName:lower()
+        --change here for multi exit in single direction
+        break --stop as we found what we are looking for
+      end --if spExDirection == parthiaMap.getEntranceDirection()
+    end --ipairs(spExitTbl)
+  end --for pairs(parthiaMap.room.specialExits)
+  
+  --make unique exit, a special exit that does not appear on the exits echo list. Requires the person mapping to manually use the exit.
+  if parthiaMap.specialExitAttempted then --if a special exit was attempted this movement.
+    local uniqueExit = exitedSpecialExit:match(parthiaMap.playerCmd) --if the players command is not already about to be mapped. 
+    if not uniqueExit then --if there was no match to the
+      addSpecialExit(parthiaMap.previousRoom.id, parthiaMap.room.id, parthiaMap.playerCmd)
+      mapDebug("function parthiaMap.connectRooms, unique exit from room id: "..parthiaMap.previousRoom.id.." to room id: "..parthiaMap.room.id.." exit type: \""..parthiaMap.playerCmd.."\"")
+    end --if not uniqueExit
+  end --if parthiaMap.specialExitAttempted
+
+  --if movement is up or down. Create the special exit now. Stopping further data sorting
+  if entryDir == "up" or entryDir == "down" then 
+    addSpecialExit(parthiaMap.previousRoom.id, parthiaMap.room.id, exitedSpecialExit)
+    mapDebug("function parthiaMap.connectRooms, special exit from room id: "..parthiaMap.previousRoom.id.." to room id: "..parthiaMap.room.id.." exit ype: \""..exitedSpecialExit.."\"")
+    addSpecialExit(parthiaMap.room.id, parthiaMap.previousRoom.id, entrySpecialExit)
+    mapDebug("function parthiaMap.connectRooms, special exit from room id: "..parthiaMap.room.id.." to room id: "..parthiaMap.previousRoom.id.." exit ype: \""..exitedSpecialExit.."\"")
+    return --function has done what was needed. Stop it.
+  end --if entryDir == "up" or entryDir == "down"
+  
+  --find what order the previous room appeared in the SKOOT 6 message
+  local entrySpecialExitRoomOrder = ""
+  for k,v in ipairs(parthiaMap.room.adjacentRooms) do --loop through rooms that are next to this one
+    --find the previous room in the adjacentRooms table
+    if  parthiaMap.room.confirmedExits[entryDir][1].room.ypos == v.ypos
+    and parthiaMap.room.confirmedExits[entryDir][1].room.xpos == v.xpos then
+      entrySpecialExitRoomOrder = k --record the order the room appear in on SKOOT 6 message
+      --change here for multi exit in single direction
+      break --stop as we found what we are lookg for
+    end ----find the order the room appear in on SKOOT 6 message
+  end --ipairs(parthiaMap.room.adjacentRooms)
+  --find the order this room appeared in the previous rooms SKOOT 6 message
+  local exitedSpecialExitRoomOrder = ""
+  for k,v in ipairs(parthiaMap.previousRoom.adjacentRooms) do --loop through rooms that are next to this one
+    --find the previous room in the adjacentRooms table
+    if  parthiaMap.previousRoom.confirmedExits[exitDir][1].room.ypos == v.ypos
+    and parthiaMap.previousRoom.confirmedExits[exitDir][1].room.xpos == v.xpos then
+      exitedSpecialExitRoomOrder = k --record the order the room appear in on SKOOT 6 message
+      --change here for multi exit in single direction
+      break --stop as we found what we are lookg for
+    end ----find the order the room appear in on SKOOT 6 message
+  end --ipairs(parthiaMap.room.adjacentRooms)
+  
+  --create the special exits to link room and previousRoom
+  --parthiaMap.previousRoom.id, parthiaMap.room.id, parthiaMap.directionWalked
+  addSpecialExit(parthiaMap.previousRoom.id, parthiaMap.room.id, exitedSpecialExit.."@#"..exitedSpecialExitRoomOrder)
+  mapDebug("function parthiaMap.connectRooms, special exit from room id: "..parthiaMap.previousRoom.id.." to room id: "..parthiaMap.room.id.." exit ype: \""..exitedSpecialExit.."@#"..exitedSpecialExitRoomOrder.."\"")
+  addSpecialExit(parthiaMap.room.id, parthiaMap.previousRoom.id, entrySpecialExit.."@#"..entrySpecialExitRoomOrder)
+  mapDebug("function parthiaMap.connectRooms, special exit from room id: "..parthiaMap.room.id.." to room id: "..parthiaMap.previousRoom.id.." exit ype: \""..exitedSpecialExit.."@#"..exitedSpecialExitRoomOrder.."\"")
+end --function parthiaMap.connectRooms()</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
 					<name>parthiaMap.Move(room, previousRoom, directionWalked)</name>
 					<packageName></packageName>
 					<script>function parthiaMap.Move(room, previousRoom, directionWalked)
+  if parthiaMap.notMovement then --if the trigger that called this function was not from movement. Stop the function
+    parthiaMap.notMovement = false
+    return
+  end --if parthiaMap.notMovement
   room = room or parthiaMap.room
   previousRoom = previousRoom or parthiaMap.previousRoom
   directionWalked = directionWalked or parthiaMap.directionWalked
@@ -9323,17 +9658,27 @@ end</script>
   end --if room.xpos and room.ypos and room.size
 
   if previousRoom then --if we are not mapping the first room
-  
     --We are at a known location within the map data, use that to track location.
     if previousRoom.id then --if we had a previous room
-      local previousExits = getRoomExits(previousRoom.id) --exits in previous room holds neighboring room IDs.
-      if previousExits[dir] then --The last room the character was in has this rooms ID in its exits table
-        room.coords = {getRoomCoordinates(previousExits[dir])}
-        room.id = previousExits[dir] --collect the current room's id
-        centerview(room.id) --center on the new room.
-        mapDebug("function parthiaMap.Move, able to get current room ID "..room.id.." from previous rooms exits table.")
-        return --stop the function
-      end --if previousExits[dir]
+      if parthiaMap.specialExitMovement then --if a special exit was used during this movement
+        room.coords = {getRoomCoordinates(parthiaMap.specialExitMovement)} --record room coordinates
+        parthiaMap.setCharacterLocation(parthiaMap.specialExitMovement) --center on the new room, make certain character location gets saved
+        mapDebug("function parthiaMap.Move, able to get current room ID "..room.id.." from previous rooms special exits table")
+        return
+      else --a special exit was not used this movement.
+        --current work, place if specialExitUsed code here.
+        local previousArea = getRoomArea(previousRoom.id)
+        if parthiaMap.currentAreaID == previousArea then --supports creating new area where movement in previous area would have been legal. Like creating new area while in welcome area logging into a character than attempting to map the game world
+          local previousExits = getRoomExits(previousRoom.id) --exits in previous room holds neighboring room IDs.
+          if previousExits[dir] then --The last room the character was in has this rooms ID in its exits table
+            room.coords = {getRoomCoordinates(previousExits[dir])}
+            room.id = previousExits[dir] --collect the current room's id
+            parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
+            mapDebug("function parthiaMap.Move, able to get current room ID "..room.id.." from previous rooms exits table.")
+            return --stop the function
+          end --if previousExits[dir]
+        end --if parthiaMap.currentAreaID == previousArea then
+      end --if parthiaMap.specialExitMovement
     end --if previousRoom.id
 
     mapDebug("function parthiaMap.Move, Unable to find current room ID from previous room exits table. Calculating it now")
@@ -9386,12 +9731,13 @@ end</script>
   else --movement is not up or down
     if parthiaMap.previousRoom then --if this is not the first movement.
       if parthiaMap.previousRoom.confirmedExits[dir] then --verify there is a exit in the direction player is moving
-        local roomSizeAdjustment = parthiaMap.previousRoom.size * .5 --We need to adjust x and y by half the room's size
-        if roomSizeAdjustment &lt; 1 then roomSizeAdjustment = 0 end --if the previous room is size 1 we do not adjust by size
-        --the previous room kept track of all adjecent rooms that connected to exits. Use the direction the player walked to refer to the exit. .room. is the table that stores the location of that room on the Alice TEC Map
-        y = y + -(parthiaMap.previousRoom.confirmedExits[dir].room.ypos) - roomSizeAdjustment --use the location of the current room in reference to the previous room to decide the players coordinates
-        x = x + parthiaMap.previousRoom.confirmedExits[dir].room.xpos + roomSizeAdjustment ----use the location of the current room in reference to the previous room to decide the players coordinates
-      else --there was not exit for the direction moved
+        if parthiaMap.previousRoom.confirmedExits[dir][1].room then --verify there is a room on the map for this exit
+          local roomSizeAdjustment = parthiaMap.room.size * .5 --We need to adjust x and y by half the room's size
+          if roomSizeAdjustment &lt; 1 then roomSizeAdjustment = 0 end --if the previous room is size 1 we do not adjust by size
+          entryDir = parthiaMap.getEntranceDirection()
+          y = y + parthiaMap.room.confirmedExits[entryDir][1].room.ypos + roomSizeAdjustment --use the location of the current room in reference to the previous room to decide the players coordinates
+          x = x + -(parthiaMap.room.confirmedExits[entryDir][1].room.xpos) - roomSizeAdjustment ---use the location of the current room in reference to the previous room to decide the players coordinates
+        else --The mapper did not show a room in this direction. Meaning vertical movement with horizonal directional command.
 --[[
 Prefface below. That code can not handle a large room with many smaller rooms exiting into it, or (vice versa) a direction with multiple exits.
 code to hangle movement that is vertical in game without the player going up or down goes here
@@ -9399,40 +9745,61 @@ A good place to test this is the stands in the colosseum.
 When you go up the benches it will not show rooms to the east or west.
 Another location that does this is the Iridine bank.
 Fix is probably using the two room sizes to resolve.
-if dir == "north" then
-    y = y+(1*((room.size)+(previousRoom.size)))
-  elseif dir == "northeast" then
-    y = y+(1*((room.size)+(previousRoom.size)))
-    x = x+(1*((room.size)+(previousRoom.size)))
-  elseif dir == "east" then
-    x = x+(1*((room.size)+(previousRoom.size)))
-  elseif dir == "southeast" then
-    y = y-(1*((room.size)+(previousRoom.size)))
-    x = x+(1*((room.size)+(previousRoom.size)))
-  elseif dir == "south" then
-    y = y-(1*((room.size)+(previousRoom.size)))
-  elseif dir == "southwest" then
-    y = y-(1*((room.size)+(previousRoom.size)))
-    x = x-(1*((room.size)+(previousRoom.size)))
-  elseif dir == "west" then
-    x = x-(1*((room.size)+(previousRoom.size)))
-  elseif dir == "northwest" then
-    y = y+(1*((room.size)+(previousRoom.size)))
-    x = x-(1*((room.size)+(previousRoom.size)))
-  end --if dir ==
 ]]--
-        
-        if parthiaMap.mapping then --player is mapping
-          mapDebug("Moved direction that mapping did not find an exit for.")
-        end --if parthiaMap.mapping
-      end --parthiaMap.previousRoom.confirmedExits[dir]
+          if dir == "north" then
+            y = y+(1*room.size)
+          elseif dir == "northeast" then
+            y = y+(1*room.size)
+            x = x+(1*previousRoom.size)
+          elseif dir == "east" then
+            x = x+(1*previousRoom.size)
+          elseif dir == "southeast" then
+            y = y-(1*previousRoom.size)
+            x = x+(1*previousRoom.size)
+          elseif dir == "south" then
+            y = y-(1*previousRoom.size)
+          elseif dir == "southwest" then
+            y = y-(1*previousRoom.size)
+            x = x-(1*room.size)
+          elseif dir == "west" then
+            x = x-(1*room.size)
+          elseif dir == "northwest" then
+            y = y+(1*room.size)
+            x = x-(1*room.size)
+          end --if dir ==
+          
+          if parthiaMap.mapping then
+            pecho("Movement through an exit that had no room on the TEC provided map occured.\n"..
+                  "Please verify this rooms position on the Parthia Map matches its position in the TEC Map. Room pips in Parthia map should be at the upper left corner of where that room appears on the TEC Map.\n"..
+                  "If it is incorrect room can be dragged and dropped into the correct location.\n")
+          end --if parthiaMap.mapping
+          if parthiaMap.playerClimbed then --If the player climb to get to the room they are in, we know veritcal and horizontal movement occured.
+            if parthiaMap.mapping then pecho("Movement that was both vertical and horizontal at the same time was detected. ") end
+            if parthiaMap.getStepsGoUp() then --if mapper has set steps to go up than increase Z
+              z = z + 1
+              if parthiaMap.mapping then
+                pecho("This movement was considerted to be upward movement. If it was downward movement please delete this room. Go back to your previous room and run command ")
+                pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map steps go down", 
+                          [[parthiaMap.setStepsGoUp(false, true)]],
+                          "Steps take you down while mapping", true)
+              end --if parthiaMap.mapping
+            else --if mapper has set steps to go down, than decrease z
+              z = z - 1
+              if parthiaMap.mapping then
+                pecho("This movement was considerted to be downward movement. If it was upward movement please delete this room. Go back to your previous room and run command ")
+                pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map steps go up", 
+                          [[parthiaMap.setStepsGoUp(true, true)]],
+                          "Steps take you up while mapping", true)
+              end --if parthiaMap.mapping
+            end --if parthiaMap.getStepsGoUp()
+          end --if parthiaMap.playerClimbed
+        end --if parthiaMap.previousRoom.confirmedExits[dir].room
+      end --if parthiaMap.previousRoom.confirmedExits[dir]
     end --if parthiaMap.previousRoom
   end --if dir == "u" or dir == "up"
 
   room.coords = {x,y,z} --collect the coordinates we used we may never need it though
   mapDebug("function parthiaMap.Move, room coords after move are: "..x..","..y..","..z)
-
-  parthiaMap.currentAreaID = 1 --currently mapping on supports mapping to ID 1
 
   local roomFound = getRoomsByPosition(parthiaMap.currentAreaID,x,y,z) --move and check if there is a room here
   if roomFound[0] then --making certain there is not an unexpecrted room here
@@ -9441,7 +9808,7 @@ if dir == "north" then
     if parthiaMap.mapping then --if player is creating new maps
       parthiaMap.connectRooms() --connect the exit nodes for the room player is in and the one they moved from
     end --if parthiaMap.mapping
-    centerview(parthiaMap.room.id) --center on the new room.
+    parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
   else --no unexpected room found
     if parthiaMap.mapping then --if player is creating new maps
       parthiaMap.addRoom() --we are mapping in a space with no previous room, add one.
@@ -9449,6 +9816,14 @@ if dir == "north" then
       mapDebug("function parthiaMap.Move, Mapping currently disabled. In unmapped area.")
     end --if parthiaMap.mapping
   end --if roomFound[0]
+  
+  parthiaMap.save(false) --movement successful, save new room ID to file.
+
+  --moved to function parthiaMap.setCharacterLocation  
+  --reset movement variables to defaults
+  --parthiaMap.playerClimbed = false
+  --parthiaMap.specialExitMovement = false
+  --parthiaMap.specialExitAttempted = false --records if a special exit was attempted. Used to automatically create a special exit for mappers.
   
   mapDebug("function parthiaMap.Move, Completed mapping space that was previously unmapped.")
 
@@ -9492,8 +9867,6 @@ end </script>
 function parthiaMap.addRoom(room, previousRoom)
   room = room or parthiaMap.room
   previousRoom = previousRoom or parthiaMap.previousRoom
-  
-  parthiaMap.currentAreaID = 1 --currently mapper only supports area id of 1
 
   if parthiaMap.mapping then --if the player is creating new maps
     local newID = createRoomID() --create a new ID in the mudlet maping system
@@ -9532,7 +9905,7 @@ function parthiaMap.addRoom(room, previousRoom)
     --set room's user data
     --setRoomUserData(341, "some table", yajl.to_string({name = "bub", age = 23}))
     
-    centerview(room.id) --center the map on the new room
+    parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
   end --if parthiaMap.mapping
 end --function parthiaMap.addRoom()</script>
 					<eventHandlerList />
@@ -9591,14 +9964,30 @@ end --function parthiaMap.trackPreviousRoom()</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.load()</name>
+					<name>parthiaMap.load(displayToScreen)</name>
 					<packageName></packageName>
-					<script>--currently only supports getting where the player was when they exited the game.
-function parthiaMap.load()
+					<script>--load player character locations from file.
+function parthiaMap.load(displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen)
 
-  parthiaMap.room.id = getPlayerRoom()
+  if io.exists(parthiaMap.savePath) then --if the file exists, load it.
+    table.load(parthiaMap.savePath, parthiaMap.saveTable)
+    if displayToScreen then pecho("[  OK  ]  - Parthia map settings successfully loaded from file.\n") end
+  else --the save file does not exist
+    if displayToScreen then pecho("[ Info ]  - No map settings file.\n") end
+  end --if io.exists(parthiaMap.savePath)
 
-end</script>
+end --function parthiaMap.load(displayToScreen)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.save(displayToScreen)</name>
+					<packageName></packageName>
+					<script>--Save map settings to file
+function parthiaMap.save(displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  parthiaTableSave(parthiaMap.saveTable, parthiaMap.savePath, false, displayToScreen)
+end --function parthiaMap.save()</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
@@ -9658,76 +10047,123 @@ parthiaMap.detectDirection("down")
 --Made outside the function so it is not recreated each time the function is called. Wasting processing time.
 parthiaMap.notZMovement = {
   "east", "eas", "ea", "e",
-  "southeast", "southeas", "southea", "southe",
+  "southeast", "se",
   "south", "sout", "sou", "so", "s",
-  "southwest", "southwes", "southwe", "southw",
+  "southwest", "sw",
   "west", "wes", "we", "w",
-  "northwest", "northwes", "northwe", "northw",
+  "northwest", "nw",
   "north", "nort", "nor", "no", "n",
+  "northeast", "ne"
 }
 
-local function specialExitMatch(exitDescription, exitUsed)
-  if exitDescription then
-    if type(exitDescription) ~= "string" then
-      tecErrorNotification("function specialExitMatch, argument 1 expected string variable receive a "..type(exitDescription))
+local zMovement = {
+  "up", "u",
+  "down", "d"
+}
+
+--returns the room id a special exit leads to
+--intended to be used with captured user movement commands that are special exit commands.
+local function specialExitMatch(playerCmd)
+  if playerCmd then
+    if type(playerCmd) ~= "string" then
+      tecErrorNotification("function specialExitMatch, argument 1 expected string variable receive a "..type(playerCmd))
       return
-    end --if type(exitDescriptionUsed) ~= "string"
+    end --if type(playerCmd) ~= "string"
   else 
     tecErrorNotification("function specialExitMatch, argument 1 expected received nil")
-  end --if exitDescription
-  if exitUsed then
-    if type(exitUsed) ~= "string" then
-      tecErrorNotification("function specialExitMatch, argument 2 expected string variable receive a "..type(exitUsed))
-      return
-    end --if type(exitDescriptionUsed) ~= "string"
-  else 
-    tecErrorNotification("function specialExitMatch, argument 2 expected received nil")
-  end --if exitUsed
+  end --if playerCmd
   
-  exitDescription = exitDescription:lower() --make certain variables are lower case, so matching will be more accurate
-  exitUsed = exitUsed:lower() --make certain variables are lower case, so matching will be more accurate
+  playerCmd = playerCmd:lower() --make certain variables are lower case, so matching will be more accurate
+  parthiaMap.specialExitAttempted = true --records if a special exit was attempted. Used to automatically create a special exit for mappers.
+  
+  local plCmdExitNum = playerCmd:match("^(%d+)%s") --capture the number at the start of the line, if it is there.
+  local plCmdExitDesc = playerCmd:match("^%d*%s*(.+)%s*") --capture the description of the exit provided in the player's command
+  
+  mapDebug("function specialExitMatch, playerCmd: \""..playerCmd.."\" plCmdExitNum: "..tostring(plCmdExitNum).." plCmdExitDesc: \""..plCmdExitDesc.."\"\n")
+  
+  if plCmdExitNum == nil then plCmdExitNum = 1 end --if the player did not specify an exit number check for the first match
+  plCmdExitNum = tonumber(plCmdExitNum) --convert it to number for future matching
 
-  if exitUsed:match("^%d") then --if the command the player sent starts with a number.
-    --get number from the start of the string.
-  end
+  spExits = getSpecialExitsSwap(parthiaMap.room.id) --collect special exits in this room
+  
+  --check if players command perfectly matches a special exit a mapper created
+  --sort the table in order the rooms these exits appear in the SKOOT 6 message
+  local sortedSpExits = {}
+  for exitDesc,exitRoomID in pairs(spExits) do
+    ----check if the players command perfectly matches a special exit.
+    if exitDesc == playerCmd then
+      mapDebug("function specialExitMatch, found special exit match at: \""..exitRoomID.."\" to roomID: "..exitRoomID.."\n")
+      parthiaMap.specialExitMovement = exitRoomID
+      return exitRoomID --found the correct exit type. Return it's room ID
+    end --if exitDesc == playercmd
+    --sort the exits table
+    local sortKey = tonumber(exitDesc:match("#(%d)$"))
+    if sortKey then
+      table.insert(sortedSpExits, sortKey, exitDesc)
+      mapDebug("&lt;orange&gt;function specialExitMatch, failed to find a room order for exit: "..exitDesc.."&lt;reset&gt;")
+    end --if sortKey
+  end --for pairs(spExits)
+  
+  --find the exit the player is looking for in the sortedSpExits table
+  local i = 0 --iterator to keep track of how many exits are found of the type from the players command
+  for _,v in pairs(sortedSpExits) do
+    i = i + 1
+    if v:match(plCmdExitDesc) then --if the exit type the player is checking for exists.
+      if i == plCmdExitNum then
+        for exitDesc, exitRoomID in pairs(spExits) do
+          if v == exitDesc then
+            mapDebug("function specialExitMatch, found special exit match at: \""..v.."\" to roomID: "..exitRoomID.."\n")
+            parthiaMap.specialExitMovement = exitRoomID
+            return exitRoomID --found the correct exit type. Return it's room ID
+          end --if v == exitDesc
+        end --for pairs(spExits)
+      end --if i == plCmdExitNum
+    end --if v:match(plCmdExitDesc)
+  end --for pairs(sortedSpExits)
+
+  mapDebug("&lt;orange&gt;function specialExitMatch, failed to find a special exit from command player ran.&lt;reset&gt;\n")
 
 end --local function specialExitMatch(exit)
 
-function parthiaMap.detectDirection(dir)
-  dir = dir or parthiaMap.directionWalked
-  dir = dir:lower()
+function parthiaMap.detectDirection(playerCmd)
+  playerCmd = playerCmd or parthiaMap.directionWalked
+  playerCmd = playerCmd:lower()
+  parthiaMap.playerCmd = playerCmd --record the command the player used
   
-  --if this does not have a chance of z movement, stop the function.
-  if table.contains(parthiaMap.notZMovement, dir) then return end
-
-  if parthiaMap.upAvailable then --if it is possible for the player to move up
-    if dir == "up" then --player is going up
-      parthiaMap.directionWalked = "up"
-      parthiaMap.dirtectionCollected = true
-      mapDebug("function detectDirection, directionWalked up found.")
-      return
-    elseif parthiaMap.room.exits["up"].description:match(dir) then
-      parthiaMap.directionWalked = "up"
-      parthiaMap.dirtectionCollected = true
-      mapDebug("function detectDirection, directionWalked up found.")
-      return
-    end --if parthiaMap.room.exits["up"].description:match(dir)
-  end --if parthiaMap.upAvailable
-  
-  if parthiaMap.downAvailable then --if it is possible for the player to move down
-    if dir == "down" then --player is going down
-      parthiaMap.directionWalked = "down"
-      parthiaMap.dirtectionCollected = true
-      mapDebug("function parthiaMap.horizontalTracking, directionWalked down found.")
-      return
-    elseif parthiaMap.room.exits["down"].description:match(dir) then
-      parthiaMap.directionWalked = "down"
-      parthiaMap.dirtectionCollected = true
-      mapDebug("function parthiaMap.horizontalTracking, directionWalked down found.")
-      return
-    end --if parthiaMap.room.exits["down"].description:match(dir)
-  end --if parthiaMap.downAvailable
-  
+  --if this is Z movement
+  if table.contains(zMovement, playerCmd) then
+    if parthiaMap.upAvailable then --if it is possible for the player to move up
+      if playerCmd == "up" then --player is going up
+        parthiaMap.directionWalked = "up"
+        parthiaMap.dirtectionCollected = true
+        mapDebug("function detectDirection, directionWalked up found.")
+        return
+      elseif parthiaMap.room.exits["up"].description:match(playerCmd) then
+        parthiaMap.directionWalked = "up"
+        parthiaMap.dirtectionCollected = true
+        mapDebug("function detectDirection, directionWalked up found.")
+        return
+      end --if parthiaMap.room.exits["up"].description:match(playerCmd)
+    end --if parthiaMap.upAvailable
+    
+    if parthiaMap.downAvailable then --if it is possible for the player to move down
+      if playerCmd == "down" then --player is going down
+        parthiaMap.directionWalked = "down"
+        parthiaMap.dirtectionCollected = true
+        mapDebug("function parthiaMap.horizontalTracking, directionWalked down found.")
+        return
+      elseif parthiaMap.room.exits["down"].description:match(playerCmd) then
+        parthiaMap.directionWalked = "down"
+        parthiaMap.dirtectionCollected = true
+        mapDebug("function parthiaMap.horizontalTracking, directionWalked down found.")
+        return
+      end --if parthiaMap.room.exits["down"].description:match(playerCmd)
+    end --if parthiaMap.downAvailable
+  elseif table.contains(parthiaMap.notZMovement, playerCmd) then
+    --code to adjust standardmovement goes here.
+  else --if the input is not a standard movement, a special exit command was used
+    specialExitMatch(playerCmd) --find what exit, than room ID this command leads to
+  end --if not table.contains(parthiaMap.notZMovement, playerCmd)
 end --parthiaMap.horizontalTracking</script>
 					<eventHandlerList />
 				</Script>
@@ -9892,6 +10328,91 @@ end</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.findSpecialExits(exitEcho)</name>
+					<packageName></packageName>
+					<script>--[[
+finds the description for all the current rooms exits.
+Store this in the parthiaMap.room.exits table.
+these descriptions will stored in userdata
+  than used when a player runs a command to use a keyword on an exit.
+method
+players runs `go 2 door`
+mapper 
+]]--
+function parthiaMap.findSpecialExits(exitEcho)
+  exitEcho = exitEcho or parthiaMap.room.exitEcho
+  local previousRoomType = ""
+  parthiaMap.room.specialExits = {}
+  local spExitToDir = {} --keep track of special exits for directions
+  local lastSpExit = "" --keep track of the last special exit that appears 
+  
+  for exit in string.gmatch( exitEcho, "00[^0]%x[^0]%x\"&gt;(.-)&lt;\/" ) do --find exits for this room
+    
+    --upwards and downwards is not a function exit type. Though it appears on the exit echo
+    if exit == "upwards" then exit = "up" end
+    if exit == "downwards" then exit = "down" end
+    
+    --if this exit is a standard exit name
+    if table.contains(parthiaMap.directions, exit) then 
+      
+      --record the direction(s) special exits go
+      if #spExitToDir &gt; 1 then --there has been more than one exit since the last standard exit
+        for k,v in ipairs(spExitToDir) do --loop through those previous special exits found
+          table.insert(parthiaMap.room.specialExits[v],exit) --record the direction those special exits go in
+        end --for ipairs(spExitToDir)
+      else --there is has only been one special exit since last
+        table.insert(parthiaMap.room.specialExits[lastSpExit],exit)
+      end --if #spExitToDir &gt; 1
+      spExitToDir = {} --prevents duplicate entries
+    
+    else --this is a special exit
+    
+      --track special exits
+      table.insert(spExitToDir, exit)
+      parthiaMap.room.specialExits[exit] = {}
+      lastSpExit = exit --keep track of the last special exit used
+      
+    end --if table.contains(parthiaMap.directions, exit)
+    
+    if table.contains(parthiaMap.directions, exit) then --if this exit is a standard exit name
+      local exitIsADoor = false --will tell addRoom function if there is a door at this exit
+      if previousRoomType:lower():match("door") or previousRoomType:lower():match("gate") then --check if this exit is a door or gate
+        exitIsADoor = true 
+      end --if previousRoomType:lower():match("door") or previousRoomType:lower():match("gate")
+      parthiaMap.room.exits[exit] = { door = exitIsADoor } --mark that this direction is a door or a gate so the mapper can add a door later.
+      if exit == "up" then --if this exit allows player to move up or down
+        parthiaMap.upAvailable = true --needed because go u could be short for something other than go up
+        parthiaMap.room.exits[exit].description = previousRoomType --keep track of a description of the exit. Use this to compair against movement commands like go ladder
+      elseif exit == "down" then
+        parthiaMap.downAvailable = true --needed because go d, could be used as short for go door
+        parthiaMap.room.exits[exit].description = previousRoomType --keep track of a description of the exit. Use this to compair against movement commands like go ladder
+      end --if exit == "up"
+    end --if table.contains(parthiaMap.directions, exit)
+    previousRoomType = exit --Keep track of the last room type used.
+  end --for string.gmatch( line, "0020ff\"&gt;(%P+)&lt;\/" )
+  
+  local tmpCurrentRoomType = exitEcho:match("^You arrive at (%P+)%p")
+  if tmpCurrentRoomType then --if something was found above.
+    if parthiaMap.getEnabled() then --if player is using parthiaMap
+      parthiaMap.room.name = tmpCurrentRoomType --collect this description for a room name.
+    end --if parthiaMap.getEnabled()
+  end --if tmpCurrentRoomType
+
+  --collection direction walked for mapper
+    if not parthiaMap.dirtectionCollected then --if we have not collection a movement direction yet do so now.
+      parthiaMap.directionWalked = exitEcho:match(" You are facing (%a+)%.")
+      if parthiaMap.directionWalked then
+        mapDebug("function addlinksToDirections, Direction walked: "..parthiaMap.directionWalked)
+      else
+        mapDebug("function addlinksToDirections, could collect direction walked")
+      end --if parthiaMap.directionWalked
+    end --if not parthiaMap.dirtectionCollected
+    parthiaMap.dirtectionCollected = false --reset directionCollected for next movement.
+
+end --function parthiaMap.findSpecialExits()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
 					<name>parthiaMap.findRoomExits()</name>
 					<packageName></packageName>
 					<script>--[[
@@ -9919,69 +10440,69 @@ We will check for matching rooms to exits by the exits in the parthiaMap.room.co
 --for each know exit, find what room it leads to than track that.
 function sortAdjacentRooms()
   
-  for exitDirection,exitTable in pairs(parthiaMap.room.confirmedExits) do --loop through exits know to be for this room
-    if exitTable.open then --make certain the exit is open, if it is not there is no room that it connects to.
-    
-      --If this is a corner exit, find the room it leads to, put that room in the parthiaMap.room.confirmedExits[exitDirection].room table
-      if exitDirection == "northwest" or exitDirection == "southwest" or exitDirection == "southeast" or exitDirection == "northeast" then --if this is a corner exit
-      mapDebug("function sortAdjacentRooms, checking for room at exit: "..exitDirection)
-        --The math for all diaginal movement is the same only variables change
-        if not parthiaMap.room.corners then --if the table does not already exist
-          parthiaMap.room.corners = {} 
-          parthiaMap.room.corners.northwest = { --where the northwest corner is for the current room
-           xpos = parthiaMap.room.xpos, --nw's x position
-           ypos = parthiaMap.room.ypos --nw's y position
-          }
-          parthiaMap.room.corners.northeast = { xpos = parthiaMap.room.xpos+parthiaMap.room.size, ypos = parthiaMap.room.ypos, }
-          parthiaMap.room.corners.southeast = { xpos = parthiaMap.room.xpos+parthiaMap.room.size, ypos = parthiaMap.room.ypos+parthiaMap.room.size, }
-          parthiaMap.room.corners.southwest = { xpos = parthiaMap.room.xpos , ypos = parthiaMap.room.ypos+parthiaMap.room.size}
-        end --if not parthiaMap.room.corners
-        for k,adjacentRoom in ipairs(parthiaMap.room.adjacentRooms) do --loop through rooms know to be adjacent of the players room
-          if not adjacentRoom.sorted then --if the proper exit for this room has not been found yet.
-            local adjacentRoomCorner = {} --Checking for rooms in a corner use the same math for all corners. Only variables change. Use this table to use those variables
-            adjacentRoomCorner.northwest = { --store the x y coords of the corner in this room that matches up with the northwest corner of the players current room
-              xpos = adjacentRoom.xpos+adjacentRoom.size, --x for the corner we want to check
-              ypos = adjacentRoom.ypos+adjacentRoom.size --y for the corner we want to check 
-            } --cornerTable.northwest
-            adjacentRoomCorner.northeast = {xpos = adjacentRoom.xpos, ypos = adjacentRoom.ypos+adjacentRoom.size}
-            adjacentRoomCorner.southeast = {xpos = adjacentRoom.xpos, ypos = adjacentRoom.ypos}
-            adjacentRoomCorner.southwest = {xpos = adjacentRoom.xpos+adjacentRoom.size, ypos = adjacentRoom.ypos}
-            mapDebug("\tfunction sortAdjacentRooms, checking room, adjacentRoom.xpos: "..adjacentRoom.xpos.." adjacentRoom.ypos: "..adjacentRoom.ypos.." adjacentRoom.size: "..adjacentRoom.size)
-            mapDebug("\tfunction sortAdjacentRooms, compairing adjacentRoomCorner[exitDirection].xpos: "..adjacentRoomCorner[exitDirection].xpos.." to parthiaMap.room.corners[exitDirection].xpos "
-            ..parthiaMap.room.corners[exitDirection].xpos.." AND adjacentRoomCorner[exitDirection].ypos: "..adjacentRoomCorner[exitDirection].ypos
-            .." to parthiaMap.room.corners[exitDirection].ypos: "..parthiaMap.room.corners[exitDirection].ypos)
-            if  (adjacentRoomCorner[exitDirection].xpos == parthiaMap.room.corners[exitDirection].xpos) and (adjacentRoomCorner[exitDirection].ypos == parthiaMap.room.corners[exitDirection].ypos) then --if the appropriate corners of the two rooms are aligned this is the correct room for this exit.
-              mapDebug("function sortAdjacentRooms, parthiaMap.room.adjacentRooms.xpos: "..adjacentRoomCorner[exitDirection].xpos.." parthiaMap.room.adjacentRooms.ypos: "..adjacentRoomCorner[exitDirection].ypos.." is "..exitDirection.." of the current room.")
-              parthiaMap.room.confirmedExits[exitDirection].room = adjacentRoom --record info for this room in the appropriate exit table
+  for exitDirection,directionExitsTable in pairs(parthiaMap.room.confirmedExits) do --loop through exits know to be for this room
+    for _, exitTable in ipairs(directionExitsTable) do
+      if exitTable.open then --make certain the exit is open, if it is not there is no room that it connects to.
+        --If this is a corner exit, find the room it leads to, put that room in the parthiaMap.room.confirmedExits[exitDirection].room table
+        if exitDirection == "northwest" or exitDirection == "southwest" or exitDirection == "southeast" or exitDirection == "northeast" then --if this is a corner exit
+        mapDebug("function sortAdjacentRooms, checking for room at exit: "..exitDirection)
+          --The math for all diaginal movement is the same only variables change
+          if not parthiaMap.room.corners then --if the table does not already exist
+            parthiaMap.room.corners = {} 
+            parthiaMap.room.corners.northwest = { --where the northwest corner is for the current room
+             xpos = parthiaMap.room.xpos, --nw's x position
+             ypos = parthiaMap.room.ypos --nw's y position
+            }
+            parthiaMap.room.corners.northeast = { xpos = parthiaMap.room.xpos+parthiaMap.room.size, ypos = parthiaMap.room.ypos, }
+            parthiaMap.room.corners.southeast = { xpos = parthiaMap.room.xpos+parthiaMap.room.size, ypos = parthiaMap.room.ypos+parthiaMap.room.size, }
+            parthiaMap.room.corners.southwest = { xpos = parthiaMap.room.xpos , ypos = parthiaMap.room.ypos+parthiaMap.room.size}
+          end --if not parthiaMap.room.corners
+          for k,adjacentRoom in ipairs(parthiaMap.room.adjacentRooms) do --loop through rooms know to be adjacent of the players room
+            if not adjacentRoom.sorted then --if the proper exit for this room has not been found yet.
+              local adjacentRoomCorner = {} --Checking for rooms in a corner use the same math for all corners. Only variables change. Use this table to use those variables
+              adjacentRoomCorner.northwest = { --store the x y coords of the corner in this room that matches up with the northwest corner of the players current room
+                xpos = adjacentRoom.xpos+adjacentRoom.size, --x for the corner we want to check
+                ypos = adjacentRoom.ypos+adjacentRoom.size --y for the corner we want to check 
+              } --cornerTable.northwest
+              adjacentRoomCorner.northeast = {xpos = adjacentRoom.xpos, ypos = adjacentRoom.ypos+adjacentRoom.size}
+              adjacentRoomCorner.southeast = {xpos = adjacentRoom.xpos, ypos = adjacentRoom.ypos}
+              adjacentRoomCorner.southwest = {xpos = adjacentRoom.xpos+adjacentRoom.size, ypos = adjacentRoom.ypos}
+              mapDebug("\tfunction sortAdjacentRooms, checking room, adjacentRoom.xpos: "..adjacentRoom.xpos.." adjacentRoom.ypos: "..adjacentRoom.ypos.." adjacentRoom.size: "..adjacentRoom.size)
+              mapDebug("\tfunction sortAdjacentRooms, compairing adjacentRoomCorner[exitDirection].xpos: "..adjacentRoomCorner[exitDirection].xpos.." to parthiaMap.room.corners[exitDirection].xpos "
+              ..parthiaMap.room.corners[exitDirection].xpos.." AND adjacentRoomCorner[exitDirection].ypos: "..adjacentRoomCorner[exitDirection].ypos
+              .." to parthiaMap.room.corners[exitDirection].ypos: "..parthiaMap.room.corners[exitDirection].ypos)
+              if  (adjacentRoomCorner[exitDirection].xpos == parthiaMap.room.corners[exitDirection].xpos) and (adjacentRoomCorner[exitDirection].ypos == parthiaMap.room.corners[exitDirection].ypos) then --if the appropriate corners of the two rooms are aligned this is the correct room for this exit.
+                mapDebug("function sortAdjacentRooms, parthiaMap.room.adjacentRooms.xpos: "..adjacentRoomCorner[exitDirection].xpos.." parthiaMap.room.adjacentRooms.ypos: "..adjacentRoomCorner[exitDirection].ypos.." is "..exitDirection.." of the current room.")
+                exitTable.room = adjacentRoom --record info for this room in the appropriate exit table
+                adjacentRoom.sorted = true --this room does not need to be checked again.
+                break --found this exit no need to keep looking.
+              end --if  (cornerTable[exitDirection].xpos == parthiaMap.room.xpos) and (cornerTable[exitDirection].ypos == parthiaMap.room.ypos)
+            end --if not roomTable.sorted
+          end --for ipairs(parthiaMap.room.adjacentRooms)
+        elseif exitDirection == "north" or exitDirection == "south" or exitDirection == "east" or exitDirection == "west" then
+          for k,adjacentRoom in ipairs(parthiaMap.room.adjacentRooms) do --loop through rooms know to be adjacent of the players room
+            local sidesTable = {} --track where the sides for this room are
+            sidesTable.north = { --remember each side is a line
+              axisMin = adjacentRoom.xpos, --where n starts for this room. Furthest west location
+              axisMax = adjacentRoom.xpos+adjacentRoom.size, --where n ends for this room. Furthest east location
+              oppositeAxis = adjacentRoom.ypos+adjacentRoom.size, --Where n is on y or it's north south location
+              exitAxis = exitTable.xpos, --where the exit is on x, east west
+              exitOppositeAxis = round(exitTable.ypos) --where the exit is on y, north south
+            } --sidesTable
+            sidesTable.south = { axisMin = adjacentRoom.xpos, axisMax = adjacentRoom.xpos+adjacentRoom.size, oppositeAxis = adjacentRoom.ypos , exitAxis = exitTable.xpos, exitOppositeAxis = round(exitTable.ypos)}
+            sidesTable.east = { axisMin = adjacentRoom.ypos, axisMax = adjacentRoom.ypos+adjacentRoom.size, oppositeAxis = adjacentRoom.xpos , exitAxis = exitTable.ypos, exitOppositeAxis = round(exitTable.xpos)}
+            sidesTable.west = { axisMin = adjacentRoom.ypos, axisMax = adjacentRoom.ypos+adjacentRoom.size, oppositeAxis = adjacentRoom.xpos+adjacentRoom.size, exitAxis = exitTable.ypos, exitOppositeAxis = round(exitTable.xpos) }
+            --using variables above is the exit we are checking within the side of the adjacent that shares a side with the current room
+            if sidesTable[exitDirection].exitAxis &gt;= sidesTable[exitDirection].axisMin and sidesTable[exitDirection].exitAxis &lt;= sidesTable[exitDirection].axisMax
+            and sidesTable[exitDirection].exitOppositeAxis == sidesTable[exitDirection].oppositeAxis then
+              exitTable.room = adjacentRoom --record info for this room in the appropriate exit table
               adjacentRoom.sorted = true --this room does not need to be checked again.
-              break --found this exit no need to keep looking.
-            end --if  (cornerTable[exitDirection].xpos == parthiaMap.room.xpos) and (cornerTable[exitDirection].ypos == parthiaMap.room.ypos)
-          end --if not roomTable.sorted
-        end --for ipairs(parthiaMap.room.adjacentRooms)
-      elseif exitDirection == "north" or exitDirection == "south" or exitDirection == "east" or exitDirection == "west" then
-        for k,adjacentRoom in ipairs(parthiaMap.room.adjacentRooms) do --loop through rooms know to be adjacent of the players room
-          local sidesTable = {} --track where the sides for this room are
-          sidesTable.north = { --remember each side is a line
-            axisMin = adjacentRoom.xpos, --where n starts for this room. Furthest west location
-            axisMax = adjacentRoom.xpos+adjacentRoom.size, --where n ends for this room. Furthest east location
-            oppositeAxis = adjacentRoom.ypos+adjacentRoom.size, --Where n is on y or it's north south location
-            exitAxis = exitTable.xpos, --where the exit is on x, east west
-            exitOppositeAxis = round(exitTable.ypos) --where the exit is on y, north south
-          } --sidesTable
-          sidesTable.south = { axisMin = adjacentRoom.xpos, axisMax = adjacentRoom.xpos+adjacentRoom.size, oppositeAxis = adjacentRoom.ypos , exitAxis = exitTable.xpos, exitOppositeAxis = round(exitTable.ypos)}
-          sidesTable.east = { axisMin = adjacentRoom.ypos, axisMax = adjacentRoom.ypos+adjacentRoom.size, oppositeAxis = adjacentRoom.xpos , exitAxis = exitTable.ypos, exitOppositeAxis = round(exitTable.xpos)}
-          sidesTable.west = { axisMin = adjacentRoom.ypos, axisMax = adjacentRoom.ypos+adjacentRoom.size, oppositeAxis = adjacentRoom.xpos+adjacentRoom.size, exitAxis = exitTable.ypos, exitOppositeAxis = round(exitTable.xpos) }
-          --using variables above is the exit we are checking within the side of the adjacent that shares a side with the current room
-          if sidesTable[exitDirection].exitAxis &gt;= sidesTable[exitDirection].axisMin and sidesTable[exitDirection].exitAxis &lt;= sidesTable[exitDirection].axisMax
-          and sidesTable[exitDirection].exitOppositeAxis == sidesTable[exitDirection].oppositeAxis then --
-            parthiaMap.room.confirmedExits[exitDirection].room = adjacentRoom --record info for this room in the appropriate exit table
-            adjacentRoom.sorted = true --this room does not need to be checked again.
-          end --if sidesTable[exitDirection].exitAxis &gt;= sidesTable[exitDirection].axisMin and sidesTable[exitDirection].exitAxis &lt;= sidesTable[exitDirection].axisMax and sidesTable[exitDirection].exitOppositeAxis == sidesTable[exitDirection].oppositeAxis
-        end --for ipairs(parthiaMap.room.adjacentRooms)
-      
-      end --if exitDirection.match("northwest")
-    end --if exitTable.open
-  end --for ipairs(parthiaMap.room.confirmedExits)
+            end --if sidesTable[exitDirection].exitAxis &gt;= sidesTable[exitDirection].axisMin and sidesTable[exitDirection].exitAxis &lt;= sidesTable[exitDirection].axisMax and sidesTable[exitDirection].exitOppositeAxis == sidesTable[exitDirection].oppositeAxis
+          end --for ipairs(parthiaMap.room.adjacentRooms)
+        end --if exitDirection.match("northwest")
+      end --if exitTable.open
+    end --for ipairs(directionExitsTable)
+  end --for pairs(parthiaMap.room.confirmedExits)
 end --function sortAdjacentRooms()
 
 --[[
@@ -10025,20 +10546,33 @@ local function sortRoomExits(roomExits)
         { exit = "north", axisPoint = roomYMin,  exitAxis = yposRounded, exitOppositeAxis = roomExits.xpos, oppositeAxisMin = roomXMin, oppositeAxisMax = roomXMax, acceptableDirection = "ver"},
         { exit = "south", axisPoint = roomYMax,  exitAxis = yposRounded, exitOppositeAxis = roomExits.xpos, oppositeAxisMin = roomXMin, oppositeAxisMax = roomXMax, acceptableDirection = "ver"},
       } --end sidesTable
-      for k,side in ipairs(sidesTable) do --Loop through the sidesTable above
+      for _,side in ipairs(sidesTable) do --Loop through the sidesTable above
         if side.axisPoint == side.exitAxis then --if the side we are checking shares an access point with the exit.
           if side.exitOppositeAxis &gt;= side.oppositeAxisMin and side.exitOppositeAxis &lt;= side.oppositeAxisMax then --Make certain the exit is in the current rooms area
               if side.acceptableDirection == roomExits.direction then --if the orientation for the exit is correct for this side
-                if not parthiaMap.room.confirmedExits[side.exit] then --if the exit side is not already tracked and confirmed
-                  parthiaMap.room.confirmedExits[side.exit] = roomExits --sort the exit
-                  return --Found the side this exit belongs on. No further checks needed.
-                elseif not parthiaMap.room.confirmedExits[side.exit.."2"] then --if there is already one exit in this direction, track the second
-                  parthiaMap.room.confirmedExits[side.exit.."2"] = roomExits --sort the exit
-                  return --Found the side this exit belongs on. No further checks needed.
-                elseif not parthiaMap.room.confirmedExits[side.exit.."3"] then --if there is already one exit in this direction, track the third
-                  parthiaMap.room.confirmedExits[side.exit.."3"] = roomExits --sort the exit
-                  return --Found the side this exit belongs on. No further checks needed.
-                end --if not parthiaMap.room.confirmedExits[side.exit], elseif series
+                if not parthiaMap.room.confirmedExits[side.exit] then --if the exit side is not already tracked and confirmed             
+                  parthiaMap.room.confirmedExits[side.exit] = {}
+                  table.insert(parthiaMap.room.confirmedExits[side.exit], roomExits)
+                  return --Found the side this exit belongs on. No further checks needed.     
+                else --a table has already been created for this exit.
+                  local position
+                  if side.exit == "east" or side.exit == "west" then
+                    position = "ypos"
+                  elseif side.exit == "north" or side.exit == "south" then
+                    position = "xpos"
+                  else
+                    local errorFound = "failed to find position while sorting multiple exits for a single side."
+                    tecWarningNotification("function parthiaMap.sortRoomExits, "..errorFound)
+                    return errorFound
+                  end
+                  for k,v in ipairs(parthiaMap.room.confirmedExits[side.exit]) do
+                    if v[position] &gt; roomExits[position] then --TEC sees most western, or norther exits as primary
+                      mapDebug("function sortRoomExits, Inserting room into exit: "..side.exit.." at key: "..k.."\n")
+                      table.insert(parthiaMap.room.confirmedExits[side.exit], k, roomExits) --insert this exit into it's correct order. According to 
+                      return --Found the side this exit belongs on. No further checks needed.
+                    end --if v[position] &gt; roomExits[position]
+                  end --for ipairs(parthiaMap.room.confirmedExits[side.exit])
+                end --if not parthiaMap.room.confirmedExits[side.exit]
               end --if acceptableDirection == roomExits.direction
           end --if side.exitOppositeAxis &gt;= side.oppositeAxisMin and side.exitOppositeAxis &lt;= side.oppositeAxisMax
         end --if side.axisPoint == side.exitAxis
@@ -10065,7 +10599,8 @@ local function sortRoomExits(roomExits)
             --mapDebug("\tChecking corner.direction: "..corner.direction.." agains roomExits.direction: "..roomExits.direction)
             if roomExits.direction == corner.direction then --is the orentation for the exit's icon on the TEC Map of the corrent type for this corner?
               if not parthiaMap.room.confirmedExits[corner.exit] then --make certain the corner is was not already sorted
-                parthiaMap.room.confirmedExits[corner.exit] = roomExits --Sort this exit to it's correct direction for this exit on the TEC Map
+                parthiaMap.room.confirmedExits[corner.exit] = {}
+                table.insert(parthiaMap.room.confirmedExits[corner.exit],roomExits)
                 return --found what we were looking for
               else --for some reason this exit has already been sorted!
                 tecWarningNotification("function sortRoomExits, found second corner.direction:"..corner.direction.." exit.")
@@ -10136,18 +10671,175 @@ function parthiaMap.setEnabled(mode, displayToScreen)
   displayToScreen = fuzzyBoolean(displayToScreen)
   
   tecSettings.parthiaMapEnabled = mode --set the state for parthiaMap
+  debugToDisplay("function parthiaMap.setEnabled, set tecSettings.parthiaMapEnabled to "..tostring(mode))
   
   if displayToScreen then 
     if mode then --mapping was enabled
       pecho("Parthia map enabled.\n")
-      debugToDisplay("Parthia map enabled.")
     else --mapping was disabled
       pecho("Parthia map disabled.\n")
-      debugToDisplay("Parthia map disabled.")
     end --if mode
     dontForgetToSave() --remind player to save their changes
   end --if displayToScreen
+  
 end --parthiaMap.setEnabled(mode, displayToScreen)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.getStepsGoUp()</name>
+					<packageName></packageName>
+					<script>--[[
+Used to check if steps that go in non vertical directions go up or down.
+
+Useage: 
+if parthiaMap.getStepsGoUp() then
+  --code that adds to z movement here
+else
+  --code that removes from z movement here
+end
+
+This function is used in parthiaMap.Move function
+]]--
+function parthiaMap.getStepsGoUp()
+  return parthiaMap.stepsGoUp
+end --function parthiaMap.getStepsGo()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.setStepsGoUp(mode, displayToScreen)</name>
+					<packageName></packageName>
+					<script>--[[
+sets variable parthiaMap.stepsGoUp
+This variable is true by default. Seting is function parthiaMap.config
+if true steps go up, add to Z access
+if false steps go down, remove from Z access
+
+Usage:
+parthiaMap.setStepsGoUp(true, true) --would set steps to go up and display a message to screen
+parthiaMap.setStepsGoUp(false) --would set steps to go down
+parthiaMap.setStepsGoUp() --would set steps to go down
+
+This function is used in aliases:
+parthia map steps go down
+parthia map steps go up
+]]--
+function parthiaMap.setStepsGoUp(mode, displayToScreen)
+  --make certain variables passed are good
+  mode = fuzzyBoolean(mode)
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  
+  parthiaMap.stepsGoUp = mode --tell parthia map if steps go up or down
+  parthiaMap.playerClimbed = false --if true the player climbed during their last movement.
+  mapDebug("parthiaMap.setStepsGoUp, set parthiaMap.stepsGoUp to: "..tostring(mode))
+  
+  if displayToScreen then --if true display a message to screen
+    if mode then --if true steps go up, or z gets added to
+      pecho("When steps are used with horizontal movement methods they will be considered to go up. Z access will get added to when steps are used.\n")
+    else --false means steps go down, or z gets subtracted from
+      pecho("When steps are used with horizontal movement methods they will be considered to go down. Z access will get subtracted from when steps are used.\n")
+    end --if mode
+    pecho("This setting does not have a method to save to file.\n")
+  end --if displayToScreen
+  
+end --parthiaMap.setStepsGoUp(mode, displayToScreen)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.setCharacterLocation(id, displayToScreen)</name>
+					<packageName></packageName>
+					<script>--[[
+sets the room the current character is in
+This function is called in alias `parthia map character move`, functions parthiaMap.Move, parthiaMap.addRoom, and parthiaMap.checkCharacter
+usage:
+parthiaMap.setCharacterLocation(id, displayToScreen)
+  id, is a room id.
+  displayToScreen, controls if messages are shown on main console.
+examples:
+  parthiaMap.setCharacterLocation(3) --sets the characters location on the parthia map to room id 3. Messages on only displayed to debug and error consoles.
+  local errorFound = parthiaMap.setCharacterLocation(3) --sets the characters location on the parthia map to room id 3. Messages on only displayed to debug and error consoles. If errors are found a message describing them is put into variable errorFound
+  parthiaMap.setCharacterLocation(3, true) --sets the characters location on the parthia map to room id 3. Messages displayed on main console and all error and debug consoles.
+]]--
+function parthiaMap.setCharacterLocation(id, displayToScreen)
+  id = id or parthiaMap.room.id --set id to current rooms id
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  
+  if id then
+    local roomsAreaID = getRoomArea(id) --check if this room id has an area set.
+    if roomsAreaID then --all rooms are know to have areas. We are using this to verify this room exists.
+      parthiaMap.room.id = id --update the current room's id
+    else --the room does not exist
+      local errorFound = "Attempted to change character location to room id: "..id.." the room was not found."
+      if displayToScreen then pecho(errorFound) end
+      tecWarningNotification("function parthiaMap.setCharacterLocation, "..errorFound)
+      return roomsAreaID
+    end --if roomExists
+    centerview(id) --highly characters room on the map
+    parthiaMap.currentAreaID = roomsAreaID --collect the area ID of the current room
+    --reset movement variables to defaults
+    parthiaMap.playerClimbed = false
+    parthiaMap.specialExitMovement = false
+    parthiaMap.specialExitAttempted = false --records if a special exit was attempted. Used to automatically create a special exit for mappers.
+    if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name] then --if the current character has location in the map save table.
+      parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].roomID = id --record the id to the map settings save table
+      parthiaMap.room.id = id --record the ID to the mapper current room's id.
+      local errorFound = parthiaTableSave(parthiaMap.saveTable, parthiaMap.savePath, false, false) --save the location change to file. So location is know on startup.
+      if errorFound then --an error was found
+        if displayToScreen then --display error message to file
+          tecErrorNotification("function parthiaMap.setCharacterLocation, "..errorFound)
+        else --do not display error message to file.
+          tecErrorNotification("function parthiaMap.setCharacterLocation, "..errorFound, false)
+        end --if displayToScreen
+      end --if errorFound
+      if displayToScreen then pecho("Player in room id: "..tostring(id)..".\n") end
+    else
+      tecWarningNotification("function parthiaMap.setCharacterLocation, table key parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name] unavailable.")
+    end --if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name]
+  else --no room id is available
+    local errorFound = "No room ID after data verification.\n"
+    if displayToScreen then pecho(errorFound) end
+    tecWarningNotification("function parthiaMap.setCharacterLocation, "..errorFound)
+    return errorFound
+  end --if id
+end --function parthiaMap.setCharacterLocation(id, displayToScreen)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.checkCharacter()</name>
+					<packageName></packageName>
+					<script>--[[
+This function changes the character that is currently logged in and on the map
+It is called in trigger: `stats` within function setStatsCheckActive(false), only when it is sent false. Indicating stats collection and space filtering has completed
+This function needs the character name to run. the stats filter is what collects the playername
+]]--
+function parthiaMap.checkCharacter(displayToScreen)
+  local character = ""
+  if parthiaPlayer.CurrentCharacter.name then --if logged into a character account
+    character = parthiaPlayer.CurrentCharacter.name
+  else --if the stats command does not work, the player is in the welcome room
+    character = "Welcome Room ID"
+    parthiaPlayer.CurrentCharacter.name = character
+  end --if parthiaPlayer.CurrentCharacter.name
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  if not parthiaMap.saveTable[character] then --if this character does not exist in the table parthiaMap uses to save
+    parthiaMap.saveTable[character] = {}
+    if displayToScreen then pecho("A character name of \""..character.."\", was not found in save file.") end
+    mapDebug("function parthiaMap.checkCharacter, created table for character \""..character.."\" in the parthiaMap.saveTable table.")
+  end --if not parthiaMap.saveTable[character]
+  
+  if parthiaMap.saveTable[character].roomID then --if the player had a previously saved location
+    local errorFound = parthiaMap.setCharacterLocation(parthiaMap.saveTable[character].roomID) --sets the current characters location and centers map view on that room
+    if errorFound then --if an error occured while attempting to set the current character's location
+      local errorMessage = "Unable to move character, error recived from setCharacterLocation is: "..errorFound
+      if displayToScreen then pecho(errorMessage) end
+      tecWarningNotification("function parthiaMap.checkCharacter, received error from parthiaMap.setCharacterLocation. Error was: "..errorMessage)
+    else --no errors found
+      local parthiaMessage = "Moved character "..character.." to room ID: "..parthiaMap.saveTable[character].roomID.."\n"
+      if displayToScreen then pecho(parthiaMessage) end
+      mapDebug("function parthiaMap.checkCharacter, "..parthiaMessage)
+    end --if errorFound
+--code for finding a room hash here
+  end --if parthiaMap.saveTable[character].roomID
+end --parthiaMap.loadCharater(character)</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -10318,7 +11010,6 @@ tecCompass = tecCompass or {
 tecCompass.window = Geyser.Container:new({
   name = "Compass",    -- give it a unique name here
   x=0, y=0,                   -- I am uncertain if adjusting this will move it within the GUIframe box it will be in
-  width = 0, height=0, -- width and height of 0 because it will be passed to GUIframe
 })
 
 --back label for tecCompass
@@ -10663,8 +11354,7 @@ UIManagerRegisterWindow(parthiaMapWindow)</script>
 
 roomCharacters = Geyser.Container:new({
   name = "Room Characters",    -- give it a unique name here
-  x=0, y=0,                   
-  width = 0, height=0, 
+  x=0, y=0
 })
 
 --box that will store the miniconsoles

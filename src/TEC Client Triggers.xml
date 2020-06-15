@@ -67,7 +67,12 @@ parthiaDrawMapRooms()
 --We want the map zoom level, but not 100 times.
 if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
 
-deleteLine() --remove line from main console. line variable remains unchanged.</script>
+deleteLine() --remove line from main console. line variable remains unchanged.
+
+--SKOOT 10 is our last room data message. Use data collected from TEC to manage parthiaMap
+if parthiaMap.getEnabled() then --if player is using parthiaMap
+  tempTimer(.25, "parthiaMap.Move()")
+end --if parthiaMap.getEnabled()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -134,9 +139,9 @@ if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
 deleteLine() --remove line from main console. line variable remains unchanged.
 
 --SKOOT 10 is our last room data message. Use data collected from TEC to manage parthiaMap
-if parthiaMap.getEnabled() then --if player is using parthiaMap
-  parthiaMap.Move()
-end --if parthiaMap.getEnabled()</script>
+--if parthiaMap.getEnabled() then --if player is using parthiaMap
+--  parthiaMap.Move()
+--end --if parthiaMap.getEnabled()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -693,12 +698,16 @@ if statsFilter.lineCount &gt; 37 then --if loop count higher than number of line
 end --if statsFilter.lineCount &gt; 37
 
 --Remove these to items if they are found.
-if line == ""
+if line:match("This command is only available in the world of Midlight. Please enter the game to use it.") then --if player is in welcome area
+  if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+  setStatsCheckActive(false) --tell Parthia we will not be collecting stats data
+elseif line == ""
 or line == "Attributes:"
 or line == "Character Background"
 or line == "Physical Characteristics"
 or line == "To see a list of skills and actions your character knows, type: skills"
 or line == "You are currently sitting.  Stats are shown in real time.  Stand up to see your maximum stats."
+or line == "You are currently laying.  Stats are shown in real time.  Stand up to see your maximum stats."
 or line:match("^Character Sheet for")
 or line:match("&lt;/pre&gt;&lt;pre&gt;&lt;font size=%+1&gt;&lt;b&gt;Character Sheet for %w+%s?%w*&lt;/b&gt;&lt;/font&gt;&lt;/font&gt;") then
   if not statsFilter.displayToScreen then deleteLine() end --Delete main's line if we are not displaying it to screen
@@ -710,8 +719,6 @@ elseif line == "&lt;hr&gt;" then
 elseif line == "&lt;/pre&gt;" then --end of stats command found.
 	setStatsCheckActive(false)--disable stats filter, it is done
   deleteLine() --Make is so line does not appear in main console.
-elseif line:match("This command is only available in the world of Midlight. Please enter the game to use it.") then
-  if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
 else --all other lines we will want to look for data to collect
   if line:match("^Name:") then --line starts with Name:
     parthiaPlayer.CurrentCharacter.name, parthiaPlayer.CurrentCharacter.homeLand = 
@@ -796,7 +803,6 @@ else --all other lines we will want to look for data to collect
     parthiaPlayer.CurrentCharacter.willpower
     = line:match("Willpower:%s+(%a+%s%a*%s?%a*)")
     if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
---Willpower:  good
   end --if line:match("^Name:")
 end</script>
 				<triggerType>0</triggerType>
@@ -1053,7 +1059,9 @@ tecResetRoomCharacterWindow()
 --collect player data, 1 second wait due to one command per second limitation
 --runConditionCollection(false)
 parthiaPlayer.CurrentCharacter = { }
-local statsCollectionTimer = tempTimer(1.1, [[runStatsCollection(false)]])</script>
+local statsCollectionTimer = tempTimer(1.1, [[runStatsCollection(false)]])
+
+parthiaMap.notMovement = true --tell parthiaMap.Move function this is not actual movement.</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1860,6 +1868,8 @@ if parthiaMap.getEnabled() then --if player is using parthiaMap
   parthiaMap.downAvailable = false
   parthiaMap.TECMapRooms = {} --clear the rooms table so it will not overlap
   parthiaMap.trackPreviousRoom() --movement complete keep track of what the previous room was
+  parthiaMap.room.exitEcho = line --record the echo to a variable to sort data from it at a later time.
+  parthiaMap.findSpecialExits() --find special exit names for this room and direction walked if not collected already
 end --if parthiaMap.getEnabled()
 
 --Set default text in room characters window
@@ -2043,25 +2053,16 @@ end --if parthiaMap.getEnabled()</script>
 					<integer>3</integer>
 				</regexCodePropertyList>
 			</Trigger>
-		</TriggerGroup>
-		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-			<name>parthia mapper</name>
-			<script></script>
-			<triggerType>0</triggerType>
-			<conditonLineDelta>0</conditonLineDelta>
-			<mStayOpen>0</mStayOpen>
-			<mCommand></mCommand>
-			<packageName></packageName>
-			<mFgColor>#ff0000</mFgColor>
-			<mBgColor>#ffff00</mBgColor>
-			<mSoundFile></mSoundFile>
-			<colorTriggerFgColor>#000000</colorTriggerFgColor>
-			<colorTriggerBgColor>#000000</colorTriggerBgColor>
-			<regexCodeList />
-			<regexCodePropertyList />
-			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>parthia mapper room movement</name>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>player climbed</name>
 				<script>--[[
+If the key word climb appeared. There is a seperate pattern that parthiaMap.Move will look for.
+  That pattern is if a room has an exit but no room attached to it. We know the room that exit leads to is either a closed door, hidden room or both vertical and horizonal movement (normally steps)
+  If we see both a exit that has no room on the Alice TEC Map and the key words You climb are emoted during movement, we know vertical and horizontal movement in a single move is occuring (steps, a ramp or the like)
+]]--
+parthiaMap.playerClimbed = true --we know the player climbed during this movement.
+
+--[[
 We know know the player has climbed.
 If up and down are avilable and we have not already detected the movement direction from player input.
 We are going to see if up, down or both are avialable.
@@ -2069,7 +2070,7 @@ If only one is detected, we assume player has moved that direction.
 If both are available we will compare the exit descriptoinin the echo against the exit descriptions collected from previous mapping
 this method may not be needed.
 This method would only function when light was not available.
-]]--
+
 
 if parthiaMap.getEnabled() then --if player is using parthiaMap
   if not parthiaMap.dirtectionCollected then
@@ -2083,7 +2084,8 @@ if parthiaMap.getEnabled() then --if player is using parthiaMap
       --collect exit decription from map data.
     end
   end --if not parthiaMap.dirtectionCollected
-end --if parthiaMap.getEnabled()</script>
+end --if parthiaMap.getEnabled()
+]]--</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -2101,6 +2103,22 @@ end --if parthiaMap.getEnabled()</script>
 					<integer>2</integer>
 				</regexCodePropertyList>
 			</Trigger>
+		</TriggerGroup>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>parthia mapper</name>
+			<script></script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>failed movement</name>
 				<script>--in case player types goes a direction that is not available than goes in a different direction
@@ -2124,6 +2142,8 @@ end --if parthiaMap.getEnabled()</script>
 					<string>You are not next to anything.</string>
 					<string>It is too dark to see where you are going.</string>
 					<string>^You don't see a &amp;quot;.+&amp;quot; here\.$</string>
+					<string>is closed\.$</string>
+					<string>You are not next to anything.</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>3</integer>
@@ -2131,6 +2151,8 @@ end --if parthiaMap.getEnabled()</script>
 					<integer>3</integer>
 					<integer>3</integer>
 					<integer>1</integer>
+					<integer>1</integer>
+					<integer>3</integer>
 				</regexCodePropertyList>
 			</Trigger>
 		</TriggerGroup>
