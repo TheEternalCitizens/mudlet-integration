@@ -6685,7 +6685,7 @@ function parthiaDrawMapRooms()
   	--Convert the size of the room to draw into % of its size on the map.
     --size / 240 = decimalNumber like .3333. Multiply decimalNumber by 100, that is your % 
     sizeScaler = tecMapPixelToPercent(size)
-  
+--[[ 
   	if getTECMapDebugMode() then --if Display Debug Mod is on.
     	debugToDisplay("Map Room "..tostring(mapRoomsLC).." xpos: "..tostring(tonumber(xpos)+120)
   		.." xposScaler: "..tostring(xposScaler)
@@ -6694,7 +6694,7 @@ function parthiaDrawMapRooms()
       .." color: "..tostring(tecMapRoomcolor))
     	cecho(mapRoom[mapRoomsLC].name,tostring(mapRoomsLC),blue,"c") --put room # on label
   	end --end if DisplayDebugMode is true
-    	
+]]--   	
     mapRoom[mapRoomsLC]:move(tostring(xposScaler).."%", tostring(yposScaler).."%") --Move the room into position.
     mapRoom[mapRoomsLC]:resize(tostring(sizeScaler).."%", tostring(sizeScaler).."%") --Change the rooms size.
   	--using style sheets set the shape and color of the room
@@ -6741,7 +6741,7 @@ open if the Exit is open. 1 is open 0 is closed.
 function parthiaDrawMapExits()
   --look through line for the data pattern to get exit data. Input them into variables.
   for xpos, ypos, exitDirection, exitOpen in string.gmatch( line, "(-?%d+),(-?%d+),(%w+),(%d+),?" ) do
-  
+--[[  
   	if getTECMapDebugMode() then --if Display Debug Mode is on.
     	debugToDisplay("Map Exit "..tostring(mapExitsLC).." xpos: "
   		..tostring(tonumber(xpos)+120).." xposScaler: "..tostring(xposScaler)
@@ -6752,7 +6752,7 @@ function parthiaDrawMapExits()
   		.." Height: "..tecExit[exitDirection].height
       .." Style sheet: "..tecExit[exitDirection][exitOpen].tecExitStyleSheet)
   	end --end if DisplayDebugMode is true
-  
+]]--  
   	--pulling sizes from the tecExit table resize the label for the icon	
     mapExit[mapExitsLC]:resize(tecExit[exitDirection].width, tecExit[exitDirection].height)
   	--Now set the style sheet for the  
@@ -9382,7 +9382,10 @@ parthiaMap = parthiaMap or {} --table to hold the mapper data.
 --parthiaMap.room.exitEcho = "" --the message that echos to screen as a player enters a room, that lists a description for this rooms exits
 --parthiaMap.specialExitMovement = false --sets to the room id the exit leads to when player runs a command that uses a special exit.
 --parthiaMap.specialExitAttempted = false --records if a special exit was attempted. Used to automatically create a special exit for mappers.
---parthiaMap.playerCmd = false --the command the player used during this movement. be a carinal direction if player used a shorthand for one</script>
+--parthiaMap.playerCmd = false --the command the player used during this movement. be a carinal direction if player used a shorthand for one
+--parthiaMap.entryIndex = 1 --index used to tell what exit was entered through to get to current room
+--parthiaMap.exitIndex = 1 --index used to tell what exit was exited through from previous room to get to current room
+--parthiaMap.descriptionOfExitUsed = "" --stores the description of the exit player used.</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
 					<name>parthiaMap.resetRoom()</name>
@@ -9548,43 +9551,61 @@ end --function parthiaMap.changeArea(areaNameOrID)</script>
 					<packageName></packageName>
 					<script>--call when mapping is ready to connect the exits of the players previous and current rooms
 function parthiaMap.connectRooms()
-
-  --connect exit stubs that appear on map.
-  mapDebug("function parthiaMap.connectRooms, connecting previous room ID: "..parthiaMap.previousRoom.id.." to current room ID "..parthiaMap.room.id.." using current room exit "..parthiaMap.getEntranceDirection())
-  setExit(parthiaMap.previousRoom.id, parthiaMap.room.id, parthiaMap.directionWalked)
-  setExit(parthiaMap.room.id, parthiaMap.previousRoom.id, parthiaMap.getEntranceDirection())
-  
   local entryDir = parthiaMap.getEntranceDirection()
   local exitDir = parthiaMap.directionWalked
-  
-  --create the special exits that connect these two rooms
+  local entryIndex = parthiaMap.entryIndex --index used to tell what exit was entered through to get to current room
+  local exitIndex = parthiaMap.exitIndex --index used to tell what exit was exited through from previous room to get to current room
+  local plCmdExitDesc = parthiaMap.playerCmd:match("^%d*%s*(.+)%s*") --capture the description of the exit provided in the player's command
+
+  if not parthiaMap.specialExitAttempted then --if the movement was a cardinal direction
+    --connect exit stubs that appear on map.
+    mapDebug("function parthiaMap.connectRooms, connecting previous room ID: "..parthiaMap.previousRoom.id.." to current room ID "..parthiaMap.room.id.." using previous room exit "..parthiaMap.directionWalked..". In if not parthiaMap.specialExitAttempted.")
+    setExit(parthiaMap.previousRoom.id, parthiaMap.room.id, parthiaMap.directionWalked)
+    mapDebug("function parthiaMap.connectRooms, connecting current room ID: "..parthiaMap.room.id.." to previous room ID "..parthiaMap.previousRoom.id.." using current room exit "..parthiaMap.getEntranceDirection().."In if not parthiaMap.specialExitAttempted.")
+    setExit(parthiaMap.room.id, parthiaMap.previousRoom.id, parthiaMap.getEntranceDirection())
+  end --if not parthiaMap.specialExitAttempted
 
   --get the special exit that leads to the previous room
   local entrySpecialExit = "" --will store what special exit leads to previous room
   for spExitName,spExitTbl in pairs(parthiaMap.room.specialExits) do --look through the special exits in this room
-    for k,spExDirection in ipairs(spExitTbl) do --list exits each special exit type leads in
-      if spExDirection == entryDir then --if this exit goes the direction entered
-        entrySpecialExit = spExitName:lower()
-        --change here for multi exit in single direction
-        break --stop as we found what we are looking for
-      end --if spExDirection == parthiaMap.getEntranceDirection()
-    end --ipairs(spExitTbl)
-  end --for pairs(parthiaMap.room.specialExits)
-  --get the special exit used to get to this room
-  local exitedSpecialExit = ""
-  for spExitName,spExitTbl in pairs(parthiaMap.previousRoom.specialExits) do --look through the special exits in this room
-    for k,spExDirection in ipairs(spExitTbl) do --list exits each special exit type leads in
-      if spExDirection == exitDir then --if this exit goes the direction entered
-        exitedSpecialExit = spExitName:lower()
-        --change here for multi exit in single direction
-        break --stop as we found what we are looking for
-      end --if spExDirection == parthiaMap.getEntranceDirection()
+    if parthiaMap.descriptionOfExitUsed:lower() == spExitName:lower() then
+      entrySpecialExit = spExitName:lower()
+      break --stop as we found what we are looking for
     end --ipairs(spExitTbl)
   end --for pairs(parthiaMap.room.specialExits)
   
+  --get the special exit used to get to this room
+  local exitedSpecialExit = ""
+  for spExitName,spExitTbl in pairs(parthiaMap.previousRoom.specialExits) do --look through the special exits in this room
+    if parthiaMap.descriptionOfExitUsed:lower() == spExitName:lower() then
+      exitedSpecialExit = spExitName:lower()
+    end --ipairs(spExitTbl)
+  end --for pairs(parthiaMap.room.specialExits)
+  
+  --find what order the previous room appeared in the SKOOT 6 message
+  local entrySpecialExitRoomOrder = ""
+  for k,v in ipairs(parthiaMap.room.adjacentRooms) do --loop through rooms that are next to this one
+    --find the previous room in the adjacentRooms table
+    if  parthiaMap.room.confirmedExits[entryDir][entryIndex].room.ypos == v.ypos
+    and parthiaMap.room.confirmedExits[entryDir][entryIndex].room.xpos == v.xpos then
+      entrySpecialExitRoomOrder = k --record the order the room appear in on SKOOT 6 message
+      break --stop as we found what we are looking for
+    end ----find the order the room appear in on SKOOT 6 message
+  end --ipairs(parthiaMap.room.adjacentRooms)
+  --find the order this room appeared in the previous rooms SKOOT 6 message
+  local exitedSpecialExitRoomOrder = ""
+  for k,v in ipairs(parthiaMap.previousRoom.adjacentRooms) do --loop through rooms that are next to this one
+    --find the previous room in the adjacentRooms table
+    if  parthiaMap.previousRoom.confirmedExits[exitDir][exitIndex].room.ypos == v.ypos
+    and parthiaMap.previousRoom.confirmedExits[exitDir][exitIndex].room.xpos == v.xpos then
+      exitedSpecialExitRoomOrder = k --record the order the room appear in on SKOOT 6 message
+      break --stop as we found what we are lookg for
+    end ----find the order the room appear in on SKOOT 6 message
+  end --ipairs(parthiaMap.room.adjacentRooms)
+
   --make unique exit, a special exit that does not appear on the exits echo list. Requires the person mapping to manually use the exit.
   if parthiaMap.specialExitAttempted then --if a special exit was attempted this movement.
-    local uniqueExit = exitedSpecialExit:match(parthiaMap.playerCmd) --if the players command is not already about to be mapped. 
+    local uniqueExit = exitedSpecialExit:match(plCmdExitDesc) --if the players command is not already about to be mapped. 
     if not uniqueExit then --if there was no match to the
       addSpecialExit(parthiaMap.previousRoom.id, parthiaMap.room.id, parthiaMap.playerCmd)
       mapDebug("function parthiaMap.connectRooms, unique exit from room id: "..parthiaMap.previousRoom.id.." to room id: "..parthiaMap.room.id.." exit type: \""..parthiaMap.playerCmd.."\"")
@@ -9594,41 +9615,28 @@ function parthiaMap.connectRooms()
   --if movement is up or down. Create the special exit now. Stopping further data sorting
   if entryDir == "up" or entryDir == "down" then 
     addSpecialExit(parthiaMap.previousRoom.id, parthiaMap.room.id, exitedSpecialExit)
-    mapDebug("function parthiaMap.connectRooms, special exit from room id: "..parthiaMap.previousRoom.id.." to room id: "..parthiaMap.room.id.." exit ype: \""..exitedSpecialExit.."\"")
+    mapDebug("function parthiaMap.connectRooms, special exit from room id: "..parthiaMap.previousRoom.id.." to room id: "..parthiaMap.room.id.." exit type: \""..exitedSpecialExit.."\"")
     addSpecialExit(parthiaMap.room.id, parthiaMap.previousRoom.id, entrySpecialExit)
-    mapDebug("function parthiaMap.connectRooms, special exit from room id: "..parthiaMap.room.id.." to room id: "..parthiaMap.previousRoom.id.." exit ype: \""..exitedSpecialExit.."\"")
+    mapDebug("function parthiaMap.connectRooms, special exit from room id: "..parthiaMap.room.id.." to room id: "..parthiaMap.previousRoom.id.." exit type: \""..exitedSpecialExit.."\"")
     return --function has done what was needed. Stop it.
   end --if entryDir == "up" or entryDir == "down"
   
-  --find what order the previous room appeared in the SKOOT 6 message
-  local entrySpecialExitRoomOrder = ""
-  for k,v in ipairs(parthiaMap.room.adjacentRooms) do --loop through rooms that are next to this one
-    --find the previous room in the adjacentRooms table
-    if  parthiaMap.room.confirmedExits[entryDir][1].room.ypos == v.ypos
-    and parthiaMap.room.confirmedExits[entryDir][1].room.xpos == v.xpos then
-      entrySpecialExitRoomOrder = k --record the order the room appear in on SKOOT 6 message
-      --change here for multi exit in single direction
-      break --stop as we found what we are lookg for
-    end ----find the order the room appear in on SKOOT 6 message
-  end --ipairs(parthiaMap.room.adjacentRooms)
-  --find the order this room appeared in the previous rooms SKOOT 6 message
-  local exitedSpecialExitRoomOrder = ""
-  for k,v in ipairs(parthiaMap.previousRoom.adjacentRooms) do --loop through rooms that are next to this one
-    --find the previous room in the adjacentRooms table
-    if  parthiaMap.previousRoom.confirmedExits[exitDir][1].room.ypos == v.ypos
-    and parthiaMap.previousRoom.confirmedExits[exitDir][1].room.xpos == v.xpos then
-      exitedSpecialExitRoomOrder = k --record the order the room appear in on SKOOT 6 message
-      --change here for multi exit in single direction
-      break --stop as we found what we are lookg for
-    end ----find the order the room appear in on SKOOT 6 message
-  end --ipairs(parthiaMap.room.adjacentRooms)
-  
-  --create the special exits to link room and previousRoom
+  --create a standard special exit.
   --parthiaMap.previousRoom.id, parthiaMap.room.id, parthiaMap.directionWalked
   addSpecialExit(parthiaMap.previousRoom.id, parthiaMap.room.id, exitedSpecialExit.."@#"..exitedSpecialExitRoomOrder)
-  mapDebug("function parthiaMap.connectRooms, special exit from room id: "..parthiaMap.previousRoom.id.." to room id: "..parthiaMap.room.id.." exit ype: \""..exitedSpecialExit.."@#"..exitedSpecialExitRoomOrder.."\"")
+  mapDebug("function parthiaMap.connectRooms, special exit from room id: "..parthiaMap.previousRoom.id.." to room id: "..parthiaMap.room.id.." exit type: \""..exitedSpecialExit.."@#"..exitedSpecialExitRoomOrder.."\". Inside else of if parthiaMap.specialExitAttempted.")
   addSpecialExit(parthiaMap.room.id, parthiaMap.previousRoom.id, entrySpecialExit.."@#"..entrySpecialExitRoomOrder)
-  mapDebug("function parthiaMap.connectRooms, special exit from room id: "..parthiaMap.room.id.." to room id: "..parthiaMap.previousRoom.id.." exit ype: \""..exitedSpecialExit.."@#"..exitedSpecialExitRoomOrder.."\"")
+  mapDebug("function parthiaMap.connectRooms, special exit from room id: "..parthiaMap.room.id.." to room id: "..parthiaMap.previousRoom.id.." exit type: \""..exitedSpecialExit.."@#"..exitedSpecialExitRoomOrder.."\". Inside else of if parthiaMap.specialExitAttempted")
+
+  if parthiaMap.specialExitAttempted then --special movement while mapping used
+    if #parthiaMap.room.confirmedExits[entryDir] &lt; 2 then
+      setExit(parthiaMap.room.id, parthiaMap.previousRoom.id, parthiaMap.getEntranceDirection())
+      addCustomLine(parthiaMap.room.id, parthiaMap.previousRoom.id, parthiaMap.directionWalked, "solid line", {127,127,127}, false)
+      mapDebug("function parthiaMap.connectRooms, exit from id: "..parthiaMap.room.id.." to room id: "..parthiaMap.previousRoom.id.." going direction "..parthiaMap.getEntranceDirection()..". In if parthiaMap.specialExitAttempted.")
+    else
+      pecho("&lt;green&gt;Multiple exits found in each room of movement. You will need to return to the previous room to map the path from this room, to the previous room.&lt;reset&gt;\n")
+    end --if #parthiaMap.room.confirmedExits[entryDir] &lt; 2
+  end --if parthiaMap.specialExitAttempted
 end --function parthiaMap.connectRooms()</script>
 					<eventHandlerList />
 				</Script>
@@ -9643,6 +9651,9 @@ end --function parthiaMap.connectRooms()</script>
   room = room or parthiaMap.room
   previousRoom = previousRoom or parthiaMap.previousRoom
   directionWalked = directionWalked or parthiaMap.directionWalked
+  local entryIndex = 1 --key for the exit in confirmed exits table. For the current room's exit that was used to enter the room
+  local exitIndex = 1 --key for the exit in confirmed exits table. For the previous room's exit that was used to enter this room
+  local entryDir = parthiaMap.getEntranceDirection() --direction player entered current room
   local x,y,z = 0,0,0 --coordinates for current location
   local dir = directionWalked --direction player walked
   if room.xpos and room.ypos and room.size then --if we have the data to set the current rooms area set to rooms area
@@ -9658,27 +9669,74 @@ end --function parthiaMap.connectRooms()</script>
   end --if room.xpos and room.ypos and room.size
 
   if previousRoom then --if we are not mapping the first room
+  
+    --find the keys needed for exited and entered exits.
+    if parthiaMap.previousRoom.confirmedExits then --verify the exits table exists
+      if parthiaMap.previousRoom.confirmedExits[dir] and parthiaMap.room.confirmedExits[entryDir] then --make certain this is not an exitless movement
+        if #parthiaMap.previousRoom.confirmedExits[dir] &gt; 1 --only do if either the current or previous room have multiple exits.
+        or #parthiaMap.room.confirmedExits[entryDir] &gt; 1 then
+          --loop through current and previous room confirmedExits tables, find what room coordinate leads to the previous room
+          for previousRoomExitsKey, previousRoomExit in ipairs(parthiaMap.previousRoom.confirmedExits[dir]) do --loop through previous room's exits
+            --get a target coordinate that will match the correct room coordinates in the confirmed exits table
+            if previousRoomExit.room then --if a room was found for this exit.
+            local targetCoord = parthiaMap.room.size * .5 --We need to adjust x and y by half the room's size
+            if targetCoord &lt; 1 then targetCoord = 0 end --if the previous room is size 1 we do not adjust by size
+            local previousRoomAdjust = parthiaMap.previousRoom.size * .5 --We need to adjust x and y by half the room's size
+            if previousRoomAdjust &lt; 1 then previousRoomAdjust = 0 end --if the previous room is size 1 we do not adjust by size
+            targetCoord = -(targetCoord + previousRoomAdjust) --invert variable, it will be use to represent top left corner of the previousRoom
+            --loop through current exits, seeing if the room they lead to is the previousRoom
+            for currentRoomExitsKey, currentRoomExits in ipairs(parthiaMap.room.confirmedExits[entryDir]) do --loop through current rooms exits
+              --pecho("previousRoomExit.room.xpos: "..previousRoomExit.room.xpos.." currentRoomExits.room.xpos: "..currentRoomExits.room.xpos.." targetCoord: "..targetCoord.."\n")
+              --pecho("previousRoomExit.room.ypos: "..previousRoomExit.room.ypos.." currentRoomExits.room.ypos: "..currentRoomExits.room.ypos.." targetCoord: "..targetCoord.."\n")
+              if  previousRoomExit.room.xpos + currentRoomExits.room.xpos == targetCoord
+              and previousRoomExit.room.ypos + currentRoomExits.room.ypos == targetCoord then
+                entryIndex = currentRoomExitsKey
+                exitIndex = previousRoomExitsKey
+                break --stop the loop found what we are looking for
+              end --if  previousRoomExit.room.xpos + parthiaMap.room.confirmedExits[entryDir][entryIndex].room.xpos == xTarget
+            end --for ipairs(parthiaMap.room.confirmedExits[entryDir])
+            end --if previousRoomExit.room
+          end --for ipairs(parthiaMap.previousRoom.confirmedExits[dir])
+        end --if #parthiaMap.previousRoom.confirmedExits[dir] &gt; 1
+      end --if parthiaMap.previousRoom.confirmedExits[dir] and parthiaMap.room.confirmedExits[entryDir]
+    end --if parthiaMap.previousRoom.confirmedExits
+    
+    parthiaMap.entryIndex = entryIndex --index used to tell what exit was entered through to get to current room
+    parthiaMap.exitIndex = exitIndex --index used to tell what exit was exited through from previous room to get to current room
+
     --We are at a known location within the map data, use that to track location.
     if previousRoom.id then --if we had a previous room
-      if parthiaMap.specialExitMovement then --if a special exit was used during this movement
-        room.coords = {getRoomCoordinates(parthiaMap.specialExitMovement)} --record room coordinates
-        parthiaMap.setCharacterLocation(parthiaMap.specialExitMovement) --center on the new room, make certain character location gets saved
-        mapDebug("function parthiaMap.Move, able to get current room ID "..room.id.." from previous rooms special exits table")
-        return
-      else --a special exit was not used this movement.
-        --current work, place if specialExitUsed code here.
-        local previousArea = getRoomArea(previousRoom.id)
-        if parthiaMap.currentAreaID == previousArea then --supports creating new area where movement in previous area would have been legal. Like creating new area while in welcome area logging into a character than attempting to map the game world
-          local previousExits = getRoomExits(previousRoom.id) --exits in previous room holds neighboring room IDs.
-          if previousExits[dir] then --The last room the character was in has this rooms ID in its exits table
-            room.coords = {getRoomCoordinates(previousExits[dir])}
-            room.id = previousExits[dir] --collect the current room's id
-            parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
-            mapDebug("function parthiaMap.Move, able to get current room ID "..room.id.." from previous rooms exits table.")
-            return --stop the function
-          end --if previousExits[dir]
-        end --if parthiaMap.currentAreaID == previousArea then
-      end --if parthiaMap.specialExitMovement
+      local previousArea = getRoomArea(previousRoom.id) --get the area id for the last room
+      if parthiaMap.currentAreaID == previousArea then --supports creating new area where movement in previous area would have been legal. Like creating new area while in welcome area logging into a character than attempting to map the game world
+        if parthiaMap.specialExitMovement then --if a special exit was used during this movement
+          room.coords = {getRoomCoordinates(parthiaMap.specialExitMovement)} --record room coordinates
+          parthiaMap.setCharacterLocation(parthiaMap.specialExitMovement) --center on the new room, make certain character location gets saved
+          mapDebug("function parthiaMap.Move, able to get current room ID "..room.id.." from previous rooms special exits table.")
+          return parthiaMap.specialExitMovement --stop function return id moved to
+        else --all other movement types
+          if parthiaMap.mapping then --if creating new maps
+            if not parthiaMap.specialExitAttempted then --if this is a standard cardinal movement. Needing when 
+              local previousExits = getRoomExits(previousRoom.id)--exits in previous room holds neighboring room IDs.
+              if previousExits[dir] then --The last room the character was in has this rooms ID in its exits table
+                room.coords = {getRoomCoordinates(previousExits[dir])}
+                room.id = previousExits[dir] --collect the current room's id
+                parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
+                mapDebug("function parthiaMap.Move, able to get current room ID "..room.id.." from previous rooms exits table. Inside if not parthiaMap.specialExitAttempted.")
+                return room.id --stop function return id moved to
+              end --if previousExits[dir]
+            end --if not parthiaMap.specialExitAttempted
+          else --not creating new maps.
+              local previousExits = getRoomExits(previousRoom.id)--exits in previous room holds neighboring room IDs.
+              if previousExits[dir] then --The last room the character was in has this rooms ID in its exits table
+                room.coords = {getRoomCoordinates(previousExits[dir])}
+                room.id = previousExits[dir] --collect the current room's id
+                parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
+                mapDebug("function parthiaMap.Move, able to get current room ID "..room.id.." from previous rooms exits table.")
+                return room.id --stop function return id moved to
+              end --if previousExits[dir]
+          end --if parthiaMap.mapping
+        end --if parthiaMap.specialExitMovement else
+      end --if parthiaMap.currentAreaID == previousArea then
     end --if previousRoom.id
 
     mapDebug("function parthiaMap.Move, Unable to find current room ID from previous room exits table. Calculating it now")
@@ -9719,9 +9777,7 @@ end --function parthiaMap.connectRooms()</script>
   end --if previousRoom
 
   --Character is in an unmapped area. Find coordinates and create a room if
-  mapDebug("function parthiaMap.Move, getting room coordinates room.size: "..room.size
-    .." previousRoom.size: "..previousRoom.size
-    .." directionWalked: "..directionWalked.."\n")
+  mapDebug("function parthiaMap.Move, getting room coordinates room.size: "..room.size.." previousRoom.size: "..previousRoom.size.." directionWalked: "..directionWalked.."\n")
 
   --determin where the new room needs to be.
   if dir == "u" or dir == "up" then
@@ -9730,13 +9786,12 @@ end --function parthiaMap.connectRooms()</script>
     z = z - 1
   else --movement is not up or down
     if parthiaMap.previousRoom then --if this is not the first movement.
-      if parthiaMap.previousRoom.confirmedExits[dir] then --verify there is a exit in the direction player is moving
-        if parthiaMap.previousRoom.confirmedExits[dir][1].room then --verify there is a room on the map for this exit
+      if parthiaMap.room.confirmedExits[entryDir] then --verify there is a exit in the direction player is moving
+        if parthiaMap.room.confirmedExits[entryDir][entryIndex].room then --verify there is a room on the map for this exit
           local roomSizeAdjustment = parthiaMap.room.size * .5 --We need to adjust x and y by half the room's size
           if roomSizeAdjustment &lt; 1 then roomSizeAdjustment = 0 end --if the previous room is size 1 we do not adjust by size
-          entryDir = parthiaMap.getEntranceDirection()
-          y = y + parthiaMap.room.confirmedExits[entryDir][1].room.ypos + roomSizeAdjustment --use the location of the current room in reference to the previous room to decide the players coordinates
-          x = x + -(parthiaMap.room.confirmedExits[entryDir][1].room.xpos) - roomSizeAdjustment ---use the location of the current room in reference to the previous room to decide the players coordinates
+          y = y + parthiaMap.room.confirmedExits[entryDir][entryIndex].room.ypos + roomSizeAdjustment --use the location of the current room in reference to the previous room to decide the players coordinates
+          x = x + -(parthiaMap.room.confirmedExits[entryDir][entryIndex].room.xpos) - roomSizeAdjustment ---use the location of the current room in reference to the previous room to decide the players coordinates
         else --The mapper did not show a room in this direction. Meaning vertical movement with horizonal directional command.
 --[[
 Prefface below. That code can not handle a large room with many smaller rooms exiting into it, or (vice versa) a direction with multiple exits.
@@ -9767,7 +9822,7 @@ Fix is probably using the two room sizes to resolve.
             y = y+(1*room.size)
             x = x-(1*room.size)
           end --if dir ==
-          
+
           if parthiaMap.mapping then
             pecho("Movement through an exit that had no room on the TEC provided map occured.\n"..
                   "Please verify this rooms position on the Parthia Map matches its position in the TEC Map. Room pips in Parthia map should be at the upper left corner of where that room appears on the TEC Map.\n"..
@@ -9793,8 +9848,8 @@ Fix is probably using the two room sizes to resolve.
               end --if parthiaMap.mapping
             end --if parthiaMap.getStepsGoUp()
           end --if parthiaMap.playerClimbed
-        end --if parthiaMap.previousRoom.confirmedExits[dir].room
-      end --if parthiaMap.previousRoom.confirmedExits[dir]
+        end --if parthiaMap.room.confirmedExits[entryDir][1].room
+      end --if parthiaMap.room.confirmedExits[entryDir]
     end --if parthiaMap.previousRoom
   end --if dir == "u" or dir == "up"
 
@@ -9818,12 +9873,6 @@ Fix is probably using the two room sizes to resolve.
   end --if roomFound[0]
   
   parthiaMap.save(false) --movement successful, save new room ID to file.
-
-  --moved to function parthiaMap.setCharacterLocation  
-  --reset movement variables to defaults
-  --parthiaMap.playerClimbed = false
-  --parthiaMap.specialExitMovement = false
-  --parthiaMap.specialExitAttempted = false --records if a special exit was attempted. Used to automatically create a special exit for mappers.
   
   mapDebug("function parthiaMap.Move, Completed mapping space that was previously unmapped.")
 
@@ -10076,8 +10125,8 @@ local function specialExitMatch(playerCmd)
   playerCmd = playerCmd:lower() --make certain variables are lower case, so matching will be more accurate
   parthiaMap.specialExitAttempted = true --records if a special exit was attempted. Used to automatically create a special exit for mappers.
   
-  local plCmdExitNum = playerCmd:match("^(%d+)%s") --capture the number at the start of the line, if it is there.
-  local plCmdExitDesc = playerCmd:match("^%d*%s*(.+)%s*") --capture the description of the exit provided in the player's command
+  local plCmdExitNum = playerCmd:match("^%s*(%d+)%s") --capture the number at the start of the line, if it is there.
+  local plCmdExitDesc = playerCmd:match("^%s*%d*%s*(.+)%s*") --capture the description of the exit provided in the player's command
   
   mapDebug("function specialExitMatch, playerCmd: \""..playerCmd.."\" plCmdExitNum: "..tostring(plCmdExitNum).." plCmdExitDesc: \""..plCmdExitDesc.."\"\n")
   
@@ -10092,7 +10141,7 @@ local function specialExitMatch(playerCmd)
   for exitDesc,exitRoomID in pairs(spExits) do
     ----check if the players command perfectly matches a special exit.
     if exitDesc == playerCmd then
-      mapDebug("function specialExitMatch, found special exit match at: \""..exitRoomID.."\" to roomID: "..exitRoomID.."\n")
+      mapDebug("function specialExitMatch, found perfect special exit match for player command: "..playerCmd.." to roomID: "..exitRoomID..". Inside if exitDesc == playerCmd")
       parthiaMap.specialExitMovement = exitRoomID
       return exitRoomID --found the correct exit type. Return it's room ID
     end --if exitDesc == playercmd
@@ -10100,20 +10149,21 @@ local function specialExitMatch(playerCmd)
     local sortKey = tonumber(exitDesc:match("#(%d)$"))
     if sortKey then
       table.insert(sortedSpExits, sortKey, exitDesc)
+    else
       mapDebug("&lt;orange&gt;function specialExitMatch, failed to find a room order for exit: "..exitDesc.."&lt;reset&gt;")
     end --if sortKey
   end --for pairs(spExits)
   
   --find the exit the player is looking for in the sortedSpExits table
-  local i = 0 --iterator to keep track of how many exits are found of the type from the players command
+  local i = 0 --iterator to keep track of how may times the exit exitDesc (exit description from the players command) is found in this rooms special exits table
   for _,v in pairs(sortedSpExits) do
-    i = i + 1
     if v:match(plCmdExitDesc) then --if the exit type the player is checking for exists.
-      if i == plCmdExitNum then
+      i = i + 1 --increase match iterator
+      if i == plCmdExitNum then --if the exit number matches the number the player input.
         for exitDesc, exitRoomID in pairs(spExits) do
           if v == exitDesc then
             mapDebug("function specialExitMatch, found special exit match at: \""..v.."\" to roomID: "..exitRoomID.."\n")
-            parthiaMap.specialExitMovement = exitRoomID
+            parthiaMap.specialExitMovement = exitRoomID --record id to global variable
             return exitRoomID --found the correct exit type. Return it's room ID
           end --if v == exitDesc
         end --for pairs(spExits)
@@ -10564,14 +10614,11 @@ local function sortRoomExits(roomExits)
                     local errorFound = "failed to find position while sorting multiple exits for a single side."
                     tecWarningNotification("function parthiaMap.sortRoomExits, "..errorFound)
                     return errorFound
-                  end
-                  for k,v in ipairs(parthiaMap.room.confirmedExits[side.exit]) do
-                    if v[position] &gt; roomExits[position] then --TEC sees most western, or norther exits as primary
-                      mapDebug("function sortRoomExits, Inserting room into exit: "..side.exit.." at key: "..k.."\n")
-                      table.insert(parthiaMap.room.confirmedExits[side.exit], k, roomExits) --insert this exit into it's correct order. According to 
-                      return --Found the side this exit belongs on. No further checks needed.
-                    end --if v[position] &gt; roomExits[position]
-                  end --for ipairs(parthiaMap.room.confirmedExits[side.exit])
+                  end --if side.exit == "east" or side.exit == "west"
+                  
+                  table.insert(parthiaMap.room.confirmedExits[side.exit], roomExits) --insert this exit into
+                  return --Found the side this exit belongs on. No further checks needed.
+
                 end --if not parthiaMap.room.confirmedExits[side.exit]
               end --if acceptableDirection == roomExits.direction
           end --if side.exitOppositeAxis &gt;= side.oppositeAxisMin and side.exitOppositeAxis &lt;= side.oppositeAxisMax
@@ -10624,7 +10671,7 @@ function parthiaMap.findRoomExits()
   for k,exitToCheck in ipairs(parthiaMap.TECMapExits) do --loop through all exits that appear on the tec map when player is in this room
     local xposRounded = round(exitToCheck.xpos) --rounds to the nearest whole number
     local yposRounded = round(exitToCheck.ypos) --rounds to the nearest whole number
-    mapDebug("function parthiaMap.findRoomExits, checking exit at: xpos: "..exitToCheck.xpos.." Rounded to: "..xposRounded.." and ypos: "..exitToCheck.ypos.." Rounded to: "..round(yposRounded).."\n")
+--    mapDebug("function parthiaMap.findRoomExits, checking exit at: xpos: "..exitToCheck.xpos.." Rounded to: "..xposRounded.." and ypos: "..exitToCheck.ypos.." Rounded to: "..round(yposRounded).."\n")
     if parthiaMap.room.area[xposRounded] then --if the exit shares a xposition with the current room on the TECMap
       if parthiaMap.room.area[xposRounded][yposRounded] then --if the exit shares both an x and y position with the current room.
         table.insert(parthiaMap.room.TECMapExits, table.deepcopy(exitToCheck)) --exit on map is one for this room. Keep track of it
@@ -10779,6 +10826,8 @@ function parthiaMap.setCharacterLocation(id, displayToScreen)
     parthiaMap.playerClimbed = false
     parthiaMap.specialExitMovement = false
     parthiaMap.specialExitAttempted = false --records if a special exit was attempted. Used to automatically create a special exit for mappers.
+    parthiaMap.entryIndex = 1 --index used to tell what exit was entered through to get to current room
+    parthiaMap.exitIndex = 1 --index used to tell what exit was exited through from previous room to get to current room
     if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name] then --if the current character has location in the map save table.
       parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].roomID = id --record the id to the map settings save table
       parthiaMap.room.id = id --record the ID to the mapper current room's id.
