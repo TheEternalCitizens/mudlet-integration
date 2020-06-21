@@ -9677,24 +9677,27 @@ end --function parthiaMap.connectRooms()</script>
         or #parthiaMap.room.confirmedExits[entryDir] &gt; 1 then
           --loop through current and previous room confirmedExits tables, find what room coordinate leads to the previous room
           for previousRoomExitsKey, previousRoomExit in ipairs(parthiaMap.previousRoom.confirmedExits[dir]) do --loop through previous room's exits
+            
             --get a target coordinate that will match the correct room coordinates in the confirmed exits table
-            if previousRoomExit.room then --if a room was found for this exit.
-            local targetCoord = parthiaMap.room.size * .5 --We need to adjust x and y by half the room's size
-            if targetCoord &lt; 1 then targetCoord = 0 end --if the previous room is size 1 we do not adjust by size
-            local previousRoomAdjust = parthiaMap.previousRoom.size * .5 --We need to adjust x and y by half the room's size
-            if previousRoomAdjust &lt; 1 then previousRoomAdjust = 0 end --if the previous room is size 1 we do not adjust by size
-            targetCoord = -(targetCoord + previousRoomAdjust) --invert variable, it will be use to represent top left corner of the previousRoom
-            --loop through current exits, seeing if the room they lead to is the previousRoom
-            for currentRoomExitsKey, currentRoomExits in ipairs(parthiaMap.room.confirmedExits[entryDir]) do --loop through current rooms exits
-              --pecho("previousRoomExit.room.xpos: "..previousRoomExit.room.xpos.." currentRoomExits.room.xpos: "..currentRoomExits.room.xpos.." targetCoord: "..targetCoord.."\n")
-              --pecho("previousRoomExit.room.ypos: "..previousRoomExit.room.ypos.." currentRoomExits.room.ypos: "..currentRoomExits.room.ypos.." targetCoord: "..targetCoord.."\n")
-              if  previousRoomExit.room.xpos + currentRoomExits.room.xpos == targetCoord
-              and previousRoomExit.room.ypos + currentRoomExits.room.ypos == targetCoord then
-                entryIndex = currentRoomExitsKey
-                exitIndex = previousRoomExitsKey
-                break --stop the loop found what we are looking for
-              end --if  previousRoomExit.room.xpos + parthiaMap.room.confirmedExits[entryDir][entryIndex].room.xpos == xTarget
-            end --for ipairs(parthiaMap.room.confirmedExits[entryDir])
+            if previousRoomExit.room and previousRoomExit.open then --if a room was found for this exit.
+              local targetCoord = parthiaMap.room.size * .5 --We need to adjust x and y by half the room's size
+              if targetCoord &lt; 1 then targetCoord = 0 end --if the previous room is size 1 we do not adjust by size
+              local previousRoomAdjust = parthiaMap.previousRoom.size * .5 --We need to adjust x and y by half the room's size
+              if previousRoomAdjust &lt; 1 then previousRoomAdjust = 0 end --if the previous room is size 1 we do not adjust by size
+              targetCoord = -(targetCoord + previousRoomAdjust) --invert variable, it will be use to represent top left corner of the previousRoom
+              --loop through current exits, seeing if the room they lead to is the previousRoom
+              for currentRoomExitsKey, currentRoomExits in ipairs(parthiaMap.room.confirmedExits[entryDir]) do --loop through current rooms exits
+                --pecho("previousRoomExit.room.xpos: "..previousRoomExit.room.xpos.." currentRoomExits.room.xpos: "..currentRoomExits.room.xpos.." targetCoord: "..targetCoord.."\n")
+                --pecho("previousRoomExit.room.ypos: "..previousRoomExit.room.ypos.." currentRoomExits.room.ypos: "..currentRoomExits.room.ypos.." targetCoord: "..targetCoord.."\n")
+                if currentRoomExits.room and previousRoomExit.open then
+                  if  previousRoomExit.room.xpos + currentRoomExits.room.xpos == targetCoord
+                  and previousRoomExit.room.ypos + currentRoomExits.room.ypos == targetCoord then
+                    entryIndex = currentRoomExitsKey
+                    exitIndex = previousRoomExitsKey
+                    break --stop the loop found what we are looking for
+                  end --if  previousRoomExit.room.xpos + parthiaMap.room.confirmedExits[entryDir][entryIndex].room.xpos == targetCoord
+                end
+              end --for ipairs(parthiaMap.room.confirmedExits[entryDir])
             end --if previousRoomExit.room
           end --for ipairs(parthiaMap.previousRoom.confirmedExits[dir])
         end --if #parthiaMap.previousRoom.confirmedExits[dir] &gt; 1
