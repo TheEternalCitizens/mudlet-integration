@@ -323,10 +323,10 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   tecSettings.helpHighlightColor = "SteelBlue"
   
   --default font size. Do not save it to file.
-  tecDefaultFontSize = 14
+  tecDefaultFontSize = 12
   
   --adjustable font size
-  tecSettings.tecFontSize = 14
+  tecSettings.tecFontSize = 12
   
   --Text size applied to tabs.
   tecSettings.tecTabsFontSize = 18
@@ -4586,9 +4586,7 @@ end --function resizeStatusText(statusBars)</script>
 				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>UIManager</name>
 					<packageName></packageName>
-					<script>--[[
-
-]]--</script>
+					<script></script>
 					<eventHandlerList />
 					<Script isActive="yes" isFolder="no">
 						<name>SetUIManager(UIManagerName, displayToScreen)</name>
@@ -5760,15 +5758,24 @@ end --function UIManagerReset</script>
 --Intended to be used within a help system you make.
 function UIManagerHelp()
 
+  --display parthia at the start of display help commands
+  local displayParthia
+  if parthiaDisplayHelp then
+    displayParthia = "parthia "
+  else
+    displayParthia = ""
+  end --if parthiaDisplayHelp
+  parthiaDisplayHelp = false
+
   pecho("Developer display commands:\n")
 
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display add window name", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;"..displayParthia.."display add window name", 
     [[printCmdLine("display add ");
     pecho("Now enter a window name, all to add all windows or list to list supported window names.")]], 
     "Add graphical object", true)
 	pecho(", show a registered window.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display remove window name", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;"..displayParthia.."display remove window name", 
   [[printCmdLine("display remove ");
     pecho("Now enter a window name, all to remove all windows or list to list supported window names.")]], 
   "Remove graphical object", true)
@@ -5776,63 +5783,63 @@ function UIManagerHelp()
   
   pecho("\nPlayer display commands:\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display clear", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;"..displayParthia.."display clear", 
   [[UIManagerClearMainWindow()]], 
   "Remove text from main screen", true)
 	pecho(", clear text from main text console.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display scrollbars enable", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;"..displayParthia.."display scrollbars enable", 
   [[tecSetScrollBars(true)]], 
   "Enable scroll bars", true)
 	pecho(", enable scrollbars in Parthia.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display scrollbars disable", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;"..displayParthia.."display scrollbars disable", 
   [[tecSetScrollBars(false)]], 
   "Hide scroll bars", true)
 	echo(", hide scrollbars in Parthia.\n")
 
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display side list", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;"..displayParthia.."display side list", 
   [[UIManagerEnableSide("list",true,true);
     UIManagerEnableSide("list",false,true);
     pecho("Click a command above to enable or disable a side of the screen.\n")]], 
   "Control what sides are displayed", true)
 	pecho(", enable or disable sides of the screen that hold windows.\n")
 
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window list", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;"..displayParthia.."display window list", 
   [[UIManagerEnableWindow("list",true,true);
     UIManagerEnableWindow("list",false,true);
     pecho("Click a command above to enable or disable a window.\n")]], 
   "List all window commands", true)
 	pecho(", show all windows that can be enabled or disabled.\n")
 
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display images list", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;"..displayParthia.."display images list", 
   [[parthiaSetImages("list", "list", true);]],
   "List commands change images", true)
 	pecho(", change images in Parthia.\n")  
   
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display layout list", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;"..displayParthia.."display layout list", 
   [[UIManagerSetTheme("list",true);
     pecho("Click a command above to switch to a different layout theme.\n")]], 
   "Change windows layout", true)
 	pecho(", change window's layout to a preset theme.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display manager name", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;"..displayParthia.."display manager name", 
   [[SetUIManager("list", true)]], 
   "Change display manager", true)
 	pecho(", change display manager.\n")
 	
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display save", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;"..displayParthia.."display save", 
   [[UIManagerFileSave(true)]], 
   "Save window positions", true)
 	pecho(", save window positions.\n")
 	
-	pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display load", 
+	pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;"..displayParthia.."display load", 
   [[UIManagerFileLoad(true)]], 
   "Load window positions", true)
 	pecho(", reset window positions to last save.\n")
 	
-	pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display reset", 
+	pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;"..displayParthia.."display reset", 
   [[UIManagerReset()]], 
   "Reset window positions", true)
 	pecho(", reset window positions to default.\n")
@@ -5848,8 +5855,6 @@ function UIManagerHelp()
 	pecho(", move windows in display.\n")
   
   pecho("Click a command above or type it into the command line.\n")
-  
-   --Explains how to move tabs
 
 end --function UIManagerHelp</script>
 						<eventHandlerList />
@@ -6141,6 +6146,11 @@ end --end function tecDebugHelp</script>
   "developer commands help", true)
   echo(", developer commands help.\n")
   
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map", 
+  [[parthiaMap.help()]],
+  "List parthia map commands", true)
+  pecho(", commands for parthia's mapper.\n")
+  
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk", 
   [[parthiaTalkHelp()]],
   "parthia talk help", true)
@@ -6156,15 +6166,10 @@ end --end function tecDebugHelp</script>
   "Display version of Parthia", true)
   pecho(", check installed Parthia version.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia beta test yes", 
-  [[tecSetBetaTester(true)]],
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia beta test", 
+  [[tecSetBetaTester()]],
   "Receive beta updates", true)
-  pecho(", Receive beta updates and help us make a reliable client.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia beta test no", 
-  [[tecSetBetaTester(false)]],
-  "Stop receiving beta updates", true)
-  pecho(", No longer receive beta updates.\n")
+  pecho(", Toggle if you received beta updates or not.\n")
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers", 
   [[expandAlias("parthia help developers")]],
@@ -6175,6 +6180,11 @@ end --end function tecDebugHelp</script>
   [[saveHelpDevs(true)]],
   "Save Help Developer data", true)
   pecho(", Save data collected by Help Developers to file.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment", 
+  [[parthiaPlayerDevelopmentHelp()]],
+  "Tools to help player developers", true)
+  pecho(", list commands to assist player developers.\n")
 
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save all", 
   [[tecClientSaveAll(true)]],
@@ -6189,14 +6199,12 @@ end --end function tecDebugHelp</script>
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia load", 
   [[tecFileLoadSettings(true)]],
   "Load client settings from file", true)
-  pecho(", Loads client settings from file. Run -parthia"
-  	.." save- to create a settings file.\n")
+  pecho(", Loads client settings from file. \n")
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia reset", 
   [[tecClientReset(true);dontForgetToSave(true)]],
   "Reset client to default", true)
-  pecho(", Reset client to default client settings. "
-  	.."Run -display reset- to reset display.\n")
+  pecho(", Reset non display client settings to default.\n")
   	
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia reset all", 
   [[tecClientResetAll()]],
@@ -6212,26 +6220,6 @@ end --end function tecDebugHelp</script>
   [[tecReportIssues()]],
   "Report Parthia issues", true)
   pecho(", receive instruction on reporting issues.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment Install", 
-  [[PlayerDev.SetEnabled(true)]],
-  "Install player development folders", true)
-  pecho(", install player development folders.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment uninstall", 
-  [[PlayerDev.SetPackages(false)]],
-  "Uninstall player development folders", true)
-  pecho(", Uninstall player development folders.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment disable", 
-  [[PlayerDev.SetEnabled(false)]],
-  "Disable player development updates", true)
-  pecho(", stop receiving player development code updates.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment update", 
-  [[PlayerDev.Update(true)]],
-  "Check for player development updates", true)
-  pecho(", check for updates to player development folders. Occurs automatically with client updates.\n")
   
   cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia numpad navigation", 
   [[expandAlias("parthia numpad navigation")]],
@@ -6260,11 +6248,11 @@ end --end function tecDebugHelp</script>
   "List custom parthia commands", true)
   pecho(", game commands that exist in parthia only.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display", 
-  [[expandAlias("display")]],
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia display", 
+  [[expandAlias("parthia display")]],
   "List Parthia's display commands", true)
   pecho(", list commands to customize display layout, images and scrollbars in Parthia.\n")
-  
+ 
   pecho("Click a command above or type it into the command line.\n")
 
 end --function tecClientHelp</script>
@@ -6565,14 +6553,40 @@ function parthiaTalkHelp()
     "Speak speech always", true)
   pecho(", speak in game speech even if parthia talk is disabled.\n")
   
-  pecho("\nparthia talk has a short hand version of pt. For example ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;pt enable", 
+  pecho("\nparthia talk has a short hand version of /pt. For example ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/pt enable", 
     [[expandAlias("pt enable")]],
     "Enable parthia talk", true)
   cecho("\n")
   
   pecho("Click a command above or type it into the command line.\n")
 end --function parthiaTalkHelp()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaPlayerDevelopmentHelp()</name>
+					<packageName></packageName>
+					<script>function parthiaPlayerDevelopmentHelp()
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment Install", 
+  [[PlayerDev.SetEnabled(true)]],
+  "Install player development folders", true)
+  pecho(", install player development folders.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment uninstall", 
+  [[PlayerDev.SetPackages(false)]],
+  "Uninstall player development folders", true)
+  pecho(", Uninstall player development folders.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment disable", 
+  [[PlayerDev.SetEnabled(false)]],
+  "Disable player development updates", true)
+  pecho(", stop receiving player development code updates.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment update", 
+  [[PlayerDev.Update(true)]],
+  "Check for player development updates", true)
+  pecho(", check for updates to player development folders. Occurs automatically with client updates.\n")
+end --function parthiaPlayerDevelopmentHelp()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -7431,14 +7445,13 @@ end --function tecColorWindow()</script>
 				<Script isActive="yes" isFolder="no">
 					<name>tecSetBetaTester(betaTester)</name>
 					<packageName></packageName>
-					<script>function tecSetBetaTester(betaTester)
-  betaTester = fuzzyBoolean(betaTester) --make certain nothin odd gets sent.
-  tecSettings.betaTester = betaTester --tell Parthia player is a beta tester.
-  
+					<script>function tecSetBetaTester() 
   if tecSettings.betaTester then
-    pecho("You will now receive beta updates.\n\tThank you this helps us a GREAT deal!\n")
-  else
+    tecSettings.betaTester = false
     pecho("You will not receive beta updates.\n")
+  else
+    tecSettings.betaTester = true
+    pecho("You will now receive beta updates.\n\tThank you this helps us a GREAT deal!\n")
   end --if betaTester
   
   dontForgetToSave() --remind player to save
@@ -9458,7 +9471,18 @@ function parthiaMap.addArea(areaName)
     end --if err
   else --no error found
     pecho("&lt;green&gt;Created new area "..areaName.." with the ID of "..newID..".&lt;reset&gt;\n")
-    parthiaMap.coords = { 0,0,0 } --reset coordinates becuas
+    pecho("Your next step will begin mapping in the new area.\nIf you do not want to map in the new area run commands ")
+    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map character area", 
+      [[printCmdLine("parthia map character area ");
+      pecho("Now type the name of the area to remove and press enter.\n")]],
+      "change mapping area", true)
+    pecho(" or ")
+    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/maparea", 
+      [[printCmdLine("/maparea ");
+        pecho("Now type the name of the area to remove and press enter.\n")]],
+      "change mapping area", true)
+    pecho(". To change to the area you would like to map.")
+    --parthiaMap.coords = { 0,0,0 } --reset coordinates becuas
     parthiaMap.currentAreaID = newID --set the new ID for mapping in the new space
   end --if newID == nil or newID &lt; 1 or err
 end --function parthiaMap.addArea</script>
@@ -9836,18 +9860,26 @@ Fix is probably using the two room sizes to resolve.
             if parthiaMap.getStepsGoUp() then --if mapper has set steps to go up than increase Z
               z = z + 1
               if parthiaMap.mapping then
-                pecho("This movement was considerted to be upward movement. If it was downward movement please delete this room. Go back to your previous room and run command ")
+                pecho("This movement was considerted to be upward movement. If it was downward movement please go back to your previous room. Delete this room. Run command ")
                 pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map steps go down", 
-                          [[parthiaMap.setStepsGoUp(false, true)]],
-                          "Steps take you down while mapping", true)
+                  [[parthiaMap.setStepsGoUp(false, true)]],
+                  "Steps and ramps go up", true)
+                pecho(" or ")
+                pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapdown", 
+                  [[parthiaMap.setStepsGoUp(false, true)]],
+                  "Steps and ramps go down", true)
               end --if parthiaMap.mapping
             else --if mapper has set steps to go down, than decrease z
               z = z - 1
               if parthiaMap.mapping then
-                pecho("This movement was considerted to be downward movement. If it was upward movement please delete this room. Go back to your previous room and run command ")
+                pecho("This movement was considerted to be downward movement. If it was upward movement please go back to your previous room. Delete this room. Run command ")
                 pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map steps go up", 
-                          [[parthiaMap.setStepsGoUp(true, true)]],
-                          "Steps take you up while mapping", true)
+                  [[parthiaMap.setStepsGoUp(true, true)]],
+                  "Steps and ramps go up", true)
+                pecho(" or ")
+                pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapup", 
+                  [[parthiaMap.setStepsGoUp(true, true)]],
+                  "Steps and ramps go down", true)
               end --if parthiaMap.mapping
             end --if parthiaMap.getStepsGoUp()
           end --if parthiaMap.playerClimbed
@@ -10892,6 +10924,163 @@ function parthiaMap.checkCharacter(displayToScreen)
 --code for finding a room hash here
   end --if parthiaMap.saveTable[character].roomID
 end --parthiaMap.loadCharater(character)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.setMapping(displayToScreen)</name>
+					<packageName></packageName>
+					<script>function parthiaMap.setMapping(displayToScreen)
+  --enable or disable new map creation
+  if parthiaMap.mapping then
+    parthiaMap.mapping = false
+    if displayToScreen then pecho("&lt;green&gt;Mapping stopped.&lt;reset&gt;\n") end
+  else
+    parthiaMap.mapping = true
+    if displayToScreen then pecho("&lt;green&gt;Mapping started.&lt;reset&gt;\n") end
+  end
+end</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.help()</name>
+					<packageName></packageName>
+					<script>function parthiaMappingTutorial()
+  pecho("\nVerify mapping is enabled with: ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map enable", 
+    [[parthiaMap.setEnabled(true, true)]],
+    "Enable parthia map", true)
+  pecho("\nTell parthia you want to make new maps with: ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map mapping", 
+    [[parthiaMap.setMapping(true)]],
+    "Toggle new map creation", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/map", 
+    [[parthiaMap.setMapping(true)]],
+    "Toggle new map creation", true)
+  pecho(".\n\nIf wanting to map a new area or no areas exist. Create a new area with command: ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map area add", 
+    [[printCmdLine("parthia map area add ");
+      pecho("Now type the name you would like to give to the new area.\n")]],
+    "create new area", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapareaadd", 
+    [[printCmdLine("/mapareaadd ");
+      pecho("Now type the name you would like to give to the new area.\n")]],
+    "create new area", true)
+    pecho(". If they do no already exist it is recommended to create an area for the welcome Area and at least one for the game world.\n")
+    pecho("\nTo support a second character in game you would need to place them in a know room and run: ")
+      pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map character move", 
+    [[printCmdLine("parthia map character move ");
+      pecho("Now type the room id you would like to move to and press enter.\n")]],
+    "move to room id", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapmove", 
+    [[printCmdLine("/mapmove ");
+      pecho("Now type the room id you would like to move to and press enter.\n")]],
+    "move to room id", true)
+  pecho(". Using the room id you know the character is currently in.\n")
+end
+
+function parthiaMap.help()
+ pecho("Parthia map commands are\n")
+
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map enable", 
+    [[parthiaMap.setEnabled(true, true)]],
+    "Enable parthia map", true)
+  pecho(", enable parthia map.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map disable", 
+    [[parthiaMap.setEnabled(false, true)]],
+    "Enable parthia map", true)
+  pecho(", enable parthia map.\n")
+
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map mapping", 
+    [[parthiaMap.setMapping(true)]],
+    "Toggle new map creation", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/map", 
+    [[parthiaMap.setMapping(true)]],
+    "Toggle new map creation", true)
+  pecho(", toggle new map creation on or off.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map steps go up", 
+    [[parthiaMap.setStepsGoUp(true, true)]],
+    "Steps and ramps go up", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapup", 
+    [[parthiaMap.setStepsGoUp(true, true)]],
+    "Steps and ramps go down", true)
+  pecho(", while mapping steps and ramps go up.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map steps go down", 
+    [[parthiaMap.setStepsGoUp(false, true)]],
+    "Steps and ramps go down", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapdown", 
+    [[parthiaMap.setStepsGoUp(false, true)]],
+    "Steps and ramps go down", true)    
+  pecho(", while mapping steps and ramps go down.\n")
+
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map character move", 
+    [[printCmdLine("parthia map character move ");
+      pecho("Now type the room id you would like to move to and press enter.\n")]],
+    "move to room id", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapmove", 
+    [[printCmdLine("/mapmove ");
+      pecho("Now type the room id you would like to move to and press enter.\n")]],
+    "move to room id", true)
+  pecho(", move to a room id on the map.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map area add", 
+    [[printCmdLine("parthia map area add ");
+      pecho("Now type the name you would like to give to the new area.\n")]],
+    "create new area", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapareaadd", 
+    [[printCmdLine("/mapareaadd ");
+      pecho("Now type the name you would like to give to the new area.\n")]],
+    "create new area", true)
+  pecho(", create new area.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map area remove", 
+    [[printCmdLine("parthia map area remove ");
+      pecho("Now type the name or id of the area to remove and press enter.\n")]],
+    "create new area", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/maparearemove", 
+    [[printCmdLine("/maparearemove ");
+      pecho("Now type the name or id of the area to remove and press enter.\n")]],
+    "create new area", true)    
+  pecho(", create new area.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map area clear", 
+    [[printCmdLine("parthia map area clear ");
+      pecho("Now type the id of the area to clear the rooms from.\n")]],
+    "clear rooms from area", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapareaclear", 
+    [[printCmdLine("/mapareaclear ");
+      pecho("Now type the id of the area to clear the rooms from.\n")]],
+    "clear rooms from area", true)    
+  pecho(", clear rooms from an area.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map character area", 
+    [[printCmdLine("parthia map character area ");
+      pecho("Now type the name of the area to remove and press enter.\n")]],
+    "change mapping area", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/maparea", 
+    [[printCmdLine("/maparea ");
+      pecho("Now type the name of the area to remove and press enter.\n")]],
+    "change mapping area", true)    
+  pecho(", change the area being mapped.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Mapping tutorial", 
+    [[parthiaMappingTutorial()]],
+    "Click for basic mapping tutorial", true)
+  pecho(", display a basic mapping tutorial.\n")
+end --function parthiaMap.help()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
