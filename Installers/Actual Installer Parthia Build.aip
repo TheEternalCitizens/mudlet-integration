@@ -1,5 +1,5 @@
 ﻿[Setup]
-Version=7.6
+Version=8.0
 Edition=1
 GUID={143DE204-C574-4F1B-9870-B5528959BC4C}
 AppName=Parthia Installation
@@ -16,6 +16,7 @@ CheckVersions=0
 CheckMinVer=1.0
 CheckMaxVer=2.0
 CheckNoUpdate=0
+CheckAllowMultiVer=0
 Windows XP=1
 Windows Vista=1
 Windows 7=1
@@ -49,7 +50,7 @@ AR=0
 ARVersion=7
 LinkAR=http://get.adobe.com/reader/
 Java=0
-JavaVersion=0
+JavaVersion=6
 LinkJR=http://www.java.com/en/download/manual.jsp
 SQL=0
 SQLVersion=0
@@ -67,7 +68,7 @@ SetupFolder=C:\Users\David\.config\mudlet\profiles\The Eternal Citizens\Scripts\
 SetupFileName=Install Parthia
 SetupFile=C:\Users\David\.config\mudlet\profiles\The Eternal Citizens\Scripts\mudlet-integration\Installers\Install Parthia.exe
 IconFile=Default
-SourceDir=C:\Users\David\.config\mudlet\profiles\The Eternal City Build Profile
+SourceDir=C:\Users\David\.config\mudlet\profiles\The Eternal City
 InstallationPath=<UserProfile>\.config\mudlet\profiles\The Eternal City
 MainExecutable=
 ProgramGroup=<AppName>
@@ -97,13 +98,15 @@ CheckUpdatePassParam=0
 CheckUpdaterParam=?id=<AppVersion>
 CheckSmartNotification=0
 AllowChangeUpdate=0
+UpdaterParameters=
 LaunchOnStatup=0
 SelectFolderMode=0
 AltInstallDir=<AppData>\<AppName>
 DataExtractParam=-o"<InstallDir>" -aoa
-ImageSettings=0000
 UninstallFileName=Uninstall.exe
 LangIDMethod=0
+AllowInstallIfNoSpace=0
+CalcReqSizeMethod=0
 WizardBitmap=C:\Program Files (x86)\Actual Installer\Bitmaps\Wizard\01.bmp
 HeaderBitmap=C:\Program Files (x86)\Actual Installer\Bitmaps\Header\01.bmp
 LogoBitmap=C:\Program Files (x86)\Actual Installer\Bitmaps\Logo\01.bmp
@@ -142,6 +145,12 @@ CustomComboBox=0
 CustomComboBoxName=
 CustomComboBoxItems=
 CustomComboDefItem=
+CustomComponents=0
+CustomComponentsText=
+CustomComponentsDesc=
+CustomComponentsFull=0
+CalcCompoSize=0
+CompoMustSelect=0
 RestartComputer=0
 LaunchFile=0
 LaunchFileName=
@@ -157,8 +166,14 @@ TotalFiles=1
 [Languages]
 English=
 
+[GUI]
+LogoAutoSize=0
+LogoTransparent=0
+LogoStretch=0
+LogoProportional=0
+
 [Files]
-0=C:\Program Files (x86)\Actual Installer\Uninstall.exe?<InstallDir>\Uninstall.exe?1?-1
+0=C:\Program Files (x86)\Actual Installer\Uninstall.exe?<InstallDir>\Uninstall.exe?1?1
 
 [License]
 (Default)=https://raw.githubusercontent.com/TheEternalCitizens/mudlet-integration/master/LICENSE.md
