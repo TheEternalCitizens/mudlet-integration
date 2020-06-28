@@ -7778,7 +7778,7 @@ function GitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if GitUpdate.localRespitory not exist
   GitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  GitUpdate.localVersion = "0.1.46" --Must match the tag in your github release
+  GitUpdate.localVersion = "0.1.47" --Must match the tag in your github release
   GitUpdate.aliasName = "parthia update" --Name of alias user runs to process update
   --Name of the alias to check if an update is available.
   GitUpdate.updateCheckAlias = "parthia update check" 
@@ -9398,7 +9398,8 @@ parthiaMap = parthiaMap or {} --table to hold the mapper data.
 --parthiaMap.playerCmd = false --the command the player used during this movement. be a carinal direction if player used a shorthand for one
 --parthiaMap.entryIndex = 1 --index used to tell what exit was entered through to get to current room
 --parthiaMap.exitIndex = 1 --index used to tell what exit was exited through from previous room to get to current room
---parthiaMap.descriptionOfExitUsed = "" --stores the description of the exit player used.</script>
+--parthiaMap.descriptionOfExitUsed = "" --stores the description of the exit player used.
+--parthiaMap.moveNeeded = false --Movement needs to be delayed because sometimes there is not SKOOT 10 message. This is used to track if movement has already begun. Used in function parthiaMap.delayMove()</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
 					<name>parthiaMap.resetRoom()</name>
@@ -9610,21 +9611,25 @@ function parthiaMap.connectRooms()
   local entrySpecialExitRoomOrder = ""
   for k,v in ipairs(parthiaMap.room.adjacentRooms) do --loop through rooms that are next to this one
     --find the previous room in the adjacentRooms table
-    if  parthiaMap.room.confirmedExits[entryDir][entryIndex].room.ypos == v.ypos
-    and parthiaMap.room.confirmedExits[entryDir][entryIndex].room.xpos == v.xpos then
-      entrySpecialExitRoomOrder = k --record the order the room appear in on SKOOT 6 message
-      break --stop as we found what we are looking for
-    end ----find the order the room appear in on SKOOT 6 message
+    if  parthiaMap.room.confirmedExits[entryDir] then --up and down will be nil
+      if  parthiaMap.room.confirmedExits[entryDir][entryIndex].room.ypos == v.ypos
+      and parthiaMap.room.confirmedExits[entryDir][entryIndex].room.xpos == v.xpos then
+        entrySpecialExitRoomOrder = k --record the order the room appear in on SKOOT 6 message
+        break --stop as we found what we are looking for
+      end ----find the order the room appear in on SKOOT 6 message
+    end --if  parthiaMap.room.confirmedExits[entryDir]
   end --ipairs(parthiaMap.room.adjacentRooms)
   --find the order this room appeared in the previous rooms SKOOT 6 message
   local exitedSpecialExitRoomOrder = ""
   for k,v in ipairs(parthiaMap.previousRoom.adjacentRooms) do --loop through rooms that are next to this one
     --find the previous room in the adjacentRooms table
-    if  parthiaMap.previousRoom.confirmedExits[exitDir][exitIndex].room.ypos == v.ypos
-    and parthiaMap.previousRoom.confirmedExits[exitDir][exitIndex].room.xpos == v.xpos then
-      exitedSpecialExitRoomOrder = k --record the order the room appear in on SKOOT 6 message
-      break --stop as we found what we are lookg for
-    end ----find the order the room appear in on SKOOT 6 message
+    if parthiaMap.previousRoom.confirmedExits[exitDir] then
+      if  parthiaMap.previousRoom.confirmedExits[exitDir][exitIndex].room.ypos == v.ypos
+      and parthiaMap.previousRoom.confirmedExits[exitDir][exitIndex].room.xpos == v.xpos then
+        exitedSpecialExitRoomOrder = k --record the order the room appear in on SKOOT 6 message
+        break --stop as we found what we are lookg for
+      end --find the order the room appear in on SKOOT 6 message
+    end --if parthiaMap.previousRoom.confirmedExits[exitDir]
   end --ipairs(parthiaMap.room.adjacentRooms)
 
   --make unique exit, a special exit that does not appear on the exits echo list. Requires the person mapping to manually use the exit.
@@ -9668,6 +9673,7 @@ end --function parthiaMap.connectRooms()</script>
 					<name>parthiaMap.Move(room, previousRoom, directionWalked)</name>
 					<packageName></packageName>
 					<script>function parthiaMap.Move(room, previousRoom, directionWalked)
+  parthiaMap.moveNeeded = false --Movement needs to be delayed because sometimes there is not SKOOT 10 message. This is used to track if movement has already begun. Used in function parthiaMap.delayMove()
   if parthiaMap.notMovement then --if the trigger that called this function was not from movement. Stop the function
     parthiaMap.notMovement = false
     return
@@ -11081,6 +11087,18 @@ function parthiaMap.help()
     "Click for basic mapping tutorial", true)
   pecho(", display a basic mapping tutorial.\n")
 end --function parthiaMap.help()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.delayMove()</name>
+					<packageName></packageName>
+					<script>function parthiaMap.delayMove()
+
+  if parthiaMap.moveNeeded then --if movement has not happened yet
+    parthiaMap.Move() 
+  end --if parthiaMap.moveNeeded
+
+end --function parthiaMap.delayMove()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
