@@ -9697,6 +9697,15 @@ end --function parthiaMap.connectRooms()</script>
       mapDebug("function parthiaMap.Move, was not able to collect room size or position in TEC Map, if next room is a new room it will not be created.")
     end --if parthiaMap.mapping
   end --if room.xpos and room.ypos and room.size
+  
+  --if the or previous room has no exits, it is a desk, market stall or other `room` within a room. Stop movement.
+  if (next(parthiaMap.room.confirmedExits) == nil  and next(parthiaMap.room.specialExits) == nil) --current room has no exits
+  or (next(parthiaMap.previousRoom.confirmedExits) == nil  and next(parthiaMap.previousRoom.specialExits) == nil) then --previous room had no exits
+    parthiaMap.room.id = previousRoom.id --record the corrent room id.
+    parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved. Also resets special movement booleans.
+    mapDebug("function parthiaMap.Move, found room within room. No movement room id copied.")
+    return --stop the movement
+  end --if  next(parthiaMap.room.confirmedExits) == nil and next(parthiaMap.room.specialExits) == nil
 
   if previousRoom then --if we are not mapping the first room
   
@@ -9739,6 +9748,7 @@ end --function parthiaMap.connectRooms()</script>
 
     --We are at a known location within the map data, use that to track location.
     if previousRoom.id then --if we had a previous room
+      mapDebug("Attempting movement from previous room id: "..previousRoom.id)
       local previousArea = getRoomArea(previousRoom.id) --get the area id for the last room
       if parthiaMap.currentAreaID == previousArea then --supports creating new area where movement in previous area would have been legal. Like creating new area while in welcome area logging into a character than attempting to map the game world
         if parthiaMap.specialExitMovement then --if a special exit was used during this movement
@@ -10143,7 +10153,8 @@ parthiaMap.notZMovement = {
   "west", "wes", "we", "w",
   "northwest", "nw",
   "north", "nort", "nor", "no", "n",
-  "northeast", "ne"
+  "northeast", "ne",
+  "leave", "leav", "lea", "le"
 }
 
 local zMovement = {
