@@ -125,7 +125,7 @@ UIManagerReset(true)</script>
 				<regex>^display reset</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>Dispay update autowrap</name>
+				<name>dispay update autowrap</name>
 				<script>--set main window word wrap size.
 --Function is is scripts - GUI - GUI Functions
 setMainWindowAutoWrap()
@@ -364,7 +364,7 @@ tecClientReset(true)</script>
 				<packageName></packageName>
 				<regex>^parthia tab font size (.*)$</regex>
 			</Alias>
-			<Alias isActive="no" isFolder="no">
+			<Alias isActive="yes" isFolder="no">
 				<name>parthia update</name>
 				<script>DownloadGitScripts() --Begin downloading updates</script>
 				<command></command>
@@ -392,18 +392,11 @@ DownloadGitReleaseJSON() --start the update process</script>
 				<regex>^parthia update check$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>parthia beta test yes</name>
-				<script>tecSetBetaTester(true) --inform Parthia player is a beta tester.</script>
+				<name>parthia beta test</name>
+				<script>tecSetBetaTester() --toggle if beta updates should be received.</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^parthia beta test yes$</regex>
-			</Alias>
-			<Alias isActive="yes" isFolder="no">
-				<name>parthia beta test no</name>
-				<script>tecSetBetaTester(false) --inform Parthia player is a beta tester.</script>
-				<command></command>
-				<packageName></packageName>
-				<regex>^parthia beta test no$</regex>
+				<regex>^parthia beta test$</regex>
 			</Alias>
 			<AliasGroup isActive="yes" isFolder="yes">
 				<name>colors</name>
@@ -644,20 +637,20 @@ ttsSkip() --skip the current message so it stops reading</script>
 					<regex>^parthia talk sk$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>pt *</name>
+					<name>/pt *</name>
 					<script>--create shorter version of parthia talk command
 expandAlias("parthia talk "..tostring(matches[2]))
 </script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^pt (.*)$</regex>
+					<regex>^/pt (.*)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>pt</name>
+					<name>/pt</name>
 					<script>expandAlias("parthia talk")</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^pt$</regex>
+					<regex>^/pt$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia talk test</name>
@@ -1031,20 +1024,22 @@ echo("\n")</script>
 				</Alias>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>display</name>
+				<name>parthia display</name>
 				<script>--Please make changes to the display alias group.
 --This alias will fordward to them.
-expandAlias("display"..matches[2])</script>
+parthiaDisplayHelp = true
+expandAlias("display"..matches[2])
+</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^parthia display(\s?.*)$</regex>
 			</Alias>
 			<AliasGroup isActive="yes" isFolder="yes">
-				<name>map</name>
-				<script></script>
+				<name>parthia map</name>
+				<script>parthiaMap.help()</script>
 				<command></command>
 				<packageName></packageName>
-				<regex></regex>
+				<regex>^parthia map$</regex>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia map area add</name>
 					<script>parthiaMap.addArea(matches[2]) --add the new map area</script>
@@ -1067,20 +1062,12 @@ expandAlias("display"..matches[2])</script>
 					<regex>^parthia map area clear (.*)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>parthia map mapping start</name>
-					<script>parthiaMap.mapping = true
-pecho("Mapping started.\n")</script>
+					<name>parthia map mapping</name>
+					<script>--enable or disable new map creation
+parthiaMap.setMapping(true)</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^parthia map mapping start$</regex>
-				</Alias>
-				<Alias isActive="yes" isFolder="no">
-					<name>parthia map mapping stop</name>
-					<script>parthiaMap.mapping = false
-pecho("Mapping stopped.\n")</script>
-					<command></command>
-					<packageName></packageName>
-					<regex>^parthia map mapping stop$</regex>
+					<regex>^parthia map mapping$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia map location clear</name>
@@ -1139,6 +1126,49 @@ pecho("Cleared room and previousRoom tables.\n")</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia map location check$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>/map</name>
+					<script>local cmd, arg = matches[2]:match("^(%a+)%s*(.*)")
+
+if cmd then
+  if cmd == "up" then
+    parthiaMap.setStepsGoUp(true, true) --set steps to go up or add to z access. Display message to screen of this change.
+  elseif cmd == "down" then
+    parthiaMap.setStepsGoUp(false, true) --set steps to go down or subtract from z access. Display message to screen of this change.
+  elseif cmd == "move" then
+    parthiaMap.setCharacterLocation(arg, true) --move the room the player is in
+  elseif cmd == "areaadd" then
+    parthiaMap.addArea(arg) --add the new map area
+  elseif cmd == "arearemove" then
+    parthiaMap.removeArea(arg, true) --remove the area, display success or failure to screen
+  elseif cmd == "areaclear" then
+    parthiaMap.clearAreaRooms(arg)
+  elseif cmd == "area" then
+    parthiaMap.changeArea(arg, true) --changes the area the character is in.
+  elseif cmd == "coord" then
+    pecho("Command not created yet.\n")
+  elseif cmd == "dangerous" then
+    pecho("Command not created yet.\n")
+  elseif cmd == "unique" then
+    pecho("Command not created yet.\n")
+  elseif cmd == "first" then
+    pecho("Command not created yet.\n")
+  elseif cmd == "store" then
+    pecho("Command not created yet.\n")
+  else
+    pecho("No mapping command: "..cmd.."\n")
+  end
+
+else --no additional text after /map in command
+
+  --toggle map creation
+  parthiaMap.setMapping(true)
+
+end</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^/map(.*)$</regex>
 				</Alias>
 			</AliasGroup>
 		</AliasGroup>

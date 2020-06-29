@@ -71,7 +71,8 @@ deleteLine() --remove line from main console. line variable remains unchanged.
 
 --SKOOT 10 is our last room data message. Use data collected from TEC to manage parthiaMap
 if parthiaMap.getEnabled() then --if player is using parthiaMap
-  tempTimer(.25, "parthiaMap.Move()")
+  parthiaMap.moveNeeded = true --Movement needs to be delayed because sometimes there is not SKOOT 10 message. This is used to track if movement has already begun. Used in function parthiaMap.delayMove()
+  tempTimer(.25, "parthiaMap.delayMove()")
 end --if parthiaMap.getEnabled()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -99,9 +100,15 @@ This catches an unwanted parse during a SKOOT 6 or map room draw message
 ]]--
 
 if not string.starts(line, "SKOOT") then --do not run if this is a SKOOT message
+  
   debugToDisplay("trigger, Map Room error catch.")
   parthiaDrawMapRooms()--draw the rooms, use data from global line variable
   deleteLine() --remove line from main console. line variable remains unchanged.
+
+  --tell person mapping they need to recapture the room
+  if parthiaMap.mapping then --if new maps are currently being created
+    pecho("&lt;red&gt;Lag error server side. Please move back erase this room and attempt again.\n&lt;reset&gt;")
+  end --if parthiaMap.mapping
 end
 </script>
 				<triggerType>0</triggerType>
@@ -139,9 +146,9 @@ if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
 deleteLine() --remove line from main console. line variable remains unchanged.
 
 --SKOOT 10 is our last room data message. Use data collected from TEC to manage parthiaMap
---if parthiaMap.getEnabled() then --if player is using parthiaMap
---  parthiaMap.Move()
---end --if parthiaMap.getEnabled()</script>
+if parthiaMap.getEnabled() then --if player is using parthiaMap
+  parthiaMap.Move()
+end --if parthiaMap.getEnabled()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -169,11 +176,17 @@ This catches an unwanted parse during a SKOOT 6 or map room draw message
 
 if not string.starts(line, "SKOOT") and 
   (line:match("hor") or line:match("ver") ) then --do not run if this is a SKOOT message
+  
   debugToDisplay("trigger, Map Exits error catch.")
   parthiaDrawMapExits()--draw the exits, using data from global line variable
   tecMap_back:lower() --lower the background behind the exits.
   deleteLine() --remove line from main console. line variable remains unchanged.
-end
+  
+  --tell person mapping they need to recapture the room
+  if parthiaMap.mapping then --if new maps are currently being created
+    pecho("&lt;red&gt;Lag error server side. Please move back erase this room and attempt again.\n&lt;reset&gt;")
+  end --if parthiaMap.mapping
+end --if not string.starts(line, "SKOOT")
 </script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -2153,6 +2166,29 @@ end --if parthiaMap.getEnabled()</script>
 					<integer>1</integer>
 					<integer>1</integer>
 					<integer>3</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>collect exit description</name>
+				<script>parthiaMap.descriptionOfExitUsed = matches[2] --stores the description of the exit player used.
+mapDebug("trigger collect exit description, collected exit description: "..matches[2])</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^You walk through (?:a|an) (.+)\.$</string>
+					<string>^You walk to (?:a|an) (.+),</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
 		</TriggerGroup>
