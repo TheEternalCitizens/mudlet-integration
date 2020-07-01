@@ -6832,7 +6832,7 @@ end --function parthiaDrawMapExits()</script>
   "Check for updates", true)
 	
   cechoLink("tecSettingsConsole", "&lt;black:SkyBlue&gt;Font Size\n", 
-  [[printCmdLine("tecclient font size ")]],
+  [[printCmdLine("parthia font size ")]],
   "Change client font size", true)
 	
   cechoLink("tecSettingsConsole", "&lt;:"..tecSettings.helpHighlightColor.."&gt;Resize Windows\n", 
