@@ -1444,8 +1444,7 @@ Example would be `wait for drover`
 			<Alias isActive="yes" isFolder="no">
 				<name>wait for drover</name>
 				<script>if not parthiaGetWaitForDrover() then --if the player is not already waiting for the drover
-  parthiaSetWaitForDrover(true) --wait for the drover. Uses trigger `Drover Arrives`
-  pecho("You patiently wait for the drover to arrive.\n")
+  parthiaSetWaitForDrover(true, true) --wait for the drover. Uses trigger `Drover Arrives`
 else --player is already waiting for drover
   pecho("You are already waiting for the drover.\n")
 end --if not parthiaGetWaitForDrover()</script>
@@ -1516,6 +1515,94 @@ parthiaMap.detectDirection(matches[2])</script>
 				<regex>^((?i)(?:n(?:orth|ort|or|o)?|ne|e(?:ast|as|a)?|se|s(?:outh|out|ou|o)?|sw|w(?:est|es|e)?|nw|u(?:p)?|d(?:own)?|le(?:ave|av|a)?|1|2|3|4|6|7|8|9(?:\s.+)?))$</regex>
 			</Alias>
 		</AliasGroup>
+		<AliasGroup isActive="yes" isFolder="yes">
+			<name>Obstacle Courses</name>
+			<script></script>
+			<command></command>
+			<packageName></packageName>
+			<regex></regex>
+			<Alias isActive="yes" isFolder="no">
+				<name>3Part</name>
+				<script>if courses.threePart then
+  courses.disable(true) --stop the course script, display a message to the player
+else
+  courses.running = true
+  courses.threePart = true
+  enableTrigger("Courses 3 Part")
+  courses.lookRan = true --prevents the player running the look command from triggering the script.
+  send("look")
+end --if courses.threePart</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>/3part</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>4Part</name>
+				<script>if courses.fourPart then
+  courses.disable(true) --stop the course script, display a message to the player
+else
+  courses.running = true
+  courses.fourPart = true
+  enableTrigger("Courses 4 Part")
+  courses.lookRan = true 
+  send("look")
+end --if courses.fourPart</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>/4part</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>Courses</name>
+				<script>pecho("Course Completions:\n")
+if courses.Strength   then pecho("Strength: "..courses.Strength.."\n") end
+if courses.Speed      then pecho("Speed: " ..courses.Speed.."\n") end
+if courses.Perception then pecho("Perception: " ..courses.Perception.."\n") end
+if courses.Agi        then pecho("Agility: " ..courses.Agi.."\n") end
+if courses.Dex        then pecho("Dexterity: " ..courses.Dex.."\n") end
+if courses.End        then pecho("Endurance: " ..courses.End.."\n") end
+if courses.Will       then pecho("Willpower: " ..courses.Will.."\n") end</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^(?i)courses\s*$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>Courses Reset</name>
+				<script>if courses.Strength then courses.Strength = false end
+if courses.Speed then courses.Speed = false end
+if courses.Perception then courses.Perception = false end
+if courses.Dex then courses.Dex = false end
+if courses.Agi then courses.Agi = false end
+if courses.End then courses.End = false end
+if courses.Will then  courses.Will = false end
+pecho("Reset course completions.\n")</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^(?i)courses reset\s*$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>run course</name>
+				<script>courses.running = true
+courses.threePart = true
+enableTrigger("Courses 3 Part")
+courses.lookRan = true --prevents the player running the look command from triggering the script.
+
+courses.fourPart = true
+enableTrigger("Courses 4 Part")
+
+send("look")</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^(?i)run course\s*$</regex>
+			</Alias>
+		</AliasGroup>
+		<Alias isActive="yes" isFolder="no">
+			<name>stop</name>
+			<script>send("stop")
+parthiaStopScripts(true) --stop all automation scripts, display message to screen.</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^(?i)stop\s*$</regex>
+		</Alias>
 	</AliasPackage>
 	<ActionPackage />
 	<ScriptPackage />
