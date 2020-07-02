@@ -1552,7 +1552,7 @@ end --if courses.fourPart</script>
 				<regex>/4part</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
-				<name>CourseTracker</name>
+				<name>Courses</name>
 				<script>pecho("Course Completions:\n")
 if courses.Strength   then pecho("Strength: "..courses.Strength.."\n") end
 if courses.Speed      then pecho("Speed: " ..courses.Speed.."\n") end
@@ -1563,22 +1563,36 @@ if courses.End        then pecho("Endurance: " ..courses.End.."\n") end
 if courses.Will       then pecho("Willpower: " ..courses.Will.."\n") end</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^/courses$</regex>
+				<regex>^(?i)courses\s*$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>Courses Reset</name>
-				<script>courses = courses or {}
-courses.Strength = 0
-courses.Speed = 0
-courses.Perception = 0
-courses.Dex = 0
-courses.Agi = 0
-courses.End = 0
-courses.Will = 0
-pecho("Resetting course completions.\n")</script>
+				<script>if courses.Strength then courses.Strength = false end
+if courses.Speed then courses.Speed = false end
+if courses.Perception then courses.Perception = false end
+if courses.Dex then courses.Dex = false end
+if courses.Agi then courses.Agi = false end
+if courses.End then courses.End = false end
+if courses.Will then  courses.Will = false end
+pecho("Reset course completions.\n")</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^/courses reset$</regex>
+				<regex>^(?i)courses reset\s*$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>run course</name>
+				<script>courses.running = true
+courses.threePart = true
+enableTrigger("Courses 3 Part")
+courses.lookRan = true --prevents the player running the look command from triggering the script.
+
+courses.fourPart = true
+enableTrigger("Courses 4 Part")
+
+send("look")</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^(?i)run course\s*$</regex>
 			</Alias>
 		</AliasGroup>
 		<Alias isActive="yes" isFolder="no">

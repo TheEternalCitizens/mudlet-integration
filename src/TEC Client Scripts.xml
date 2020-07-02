@@ -6462,10 +6462,26 @@ end --function tecClientChangeColors()</script>
 					<packageName></packageName>
 					<script>function parthiaCommandsHelp()
   pecho("\nCustom Parthia commands:\n")
+
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;wait for drover", 
   [[expandAlias("wait for drover")]],
   "Wait for a drover", true)
   pecho(", wait for a wagon drover.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;run course", 
+  [[expandAlias("run course")]],
+  "run an obsticle course", true)
+  pecho(", run one of the two obsticle courses north of Iridine.\n")
+
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;courses", 
+  [[expandAlias("Courses")]],
+  "View course increases", true)
+  pecho(", show stat increases from running courses this session.\n")  
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;courses reset", 
+  [[expandAlias("Courses Reset")]],
+  "Erase course stat tracking", true)
+  pecho(", erase the stats tracked this session at the courses.\n")    
   
   pecho("Click a command above or type it into the command line.\n")
 end --function parthiaCommandsHelp()</script>
@@ -9339,8 +9355,12 @@ function courses.firstStep()
   if courses.running then
     if courses.fourPart then
       send("go south")
+      disableTrigger("Courses 3 Part")
+      courses.threePart = false
     elseif courses.threePart then
       send("go east")
+      disableTrigger("Courses 4 Part")
+      courses.fourPart = false
     end --if courses.fourPart
   end --if courses.running
     

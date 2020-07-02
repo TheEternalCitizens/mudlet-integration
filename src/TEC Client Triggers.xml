@@ -2236,13 +2236,17 @@ mapDebug("trigger collect exit description, collected exit description: "..match
 				<name>Courses 4 Part</name>
 				<script>if line:match([[&lt;/font&gt;&lt;font color="#000000"&gt;You are on a wide, grassy field. Little divots across the turf indicate that one or several horses have run across it at some point, perhaps in cavalry practice. The short grass is barely two inches high, and looks to be meticulously kept that way. Jutting from the ground is a brightly glowing lantern hanging from a pole. &lt;/font&gt;]]) then
   if courses.lookRan then 
-    tempTimer(.25, [[pecho("You begin to run the course.\n")]])
+    tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go south")]])
+    disableTrigger("Courses 3 Part")
+    courses.threePart = false
   end --if courses.lookRan
 elseif line:match([[&lt;font color="#0020ff"&gt;mud pit&lt;/font&gt;&lt;font color="#000000"&gt; to the &lt;/font&gt;&lt;font color="#0020ff"&gt;south&lt;/font&gt;]]) then
   if courses.standingUp then
     tempTimer(1, [[send("stand")]])
     courses.standingUp = false
+    disableTrigger("Courses 3 Part")
+    courses.threePart = false
   else
     tempTimer(1, [[courses.firstStep()]])
   end --if courses.standingUp
@@ -2255,38 +2259,49 @@ elseif line:match("^You must be standing.$") then
   tempTimer(1, [[send("stand")]])
 elseif line:match("&lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are no longer busy%.&lt;/font&gt;&lt;/font&gt;") then
   tempTimer(1, [[send("go south")]])
-elseif line:match("^You arrive at a mud pit") then
+elseif line:match("^You arrive at a mud pit. ") then
   tempTimer(1, [[send("jump rope")]])
 elseif line:match([[   &lt;/font&gt;&lt;font color="#000000"&gt;You approach the start of a training course. This challenge is a muddy pit with a beam erected over it. Swinging from the beam is a muddy rope. It looks as though you have to jump at the rope to swing across the pit.  &lt;/font&gt;]]) then
   if courses.lookRan then
     tempTimer(.25, [[pecho("You begin to run the course.\n")]])
     tempTimer(1, [[send("jump rope")]])
+    disableTrigger("Courses 3 Part")
+    courses.threePart = false
   end
-elseif line:match([[^You arrive at a path through swinging weights. You see no obvious exits.&lt;/font&gt;$]]) then
+elseif line:match([[^You arrive at a path through swinging weights. ]]) then
   tempTimer(1, [[send("go path")]])
 elseif line:match([[   &lt;/font&gt;&lt;font color="#000000"&gt;This is the second test on this training course. Here you must test your agility by going along a path that has heavy bags of sand swinging across it. The object is to not get hit.  &lt;/font&gt;$]]) then
   if courses.lookRan then
-    tempTimer(.25, [[pecho("You begin to run the course.\n")]])
+    tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go path")]])
+    disableTrigger("Courses 3 Part")
+    courses.threePart = false
   end --if courses.lookRan
-elseif line:match([[^You arrive at a circular track. You see no obvious exits.&lt;/font&gt;$]]) then
+elseif line:match([[^You arrive at a circular track. ]]) then
   tempTimer(1, [[send("go track")]])
 elseif line:match([[   &lt;/font&gt;&lt;font color="#000000"&gt;This third training area involves a circular track that has a pole spinning around it. You must go along the track, running laps and stay in front of the pole or it will knock you flat.  &lt;/font&gt;$]]) then
   if courses.lookRan then
-    tempTimer(.25, [[pecho("You begin to run the course.\n")]])
+    tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go track")]])
+    disableTrigger("Courses 3 Part")
+    courses.threePart = false
   end --if courses.lookRan
-elseif line:match([[^You arrive at a bed of hot coals. You see no obvious exits.&lt;/font&gt;$]]) then
+elseif line:match([[^You arrive at a bed of hot coals. ]]) then
   tempTimer(1, [[send("go coal")]])
 elseif line:match([[&lt;/font&gt;&lt;font color="#000000"&gt;This place is the last test on this course. You must prove your willpower by walking across the bed of hot coals.  &lt;/font&gt;$]]) then
   if courses.lookRan then
-    tempTimer(.25, [[pecho("You begin to run the course.\n")]])
+    tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go coal")]])
+    disableTrigger("Courses 3 Part")
+    courses.threePart = false
   end --if courses.lookRan
 else
   if courses.lookRan then
-    courses.disable(true) --stop the course script, display a message to the player
-    tempTimer(.25, [[pecho("You need to be at the four part obsticle course north of Iridine to run the course.\n")]])
+    --courses.disable(true) --stop the course script, display a message to the player
+    --tempTimer(.25, [[pecho("You need to be at the four part obsticle course north of Iridine to run the course.\n")]])
+    disableTrigger("Courses 4 Part")
+    courses.fourPart = false
+    courses.notFourPart = true
   end --if courses.lookRan
 end --if line:match elseif line:match series
 
@@ -2312,8 +2327,10 @@ courses.lookRan = false --prevents the player running the look command from trig
 				<name>Courses 3 Part</name>
 				<script>if line:match("The closely cropped field stretching out around you seems to serve as a drilling field for soldiers and cavalry%.") then
   if courses.lookRan then 
-    tempTimer(.25, [[pecho("You begin to run the course.\n")]])
+    tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go east")]])
+    disableTrigger("Courses 4 Part")
+    courses.fourPart = false
   end --if courses.lookRan
 elseif line:match([[&lt;font color="#%x+"&gt;climbing wall&lt;/font&gt;&lt;font color="#%x+"&gt; to the &lt;/font&gt;&lt;font color="#%x+"&gt;east&lt;/font&gt;]]) then
   if courses.standingUp then
@@ -2331,32 +2348,37 @@ elseif line:match("^You must be standing.$") then
   tempTimer(1, [[send("stand")]])
 elseif line:match("&lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are no longer busy%.&lt;/font&gt;&lt;/font&gt;") then
   tempTimer(1, [[send("go east")]])
-elseif line:match("^You arrive at a climbing wall") then
+elseif line:match("^You arrive at a climbing wall. ") then
   tempTimer(1, [[send("climb rope")]])
 elseif line:match("&lt;/font&gt;&lt;font color=\"#%x+\"&gt;This is the first part of this training course. There is a tall wall here. The wall has a rope attached to it and the only way to proceed is to climb the rope.  &lt;/font&gt;$") then
   if courses.lookRan then
-    tempTimer(.25, [[pecho("You begin to run the course.\n")]])
+    tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("climb rope")]])
+    disableTrigger("Courses 4 Part")
+    courses.fourPart = false
   end --if courses.lookRan
-elseif line:match("^You arrive at a pool. You see no obvious exits.&lt;/font&gt;$") then
+elseif line:match("^You arrive at a pool. ") then
   tempTimer(1, [[send("go plank")]])
 elseif line:match(" &lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are at the second part of this training course. There is a pool here with several planks across it. You must be perceptive and go across the one that doesn't swivel.  &lt;/font&gt;$") then
   if courses.lookRan then 
-    tempTimer(.25, [[pecho("You begin to run the course.\n")]])
+    tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go plank")]])
+    disableTrigger("Courses 4 Part")
+    courses.fourPart = false
   end --if courses.lookRan
-elseif line:match("^You arrive at a dropping pole. You see no obvious exits.&lt;/font&gt;$") then
+elseif line:match("^You arrive at a dropping pole. ") then
   tempTimer(1, [[send("go path")]])
 elseif line:match("   &lt;/font&gt;&lt;font color=\"#%x+\"&gt;This is the last obstacle in this section of the training field. Before you is a path which goes underneath a rapidly descending beam. You need to run along the path and use your speed to get under the beam before it hits you.  &lt;/font&gt;$") then
   if courses.lookRan then tempTimer(1, [[send("go path")]]) end
 else
-  if courses.lookRan then
+  if courses.lookRan or courses.notFourPart then
     courses.disable(true) --stop the course script, display a message to the player
-    tempTimer(.25, [[pecho("You need to be at the three part obsticle course north of Iridine to run the course.\n")]])
+    tempTimer(.25, [[pecho("You need to be at one of the obsticle courses north of Iridine to run the courses.\n")]])
   end --if courses.lookRan
 end --if line:match elseif line:match series
 
-courses.lookRan = false --prevents the player running the look command from triggering the script.</script>
+courses.lookRan = false --prevents the player running the look command from triggering the script.
+courses.notFourPart = false --used to detect if player is at a course. Needed for `run course` command</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -2411,7 +2433,7 @@ elseif matches[2] == "perception" then
   end --if courses.Perception
 elseif matches[2] == "dexterity" then
   if courses.Dex then
-    courses.Dex = coursesDex + 1
+    courses.Dex = courses.Dex + 1
   else
     courses.Dex = 1
   end --if courses.Dex
