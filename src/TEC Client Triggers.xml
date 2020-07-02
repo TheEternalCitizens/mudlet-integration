@@ -1074,7 +1074,9 @@ tecResetRoomCharacterWindow()
 parthiaPlayer.CurrentCharacter = { }
 local statsCollectionTimer = tempTimer(1.1, [[runStatsCollection(false)]])
 
-parthiaMap.notMovement = true --tell parthiaMap.Move function this is not actual movement.</script>
+parthiaMap.notMovement = true --tell parthiaMap.Move function this is not actual movement.
+
+parthiaStopScripts() --stop all automation scripts</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -2116,6 +2118,29 @@ end --if parthiaMap.getEnabled()
 					<integer>2</integer>
 				</regexCodePropertyList>
 			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>You aren't doing anything.</name>
+				<script>if parthiaGetStopRan() then
+  deleteLine() --remove line from main console. line variable remains unchanged.
+  parthiaStopRan = false
+end --if parthiaStopRan</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You aren't doing anything.</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>3</integer>
+				</regexCodePropertyList>
+			</Trigger>
 		</TriggerGroup>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>parthia mapper</name>
@@ -2191,6 +2216,242 @@ mapDebug("trigger collect exit description, collected exit description: "..match
 					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
+		</TriggerGroup>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>Obstacle Courses</name>
+			<script></script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
+			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Courses 4 Part</name>
+				<script>if line:match([[&lt;/font&gt;&lt;font color="#000000"&gt;You are on a wide, grassy field. Little divots across the turf indicate that one or several horses have run across it at some point, perhaps in cavalry practice. The short grass is barely two inches high, and looks to be meticulously kept that way. Jutting from the ground is a brightly glowing lantern hanging from a pole. &lt;/font&gt;]]) then
+  if courses.lookRan then 
+    tempTimer(.25, [[pecho("You begin to run the course.\n")]])
+    tempTimer(1, [[send("go south")]])
+  end --if courses.lookRan
+elseif line:match([[&lt;font color="#0020ff"&gt;mud pit&lt;/font&gt;&lt;font color="#000000"&gt; to the &lt;/font&gt;&lt;font color="#0020ff"&gt;south&lt;/font&gt;]]) then
+  if courses.standingUp then
+    tempTimer(1, [[send("stand")]])
+    courses.standingUp = false
+  else
+    tempTimer(1, [[courses.firstStep()]])
+  end --if courses.standingUp
+elseif line:match("^Several trainers drag you back to the start%.$") then
+  courses.standingUp = true
+elseif line:match("^You have a feeling this course has no more to offer you at this time%.$") then
+  courses.disable(true) --stop running the courses script
+elseif line:match("^You must be standing.$") then
+  deleteLine() --remove line from main console. line variable remains unchanged.
+  tempTimer(1, [[send("stand")]])
+elseif line:match("&lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are no longer busy%.&lt;/font&gt;&lt;/font&gt;") then
+  tempTimer(1, [[send("go south")]])
+elseif line:match("^You arrive at a mud pit") then
+  tempTimer(1, [[send("jump rope")]])
+elseif line:match([[   &lt;/font&gt;&lt;font color="#000000"&gt;You approach the start of a training course. This challenge is a muddy pit with a beam erected over it. Swinging from the beam is a muddy rope. It looks as though you have to jump at the rope to swing across the pit.  &lt;/font&gt;]]) then
+  if courses.lookRan then
+    tempTimer(.25, [[pecho("You begin to run the course.\n")]])
+    tempTimer(1, [[send("jump rope")]])
+  end
+elseif line:match([[^You arrive at a path through swinging weights. You see no obvious exits.&lt;/font&gt;$]]) then
+  tempTimer(1, [[send("go path")]])
+elseif line:match([[   &lt;/font&gt;&lt;font color="#000000"&gt;This is the second test on this training course. Here you must test your agility by going along a path that has heavy bags of sand swinging across it. The object is to not get hit.  &lt;/font&gt;$]]) then
+  if courses.lookRan then
+    tempTimer(.25, [[pecho("You begin to run the course.\n")]])
+    tempTimer(1, [[send("go path")]])
+  end --if courses.lookRan
+elseif line:match([[^You arrive at a circular track. You see no obvious exits.&lt;/font&gt;$]]) then
+  tempTimer(1, [[send("go track")]])
+elseif line:match([[   &lt;/font&gt;&lt;font color="#000000"&gt;This third training area involves a circular track that has a pole spinning around it. You must go along the track, running laps and stay in front of the pole or it will knock you flat.  &lt;/font&gt;$]]) then
+  if courses.lookRan then
+    tempTimer(.25, [[pecho("You begin to run the course.\n")]])
+    tempTimer(1, [[send("go track")]])
+  end --if courses.lookRan
+elseif line:match([[^You arrive at a bed of hot coals. You see no obvious exits.&lt;/font&gt;$]]) then
+  tempTimer(1, [[send("go coal")]])
+elseif line:match([[&lt;/font&gt;&lt;font color="#000000"&gt;This place is the last test on this course. You must prove your willpower by walking across the bed of hot coals.  &lt;/font&gt;$]]) then
+  if courses.lookRan then
+    tempTimer(.25, [[pecho("You begin to run the course.\n")]])
+    tempTimer(1, [[send("go coal")]])
+  end --if courses.lookRan
+else
+  if courses.lookRan then
+    courses.disable(true) --stop the course script, display a message to the player
+    tempTimer(.25, [[pecho("You need to be at the four part obsticle course north of Iridine to run the course.\n")]])
+  end --if courses.lookRan
+end --if line:match elseif line:match series
+
+courses.lookRan = false --prevents the player running the look command from triggering the script.</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>return courses.fourPart</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>4</integer>
+				</regexCodePropertyList>
+			</TriggerGroup>
+			<TriggerGroup isActive="no" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Courses 3 Part</name>
+				<script>if line:match("The closely cropped field stretching out around you seems to serve as a drilling field for soldiers and cavalry%.") then
+  if courses.lookRan then 
+    tempTimer(.25, [[pecho("You begin to run the course.\n")]])
+    tempTimer(1, [[send("go east")]])
+  end --if courses.lookRan
+elseif line:match([[&lt;font color="#%x+"&gt;climbing wall&lt;/font&gt;&lt;font color="#%x+"&gt; to the &lt;/font&gt;&lt;font color="#%x+"&gt;east&lt;/font&gt;]]) then
+  if courses.standingUp then
+    tempTimer(1, [[send("stand")]])
+    courses.standingUp = false
+  else
+    tempTimer(1, [[courses.firstStep()]])
+  end --if courses.standingUp
+elseif line:match("^Several trainers drag you back to the start%.$") then
+  courses.standingUp = true
+elseif line:match("^You have a feeling this course has no more to offer you at this time%.$") then
+  courses.disable(true) --stop running the courses script
+elseif line:match("^You must be standing.$") then
+  deleteLine() --remove line from main console. line variable remains unchanged.
+  tempTimer(1, [[send("stand")]])
+elseif line:match("&lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are no longer busy%.&lt;/font&gt;&lt;/font&gt;") then
+  tempTimer(1, [[send("go east")]])
+elseif line:match("^You arrive at a climbing wall") then
+  tempTimer(1, [[send("climb rope")]])
+elseif line:match("&lt;/font&gt;&lt;font color=\"#%x+\"&gt;This is the first part of this training course. There is a tall wall here. The wall has a rope attached to it and the only way to proceed is to climb the rope.  &lt;/font&gt;$") then
+  if courses.lookRan then
+    tempTimer(.25, [[pecho("You begin to run the course.\n")]])
+    tempTimer(1, [[send("climb rope")]])
+  end --if courses.lookRan
+elseif line:match("^You arrive at a pool. You see no obvious exits.&lt;/font&gt;$") then
+  tempTimer(1, [[send("go plank")]])
+elseif line:match(" &lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are at the second part of this training course. There is a pool here with several planks across it. You must be perceptive and go across the one that doesn't swivel.  &lt;/font&gt;$") then
+  if courses.lookRan then 
+    tempTimer(.25, [[pecho("You begin to run the course.\n")]])
+    tempTimer(1, [[send("go plank")]])
+  end --if courses.lookRan
+elseif line:match("^You arrive at a dropping pole. You see no obvious exits.&lt;/font&gt;$") then
+  tempTimer(1, [[send("go path")]])
+elseif line:match("   &lt;/font&gt;&lt;font color=\"#%x+\"&gt;This is the last obstacle in this section of the training field. Before you is a path which goes underneath a rapidly descending beam. You need to run along the path and use your speed to get under the beam before it hits you.  &lt;/font&gt;$") then
+  if courses.lookRan then tempTimer(1, [[send("go path")]]) end
+else
+  if courses.lookRan then
+    courses.disable(true) --stop the course script, display a message to the player
+    tempTimer(.25, [[pecho("You need to be at the three part obsticle course north of Iridine to run the course.\n")]])
+  end --if courses.lookRan
+end --if line:match elseif line:match series
+
+courses.lookRan = false --prevents the player running the look command from triggering the script.</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>return courses.threePart</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>4</integer>
+				</regexCodePropertyList>
+			</TriggerGroup>
+			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Tracking</name>
+				<script></script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList />
+				<regexCodePropertyList />
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Tracking</name>
+					<script>if matches[2] == "strength" then
+  if courses.Strength then
+    courses.Strength = courses.Strength + 1
+  else
+    courses.Strength = 1
+  end --if courses.Strength
+elseif matches[2] == "speed" then
+  if courses.Speed then
+    courses.Speed = courses.Speed + 1
+  else
+    courses.Speed = 1
+  end --if courses.Speed
+elseif matches[2] == "perception" then
+  if courses.Perception then
+    courses.Perception = courses.Perception + 1
+  else
+    courses.Perception = 1
+  end --if courses.Perception
+elseif matches[2] == "dexterity" then
+  if courses.Dex then
+    courses.Dex = coursesDex + 1
+  else
+    courses.Dex = 1
+  end --if courses.Dex
+elseif matches[2] == "agility" then
+  if courses.Agi then
+    courses.Agi = courses.Agi + 1
+  else
+    courses.Agi = 1
+  end --if courses.Agi
+elseif matches[2] == "endurance" then
+  if courses.End then
+    courses.End = courses.End + 1
+  else
+    courses.End = 1
+  end --if courses.End
+elseif matches[2] == "willpower" then
+  if courses.Will then
+    courses.Will = courses.Will + 1
+  else
+    courses.Will = 1
+  end --if courses.Will
+end --if matches[2] == "strength" elseif</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>^You feel as if you have improved your (.+) slightly\.$</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>1</integer>
+					</regexCodePropertyList>
+				</Trigger>
+			</TriggerGroup>
 		</TriggerGroup>
 	</TriggerPackage>
 	<TimerPackage />
