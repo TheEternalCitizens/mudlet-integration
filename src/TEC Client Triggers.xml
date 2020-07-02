@@ -1031,7 +1031,7 @@ pecho("Please enter your username.")
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Failed Login</name>
-				<script>connectToServer("tec.skotos.net", 6730) --reconnect if there is a disconnect at login.</script>
+				<script>connectToServer("game.eternalcitygame.com", 6730) --reconnect if there is a disconnect at login.</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
