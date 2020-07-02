@@ -1638,12 +1638,11 @@ appendBuffer("Thoughts") --paste copied text to miniConsole
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>^&lt;/font&gt;&lt;font color="#\w+"&gt;&amp;lt;\w+ thinks aloud:</string>
+					<string>^&lt;/font&gt;&lt;font color="#\w+"&gt;&amp;lt;(\w+ )+thinks aloud:</string>
 					<string>&amp;lt;You think aloud: </string>
-					<string>^&lt;/font&gt;&lt;font color="#\w+"&gt;&amp;lt;\w+ \w+ thinks aloud:</string>
-					<string>^&amp;lt;\w+ thinks aloud: </string>
+					<string>^&amp;lt;(\w+ )+thinks aloud: </string>
 					<string>^You send the thought</string>
-					<string>^&lt;/font&gt;&lt;font color="#\w+"&gt;You feel \w+ think</string>
+					<string>^&lt;/font&gt;&lt;font color="#\w+"&gt;You feel (\w+ )+think</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>1</integer>
