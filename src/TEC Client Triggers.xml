@@ -1650,7 +1650,6 @@ appendBuffer("Thoughts") --paste copied text to miniConsole
 					<integer>1</integer>
 					<integer>1</integer>
 					<integer>1</integer>
-					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
