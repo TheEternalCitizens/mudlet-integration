@@ -488,8 +488,13 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   tecUsernameEntry = false --used to tell parthia when the user is entering their username.
   tecUsername = "" --used store user's name during login process. Gets removed when login was successful.
 
-  tecSettings.parthiaMapEnabled = false --tells parthia if it's mapping system should be running.
+  courses = {} --used to track settings for courses scripts.
+  courses.threePart = false --if true scripts for three part course will run
+  courses.fourPart = false --if true scritpts for four part course will run
   
+  parthiaStopRan = false --if true player ran the stop command
+
+  tecSettings.parthiaMapEnabled = false --tells parthia if it's mapping system should be running.  
 
 	if displayToScreen then pecho("Parthia settings set to default.\n") end
 
@@ -6457,10 +6462,26 @@ end --function tecClientChangeColors()</script>
 					<packageName></packageName>
 					<script>function parthiaCommandsHelp()
   pecho("\nCustom Parthia commands:\n")
+
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;wait for drover", 
   [[expandAlias("wait for drover")]],
   "Wait for a drover", true)
   pecho(", wait for a wagon drover.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;run course", 
+  [[expandAlias("run course")]],
+  "run an obsticle course", true)
+  pecho(", run one of the two obsticle courses north of Iridine.\n")
+
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;courses", 
+  [[expandAlias("Courses")]],
+  "View course increases", true)
+  pecho(", show stat increases from running courses this session.\n")  
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;courses reset", 
+  [[expandAlias("Courses Reset")]],
+  "Erase course stat tracking", true)
+  pecho(", erase the stats tracked this session at the courses.\n")    
   
   pecho("Click a command above or type it into the command line.\n")
 end --function parthiaCommandsHelp()</script>
@@ -7790,7 +7811,7 @@ function GitUpdateconfig() --Create variables used for updates
   --packages that are no longer used in the project and should be removed.
   --They can not share a name with a package that you need. Otherwise this will uninstall it.
   GitUpdate.removePackages = {"TECClientScripts", "TECClientTriggers",
-    "TECClientAliases", "TECClientKeyBindings"}
+    "TECClientAliases", "TECClientKeyBindings", "Courses_Alias", "Courses_Triggers"}
   GitUpdate.removeModules = {} --modules that are no longer used in the project and should be removed.
   --Used to tell player correct installation method if they installed scripts as modules
   GitUpdate.installationURL = "https://github.com/TheEternalCitizens/mudlet-integration/wiki/Installation"
@@ -9267,11 +9288,22 @@ IE: `wait for drover`
 					<script></script>
 					<eventHandlerList />
 					<Script isActive="yes" isFolder="no">
-						<name>parthiaSetWaitForDrover(waiting)</name>
+						<name>parthiaSetWaitForDrover(waiting, displayToScreen)</name>
 						<packageName></packageName>
-						<script>function parthiaSetWaitForDrover(waiting)
+						<script>function parthiaSetWaitForDrover(waiting, displayToScreen)
   waiting = fuzzyBoolean(waiting) --make certain it is a good variable
+  
+  if parthiaGetWaitForDrover() then parthisSetStopRun(true, true) end --hide the you are not doing anything message
+  
   parthiaWaitingForDrover = waiting
+  
+  if displayToScreen then
+    if waiting then 
+      pecho("You patiently wait for the drover to arrive.\n")
+    else
+      pecho("You stop waiting for the drover.\n")
+    end
+  end
 end --function parthiaSetWaitForDrover(waiting)</script>
 						<eventHandlerList />
 					</Script>
@@ -9281,6 +9313,114 @@ end --function parthiaSetWaitForDrover(waiting)</script>
 						<script>function parthiaGetWaitForDrover()
   return parthiaWaitingForDrover 
 end --function parthiaGetWaitForDrover()</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>Courses</name>
+					<packageName></packageName>
+					<script></script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>courses.disable(displayToScreen)</name>
+						<packageName></packageName>
+						<script>--makes certain all courses scripts are disabled.
+function courses.disable(displayToScreen)
+
+  displayToScreen = fuzzyBoolean(displayToScreen)
+
+  disableTrigger("Courses 4 Part")
+  disableTrigger("Courses 3 Part")
+  
+  if courses.running then parthisSetStopRun(true, true) end --hide the you are not doing anything message
+  
+  courses.running = false
+  courses.fourPart = false
+  courses.threePart = false
+  courses.lookRan = false
+  
+  if displayToScreen then
+    pecho("\nYou are no longer running courses.\n")
+  end --if displayToScreen
+
+end --function courses.disable(displayToScreen)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>courses.firstStep()</name>
+						<packageName></packageName>
+						<script>--message that the course has no more to offer comes after the room arrival message. This function prevents moving when it is no longer needed
+function courses.firstStep()
+
+  if courses.running then
+    if courses.fourPart then
+      send("go south")
+      disableTrigger("Courses 3 Part")
+      courses.threePart = false
+    elseif courses.threePart then
+      send("go east")
+      disableTrigger("Courses 4 Part")
+      courses.fourPart = false
+    end --if courses.fourPart
+  end --if courses.running
+    
+end --function courses.threePartFirstStep()</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>stop</name>
+					<packageName></packageName>
+					<script></script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaGetStopRan()</name>
+						<packageName></packageName>
+						<script>--return if the stop command was run by scripts.
+function parthiaGetStopRan()
+  
+  return parthiaStopRan
+  
+end --parthiaGetStopRan()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthisSetStopRun(mode, delay)</name>
+						<packageName></packageName>
+						<script>--[[
+Used to suppress the "You aren't doing anything." message that appears when a player runs the stop command to stop scripts, but they are not doing a task in the game
+Used in trigger "You aren't doing anything." if the mode is true the message is suppressed. If not the message is shown.
+delay allows the player to run `stop` than delay for the "You aren't doing anything." message to arrive. Setting it to false after it arrives.
+
+usage:
+  parthisSetStopRun(mode, delay)
+  mode is a boolean. true stops the "You aren't doing anything." false allows it to show.
+  delay is a boolean. If true the function waits half a second to set the mode.
+]]--
+
+function parthisSetStopRun(mode, delay)
+  mode = fuzzyBoolean(mode)
+  delay = fuzzyBoolean(delay)
+  
+  if delay then
+    tempTimer(.5, [[parthisSetStopRun(true)]])
+  else
+    parthiaStopRan = mode
+  end --if delay
+
+end --function parthisSetStopRun(mode, delay)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaStopScripts(displayToScreen)</name>
+						<packageName></packageName>
+						<script>--stops all scripts running in parthia
+function parthiaStopScripts(displayToScreen)
+
+  if courses.running then courses.disable(displayToScreen) end --If running, disable courses scripts
+  if parthiaGetWaitForDrover() then parthiaSetWaitForDrover(false, displayToScreen) end --if running, disable waiting for drover script
+
+end --function parthiaStopScripts(displayToScreen)</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
@@ -9611,7 +9751,9 @@ function parthiaMap.connectRooms()
   local entrySpecialExitRoomOrder = ""
   for k,v in ipairs(parthiaMap.room.adjacentRooms) do --loop through rooms that are next to this one
     --find the previous room in the adjacentRooms table
-    if  parthiaMap.room.confirmedExits[entryDir] then --up and down will be nil
+    if  parthiaMap.room.confirmedExits[entryDir]
+    and parthiaMap.room.confirmedExits[entryDir][entryIndex]
+    and parthiaMap.room.confirmedExits[entryDir][entryIndex].room then --up and down will be nil
       if  parthiaMap.room.confirmedExits[entryDir][entryIndex].room.ypos == v.ypos
       and parthiaMap.room.confirmedExits[entryDir][entryIndex].room.xpos == v.xpos then
         entrySpecialExitRoomOrder = k --record the order the room appear in on SKOOT 6 message
@@ -9623,7 +9765,9 @@ function parthiaMap.connectRooms()
   local exitedSpecialExitRoomOrder = ""
   for k,v in ipairs(parthiaMap.previousRoom.adjacentRooms) do --loop through rooms that are next to this one
     --find the previous room in the adjacentRooms table
-    if parthiaMap.previousRoom.confirmedExits[exitDir] then
+    if  parthiaMap.previousRoom.confirmedExits[exitDir]
+    and parthiaMap.previousRoom.confirmedExits[exitDir][exitIndex]
+    and parthiaMap.previousRoom.confirmedExits[exitDir][exitIndex].room then
       if  parthiaMap.previousRoom.confirmedExits[exitDir][exitIndex].room.ypos == v.ypos
       and parthiaMap.previousRoom.confirmedExits[exitDir][exitIndex].room.xpos == v.xpos then
         exitedSpecialExitRoomOrder = k --record the order the room appear in on SKOOT 6 message
@@ -12378,7 +12522,9 @@ if getHelpDevs() then --if player has Help Developers enabled
 end --if getHelpDevs()
 
 parthiaMap.config() --load default settings for mapping system
-parthiaMap.load() --load mapping data from file.</script>
+parthiaMap.load() --load mapping data from file.
+
+</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
 					<name>UIManager</name>
