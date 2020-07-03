@@ -1373,18 +1373,11 @@ tecRoomCharRefreshNotification()</script>
 			</AliasGroup>
 			<Alias isActive="yes" isFolder="no">
 				<name>look</name>
-				<script>--[[
-l lo loo look
-
-]]--
-if matches[2]:len() &lt; 4 and (matches[2]:lower():starts("o") or matches[2]:lower():starts("oo") or matches[2]:lower():starts("ook") or matches[2] == "") then
-  lookRan = true --tell triggers player has run the look command
-end --if matches[2]:starts("o") or matches[2]:starts("oo") or matches[2]:starts("ook")
-
-send("l"..matches[2],false)</script>
+				<script>send("look",false)
+lookRan = true --tell triggers player has run the look command</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^[lL](.*)$</regex>
+				<regex>^(?i)(?:l(?:ook|oo|o)?)\s*$</regex>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
