@@ -959,6 +959,8 @@ selectCurrentLine() --select current line in main.
 replace("") --Erase text from main. Otherwise variable line will apear on console.
 deselect() --Don't forget your deselects!
 
+parthiaEchoNotification()
+
 pecho("Login delayed for one second while Parthia checks for updates.\n")
 
 --This trigger function does the client handshake for the user.
@@ -1058,6 +1060,8 @@ pecho("Please enter your username.")
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Successful login</name>
 				<script>--triggers after a successful login
+
+tempTimer(.5, [[parthiaEchoNotification()]])
 
 if passwordInputEventID then --we no longer need to listen for ID or password
   killAnonymousEventHandler(passwordInputEventID) --remove the event that listens for ID and password

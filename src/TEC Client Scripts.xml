@@ -210,6 +210,16 @@ Meaning it WILL be loaded from file on a load.
 function tecClientReset(displayToScreen) --reset all client settings to defaults
   if displayToScreen then echo("Please wait defaulting Parthia settings.\n") end
 
+  --Will be displaeyed before login and after every successful login.
+  --Intended for important messages to update parthia players
+  --make parthiaNotificationMessage false or nil to show no message
+  parthiaNotificationMessage = 
+  "\nIMPORTANT MESSAGE Below\n"
+  .."Starting mudlet version 4.10.0\n"
+  .."You will NOT be able to have your password in the mudlet profile selection window.\n"
+  .."The profile selection window is the window that automatically appears when you start mudlet and allows you to select between different mudlet compatible games.\n"
+  .."IMPORTANT MESSAGE ABOVE\n\n"
+
   --Creating a table that will be used to easily save these
   --Variables to file. So NOT putting tec.Settings. before
   --a variable will mean that it does not get saved to file.
@@ -3500,12 +3510,7 @@ end --function parthiaTableSave(tbl, path, jsonFormat, displayToScreen)</script>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>Misc</name>
 				<packageName></packageName>
-				<script>-------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external scripts --
--------------------------------------------------
-</script>
+				<script></script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
 					<name>dontForgetToSave()</name>
@@ -3854,6 +3859,25 @@ end --function commandSuccessful()</script>
   objectLinksAdded = true --tell function that objectsLinks where added to this look command run
 
 end --function addLinksToObjects()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaEchoNotification(message)</name>
+					<packageName></packageName>
+					<script>function parthiaEchoNotification(message)
+  message = message or parthiaNotificationMessage
+  
+  if message then
+  
+    if not type(message) == "string" then
+      tecWarningNotification("function parthiaEchoNotifcation, received a non string message.")
+      return
+    end --if not type(message) == "string"
+    
+    pecho(message)
+    
+  end --if message
+end --function parthiaEchoNotification</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
