@@ -2234,7 +2234,7 @@ mapDebug("trigger collect exit description, collected exit description: "..match
 			<colorTriggerBgColor>#000000</colorTriggerBgColor>
 			<regexCodeList />
 			<regexCodePropertyList />
-			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<TriggerGroup isActive="no" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Courses 4 Part</name>
 				<script>if line:match([[&lt;/font&gt;&lt;font color="#000000"&gt;You are on a wide, grassy field. Little divots across the turf indicate that one or several horses have run across it at some point, perhaps in cavalry practice. The short grass is barely two inches high, and looks to be meticulously kept that way. Jutting from the ground is a brightly glowing lantern hanging from a pole. &lt;/font&gt;]]) then
   if courses.lookRan then 
@@ -2243,14 +2243,14 @@ mapDebug("trigger collect exit description, collected exit description: "..match
     disableTrigger("Courses 3 Part")
     courses.threePart = false
   end --if courses.lookRan
-elseif line:match([[&lt;font color="#0020ff"&gt;mud pit&lt;/font&gt;&lt;font color="#000000"&gt; to the &lt;/font&gt;&lt;font color="#0020ff"&gt;south&lt;/font&gt;]]) then
+elseif line:match("^You arrive at a field with short grass. ") then
   if courses.standingUp then
     tempTimer(1, [[send("stand")]])
     courses.standingUp = false
     disableTrigger("Courses 3 Part")
     courses.threePart = false
   else
-    tempTimer(1, [[courses.firstStep()]])
+    tempTimer(1, [[courses.firstStep()]]) --check if this course has something to offer before the first step of the course
   end --if courses.standingUp
 elseif line:match("^Several trainers drag you back to the start%.$") then
   courses.standingUp = true
@@ -2265,7 +2265,7 @@ elseif line:match("^You arrive at a mud pit. ") then
   tempTimer(1, [[send("jump rope")]])
 elseif line:match([[   &lt;/font&gt;&lt;font color="#000000"&gt;You approach the start of a training course. This challenge is a muddy pit with a beam erected over it. Swinging from the beam is a muddy rope. It looks as though you have to jump at the rope to swing across the pit.  &lt;/font&gt;]]) then
   if courses.lookRan then
-    tempTimer(.25, [[pecho("You begin to run the course.\n")]])
+    tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("jump rope")]])
     disableTrigger("Courses 3 Part")
     courses.threePart = false
@@ -2299,8 +2299,6 @@ elseif line:match([[&lt;/font&gt;&lt;font color="#000000"&gt;This place is the l
   end --if courses.lookRan
 else
   if courses.lookRan then
-    --courses.disable(true) --stop the course script, display a message to the player
-    --tempTimer(.25, [[pecho("You need to be at the four part obsticle course north of Iridine to run the course.\n")]])
     disableTrigger("Courses 4 Part")
     courses.fourPart = false
     courses.notFourPart = true
@@ -2328,18 +2326,18 @@ courses.lookRan = false --prevents the player running the look command from trig
 			<TriggerGroup isActive="no" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Courses 3 Part</name>
 				<script>if line:match("The closely cropped field stretching out around you seems to serve as a drilling field for soldiers and cavalry%.") then
-  if courses.lookRan then 
+  if courses.lookRan or courses.notFourPart then 
     tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go east")]])
     disableTrigger("Courses 4 Part")
     courses.fourPart = false
   end --if courses.lookRan
-elseif line:match([[&lt;font color="#%x+"&gt;climbing wall&lt;/font&gt;&lt;font color="#%x+"&gt; to the &lt;/font&gt;&lt;font color="#%x+"&gt;east&lt;/font&gt;]]) then
+elseif line:match("^You arrive at a field with short grass. ") then
   if courses.standingUp then
     tempTimer(1, [[send("stand")]])
     courses.standingUp = false
   else
-    tempTimer(1, [[courses.firstStep()]])
+    tempTimer(1, [[courses.firstStep()]]) --check if this course has something to offer before the first step of the course
   end --if courses.standingUp
 elseif line:match("^Several trainers drag you back to the start%.$") then
   courses.standingUp = true
@@ -2353,7 +2351,7 @@ elseif line:match("&lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are no longer bus
 elseif line:match("^You arrive at a climbing wall. ") then
   tempTimer(1, [[send("climb rope")]])
 elseif line:match("&lt;/font&gt;&lt;font color=\"#%x+\"&gt;This is the first part of this training course. There is a tall wall here. The wall has a rope attached to it and the only way to proceed is to climb the rope.  &lt;/font&gt;$") then
-  if courses.lookRan then
+  if courses.lookRan or courses.notFourPart then
     tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("climb rope")]])
     disableTrigger("Courses 4 Part")
@@ -2361,8 +2359,8 @@ elseif line:match("&lt;/font&gt;&lt;font color=\"#%x+\"&gt;This is the first par
   end --if courses.lookRan
 elseif line:match("^You arrive at a pool. ") then
   tempTimer(1, [[send("go plank")]])
-elseif line:match(" &lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are at the second part of this training course. There is a pool here with several planks across it. You must be perceptive and go across the one that doesn't swivel.  &lt;/font&gt;$") then
-  if courses.lookRan then 
+elseif line:match("&lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are at the second part of this training course. There is a pool here with several planks across it. You must be perceptive and go across the one that doesn't swivel.  &lt;/font&gt;$") then
+  if courses.lookRan or courses.notFourPart then 
     tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go plank")]])
     disableTrigger("Courses 4 Part")
@@ -2370,8 +2368,13 @@ elseif line:match(" &lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are at the secon
   end --if courses.lookRan
 elseif line:match("^You arrive at a dropping pole. ") then
   tempTimer(1, [[send("go path")]])
-elseif line:match("   &lt;/font&gt;&lt;font color=\"#%x+\"&gt;This is the last obstacle in this section of the training field. Before you is a path which goes underneath a rapidly descending beam. You need to run along the path and use your speed to get under the beam before it hits you.  &lt;/font&gt;$") then
-  if courses.lookRan then tempTimer(1, [[send("go path")]]) end
+elseif line:match("&lt;/font&gt;&lt;font color=\"#%x+\"&gt;This is the last obstacle in this section of the training field. Before you is a path which goes underneath a rapidly descending beam. You need to run along the path and use your speed to get under the beam before it hits you.  &lt;/font&gt;$") then
+  if courses.lookRan or courses.notFourPart then
+    tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
+    tempTimer(1, [[send("go path")]])
+    disableTrigger("Courses 4 Part")
+    courses.fourPart = false
+  end
 else
   if courses.lookRan or courses.notFourPart then
     courses.disable(true) --stop the course script, display a message to the player
@@ -2379,7 +2382,7 @@ else
   end --if courses.lookRan
 end --if line:match elseif line:match series
 
-courses.lookRan = false --prevents the player running the look command from triggering the script.
+courses.lookRan = false --prevents the player running the look command from triggering the script
 courses.notFourPart = false --used to detect if player is at a course. Needed for `run course` command</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
