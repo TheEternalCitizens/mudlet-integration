@@ -9352,7 +9352,7 @@ end --function courses.disable(displayToScreen)</script>
 						<script>--message that the course has no more to offer comes after the room arrival message. This function prevents moving when it is no longer needed
 function courses.firstStep()
 
-  if courses.running then
+  if courses.running then --if player has not received the "You have a feeling this course has no more to offer at this time" message
     if courses.fourPart then
       send("go south")
       disableTrigger("Courses 3 Part")
@@ -12524,7 +12524,7 @@ end --if getHelpDevs()
 parthiaMap.config() --load default settings for mapping system
 parthiaMap.load() --load mapping data from file.
 
-</script>
+parthiaStopScripts(false) --make certain script triggers are not running on startup</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
 					<name>UIManager</name>
