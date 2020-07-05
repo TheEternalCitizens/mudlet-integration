@@ -364,7 +364,7 @@ tecClientReset(true)</script>
 				<packageName></packageName>
 				<regex>^parthia tab font size (.*)$</regex>
 			</Alias>
-			<Alias isActive="yes" isFolder="no">
+			<Alias isActive="no" isFolder="no">
 				<name>parthia update</name>
 				<script>DownloadGitScripts() --Begin downloading updates</script>
 				<command></command>
@@ -788,7 +788,10 @@ end --if parthiaPlayer</script>
 cecho("Number pad navigation enabled.\n")
 
 disableAlias("parthia update") --make certain update command is disabled
-pecho("Update command disabled.\n")</script>
+pecho("Update command disabled.\n")
+
+parthiaStopScripts(true)
+pecho("Automation scripts disabled.\n")</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia prepare release$</regex>
