@@ -1078,8 +1078,6 @@ tecResetRoomCharacterWindow()
 parthiaPlayer.CurrentCharacter = { }
 local statsCollectionTimer = tempTimer(1.1, [[runStatsCollection(false)]])
 
-parthiaMap.notMovement = true --tell parthiaMap.Move function this is not actual movement.
-
 parthiaStopScripts() --stop all automation scripts</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
