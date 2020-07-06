@@ -22,7 +22,7 @@ jobs:
       - name: Bump Versions
         id: version_bump
         run: |
-           NEXT_VERSION=$(echo ${{ steps.get_version.outputs.release }} | awk -F. -v OFS=. '{$NF++;print}')
+           NEXT_VERSION=$(echo "${{ steps.get_version.outputs.release }}" | awk -F. -v OFS=. '{$NF++;print}')
            echo "Next Version $NEXT_VERISON"
            echo "::set-output name=version::$NEXT_VERSION"
       - name: Create PreRelease
