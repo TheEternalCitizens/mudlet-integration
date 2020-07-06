@@ -24,7 +24,7 @@ jobs:
         run: |
            NEXT_VERSION=$(echo ${{ steps.get_version.outputs.release }} | awk -F. -v OFS=. '{$NF++;print}')
            echo "::set-output name=version::$NEXT_VERSION"
-      - name: Create Release
+      - name: Create PreRelease
         id: create_release
         uses: actions/create-release@v1
         env:
