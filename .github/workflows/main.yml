@@ -22,7 +22,7 @@ jobs:
       - name: Bump Versions
         id: version_bump
         run: |
-           NEXT_VERSION= perl -pe 's/^((\d+\.)*)(\d+)(.*)$/$1.($3+1).$4/e' < ${{ steps.get_version.outputs.release }}
+           NEXT_VERSION= perl -pe 's/^((\d+\.)*)(\d+)(.*)$/$1.($3+1).$4/e' | ${{ steps.get_version.outputs.release }}
            echo "::set-output name=version::$NEXT_VERSION"
       - name: Create Release
         id: create_release
