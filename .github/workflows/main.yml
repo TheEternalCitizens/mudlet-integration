@@ -22,7 +22,7 @@ jobs:
       - name: Bump Versions
         id: version_bump
         run: |
-          VERSION=echo "${{ steps.get_version.outputs.release }}"
+          VERSION="${{ steps.get_version.outputs.release }}"
           echo "Version $VERSION"
           NEXT_VERSION=$(awk -F. -v OFS=. '{$NF++;print}' <<< "$VERSION")
           echo "Next Version $NEXT_VERISON"
