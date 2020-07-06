@@ -372,6 +372,8 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   statsFilter = {}
   --used to filter data from the condition command 
   conditionFilter = {}
+  --table to store variables to filter data from the skills command
+  skillsFilter = {}
   
   --Stores player related data
   parthiaPlayer = {}
@@ -9023,6 +9025,52 @@ end --function runStatsCollection()</script>
 					</Script>
 				</ScriptGroup>
 				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>skills</name>
+					<packageName></packageName>
+					<script>--[[
+collect data from the skills command
+]]--</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>getSkillsCheckActive()</name>
+						<packageName></packageName>
+						<script>function getSkillsCheckActive()
+  return skillsFilter.checkActive
+end --function getSkillsCheckState()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>setSkillsCheckActive(mode)</name>
+						<packageName></packageName>
+						<script>function setSkillsCheckActive(mode)
+  mode = fuzzyBoolean(mode)
+  skillsFilter.checkActive = mode --a stats check is active
+  if skillsFilter.checkActive then --if disabeling
+    enableTrigger("skills") --enable trigger for skills collection
+    skillsFilter.hrFound = false --needed for finding the end of the skills command
+    debugToDisplay("function setSkillsCheckActive, enabled skills check")
+    tempTimer(2, [[setSkillsCheckActive(false)]]) --disable this data collection after 2 seconds incase it does not disable in the trigger
+  else
+    disableTrigger("skills") --disable the trigger for skills collections
+    debugToDisplay("function setSkillsCheckActive, disabled skills check")
+    skillsFilter.displayToScreen = true --if the check is done make certain displayToScreen is true
+  end --if not mode
+end --function setStatsCheckActive(mode)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>runSkillsCollection(displayToScreen)</name>
+						<packageName></packageName>
+						<script>function runSkillsCollection(displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen) 
+  setSkillsCheckActive(true) --tell Parthia we will be collecting stats data
+  send("skills",displayToScreen) --send command, do not echo
+  skillsFilter.displayToScreen = displayToScreen --tell stats filter not to display command to pecho
+end --function runStatsCollection()</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>condition</name>
 					<packageName></packageName>
 					<script>-------------------------------------------------
@@ -9563,7 +9611,8 @@ parthiaMap = parthiaMap or {} --table to hold the mapper data.
 --parthiaMap.entryIndex = 1 --index used to tell what exit was entered through to get to current room
 --parthiaMap.exitIndex = 1 --index used to tell what exit was exited through from previous room to get to current room
 --parthiaMap.descriptionOfExitUsed = "" --stores the description of the exit player used.
---parthiaMap.moveNeeded = false --Movement needs to be delayed because sometimes there is not SKOOT 10 message. This is used to track if movement has already begun. Used in function parthiaMap.delayMove()</script>
+--parthiaMap.moveNeeded = false --Movement needs to be delayed because sometimes there is not SKOOT 10 message. This is used to track if movement has already begun. Used in function parthiaMap.delayMove()
+--parthiaMap.danger = 0 --Used to show a message to player if they lack </script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
 					<name>parthiaMap.resetRoom()</name>

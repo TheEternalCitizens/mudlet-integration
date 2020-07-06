@@ -364,7 +364,7 @@ tecClientReset(true)</script>
 				<packageName></packageName>
 				<regex>^parthia tab font size (.*)$</regex>
 			</Alias>
-			<Alias isActive="no" isFolder="no">
+			<Alias isActive="yes" isFolder="no">
 				<name>parthia update</name>
 				<script>DownloadGitScripts() --Begin downloading updates</script>
 				<command></command>
@@ -1381,6 +1381,13 @@ lookRan = true --tell triggers player has run the look command</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^(?i)(?:l(?:ook|oo|o)?)\s*$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>skills</name>
+				<script>runSkillsCollection(true) --collect data from stats command showing command to screen</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^(?i)(?:skill(?:s)?)\s*$</regex>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">

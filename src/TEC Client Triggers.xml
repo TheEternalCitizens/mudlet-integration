@@ -835,6 +835,54 @@ end</script>
 					<integer>4</integer>
 				</regexCodePropertyList>
 			</Trigger>
+			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>skills</name>
+				<script>--[[
+to collect data when the character runs the commands we will want aliases for all the ways
+the skills command can be run. Including short hand versions
+Those aliases will set skillsCheckActive.
+A seporate bool will controll if the command is still shown to screen. skillsFilter.displayToScreen
+Collect data into a table. parthiaPlayer.CurrentCharacter.name
+References
+https://www.lua.org/pil/20.2.html string patterns
+https://wiki.mudlet.org/w/Manual:String_Functions
+]]--
+
+--Remove these to items if they are found.
+if line:match("Total Combat Ranks:") then --find combat rank line
+  parthiaPlayer.CurrentCharacter.combatRanks = line:match("Total Combat Ranks:%s+(%d+)") --collect combat ranks
+  if not skillsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+elseif line:match("Total Non%-Combat Ranks:") then --find combat rank line
+  parthiaPlayer.CurrentCharacter.noncombatRanks = line:match("Total Non%-Combat Ranks:%s+(%d+)") --collect combat ranks
+  if not skillsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+elseif line == "&lt;hr&gt;" then
+  if skillsFilter.hrFound then --this command begins and ends with an &lt;hr&gt; if we found the second one. Disable the filter.
+    setSkillsCheckActive(false) --disable skills check collection
+  end --if skillsFilter.hrFound
+  if not skillsFilter.displayToScreen then --if we do not want to display images to screen
+    deleteLine() --remove so it will not be displayed
+    disableTrigger("&lt;hr&gt;") --disable seporator trigger so it is not drawn
+  end --if not skillsFilter.displayToScreen
+else --for all other lines remove them from screen if they 
+  if not skillsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+end --if line:match("^Total Combat Ranks:") elseif</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>return getSkillsCheckActive()</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>4</integer>
+				</regexCodePropertyList>
+			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>condition</name>
 				<script>--[[
@@ -1074,9 +1122,11 @@ if tecUsername then tecUsername = nil end --remove the username, it is no longer
 tecResetRoomCharacterWindow()
 
 --collect player data, 1 second wait due to one command per second limitation
---runConditionCollection(false)
+tempTimer(.6,[[pecho("Please wait while parthia collects information about this character.")]]) --wait until after the notification message is displayed.
 parthiaPlayer.CurrentCharacter = { }
 local statsCollectionTimer = tempTimer(1.1, [[runStatsCollection(false)]])
+tempTimer(2.5, [[runSkillsCollection(false)]])
+tempTimer(3, [[pecho("Completed character information collection.\n")]])
 
 parthiaStopScripts() --stop all automation scripts</script>
 				<triggerType>0</triggerType>
