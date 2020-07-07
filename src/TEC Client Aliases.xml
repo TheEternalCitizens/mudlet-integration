@@ -1131,6 +1131,13 @@ pecho("Cleared room and previousRoom tables.\n")</script>
 					<regex>^parthia map location check$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
+					<name>parthia map danger</name>
+					<script>parthiaMap.setDanger(matches[2], true) --set danger level show message to screen.</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia map danger (.*)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
 					<name>/map</name>
 					<script>local cmd, arg = matches[2]:match("^(%a+)%s*(.*)")
 
@@ -1151,8 +1158,8 @@ if cmd then
     parthiaMap.changeArea(arg, true) --changes the area the character is in.
   elseif cmd == "coord" then
     pecho("Command not created yet.\n")
-  elseif cmd == "dangerous" then
-    pecho("Command not created yet.\n")
+  elseif cmd == "danger" then
+    parthiaMap.setDanger(arg, true)
   elseif cmd == "unique" then
     pecho("Command not created yet.\n")
   elseif cmd == "first" then
@@ -1168,12 +1175,19 @@ else --no additional text after /map in command
   --toggle map creation
   parthiaMap.setMapping(true)
 
-end</script>
+end --if cmd</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^/map(.*)$</regex>
 				</Alias>
 			</AliasGroup>
+			<Alias isActive="yes" isFolder="no">
+				<name>parthia tips</name>
+				<script>parthiaSetTips(true) --toggle the tips system, show message to screen</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^parthia tips(\s?.*)$</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Debug</name>
