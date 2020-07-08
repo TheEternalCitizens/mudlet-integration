@@ -506,7 +506,9 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   
   parthiaStopRan = false --if true player ran the stop command
 
-  tecSettings.parthiaMapEnabled = false --tells parthia if it's mapping system should be running.  
+  tecSettings.parthiaMapEnabled = false --tells parthia if it's mapping system should be running.
+  
+  tecSettings.tipsEnabled = true --tell parthia to show misc tips while exploring game world.
 
 	if displayToScreen then pecho("Parthia settings set to default.\n") end
 
@@ -6181,6 +6183,11 @@ end --end function tecDebugHelp</script>
   [[parthiaMap.help()]],
   "List parthia map commands", true)
   pecho(", commands for parthia's mapper.\n")
+
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia tips", 
+  [[parthiaSetTips(true)]],
+  "Toggle displaying game world tips", true)
+  pecho(", toggle displaying game world tips.\n")
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk", 
   [[parthiaTalkHelp()]],
@@ -9593,7 +9600,7 @@ parthiaMap = parthiaMap or {} --table to hold the mapper data.
 --parthiaMap.TECMapRooms = {} table that holds the size, position, and area of nearby rooms
 --parthiaMap.previousRoom = nil --will contain a room table of the last room the payer was in
 --parthiaMap.directionWalked = "" --direction player has walked. collected in trigger parthia mapper walk detected via function parthiaMap.findSpecialExits
---parthiaMap.roomID = nil --will hold the ID of the current room the player is in
+--parthiaMap.room.id = nil --will hold the ID of the current room the player is in
 --parthiaMap.roomName = nil --will hold the short name of the room, collected in function addLinksToDirections()
 --parthiaMap.previousRoomID = nil --will hold the ID of the previous room the player is in
 --parthiaMap.exits = {} --holds the exits for the current room, collected in function addLinksToDirections()
@@ -9612,7 +9619,8 @@ parthiaMap = parthiaMap or {} --table to hold the mapper data.
 --parthiaMap.exitIndex = 1 --index used to tell what exit was exited through from previous room to get to current room
 --parthiaMap.descriptionOfExitUsed = "" --stores the description of the exit player used.
 --parthiaMap.moveNeeded = false --Movement needs to be delayed because sometimes there is not SKOOT 10 message. This is used to track if movement has already begun. Used in function parthiaMap.delayMove()
---parthiaMap.danger = 0 --Used to show a message to player if they lack </script>
+--parthiaMap.danger = 0 --Used to show a message to player if they have fewer combat ranks than the danger rating
+--parthiaMap.previousDanger = 0 --Tracks the last change in danger level to avoid repeated danger messages to player</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
 					<name>parthiaMap.resetRoom()</name>
@@ -9657,6 +9665,8 @@ function parthiaMap.config()
   parthiaMap.load(true) --load map settings from file
   parthiaMap.currentAreaID = 1 --set the default room to the welcome area
   parthiaMap.notMovement = false --sets to true if login occured from trigger "Login Successful"
+  parthiaMap.danger = 0 --Used to show a message to player if they have fewer combat ranks than the danger rating
+  parthiaMap.previousDanger = 0 --Tracks the last change in danger level to avoid repeated danger messages to player
 end --parthiaMap.config()</script>
 					<eventHandlerList />
 				</Script>
@@ -9914,17 +9924,17 @@ end --function parthiaMap.connectRooms()</script>
       mapDebug("function parthiaMap.Move, was not able to collect room size or position in TEC Map, if next room is a new room it will not be created.")
     end --if parthiaMap.mapping
   end --if room.xpos and room.ypos and room.size
-  
-  --if the or previous room has no exits, it is a desk, market stall or other `room` within a room. Stop movement.
-  if (next(parthiaMap.room.confirmedExits) == nil  and next(parthiaMap.room.specialExits) == nil) --current room has no exits
-  or (next(parthiaMap.previousRoom.confirmedExits) == nil  and next(parthiaMap.previousRoom.specialExits) == nil) then --previous room had no exits
-    parthiaMap.room.id = previousRoom.id --record the corrent room id.
-    parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved. Also resets special movement booleans.
-    mapDebug("function parthiaMap.Move, found room within room. No movement room id copied.")
-    return --stop the movement
-  end --if  next(parthiaMap.room.confirmedExits) == nil and next(parthiaMap.room.specialExits) == nil
 
   if previousRoom then --if we are not mapping the first room
+  
+    --if the or previous room has no exits, it is a desk, market stall or other `room` within a room. Stop movement.
+    if (next(parthiaMap.room.confirmedExits) == nil  and next(parthiaMap.room.specialExits) == nil) --current room has no exits
+    or (next(parthiaMap.previousRoom.confirmedExits) == nil  and next(parthiaMap.previousRoom.specialExits) == nil) then --previous room had no exits
+      parthiaMap.room.id = previousRoom.id --record the corrent room id.
+      parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved. Also resets special movement booleans.
+      mapDebug("function parthiaMap.Move, found room within room. No movement room id copied.")
+      return --stop the movement
+    end --if  next(parthiaMap.room.confirmedExits) == nil and next(parthiaMap.room.specialExits) == nil
   
     --find the keys needed for exited and entered exits.
     if parthiaMap.previousRoom.confirmedExits then --verify the exits table exists
@@ -10220,6 +10230,7 @@ function parthiaMap.addRoom(room, previousRoom)
     end --if parthiaMap.previousRoom
     
     --set room's user data
+    setRoomUserData(room.id, "danger", parthiaMap.getDanger())
     --setRoomUserData(341, "some table", yajl.to_string({name = "bub", age = 23}))
     
     parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
@@ -11112,6 +11123,7 @@ function parthiaMap.setCharacterLocation(id, displayToScreen)
     else
       tecWarningNotification("function parthiaMap.setCharacterLocation, table key parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name] unavailable.")
     end --if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name]
+    parthiaMap.roomUserDataCheck() --check userdata stores
   else --no room id is available
     local errorFound = "No room ID after data verification.\n"
     if displayToScreen then pecho(errorFound) end
@@ -11310,6 +11322,17 @@ function parthiaMap.help()
     "change mapping area", true)    
   pecho(", change the area being mapped.\n")
   
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map danger", 
+    [[printCmdLine("parthia map danger ");
+      pecho("Now input how many combat ranks a character should have to safely enter the rooms you are mapping.\n")]],
+    "change mapping area", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapdanger", 
+    [[printCmdLine("/mapdanger ");
+      pecho("Now input how many combat ranks a character should have to safely enter the rooms you are mapping.\n")]],
+    "change mapping area", true)    
+  pecho(", change the area being mapped.\n")
+  
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Mapping tutorial", 
     [[parthiaMappingTutorial()]],
     "Click for basic mapping tutorial", true)
@@ -11327,6 +11350,134 @@ end --function parthiaMap.help()</script>
   end --if parthiaMap.moveNeeded
 
 end --function parthiaMap.delayMove()</script>
+					<eventHandlerList />
+				</Script>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>danger</name>
+					<packageName></packageName>
+					<script></script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaMap.setDanger(danger)</name>
+						<packageName></packageName>
+						<script>function parthiaMap.setDanger(danger, displayToScreen)
+  
+  danger = tonumber(danger) or 0
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  
+  if type(danger) ~= "number" then
+    tecErrorNotification("function parthiaMap.setDanger, argument received is a "..type(danger).." should be a number.")
+    return
+  end --if type(danger) ~= "number"
+  
+  parthiaMap.danger = danger
+  if displayToScreen then
+    pecho("Util this command is run again rooms will have their danger rating set to "..danger..".\n")
+  end --if displayToScreen
+  
+end --function parthiaMap.setDanger</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaMap.getDanger()</name>
+						<packageName></packageName>
+						<script>function parthiaMap.getDanger()
+  return parthiaMap.danger
+end --function parthiaMap.getDanger</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaMap.checkDanger()</name>
+						<packageName></packageName>
+						<script>--[[
+checks if the danger rating has changed
+If it has, it checks if danger is higher than current characters combat ranks
+if it is, a message is displayed
+]]--
+function parthiaMap.checkDanger(danger)
+
+  danger = tonumber(danger) or 0
+  local characterCombatRanks = tonumber(parthiaPlayer.CurrentCharacter.combatRanks)
+
+  if not (danger == parthiaMap.previousDanger) then --if the danger rating has changed
+    if danger &gt; characterCombatRanks then --if the players combat ranks is fewer than this rooms danger rating
+      local dangerRating = (danger - characterCombatRanks) / danger * 100--get how low the player is on ranks.
+      if dangerRating &lt; 0 then
+        dangerRating = false
+      elseif dangerRating &lt;= 25 then
+        dangerRating = "slightly"
+      elseif dangerRating &lt;= 50 then
+        dangerRating = "moderately"
+      elseif dangerRating &lt;= 75 then
+        dangerRating = "very"
+      elseif dangerRating &gt; 76 then
+        dangerRating = "extremely"
+      end --if dangerRating elseif
+
+      if dangerRating then --if danger rating was greater than 0
+        if parthiaGetTips() then --if the game tips system is enabled
+          pecho("\nYou feel a shiver through you body and get a feeling that you are entering a place that is "..dangerRating.." dangerous for you.\n")
+        end --if parthiaGetTips()
+      end --if dangerRating
+    end --if danger &gt; parthiaPlayer.CurrentCharacter.combatRanks
+  end --if not (danger == parthiaMap.previousDanger)
+
+  parthiaMap.previousDanger = danger --record the current room's danger rating.
+
+end --function parthiaMap.checkDanger()</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaMap.roomUserDataCheck(roomID)</name>
+					<packageName></packageName>
+					<script>--[[
+Called in function parthiaMap.setCharacterLocation, so this function will trigger after any successful movement.
+Any user data recorded to the mapper should have a function to receive variables from this function
+]]--
+function parthiaMap.roomUserDataCheck(roomID)
+  roomID = roomID or parthiaMap.room.id
+  parthiaMap.checkDanger(getRoomUserData(roomID, "danger"))
+end</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>tips</name>
+				<packageName></packageName>
+				<script></script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaSetTips(displayToScreen)</name>
+					<packageName></packageName>
+					<script>--enable or disable tips system
+function parthiaSetTips(displayToScreen)
+
+  if parthiaGetTips() then --tips system currently enabled
+    tecSettings.tipsEnabled = false
+    if displayToScreen then
+      pecho("Game world tips will no longer be displayed.\n")
+      dontForgetToSave()
+    end --if displayToScreen
+  else --tips system currently disabled
+    tecSettings.tipsEnabled = true
+    if displayToScreen then
+      pecho("Game world tips will be displayed.\n")
+      dontForgetToSave()
+    end --if displayToScreen
+  end --if parthiaGetTips()
+  
+end --function parthiaSetTips(mode, displayToScreen)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaGetTips()</name>
+					<packageName></packageName>
+					<script>function parthiaGetTips()
+
+  return tecSettings.tipsEnabled
+  
+end --function parthiaGetTips()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
