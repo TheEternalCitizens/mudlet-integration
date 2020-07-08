@@ -24,13 +24,11 @@ jobs:
         run: |
           VERSION="${{ steps.get_version.outputs.release }}"
           echo "Version $VERSION"
-          NEXT_VERSION=$(awk -F. -v OFS=. '{$NF++;print}' <<< "$VERSION")
+          export NEXT_VERSION=$(awk -F. -v OFS=. '{$NF++;print}' <<< "$VERSION")
           echo "Next Version $NEXT_VERISON"
-          echo "::set-output name=version::$NEXT_VERSION"
+          echo "::set-env name=NEXT_VERSION::$NEXT_VERSION"
       - name: Create PreRelease
         id: create_release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-          NEXT_VERSION: ${{ steps.version_bump.version }}
-        run: |
-          hub release create -p $NEXT_VERSION
+        run: hub release create -p $NEXT_VERSION
