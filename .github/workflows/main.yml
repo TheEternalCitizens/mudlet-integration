@@ -29,11 +29,7 @@ jobs:
           echo "::set-output name=version::$NEXT_VERSION"
       - name: Create PreRelease
         id: create_release
-        uses: actions/create-release@v1.1.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-        with:
-          tag_name: "${{ steps.version_bump.version }}"
-          release_name: "${{ steps.version_bump.version }}"
-          body: "${{ steps.version_bump.version }}"
-          prerelease: true
+        run: |
+          hub release create -p "${{ steps.version_bump.version }}"       
