@@ -3884,6 +3884,21 @@ end --function addLinksToObjects()</script>
 end --function parthiaEchoNotification</script>
 					<eventHandlerList />
 				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>round(num, numDecimalPlaces)</name>
+					<packageName></packageName>
+					<script>--[[
+rounds a numer to the decimal point specified with the second argument
+usage:
+round(1.1) --returns 1
+round(1.23, 1) --returns 1.2
+round(1.5) --returns 2
+]]--
+function round(num, numDecimalPlaces)
+  return tonumber(string.format("%." .. (numDecimalPlaces or 0) .. "f", num)) --don't know I didn't write it. Got it from a google
+end</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>GUI</name>
@@ -9539,19 +9554,23 @@ end --function getNumpadNaviation()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
-			<ScriptGroup isActive="yes" isFolder="yes">
+			<ScriptGroup isActive="no" isFolder="yes">
 				<name>Parthia Map</name>
 				<packageName></packageName>
 				<script>--[[
 Basic flow of mapping is:
+
 The player successfully moves. (Failed movement handled in trigger: "failed movement" and "You are in the middle of something.")
-That movement direction (IE east or west) is tracked with (alias group "movement", script "parthiaMap.findSpecialExits")
+  That movement direction (IE east or west) is tracked with (alias group "movement", via function "parthiaMap.detectDirection")
+  "parthiaMap.detectDirection" also finds the direction for special commands like "go door" or "go 3 door"
 parthiaMap.room (table that holds data about players current room) gets copied to parthiaMap.previousRoom in trigger "Player enters a room". parthiaMap.room is then reset with parthiaMap.resetRoom
-trigger "TEC Map Rooms" calls function parthiaDrawMapRooms().
-parthiaDrawMapRooms() collects sizes and positions of near by rooms into table parthiaMap.room
-trigger "TEC map exits" calls function parthiaDrawMapExits()
-parthiaDrawMapExits() collects data about exits into table parthiaMap.room
-trigger "TEC map exits" than calls function parthiaMap.Move() to move player on the map. This is a FLAWED method as some rooms do NOT have exits. So that trigger NEVER occurs!
+trigger "TEC Map Rooms" calls function parthiaDrawMapRooms() and parthiaMap.delayMove()
+  parthiaDrawMapRooms() collects sizes and positions of near by rooms into table parthiaMap.room
+  parthiaMap.delayMove(), is called on a .25 second delay. If movement has not been completed by the time this timer has completed parthiaMap.delayMove calls parthiaMap.Move. This is done because no all rooms have exits and do not call trigger "TEC map exits"
+trigger "TEC map exits" calls function parthiaDrawMapExits() and parthiaMap.Move
+  parthiaDrawMapExits() collects data about exits into table parthiaMap.room
+  function parthiaMap.Move() moves the player on the mudlet map. 
+
 parthiaMap.Move() uses mapping functions to find where near by rooms match to exits for the room the player is in.
   parthiaMap.Move() uses the direction the player moved to know which near by room was used to.
   if this is an existing room
@@ -9564,31 +9583,33 @@ parthiaMap.Move() uses mapping functions to find where near by rooms match to ex
     parthiaMap.Move creates lines for all the exits in the room.
     parthiaMap.Move sets doors on each exit line if a door or gate exists.
     parthiaMap.Move connects the exits for the room the player move from and the room the player is currently in, including special and unique exits. 
-There is obviously a LOT more that needs to be done, but this is the start
+    parthiaMap.Move creates userdata entries that are needed
+parthiaMap.setCharacterLocation
+  Is called to facilitate any successful movement.
+  It resets misc variables when movement has completed
+  calls function parthiaMap.roomUserDataCheck to work with any user data stores needed for this room
       
-
 parthiaMap table that contains parthia mapping scripts and data types.
-
-vertical movement can not be collected from messages echoed in the game.
-An example of game echo moving vertically is: You climb a spiral stairway of steel grille steps.
-The key word climb can be used to detect if a player moved up or down if only one of those options are available. This works in dark rooms also.
-The keyword climb in the vertical movement echo can not be used to collect vertical movement if both up and down movement is available.
-To detect if a player has moved up or down when both options are available. We turn to the function addLinksToDirections.
-That function already works with detecting exits in the room description echo message.
-In a room echo exit directions and exit descriptions are colored. We detect when the words "upwards" or "downwards" appear in colored text. Just before a exit direction is echoed in color, that exit's description is also colored in text.
-We take that description and store it into parthiaMap.room.exits[tmpRoomType].description = previousRoomType where tmpRoomType is a direction. 
-From there we capture all movement commands that can make the player use a special exit like: go ladder
-This has been done in alias group "movement". If a command is run IE: climb up go down go ladder. The direction is passed to function parthiaMap.detectDirection(dir)
-detectDirection detects if this movement will send the player up or down. Including if they use a special command like go ladder or go 2 ladder
-if detectDirection detects vertical movement it sets: parthiaMap.directionWalked = "up" (or "down") and parthiaMap.dirtectionCollected = true and displays a message to parthias debug console.
-
-
 
 currently detection data is reset in trigger Player enters a room that will need to be changed to add support for movement when room is dark.
 
 parthiaMap.config() and parthiaMap.load function are called in script `Post Initilization`
 
 Create option to disable mapping if colored text is disabled. Then when it is found, notify the player the parthia map can not work with colored text disabled. 
+
+know room coordinates
+Vet (Town Square) - [11400, -1200, 0]
+Seld (Town Square) - [32800, -1520, 0]
+Monlon (Town Square) - [139840, -13200, 0]
+Jackal's Point (Town Square) - [200680, 7920, 0]
+Franlius (Town Square) - [52800, -26400, 0]
+Iridine (Vet Road Mark Point) - [1680, -1040, 0]
+Rock Valley (Town Square) - [66000, 50400, 0]
+Blackvine (Town Square) - [7920, -10480, 0]
+Darpen (Town Square) - [63360, 0, 0]
+Viron (Town Square) - [31620, 45720, 0]
+Argosius (Town Square) - [42240, 2640, 0]
+Tepsin (Town Square) - [26400, 15840, 0]
 ]]--
 
 --tell mudlet we are going to create a maping script https://wiki.mudlet.org/w/Mapping_script#Making_your_own_mapping_script
@@ -9597,6 +9618,7 @@ mudlet.mapper_script = true
 
 parthiaMap = parthiaMap or {} --table to hold the mapper data.
 
+--below is a listing of misc global variables for mapper
 --parthiaMap.TECMapRooms = {} table that holds the size, position, and area of nearby rooms
 --parthiaMap.previousRoom = nil --will contain a room table of the last room the payer was in
 --parthiaMap.directionWalked = "" --direction player has walked. collected in trigger parthia mapper walk detected via function parthiaMap.findSpecialExits
@@ -9623,30 +9645,241 @@ parthiaMap = parthiaMap or {} --table to hold the mapper data.
 --parthiaMap.previousDanger = 0 --Tracks the last change in danger level to avoid repeated danger messages to player</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.resetRoom()</name>
+					<name>parthiaMap.help()</name>
 					<packageName></packageName>
-					<script>--Used to reset the data table to track the players current room
-function parthiaMap.resetRoom()
-  parthiaMap.room = {} -- clear the table
-  parthiaMap.room.id = nil --will hold the ID of the current room the player is in
-  parthiaMap.room.name = nil --will hold the short name of the room, collected in function addLinksToDirections()
-  parthiaMap.room.exits = {} --holds the exits for the current room, collected in function addLinksToDirections()
-  parthiaMap.room.coords = {} --location in the current area
-  parthiaMap.room.size = nil --size of the room, collection in function parthiaDrawMapRooms()
-  if not parthiaMap.dirtectionCollected then --if resetRoom is called after directionWalk was collected do not reset directionWalked
-    parthiaMap.directionWalked = "NOT COLLECTED" --direction the player has walked
-  end --if not parthiaMap.dirtectionCollected
-  parthiaMap.TECMapRooms = {} --rooms that appear on the map
-  parthiaMap.TECMapExits = {} --exits that appear on the map
-  parthiaMap.room.confirmedExits = {} --exits that have been confirmed to be in this room.
-  parthiaMap.room.specialExits = {} --store special exit descriptions
-end --function parthiaMap.resetRoom()</script>
+					<script>function parthiaMappingTutorial()
+  pecho("\nVerify mapping is enabled with: ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map enable", 
+    [[parthiaMap.setEnabled(true, true)]],
+    "Enable parthia map", true)
+  pecho("\nTell parthia you want to make new maps with: ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map mapping", 
+    [[parthiaMap.setMapping(true)]],
+    "Toggle new map creation", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/map", 
+    [[parthiaMap.setMapping(true)]],
+    "Toggle new map creation", true)
+  pecho(".\n\nIf wanting to map a new area or no areas exist. Create a new area with command: ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map area add", 
+    [[printCmdLine("parthia map area add ");
+      pecho("Now type the name you would like to give to the new area.\n")]],
+    "create new area", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapareaadd", 
+    [[printCmdLine("/mapareaadd ");
+      pecho("Now type the name you would like to give to the new area.\n")]],
+    "create new area", true)
+    pecho(". If they do no already exist it is recommended to create an area for the welcome Area and at least one for the game world.\n")
+    pecho("\nTo support a second character in game you would need to place them in a know room and run: ")
+      pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map character move", 
+    [[printCmdLine("parthia map character move ");
+      pecho("Now type the room id you would like to move to and press enter.\n")]],
+    "move to room id", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapmove", 
+    [[printCmdLine("/mapmove ");
+      pecho("Now type the room id you would like to move to and press enter.\n")]],
+    "move to room id", true)
+  pecho(". Using the room id you know the character is currently in.\n")
+end
+
+function parthiaMap.help()
+ pecho("Parthia map commands are\n")
+
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map enable", 
+    [[parthiaMap.setEnabled(true, true)]],
+    "Enable parthia map", true)
+  pecho(", enable parthia map.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map disable", 
+    [[parthiaMap.setEnabled(false, true)]],
+    "Enable parthia map", true)
+  pecho(", enable parthia map.\n")
+
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map mapping", 
+    [[parthiaMap.setMapping(true)]],
+    "Toggle new map creation", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/map", 
+    [[parthiaMap.setMapping(true)]],
+    "Toggle new map creation", true)
+  pecho(", toggle new map creation on or off.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map steps go up", 
+    [[parthiaMap.setStepsGoUp(true, true)]],
+    "Steps and ramps go up", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapup", 
+    [[parthiaMap.setStepsGoUp(true, true)]],
+    "Steps and ramps go down", true)
+  pecho(", while mapping steps and ramps go up.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map steps go down", 
+    [[parthiaMap.setStepsGoUp(false, true)]],
+    "Steps and ramps go down", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapdown", 
+    [[parthiaMap.setStepsGoUp(false, true)]],
+    "Steps and ramps go down", true)    
+  pecho(", while mapping steps and ramps go down.\n")
+
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map character move", 
+    [[printCmdLine("parthia map character move ");
+      pecho("Now type the room id you would like to move to and press enter.\n")]],
+    "move to room id", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapmove", 
+    [[printCmdLine("/mapmove ");
+      pecho("Now type the room id you would like to move to and press enter.\n")]],
+    "move to room id", true)
+  pecho(", move to a room id on the map.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map area add", 
+    [[printCmdLine("parthia map area add ");
+      pecho("Now type the name you would like to give to the new area.\n")]],
+    "create new area", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapareaadd", 
+    [[printCmdLine("/mapareaadd ");
+      pecho("Now type the name you would like to give to the new area.\n")]],
+    "create new area", true)
+  pecho(", create new area.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map area remove", 
+    [[printCmdLine("parthia map area remove ");
+      pecho("Now type the name or id of the area to remove and press enter.\n")]],
+    "create new area", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/maparearemove", 
+    [[printCmdLine("/maparearemove ");
+      pecho("Now type the name or id of the area to remove and press enter.\n")]],
+    "create new area", true)    
+  pecho(", create new area.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map area clear", 
+    [[printCmdLine("parthia map area clear ");
+      pecho("Now type the id of the area to clear the rooms from.\n")]],
+    "clear rooms from area", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapareaclear", 
+    [[printCmdLine("/mapareaclear ");
+      pecho("Now type the id of the area to clear the rooms from.\n")]],
+    "clear rooms from area", true)    
+  pecho(", clear rooms from an area.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map character area", 
+    [[printCmdLine("parthia map character area ");
+      pecho("Now type the name of the area to remove and press enter.\n")]],
+    "change mapping area", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/maparea", 
+    [[printCmdLine("/maparea ");
+      pecho("Now type the name of the area to remove and press enter.\n")]],
+    "change mapping area", true)    
+  pecho(", change the area being mapped.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map danger", 
+    [[printCmdLine("parthia map danger ");
+      pecho("Now input how many combat ranks a character should have to safely enter the rooms you are mapping.\n")]],
+    "change mapping area", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapdanger", 
+    [[printCmdLine("/mapdanger ");
+      pecho("Now input how many combat ranks a character should have to safely enter the rooms you are mapping.\n")]],
+    "change mapping area", true)    
+  pecho(", change the area being mapped.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Mapping tutorial", 
+    [[parthiaMappingTutorial()]],
+    "Click for basic mapping tutorial", true)
+  pecho(", display a basic mapping tutorial.\n")
+end --function parthiaMap.help()</script>
 					<eventHandlerList />
 				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.config()</name>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>modes</name>
 					<packageName></packageName>
 					<script>--[[
+enable or disable mapper or settings within it
+]]--</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaMap.setEnabled(mode, displayToScreen)</name>
+						<packageName></packageName>
+						<script>--[[
+Sets if parthia uses the mudlet mapping system.
+used in alias "parthia map enable" and "parthia map disable"
+usage:
+parthiaMap.setEnabled(true) --enable parthia's mapping system
+parthiaMap.setEnabled(false) --disable parthia's mapping system
+]]--
+function parthiaMap.setEnabled(mode, displayToScreen)
+  --make certain variables passed are good
+  mode = fuzzyBoolean(mode)
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  
+  tecSettings.parthiaMapEnabled = mode --set the state for parthiaMap
+  debugToDisplay("function parthiaMap.setEnabled, set tecSettings.parthiaMapEnabled to "..tostring(mode))
+  
+  if displayToScreen then 
+    if mode then --mapping was enabled
+      pecho("Parthia map enabled.\n")
+    else --mapping was disabled
+      pecho("Parthia map disabled.\n")
+    end --if mode
+    dontForgetToSave() --remind player to save their changes
+  end --if displayToScreen
+  
+end --parthiaMap.setEnabled(mode, displayToScreen)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaMap.getEnabled()</name>
+						<packageName></packageName>
+						<script>--[[
+Used to check if parthia map is being used
+Useage: 
+if parthiaMap.getEnabled() then
+  --code that requires mapper here
+end
+]]--
+function parthiaMap.getEnabled()
+  return tecSettings.parthiaMapEnabled
+ end --parthiaMap.getEnabled()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaMap.setMapping(displayToScreen)</name>
+						<packageName></packageName>
+						<script>--[[
+disables or enables creation of new rooms while walking.
+used in aliases "parthia map mapping" and "/map"
+]]--
+function parthiaMap.setMapping(displayToScreen)
+  --enable or disable new map creation
+  if parthiaMap.mapping then
+    parthiaMap.mapping = false
+    if displayToScreen then pecho("&lt;green&gt;Mapping stopped.&lt;reset&gt;\n") end
+  else
+    parthiaMap.mapping = true
+    if displayToScreen then pecho("&lt;green&gt;Mapping started.&lt;reset&gt;\n") end
+  end
+end</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>data</name>
+					<packageName></packageName>
+					<script>--[[
+functions that work with 
+]]--</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaMap.config()</name>
+						<packageName></packageName>
+						<script>--[[
 creates basic data need for using mudlet's mapper within Parthia.
 It is called in script "Post Initilization"
 ]]--
@@ -9668,13 +9901,105 @@ function parthiaMap.config()
   parthiaMap.danger = 0 --Used to show a message to player if they have fewer combat ranks than the danger rating
   parthiaMap.previousDanger = 0 --Tracks the last change in danger level to avoid repeated danger messages to player
 end --parthiaMap.config()</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.addArea(areaName)</name>
+						<eventHandlerList />
+					</Script>
+					<ScriptGroup isActive="yes" isFolder="yes">
+						<name>location</name>
+						<packageName></packageName>
+						<script></script>
+						<eventHandlerList />
+						<Script isActive="yes" isFolder="no">
+							<name>parthiaMap.resetRoom()</name>
+							<packageName></packageName>
+							<script>--Used to reset the data table to track the players current room
+function parthiaMap.resetRoom()
+  parthiaMap.room = {} -- clear the table
+  parthiaMap.room.id = nil --will hold the ID of the current room the player is in
+  parthiaMap.room.name = nil --will hold the short name of the room, collected in function addLinksToDirections()
+  parthiaMap.room.exits = {} --holds the exits for the current room, collected in function addLinksToDirections()
+  parthiaMap.room.coords = {} --location in the current area
+  parthiaMap.room.size = nil --size of the room, collection in function parthiaDrawMapRooms()
+  if not parthiaMap.dirtectionCollected then --if resetRoom is called after directionWalk was collected do not reset directionWalked
+    parthiaMap.directionWalked = "NOT COLLECTED" --direction the player has walked
+  end --if not parthiaMap.dirtectionCollected
+  parthiaMap.TECMapRooms = {} --rooms that appear on the map
+  parthiaMap.TECMapExits = {} --exits that appear on the map
+  parthiaMap.room.confirmedExits = {} --exits that have been confirmed to be in this room.
+  parthiaMap.room.specialExits = {} --store special exit descriptions
+end --function parthiaMap.resetRoom()</script>
+							<eventHandlerList />
+						</Script>
+						<Script isActive="yes" isFolder="no">
+							<name>parthiaMap.trackPreviousRoom()</name>
+							<packageName></packageName>
+							<script>--used to track what the previous room was and reset the current room to an empty room
+function parthiaMap.trackPreviousRoom()
+
+  --prepare for next movement
+  parthiaMap.previousRoom = {}
+  parthiaMap.previousRoom = table.deepcopy(parthiaMap.room) --keep track of what the previous room was
+  if parthiaMap.previousRoom.id then
+    mapDebug("function parthiaMap.trackPreviousRoom(),  migrated room to previousRoom previousRoom ID now: "..parthiaMap.previousRoom.id)
+  else
+    mapDebug("&lt;yellow&gt;function parthiaMap.trackPreviousRoom(), migrated room to previous room. No ID available.&lt;reset&gt;")
+  end --if parthiaMap.previousRoom.id
+  
+  parthiaMap.resetRoom() --clear the room table
+  
+end --function parthiaMap.trackPreviousRoom()</script>
+							<eventHandlerList />
+						</Script>
+						<ScriptGroup isActive="yes" isFolder="yes">
+							<name>file</name>
+							<packageName></packageName>
+							<script>--[[
+functions that permanently save to disc
+]]--</script>
+							<eventHandlerList />
+							<Script isActive="yes" isFolder="no">
+								<name>parthiaMap.load(displayToScreen)</name>
+								<packageName></packageName>
+								<script>--load player character locations from file.
+function parthiaMap.load(displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen)
+
+  if io.exists(parthiaMap.savePath) then --if the file exists, load it.
+    table.load(parthiaMap.savePath, parthiaMap.saveTable)
+    if displayToScreen then pecho("[  OK  ]  - Parthia map settings successfully loaded from file.\n") end
+  else --the save file does not exist
+    if displayToScreen then pecho("[ Info ]  - No map settings file.\n") end
+  end --if io.exists(parthiaMap.savePath)
+
+end --function parthiaMap.load(displayToScreen)</script>
+								<eventHandlerList />
+							</Script>
+							<Script isActive="yes" isFolder="no">
+								<name>parthiaMap.save(displayToScreen)</name>
+								<packageName></packageName>
+								<script>--Save map SETTINGS to file
+--it is very likely the only thing that will be saved with this is character location
+function parthiaMap.save(displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  parthiaTableSave(parthiaMap.saveTable, parthiaMap.savePath, false, displayToScreen)
+end --function parthiaMap.save()</script>
+								<eventHandlerList />
+							</Script>
+						</ScriptGroup>
+					</ScriptGroup>
+				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>area</name>
 					<packageName></packageName>
 					<script>--[[
+functions for area creation and manipulation
+]]--</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaMap.addArea(areaName)</name>
+						<packageName></packageName>
+						<script>--[[
 Used to create a new area with in mudlet's mapper
+used in aliases "parthia map area add" and "/map"
 Useage:
 parthiaMap.addArea("Name of Area")
 This function is used in alias "parthia map area add"
@@ -9710,14 +10035,14 @@ function parthiaMap.addArea(areaName)
     parthiaMap.currentAreaID = newID --set the new ID for mapping in the new space
   end --if newID == nil or newID &lt; 1 or err
 end --function parthiaMap.addArea</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.removeArea(areaName, displayToScreen)</name>
-					<packageName></packageName>
-					<script>--[[
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaMap.removeArea(areaName, displayToScreen)</name>
+						<packageName></packageName>
+						<script>--[[
 Used to remove an area with in mudlet's mapper, and all rooms in that area.
-This function is used in alias "parthia map area remove"
+This function is used in alias "parthia map area remove" and "/map"
 Useage:
 parthiaMap.removeArea(areaName, displayToScreen)
   areaName, is the full name of an area. With correct capitolization
@@ -9751,15 +10076,15 @@ function parthiaMap.removeArea(areaName, displayToScreen)
   return errorFound
 
 end --function parthiaMap.removeArea(areaName)</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.changeArea(areaName, displayToScreen)</name>
-					<packageName></packageName>
-					<script>--[[
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaMap.changeArea(areaName, displayToScreen)</name>
+						<packageName></packageName>
+						<script>--[[
 Changes character's current area.
 Function would only be useful for mappers. When they have to move between existing areas while mapping.
-Is used in alias `parthia map character area`
+Is used in alias `parthia map character area` and "/map"
 Useage:
   parthiaMap.changeArea(areaNameOrID, displayToScreen)
   areaNameOrID, contains the full name or id of an area
@@ -9792,12 +10117,170 @@ function parthiaMap.changeArea(areaNameOrID, displayToScreen)
   return errorFound
 
 end --function parthiaMap.changeArea(areaNameOrID)</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.connectRooms()</name>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaMap.clearAreaRooms(areaID)</name>
+						<packageName></packageName>
+						<script>--[[
+delte all rooms in an area
+used in function parthiaMap.removeArea. aliases "parthia map area clear ID" and /map
+Usage
+parthiaMap.clearAreaRooms(1)
+This function is used in alias "parthia map area clear ID"
+]]--
+function parthiaMap.clearAreaRooms(areaID)
+  areaID = areaID or parthiaMap.currentAreaID
+  local areaTable = getAreaRooms(areaID)
+  
+  --get the name of this area
+  local areasTable = getAreaTable() --get a table that contains all the ids and names of of each area
+  local areaName = ""
+  for k,v in pairs(areasTable) do --loop through all the areas that have been created
+    if v == areaID then areaName = k break end --when we find the area to clear record the name
+  end --for pairs(areasTable)
+  
+  if not areaTable[0] then --if the table is empty there are no rooms in this area.
+    pecho("No rooms found in area name: "..areaName..". Area ID: "..areaID.."\n")
+    return
+  end --if not areaTable[0]
+  
+  for i=0, #areaTable do --loop through the entire area table, bug means there is an index 0
+    pecho("Removing room ID: "..areaTable[i].."\n")
+    deleteRoom(areaTable[i]) --delete each room found
+  end --for i=0, #areaTable
+  
+end --function parthiaMap.resetAreaRooms(areaID)</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>character</name>
 					<packageName></packageName>
-					<script>--call when mapping is ready to connect the exits of the players previous and current rooms
+					<script>--[[
+functions used to work with player characters
+Likely will only be setting the characters location
+]]--</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaMap.setCharacterLocation(id, displayToScreen)</name>
+						<packageName></packageName>
+						<script>--[[
+sets the room the current character is in
+This function is called in alias `parthia map character move`, aliase "/map", functions parthiaMap.Move, parthiaMap.addRoom, and parthiaMap.checkCharacter
+usage:
+parthiaMap.setCharacterLocation(id, displayToScreen)
+  id, is a room id.
+  displayToScreen, controls if messages are shown on main console.
+examples:
+  parthiaMap.setCharacterLocation(3) --sets the characters location on the parthia map to room id 3. Messages on only displayed to debug and error consoles.
+  local errorFound = parthiaMap.setCharacterLocation(3) --sets the characters location on the parthia map to room id 3. Messages on only displayed to debug and error consoles. If errors are found a message describing them is put into variable errorFound
+  parthiaMap.setCharacterLocation(3, true) --sets the characters location on the parthia map to room id 3. Messages displayed on main console and all error and debug consoles.
+]]--
+function parthiaMap.setCharacterLocation(id, displayToScreen)
+  id = id or parthiaMap.room.id --set id to current rooms id
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  
+  if id then
+    local roomsAreaID = getRoomArea(id) --check if this room id has an area set.
+    if roomsAreaID then --all rooms are know to have areas. We are using this to verify this room exists.
+      parthiaMap.room.id = id --update the current room's id
+    else --the room does not exist
+      local errorFound = "Attempted to change character location to room id: "..id.." the room was not found."
+      if displayToScreen then pecho(errorFound) end
+      tecWarningNotification("function parthiaMap.setCharacterLocation, "..errorFound)
+      return roomsAreaID
+    end --if roomExists
+    centerview(id) --highly characters room on the map
+    parthiaMap.currentAreaID = roomsAreaID --collect the area ID of the current room
+    --reset movement variables to defaults
+    parthiaMap.playerClimbed = false
+    parthiaMap.specialExitMovement = false
+    parthiaMap.specialExitAttempted = false --records if a special exit was attempted. Used to automatically create a special exit for mappers.
+    parthiaMap.entryIndex = 1 --index used to tell what exit was entered through to get to current room
+    parthiaMap.exitIndex = 1 --index used to tell what exit was exited through from previous room to get to current room
+    if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name] then --if the current character has location in the map save table.
+      parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].roomID = id --record the id to the map settings save table
+      parthiaMap.room.id = id --record the ID to the mapper current room's id.
+      local errorFound = parthiaTableSave(parthiaMap.saveTable, parthiaMap.savePath, false, false) --save the location change to file. So location is know on startup.
+      if errorFound then --an error was found
+        if displayToScreen then --display error message to file
+          tecErrorNotification("function parthiaMap.setCharacterLocation, "..errorFound)
+        else --do not display error message to file.
+          tecErrorNotification("function parthiaMap.setCharacterLocation, "..errorFound, false)
+        end --if displayToScreen
+      end --if errorFound
+      if displayToScreen then pecho("Player in room id: "..tostring(id)..".\n") end
+    else
+      tecWarningNotification("function parthiaMap.setCharacterLocation, table key parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name] unavailable.")
+    end --if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name]
+    parthiaMap.roomUserDataCheck() --check userdata stores
+  else --no room id is available
+    local errorFound = "No room ID after data verification.\n"
+    if displayToScreen then pecho(errorFound) end
+    tecWarningNotification("function parthiaMap.setCharacterLocation, "..errorFound)
+    return errorFound
+  end --if id
+end --function parthiaMap.setCharacterLocation(id, displayToScreen)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaMap.checkCharacter()</name>
+						<packageName></packageName>
+						<script>--[[
+This function changes the character that is currently logged in and on the map
+It is called in trigger: `stats` within function setStatsCheckActive(false), only when it is sent false. Indicating stats collection and space filtering has completed
+This function needs the character name to run. the stats filter is what collects the playername
+]]--
+function parthiaMap.checkCharacter(displayToScreen)
+  local character = ""
+  if parthiaPlayer.CurrentCharacter.name then --if logged into a character account
+    character = parthiaPlayer.CurrentCharacter.name
+  else --if the stats command does not work, the player is in the welcome room
+    character = "Welcome Room ID"
+    parthiaPlayer.CurrentCharacter.name = character
+  end --if parthiaPlayer.CurrentCharacter.name
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  if not parthiaMap.saveTable[character] then --if this character does not exist in the table parthiaMap uses to save
+    parthiaMap.saveTable[character] = {}
+    if displayToScreen then pecho("A character name of \""..character.."\", was not found in save file.") end
+    mapDebug("function parthiaMap.checkCharacter, created table for character \""..character.."\" in the parthiaMap.saveTable table.")
+  end --if not parthiaMap.saveTable[character]
+  
+  if parthiaMap.saveTable[character].roomID then --if the player had a previously saved location
+    local errorFound = parthiaMap.setCharacterLocation(parthiaMap.saveTable[character].roomID) --sets the current characters location and centers map view on that room
+    if errorFound then --if an error occured while attempting to set the current character's location
+      local errorMessage = "Unable to move character, error recived from setCharacterLocation is: "..errorFound
+      if displayToScreen then pecho(errorMessage) end
+      tecWarningNotification("function parthiaMap.checkCharacter, received error from parthiaMap.setCharacterLocation. Error was: "..errorMessage)
+    else --no errors found
+      local parthiaMessage = "Moved character "..character.." to room ID: "..parthiaMap.saveTable[character].roomID.."\n"
+      if displayToScreen then pecho(parthiaMessage) end
+      mapDebug("function parthiaMap.checkCharacter, "..parthiaMessage)
+    end --if errorFound
+--code for finding a room hash here
+  end --if parthiaMap.saveTable[character].roomID
+end --parthiaMap.loadCharater(character)</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>room</name>
+					<packageName></packageName>
+					<script>--[[
+functions to work specifically with rooms
+]]--</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaMap.connectRooms()</name>
+						<packageName></packageName>
+						<script>--[[
+creates and connects exits between the current and previous rooms
+Including special exits
+used in:
+  parthiaMap.addRoom, after room is created
+  parthiaMap.Move, when player moves while mapping but the two rooms are not already connected.
+]]--
 function parthiaMap.connectRooms()
   local entryDir = parthiaMap.getEntranceDirection()
   local exitDir = parthiaMap.directionWalked
@@ -9894,12 +10377,246 @@ function parthiaMap.connectRooms()
     end --if #parthiaMap.room.confirmedExits[entryDir] &lt; 2
   end --if parthiaMap.specialExitAttempted
 end --function parthiaMap.connectRooms()</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.Move(room, previousRoom, directionWalked)</name>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaMap.addRoom(room, previousRoom)</name>
+						<packageName></packageName>
+						<script>--[[
+creates a room
+used in function parthiaMap.Move when movement finds there is no room at new coordinates after moving
+
+Useage:
+parthiaMap.addRoom("current rooms data table", "previous room data table")
+parthiaMap.addRoom() --adds a room using parthiaMap.room as the current room and parthiaMap.previousRoom as the previous room table
+]]--
+function parthiaMap.addRoom(room, previousRoom)
+  room = room or parthiaMap.room
+  previousRoom = previousRoom or parthiaMap.previousRoom
+
+  if parthiaMap.mapping then --if the player is creating new maps
+    local newID = createRoomID() --create a new ID in the mudlet maping system
+    mapDebug("Creating room name: "..room.name.." with ID "..newID)
+    room.id = newID --collect the new ID
+    addRoom(room.id) --create the new room
+    setRoomArea(room.id, parthiaMap.currentAreaID) --set room to area currently being mapped.
+    setRoomName(room.id, room.name) --give the room a name
+    
+    --create exits --https://wiki.mudlet.org/w/Manual:Mapper_Functions#setExitStub
+    for exitDirection,exit in pairs(room.exits) do --loop through all the exits found
+      mapDebug("function parthiaMap.addRoom, creating exit stub in direction "..exitDirection)
+      setExitStub(room.id, exitDirection, true) --make the exit stubs
+
+      if exit.door and exitDirection ~= "up" and exitDirection ~= "down" then --there is a door in one of the directions that setDoor supports
+        local doorMade = setDoor(room.id, parthiaMap.getShortDirection(exitDirection), 1) --create an open door. 
+        if doorMade then --if the door was created successfully
+          mapDebug("function parthiaMap.addRoom, created door in exit direction "..exitDirection)
+        else --if doorMade, the door failed to be made
+          tecWarningNotification("function parthiaMap.addRoom, failed to make door  in direction "..exitDirection)
+        end --if doorMade
+      end --if exit.door
+
+    end --for pairs(exits)
+    
+    --set room coordinates
+    if parthiaMap.previousRoom then --if we are NOT mapping the first room
+      setRoomCoordinates(room.id,unpack(room.coords)) --set coordinates if we are mapping
+      if previousRoom.id then --if we have a previous room ID, connect the rooms
+        parthiaMap.connectRooms() --connect the exit nodes for the room player is in and the one they moved from
+      end --if parthiaMap.previousRoom.id
+    else --if this is the first room mapped
+      setRoomCoordinates(room.id,0,0,0)
+    end --if parthiaMap.previousRoom
+    
+    --set room's user data
+    setRoomUserData(room.id, "danger", parthiaMap.getDanger())
+    --setRoomUserData(341, "some table", yajl.to_string({name = "bub", age = 23}))
+    
+    parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
+  end --if parthiaMap.mapping
+end --function parthiaMap.addRoom()</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>UserData</name>
 					<packageName></packageName>
-					<script>function parthiaMap.Move(room, previousRoom, directionWalked)
+					<script>--[[
+contains functions used for user data stores.
+Mostly these are variables created by the mapper to add intelligence to rooms and areas
+]]--</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaMap.roomUserDataCheck(roomID)</name>
+						<packageName></packageName>
+						<script>--[[
+Checks a room id for user data entries than uses each for their use.
+uses parthiaMap.room.id as default roomID
+
+Usage:
+parthiaMap.roomUserDataCheck() --to run user data check for default id of parthiaMap.room.id
+parthiaMap.roomUserDataCheck(53) --to run a user data check for room id 53
+
+Used in
+  function parthiaMap.setCharacterLocation, so this function will trigger after any successful movement.
+
+Any user data recorded to the mapper should have a function to receive variables from this function
+]]--
+function parthiaMap.roomUserDataCheck(roomID)
+  roomID = roomID or parthiaMap.room.id
+  parthiaMap.checkDanger(getRoomUserData(roomID, "danger"))
+end</script>
+						<eventHandlerList />
+					</Script>
+					<ScriptGroup isActive="yes" isFolder="yes">
+						<name>danger</name>
+						<packageName></packageName>
+						<script></script>
+						<eventHandlerList />
+						<Script isActive="yes" isFolder="no">
+							<name>parthiaMap.setDanger(danger)</name>
+							<packageName></packageName>
+							<script>--[[
+Used to set the danager level for newly created rooms.
+
+used in:
+aliases "parthia map danger" and "/map"
+data it records is collected with function parthiaMap.roomUserDataCheck and passed to function parthiaMap.checkDanger
+
+usage:
+parthiaMap.setDanger(1500, true) --new rooms will have a danger or combat ranks rating of 1500 and a message will be displayed to screen to show the setting change.
+parthiaMap.setDanger(0,false) --new rooms will not have a danger or combat rank recomendation. No message will be displayed to screen to show this change
+]]--
+function parthiaMap.setDanger(danger, displayToScreen)
+  
+  danger = tonumber(danger) or 0
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  
+  if type(danger) ~= "number" then
+    tecErrorNotification("function parthiaMap.setDanger, argument received is a "..type(danger).." should be a number.")
+    return
+  end --if type(danger) ~= "number"
+  
+  parthiaMap.danger = danger
+  if displayToScreen then
+    pecho("Util this command is run again rooms will have their danger rating set to "..danger..".\n")
+  end --if displayToScreen
+  
+end --function parthiaMap.setDanger</script>
+							<eventHandlerList />
+						</Script>
+						<Script isActive="yes" isFolder="no">
+							<name>parthiaMap.getDanger()</name>
+							<packageName></packageName>
+							<script>--returns the danger rating saved in memory for mapping new rooms
+function parthiaMap.getDanger()
+  return parthiaMap.danger
+end --function parthiaMap.getDanger</script>
+							<eventHandlerList />
+						</Script>
+						<Script isActive="yes" isFolder="no">
+							<name>parthiaMap.checkDanger()</name>
+							<packageName></packageName>
+							<script>--[[
+checks if the danger rating has changed while player walks.
+If it has, it checks if danger is higher than current characters combat ranks
+if it is, it checks if player has the `tips` system enabled
+if it is, a message is displayed
+
+used in:
+function parthiaMap.roomUserDataCheck, to received the saved danger rating fro the room
+
+usage:
+parthiaMap.checkDanger(1500) --cehcks if a danger rating of 1500 is dangerous for the current character
+]]--
+function parthiaMap.checkDanger(danger)
+
+  danger = tonumber(danger) or 0
+  local characterCombatRanks = tonumber(parthiaPlayer.CurrentCharacter.combatRanks)
+
+  if not (danger == parthiaMap.previousDanger) then --if the danger rating has changed
+    if danger &gt; characterCombatRanks then --if the players combat ranks is fewer than this rooms danger rating
+      local dangerRating = (danger - characterCombatRanks) / danger * 100--get how low the player is on ranks.
+      if dangerRating &lt; 0 then
+        dangerRating = false
+      elseif dangerRating &lt;= 25 then
+        dangerRating = "slightly"
+      elseif dangerRating &lt;= 50 then
+        dangerRating = "moderately"
+      elseif dangerRating &lt;= 75 then
+        dangerRating = "very"
+      elseif dangerRating &gt; 76 then
+        dangerRating = "extremely"
+      end --if dangerRating elseif
+
+      if dangerRating then --if danger rating was greater than 0
+        if parthiaGetTips() then --if the game tips system is enabled
+          pecho("\nYou feel a shiver through you body and get a feeling that you are entering a place that is "..dangerRating.." dangerous for you.\n")
+        end --if parthiaGetTips()
+      end --if dangerRating
+    end --if danger &gt; parthiaPlayer.CurrentCharacter.combatRanks
+  end --if not (danger == parthiaMap.previousDanger)
+
+  parthiaMap.previousDanger = danger --record the current room's danger rating.
+
+end --function parthiaMap.checkDanger()</script>
+							<eventHandlerList />
+						</Script>
+					</ScriptGroup>
+					<ScriptGroup isActive="yes" isFolder="yes">
+						<name>unique</name>
+						<packageName></packageName>
+						<script>--[[
+adds ability to create unique room identifiers.
+
+--No light needed variables--
+
+--check skoot 6 &amp; 10
+SKOOT 6 &amp; 10
+Only useable for adjacent connected rooms. In the dark these are the only ones that show up.
+When checking remove the room.open variables and compair the tables.
+
+--check skoot 7
+SKOOT 7:
+Changes when a ship is or is not docked! Not when doors are opened or closed. 
+Each direction and it corrisponding show or none has to be checked seperately. Because we need to allow of a single one to be incorrect due to ships and wagons.
+
+--you walk message
+You walk to a (or an) ROOMTYPE.
+ROOMTYPE in this case is also the room's name.
+
+you walk through a (or an) EXITTYPE
+EXITTYPE is the exit in that direction the player walked. This exit will be in the rooms special exit table.
+
+--light available--
+
+Room description:
+You arrive at ROOMTYPE. (CHARACTERNAME(s) is here.)? You are facing DIRECTION. You see EXITS
+ROOMTYPE will always be the same.
+EXITS will always be the same. Even the color codes should match.
+
+--retreval
+There needs to be a a table containing all unique room's userData stores. This allows for rapid comparison.
+  This needs to be loaded at startup into this table. So things do not get slowed down at an inoportune time. Possibly under a seperate thread if it takes too long
+Check room against unique room userData stores BEFORE other movement calculations
+If there is light, check room description first. Those will be simple string comparisons.
+
+]]--</script>
+						<eventHandlerList />
+					</ScriptGroup>
+				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>movement</name>
+					<packageName></packageName>
+					<script>--[[
+functions that are used during movement calculation
+]]--</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaMap.Move(room, previousRoom, directionWalked)</name>
+						<packageName></packageName>
+						<script>--refer to script group `Parthia Map` for details on this function
+function parthiaMap.Move(room, previousRoom, directionWalked)
   parthiaMap.moveNeeded = false --Movement needs to be delayed because sometimes there is not SKOOT 10 message. This is used to track if movement has already begun. Used in function parthiaMap.delayMove()
   if parthiaMap.notMovement then --if the trigger that called this function was not from movement. Stop the function
     parthiaMap.notMovement = false
@@ -10155,352 +10872,128 @@ Fix is probably using the two room sizes to resolve.
   mapDebug("function parthiaMap.Move, Completed mapping space that was previously unmapped.")
 
 end --parthiaMap.Move(room, previousRoom, directionWalked)</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.getEntranceDirection(directionWalked)</name>
-					<packageName></packageName>
-					<script>--Returns the opposit direction it is passed.
-function parthiaMap.getEntranceDirection(directionWalked)
-  dir = directionWalked or parthiaMap.directionWalked
-  if dir == "north" then --return the oposite of the direction walked in to find where player entered this room
-    return "south"
-  elseif dir == "northeast" then
-    return "southwest"
-  elseif dir == "east" then
-    return "west"
-  elseif dir == "southeast" then
-    return "northwest"
-  elseif dir == "south" then
-    return "north"
-  elseif dir == "southwest" then
-    return "northeast"
-  elseif dir == "west" then
-    return "east"
-  elseif dir == "northwest" then
-    return "southeast"
-  elseif dir == "u" or dir == "up" then
-    return "down"
-  elseif dir == "down" then
-    return "up"
-  end --if dir ==
-end </script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.addRoom(room, previousRoom)</name>
-					<packageName></packageName>
-					<script>--creates a new room in mudlet's mapping system. Arguments are optional.
-function parthiaMap.addRoom(room, previousRoom)
-  room = room or parthiaMap.room
-  previousRoom = previousRoom or parthiaMap.previousRoom
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaMap.delayMove()</name>
+						<packageName></packageName>
+						<script>--[[
+called in trigger "TEC Map Rooms" on a timer set at .25 second
+This is needed because some rooms have no exits or no exits on the TEC Map.
+movement completion is normally called in trigger "TEC map exits", but SKOOT 10 message does not appear in every room
+if skoot 10 message does appear "TEC map exits" sets parthiaMap.moveNeeded to false, and when parthiaMap.delayMove runs nothing happens.
+if there is no SKOOT 10 message parthiaMap.delayMove calls function parthiaMap.Move
 
-  if parthiaMap.mapping then --if the player is creating new maps
-    local newID = createRoomID() --create a new ID in the mudlet maping system
-    mapDebug("Creating room name: "..room.name.." with ID "..newID)
-    room.id = newID --collect the new ID
-    addRoom(room.id) --create the new room
-    setRoomArea(room.id, parthiaMap.currentAreaID) --set room to area currently being mapped.
-    setRoomName(room.id, room.name) --give the room a name
-    
-    --create exits --https://wiki.mudlet.org/w/Manual:Mapper_Functions#setExitStub
-    for exitDirection,exit in pairs(room.exits) do --loop through all the exits found
-      mapDebug("function parthiaMap.addRoom, creating exit stub in direction "..exitDirection)
-      setExitStub(room.id, exitDirection, true) --make the exit stubs
+Used in: refer above
 
-      if exit.door and exitDirection ~= "up" and exitDirection ~= "down" then --there is a door in one of the directions that setDoor supports
-        local doorMade = setDoor(room.id, parthiaMap.getShortDirection(exitDirection), 1) --create an open door. 
-        if doorMade then --if the door was created successfully
-          mapDebug("function parthiaMap.addRoom, created door in exit direction "..exitDirection)
-        else --if doorMade, the door failed to be made
-          tecWarningNotification("function parthiaMap.addRoom, failed to make door  in direction "..exitDirection)
-        end --if doorMade
-      end --if exit.door
-
-    end --for pairs(exits)
-    
-    --set room coordinates
-    if parthiaMap.previousRoom then --if we are NOT mapping the first room
-      setRoomCoordinates(room.id,unpack(room.coords)) --set coordinates if we are mapping
-      if previousRoom.id then --if we have a previous room ID, connect the rooms
-        parthiaMap.connectRooms() --connect the exit nodes for the room player is in and the one they moved from
-      end --if parthiaMap.previousRoom.id
-    else --if this is the first room mapped
-      setRoomCoordinates(room.id,0,0,0)
-    end --if parthiaMap.previousRoom
-    
-    --set room's user data
-    setRoomUserData(room.id, "danger", parthiaMap.getDanger())
-    --setRoomUserData(341, "some table", yajl.to_string({name = "bub", age = 23}))
-    
-    parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
-  end --if parthiaMap.mapping
-end --function parthiaMap.addRoom()</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.clearAreaRooms(areaID)</name>
-					<packageName></packageName>
-					<script>--[[
-delte all rooms in an area
 Usage
-parthiaMap.clearAreaRooms(1)
-This function is used in alias "parthia map area clear ID"
+This should not be called in other instances.
 ]]--
-function parthiaMap.clearAreaRooms(areaID)
-  areaID = areaID or parthiaMap.currentAreaID
-  local areaTable = getAreaRooms(areaID)
-  
-  --get the name of this area
-  local areasTable = getAreaTable() --get a table that contains all the ids and names of of each area
-  local areaName = ""
-  for k,v in pairs(areasTable) do --loop through all the areas that have been created
-    if v == areaID then areaName = k break end --when we find the area to clear record the name
-  end --for pairs(areasTable)
-  
-  if not areaTable[0] then --if the table is empty there are no rooms in this area.
-    pecho("No rooms found in area name: "..areaName..". Area ID: "..areaID.."\n")
-    return
-  end --if not areaTable[0]
-  
-  for i=0, #areaTable do --loop through the entire area table, bug means there is an index 0
-    pecho("Removing room ID: "..areaTable[i].."\n")
-    deleteRoom(areaTable[i]) --delete each room found
-  end --for i=0, #areaTable
-  
-end --function parthiaMap.resetAreaRooms(areaID)</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.trackPreviousRoom()</name>
-					<packageName></packageName>
-					<script>--used to track what the previous room was
-function parthiaMap.trackPreviousRoom()
 
-  --prepare for next movement
-  parthiaMap.previousRoom = {}
-  parthiaMap.previousRoom = table.deepcopy(parthiaMap.room) --keep track of what the previous room was
-  if parthiaMap.previousRoom.id then
-    mapDebug("function parthiaMap.trackPreviousRoom(),  migrated room to previousRoom previousRoom ID now: "..parthiaMap.previousRoom.id)
-  else
-    mapDebug("&lt;yellow&gt;function parthiaMap.trackPreviousRoom(), migrated room to previous room. No ID available.&lt;reset&gt;")
-  end --if parthiaMap.previousRoom.id
-  
-  parthiaMap.resetRoom() --clear the room table
-  
-end --function parthiaMap.trackPreviousRoom()</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.load(displayToScreen)</name>
-					<packageName></packageName>
-					<script>--load player character locations from file.
-function parthiaMap.load(displayToScreen)
-  displayToScreen = fuzzyBoolean(displayToScreen)
+function parthiaMap.delayMove()
 
-  if io.exists(parthiaMap.savePath) then --if the file exists, load it.
-    table.load(parthiaMap.savePath, parthiaMap.saveTable)
-    if displayToScreen then pecho("[  OK  ]  - Parthia map settings successfully loaded from file.\n") end
-  else --the save file does not exist
-    if displayToScreen then pecho("[ Info ]  - No map settings file.\n") end
-  end --if io.exists(parthiaMap.savePath)
+  if parthiaMap.moveNeeded then --if movement has not happened yet
+    parthiaMap.Move() 
+  end --if parthiaMap.moveNeeded
 
-end --function parthiaMap.load(displayToScreen)</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.save(displayToScreen)</name>
-					<packageName></packageName>
-					<script>--Save map settings to file
-function parthiaMap.save(displayToScreen)
-  displayToScreen = fuzzyBoolean(displayToScreen)
-  parthiaTableSave(parthiaMap.saveTable, parthiaMap.savePath, false, displayToScreen)
-end --function parthiaMap.save()</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.getShortDirection(dir)</name>
-					<packageName></packageName>
-					<script>--returns the short hand version of a dirrection.
---Currently only needed because function setDoor requires shorthand direction
-function parthiaMap.getShortDirection(dir)
-  if dir then
-    if type(dir) ~= "string" then
-      tecErrorNotification("parthiaMap.getShortDirection, sent a non string variable for argument 1. Expected string, receive a "..type(dir))
-    end
-  else
-    tecErrorNotification("parthiaMap.getShortDirection, requires a string for argument 1.")
+end --function parthiaMap.delayMove()</script>
+						<eventHandlerList />
+					</Script>
+					<ScriptGroup isActive="yes" isFolder="yes">
+						<name>room data</name>
+						<packageName></packageName>
+						<script>--[[
+Data that is collected and used for movement from echos.
+Includes
+skoot 6, skoot 10, and room description echos
+]]--</script>
+						<eventHandlerList />
+						<ScriptGroup isActive="yes" isFolder="yes">
+							<name>collection</name>
+							<packageName></packageName>
+							<script></script>
+							<eventHandlerList />
+							<Script isActive="yes" isFolder="no">
+								<name>parthiaMap.trackTECMapRooms(size, xpos, ypos)</name>
+								<packageName></packageName>
+								<script>--[[
+used to track where rooms appear in the SKOOT 6 message
+Or where rooms appear on the TEC Map.
+We do this so we can check if these rooms are adjacent to the players room
+this is important so we can figure out the coordinates for the room the player walks to.
+This is called in function parthiaDrawMapRooms() and collects the rooms size xpos and ypos
+]]--
+
+--ADD ERROR CHECKING!!!!!!!!!!!!!!!!!
+
+function parthiaMap.trackTECMapRooms(size, xpos, ypos)
+  if not parthiaMap.TECMapRooms then
+    parthiaMap.TECMapRooms = {}
   end
   
+  --if trackTECMapRooms was passed the players current room than do not map it. Should not be needed.
+  --if parthiaMap.room.size == size and parthiaMap.room.xpos == xpos and parthiaMap.room.ypos == ypos then
+  --  return
+  --end --if parthiaMap.room.size == size and parthiaMap.room.xpos == xpos and parthiaMap.room.ypos == ypos
   
-  if dir == "north" then --return the oposite of the direction walked in to find where player entered this room
-    return "n"
-  elseif dir == "northeast" then
-    return "ne"
-  elseif dir == "east" then
-    return "e"
-  elseif dir == "southeast" then
-    return "se"
-  elseif dir == "south" then
-    return "s"
-  elseif dir == "southwest" then
-    return "sw"
-  elseif dir == "west" then
-    return "w"
-  elseif dir == "northwest" then
-    return "nw"
-  elseif dir == "u" or dir == "up" then
-    return "u"
-  elseif dir == "down" or dir == "d" then
-    return "d"
-  end --if dir ==
+  table.insert(parthiaMap.TECMapRooms, {})
+  if not next(parthiaMap.TECMapRooms[#parthiaMap.TECMapRooms]) then --the table is empty
+    parthiaMap.TECMapRooms[#parthiaMap.TECMapRooms].size = tonumber(size/10) --collect the size for parthiaMap
+    parthiaMap.TECMapRooms[#parthiaMap.TECMapRooms].xpos = tonumber(xpos/10) --used to calculate area of room and where other rooms should be created while mapping
+    parthiaMap.TECMapRooms[#parthiaMap.TECMapRooms].ypos = tonumber(ypos/10) --used to calculate area of room and where other rooms should be created while mapping
+  else --the table was not created
+    tecErrorNotification([[function parthiaMap.trackTECMapRooms, failed to make a room table at parthiaMap.TECMapRooms[]]..(#parthiaMap.TECMapRooms+1).."]")
+  end --if parthiaMap.TECMapRooms[#parthiaMap.TECMapRooms]
 
-end</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.detectDirection(dir)</name>
-					<packageName></packageName>
-					<script>--[[
-used to sort movement to a direction the parthia mapping system supports.
-currently only supports up and down movement.
-Will support all directions and sepecial movement like go gate or go 2 gate
-
-Useage
-parthiaMap.detectDirection("up")
-parthiaMap.detectDirection("down")
+end --function parthiaMap.trackTECMapRooms(size, xpos, ypos)</script>
+								<eventHandlerList />
+							</Script>
+							<Script isActive="yes" isFolder="no">
+								<name>parthiaMap.trackTECMapExits(direction, xpos, ypos, open)</name>
+								<packageName></packageName>
+								<script>--[[
+Used to track where all the exits are that appear in SKOOT 10 message
 ]]--
 
---used to tell detectDirection what is NOT going to be z movement.
---Made outside the function so it is not recreated each time the function is called. Wasting processing time.
-parthiaMap.notZMovement = {
-  "east", "eas", "ea", "e",
-  "southeast", "se",
-  "south", "sout", "sou", "so", "s",
-  "southwest", "sw",
-  "west", "wes", "we", "w",
-  "northwest", "nw",
-  "north", "nort", "nor", "no", "n",
-  "northeast", "ne",
-  "leave", "leav", "lea", "le"
-}
+--ADD ERROR CHECKING!!!!!!!!!!!!!!!!!
 
-local zMovement = {
-  "up", "u",
-  "down", "d"
-}
+function parthiaMap.trackTECMapExits(direction, xpos, ypos, open)
+  if not parthiaMap.TECMapExits then
+    parthiaMap.TECMapExits = {}
+  end
+  if open then --if the exit is open
+    if open == "1" then
+      open = true
+    elseif open == "0" then
+      open = false
+    end --if open == "1"
+  else --if the exit was not passed. Assume it is open.
+    open = true
+  end --if open
+   
+  table.insert(parthiaMap.TECMapExits, {})
+  if not next(parthiaMap.TECMapExits[#parthiaMap.TECMapExits]) then --the table is empty
+    parthiaMap.TECMapExits[#parthiaMap.TECMapExits].direction = tostring(direction) --collect orientation of the exit
+    parthiaMap.TECMapExits[#parthiaMap.TECMapExits].xpos = tonumber(xpos/10) --used to see if this exit is for the players current room
+    parthiaMap.TECMapExits[#parthiaMap.TECMapExits].ypos = tonumber(ypos/10) --used to see if this exit is for the players current room
+    parthiaMap.TECMapExits[#parthiaMap.TECMapExits].open = open
+  else --the table was not created
+    tecErrorNotification([[function parthiaMap.trackTECMapExits, failed to make a exit table at parthiaMap.TECMapExits[]]..(#parthiaMap.TECMapExits+1).."]")
+  end --if parthiaMap.TECMapExits[#parthiaMap.TECMapExits]
 
---returns the room id a special exit leads to
---intended to be used with captured user movement commands that are special exit commands.
-local function specialExitMatch(playerCmd)
-  if playerCmd then
-    if type(playerCmd) ~= "string" then
-      tecErrorNotification("function specialExitMatch, argument 1 expected string variable receive a "..type(playerCmd))
-      return
-    end --if type(playerCmd) ~= "string"
-  else 
-    tecErrorNotification("function specialExitMatch, argument 1 expected received nil")
-  end --if playerCmd
-  
-  playerCmd = playerCmd:lower() --make certain variables are lower case, so matching will be more accurate
-  parthiaMap.specialExitAttempted = true --records if a special exit was attempted. Used to automatically create a special exit for mappers.
-  
-  local plCmdExitNum = playerCmd:match("^%s*(%d+)%s") --capture the number at the start of the line, if it is there.
-  local plCmdExitDesc = playerCmd:match("^%s*%d*%s*(.+)%s*") --capture the description of the exit provided in the player's command
-  
-  mapDebug("function specialExitMatch, playerCmd: \""..playerCmd.."\" plCmdExitNum: "..tostring(plCmdExitNum).." plCmdExitDesc: \""..plCmdExitDesc.."\"\n")
-  
-  if plCmdExitNum == nil then plCmdExitNum = 1 end --if the player did not specify an exit number check for the first match
-  plCmdExitNum = tonumber(plCmdExitNum) --convert it to number for future matching
-
-  spExits = getSpecialExitsSwap(parthiaMap.room.id) --collect special exits in this room
-  
-  --check if players command perfectly matches a special exit a mapper created
-  --sort the table in order the rooms these exits appear in the SKOOT 6 message
-  local sortedSpExits = {}
-  for exitDesc,exitRoomID in pairs(spExits) do
-    ----check if the players command perfectly matches a special exit.
-    if exitDesc == playerCmd then
-      mapDebug("function specialExitMatch, found perfect special exit match for player command: "..playerCmd.." to roomID: "..exitRoomID..". Inside if exitDesc == playerCmd")
-      parthiaMap.specialExitMovement = exitRoomID
-      return exitRoomID --found the correct exit type. Return it's room ID
-    end --if exitDesc == playercmd
-    --sort the exits table
-    local sortKey = tonumber(exitDesc:match("#(%d)$"))
-    if sortKey then
-      table.insert(sortedSpExits, sortKey, exitDesc)
-    else
-      mapDebug("&lt;orange&gt;function specialExitMatch, failed to find a room order for exit: "..exitDesc.."&lt;reset&gt;")
-    end --if sortKey
-  end --for pairs(spExits)
-  
-  --find the exit the player is looking for in the sortedSpExits table
-  local i = 0 --iterator to keep track of how may times the exit exitDesc (exit description from the players command) is found in this rooms special exits table
-  for _,v in pairs(sortedSpExits) do
-    if v:match(plCmdExitDesc) then --if the exit type the player is checking for exists.
-      i = i + 1 --increase match iterator
-      if i == plCmdExitNum then --if the exit number matches the number the player input.
-        for exitDesc, exitRoomID in pairs(spExits) do
-          if v == exitDesc then
-            mapDebug("function specialExitMatch, found special exit match at: \""..v.."\" to roomID: "..exitRoomID.."\n")
-            parthiaMap.specialExitMovement = exitRoomID --record id to global variable
-            return exitRoomID --found the correct exit type. Return it's room ID
-          end --if v == exitDesc
-        end --for pairs(spExits)
-      end --if i == plCmdExitNum
-    end --if v:match(plCmdExitDesc)
-  end --for pairs(sortedSpExits)
-
-  mapDebug("&lt;orange&gt;function specialExitMatch, failed to find a special exit from command player ran.&lt;reset&gt;\n")
-
-end --local function specialExitMatch(exit)
-
-function parthiaMap.detectDirection(playerCmd)
-  playerCmd = playerCmd or parthiaMap.directionWalked
-  playerCmd = playerCmd:lower()
-  parthiaMap.playerCmd = playerCmd --record the command the player used
-  
-  --if this is Z movement
-  if table.contains(zMovement, playerCmd) then
-    if parthiaMap.upAvailable then --if it is possible for the player to move up
-      if playerCmd == "up" then --player is going up
-        parthiaMap.directionWalked = "up"
-        parthiaMap.dirtectionCollected = true
-        mapDebug("function detectDirection, directionWalked up found.")
-        return
-      elseif parthiaMap.room.exits["up"].description:match(playerCmd) then
-        parthiaMap.directionWalked = "up"
-        parthiaMap.dirtectionCollected = true
-        mapDebug("function detectDirection, directionWalked up found.")
-        return
-      end --if parthiaMap.room.exits["up"].description:match(playerCmd)
-    end --if parthiaMap.upAvailable
-    
-    if parthiaMap.downAvailable then --if it is possible for the player to move down
-      if playerCmd == "down" then --player is going down
-        parthiaMap.directionWalked = "down"
-        parthiaMap.dirtectionCollected = true
-        mapDebug("function parthiaMap.horizontalTracking, directionWalked down found.")
-        return
-      elseif parthiaMap.room.exits["down"].description:match(playerCmd) then
-        parthiaMap.directionWalked = "down"
-        parthiaMap.dirtectionCollected = true
-        mapDebug("function parthiaMap.horizontalTracking, directionWalked down found.")
-        return
-      end --if parthiaMap.room.exits["down"].description:match(playerCmd)
-    end --if parthiaMap.downAvailable
-  elseif table.contains(parthiaMap.notZMovement, playerCmd) then
-    --code to adjust standardmovement goes here.
-  else --if the input is not a standard movement, a special exit command was used
-    specialExitMatch(playerCmd) --find what exit, than room ID this command leads to
-  end --if not table.contains(parthiaMap.notZMovement, playerCmd)
-end --parthiaMap.horizontalTracking</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.setRoomArea()</name>
-					<packageName></packageName>
-					<script>--[[
+end --function parthiaMap.trackTECMapExits(direction, xpos, ypos)</script>
+								<eventHandlerList />
+							</Script>
+						</ScriptGroup>
+						<ScriptGroup isActive="yes" isFolder="yes">
+							<name>sorting</name>
+							<packageName></packageName>
+							<script></script>
+							<eventHandlerList />
+							<Script isActive="yes" isFolder="no">
+								<name>parthiaMap.setRoomArea()</name>
+								<packageName></packageName>
+								<script>--[[
 sets area of a room. Default is players current room.
 requires the "room" passed to it is a table that has variables:
 room.size, number the size of the room
@@ -10538,83 +11031,12 @@ function parthiaMap.setRoomArea(room)
     end --for yi=0, room.size
   end --for xi=0, room.size
 end --function parthiaMap.setRoomArea(room)</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.trackTECMapRooms(size, xpos, ypos)</name>
-					<packageName></packageName>
-					<script>--[[
-used to track where rooms appear in the SKOOT 6 message
-Or where rooms appear on the TEC Map.
-We do this so we can check if these rooms are adjacent to the players room
-this is important so we can figure out the coordinates for the room the player walks to.
-This is called in function parthiaDrawMapRooms() and collects the rooms size xpos and ypos
-]]--
-
---ADD ERROR CHECKING!!!!!!!!!!!!!!!!!
-
-function parthiaMap.trackTECMapRooms(size, xpos, ypos)
-  if not parthiaMap.TECMapRooms then
-    parthiaMap.TECMapRooms = {}
-  end
-  
-  --if trackTECMapRooms was passed the players current room than do not map it. Should not be needed.
-  --if parthiaMap.room.size == size and parthiaMap.room.xpos == xpos and parthiaMap.room.ypos == ypos then
-  --  return
-  --end --if parthiaMap.room.size == size and parthiaMap.room.xpos == xpos and parthiaMap.room.ypos == ypos
-  
-  table.insert(parthiaMap.TECMapRooms, {})
-  if not next(parthiaMap.TECMapRooms[#parthiaMap.TECMapRooms]) then --the table is empty
-    parthiaMap.TECMapRooms[#parthiaMap.TECMapRooms].size = tonumber(size/10) --collect the size for parthiaMap
-    parthiaMap.TECMapRooms[#parthiaMap.TECMapRooms].xpos = tonumber(xpos/10) --used to calculate area of room and where other rooms should be created while mapping
-    parthiaMap.TECMapRooms[#parthiaMap.TECMapRooms].ypos = tonumber(ypos/10) --used to calculate area of room and where other rooms should be created while mapping
-  else --the table was not created
-    tecErrorNotification([[function parthiaMap.trackTECMapRooms, failed to make a room table at parthiaMap.TECMapRooms[]]..(#parthiaMap.TECMapRooms+1).."]")
-  end --if parthiaMap.TECMapRooms[#parthiaMap.TECMapRooms]
-
-end --function parthiaMap.trackTECMapRooms(size, xpos, ypos)</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.trackTECMapExits(direction, xpos, ypos, open)</name>
-					<packageName></packageName>
-					<script>--[[
-Used to track where all the exits are that appear in SKOOT 10 message
-]]--
-
---ADD ERROR CHECKING!!!!!!!!!!!!!!!!!
-
-function parthiaMap.trackTECMapExits(direction, xpos, ypos, open)
-  if not parthiaMap.TECMapExits then
-    parthiaMap.TECMapExits = {}
-  end
-  if open then --if the exit is open
-    if open == "1" then
-      open = true
-    elseif open == "0" then
-      open = false
-    end --if open == "1"
-  else --if the exit was not passed. Assume it is open.
-    open = true
-  end --if open
-   
-  table.insert(parthiaMap.TECMapExits, {})
-  if not next(parthiaMap.TECMapExits[#parthiaMap.TECMapExits]) then --the table is empty
-    parthiaMap.TECMapExits[#parthiaMap.TECMapExits].direction = tostring(direction) --collect orientation of the exit
-    parthiaMap.TECMapExits[#parthiaMap.TECMapExits].xpos = tonumber(xpos/10) --used to see if this exit is for the players current room
-    parthiaMap.TECMapExits[#parthiaMap.TECMapExits].ypos = tonumber(ypos/10) --used to see if this exit is for the players current room
-    parthiaMap.TECMapExits[#parthiaMap.TECMapExits].open = open
-  else --the table was not created
-    tecErrorNotification([[function parthiaMap.trackTECMapExits, failed to make a exit table at parthiaMap.TECMapExits[]]..(#parthiaMap.TECMapExits+1).."]")
-  end --if parthiaMap.TECMapExits[#parthiaMap.TECMapExits]
-
-end --function parthiaMap.trackTECMapExits(direction, xpos, ypos)</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.findAdjacentRooms()</name>
-					<packageName></packageName>
-					<script>--[[
+								<eventHandlerList />
+							</Script>
+							<Script isActive="yes" isFolder="no">
+								<name>parthiaMap.findAdjacentRooms()</name>
+								<packageName></packageName>
+								<script>--[[
 Used to find the rooms by the players current room
 
 ]]--
@@ -10640,112 +11062,12 @@ function parthiaMap.findAdjacentRooms()
     loopRooms(roomToCheck) --use the function above because we would like to stop checking when the room is known to be adjacent.
   end --for ipairs(parthiaMap.TECMapRooms)
 end --function parthiaMap.findAdjacentRooms()</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>round(num, numDecimalPlaces)</name>
-					<packageName></packageName>
-					<script>--[[
-rounds a numer to the decimal point specified with the second argument
-usage:
-round(1.1) --returns 1
-round(1.23, 1) --returns 1.2
-round(1.5) --returns 2
-]]--
-function round(num, numDecimalPlaces)
-  return tonumber(string.format("%." .. (numDecimalPlaces or 0) .. "f", num)) --don't know I didn't write it. Got it from a google
-end</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.findSpecialExits(exitEcho)</name>
-					<packageName></packageName>
-					<script>--[[
-finds the description for all the current rooms exits.
-Store this in the parthiaMap.room.exits table.
-these descriptions will stored in userdata
-  than used when a player runs a command to use a keyword on an exit.
-method
-players runs `go 2 door`
-mapper 
-]]--
-function parthiaMap.findSpecialExits(exitEcho)
-  exitEcho = exitEcho or parthiaMap.room.exitEcho
-  local previousRoomType = ""
-  parthiaMap.room.specialExits = {}
-  local spExitToDir = {} --keep track of special exits for directions
-  local lastSpExit = "" --keep track of the last special exit that appears 
-  
-  for exit in string.gmatch( exitEcho, "00[^0]%x[^0]%x\"&gt;(.-)&lt;\/" ) do --find exits for this room
-    
-    --upwards and downwards is not a function exit type. Though it appears on the exit echo
-    if exit == "upwards" then exit = "up" end
-    if exit == "downwards" then exit = "down" end
-    
-    --if this exit is a standard exit name
-    if table.contains(parthiaMap.directions, exit) then 
-      
-      --record the direction(s) special exits go
-      if #spExitToDir &gt; 1 then --there has been more than one exit since the last standard exit
-        for k,v in ipairs(spExitToDir) do --loop through those previous special exits found
-          table.insert(parthiaMap.room.specialExits[v],exit) --record the direction those special exits go in
-        end --for ipairs(spExitToDir)
-      else --there is has only been one special exit since last
-        table.insert(parthiaMap.room.specialExits[lastSpExit],exit)
-      end --if #spExitToDir &gt; 1
-      spExitToDir = {} --prevents duplicate entries
-    
-    else --this is a special exit
-    
-      --track special exits
-      table.insert(spExitToDir, exit)
-      parthiaMap.room.specialExits[exit] = {}
-      lastSpExit = exit --keep track of the last special exit used
-      
-    end --if table.contains(parthiaMap.directions, exit)
-    
-    if table.contains(parthiaMap.directions, exit) then --if this exit is a standard exit name
-      local exitIsADoor = false --will tell addRoom function if there is a door at this exit
-      if previousRoomType:lower():match("door") or previousRoomType:lower():match("gate") then --check if this exit is a door or gate
-        exitIsADoor = true 
-      end --if previousRoomType:lower():match("door") or previousRoomType:lower():match("gate")
-      parthiaMap.room.exits[exit] = { door = exitIsADoor } --mark that this direction is a door or a gate so the mapper can add a door later.
-      if exit == "up" then --if this exit allows player to move up or down
-        parthiaMap.upAvailable = true --needed because go u could be short for something other than go up
-        parthiaMap.room.exits[exit].description = previousRoomType --keep track of a description of the exit. Use this to compair against movement commands like go ladder
-      elseif exit == "down" then
-        parthiaMap.downAvailable = true --needed because go d, could be used as short for go door
-        parthiaMap.room.exits[exit].description = previousRoomType --keep track of a description of the exit. Use this to compair against movement commands like go ladder
-      end --if exit == "up"
-    end --if table.contains(parthiaMap.directions, exit)
-    previousRoomType = exit --Keep track of the last room type used.
-  end --for string.gmatch( line, "0020ff\"&gt;(%P+)&lt;\/" )
-  
-  local tmpCurrentRoomType = exitEcho:match("^You arrive at (%P+)%p")
-  if tmpCurrentRoomType then --if something was found above.
-    if parthiaMap.getEnabled() then --if player is using parthiaMap
-      parthiaMap.room.name = tmpCurrentRoomType --collect this description for a room name.
-    end --if parthiaMap.getEnabled()
-  end --if tmpCurrentRoomType
-
-  --collection direction walked for mapper
-    if not parthiaMap.dirtectionCollected then --if we have not collection a movement direction yet do so now.
-      parthiaMap.directionWalked = exitEcho:match(" You are facing (%a+)%.")
-      if parthiaMap.directionWalked then
-        mapDebug("function addlinksToDirections, Direction walked: "..parthiaMap.directionWalked)
-      else
-        mapDebug("function addlinksToDirections, could collect direction walked")
-      end --if parthiaMap.directionWalked
-    end --if not parthiaMap.dirtectionCollected
-    parthiaMap.dirtectionCollected = false --reset directionCollected for next movement.
-
-end --function parthiaMap.findSpecialExits()</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.findRoomExits()</name>
-					<packageName></packageName>
-					<script>--[[
+								<eventHandlerList />
+							</Script>
+							<Script isActive="yes" isFolder="no">
+								<name>parthiaMap.findRoomExits()</name>
+								<packageName></packageName>
+								<script>--[[
 Detects if an exit touches the area the room the player is in than verifies the exit is for this room
 Determines which adjacent room that exit leads to
 
@@ -10966,76 +11288,281 @@ function parthiaMap.findRoomExits()
   sortAdjacentRooms() --local function for each know exit, find what room it leads to than track that.
   
 end --function parthiaMap.findRoomExits()</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.getEnabled()</name>
-					<packageName></packageName>
-					<script>--[[
-Used to check if parthia map is being used
-Useage: 
-if parthiaMap.getEnabled() then
-  --code that requires mapper here
-end
+								<eventHandlerList />
+							</Script>
+							<Script isActive="yes" isFolder="no">
+								<name>parthiaMap.findSpecialExits(exitEcho)</name>
+								<packageName></packageName>
+								<script>--[[
+finds the description for all the current rooms exits.
+Store this in the parthiaMap.room.exits table.
+these descriptions will stored in userdata
+  than used when a player runs a command to use a keyword on an exit.
+method
+players runs `go 2 door`
+mapper 
 ]]--
-function parthiaMap.getEnabled()
-  return tecSettings.parthiaMapEnabled
- end --parthiaMap.getEnabled()</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.setEnabled(mode, displayToScreen)</name>
-					<packageName></packageName>
-					<script>--[[
-Sets if parthia uses the mudlet mapping system.
-usage:
-parthiaMap.setEnabled(true) --enable parthia's mapping system
-parthiaMap.setEnabled(false) --disable parthia's mapping system
-]]--
-function parthiaMap.setEnabled(mode, displayToScreen)
-  --make certain variables passed are good
-  mode = fuzzyBoolean(mode)
-  displayToScreen = fuzzyBoolean(displayToScreen)
+function parthiaMap.findSpecialExits(exitEcho)
+  exitEcho = exitEcho or parthiaMap.room.exitEcho
+  local previousRoomType = ""
+  parthiaMap.room.specialExits = {}
+  local spExitToDir = {} --keep track of special exits for directions
+  local lastSpExit = "" --keep track of the last special exit that appears 
   
-  tecSettings.parthiaMapEnabled = mode --set the state for parthiaMap
-  debugToDisplay("function parthiaMap.setEnabled, set tecSettings.parthiaMapEnabled to "..tostring(mode))
+  for exit in string.gmatch( exitEcho, "00[^0]%x[^0]%x\"&gt;(.-)&lt;\/" ) do --find exits for this room
+    
+    --upwards and downwards is not a function exit type. Though it appears on the exit echo
+    if exit == "upwards" then exit = "up" end
+    if exit == "downwards" then exit = "down" end
+    
+    --if this exit is a standard exit name
+    if table.contains(parthiaMap.directions, exit) then 
+      
+      --record the direction(s) special exits go
+      if #spExitToDir &gt; 1 then --there has been more than one exit since the last standard exit
+        for k,v in ipairs(spExitToDir) do --loop through those previous special exits found
+          table.insert(parthiaMap.room.specialExits[v],exit) --record the direction those special exits go in
+        end --for ipairs(spExitToDir)
+      else --there is has only been one special exit since last
+        table.insert(parthiaMap.room.specialExits[lastSpExit],exit)
+      end --if #spExitToDir &gt; 1
+      spExitToDir = {} --prevents duplicate entries
+    
+    else --this is a special exit
+    
+      --track special exits
+      table.insert(spExitToDir, exit)
+      parthiaMap.room.specialExits[exit] = {}
+      lastSpExit = exit --keep track of the last special exit used
+      
+    end --if table.contains(parthiaMap.directions, exit)
+    
+    if table.contains(parthiaMap.directions, exit) then --if this exit is a standard exit name
+      local exitIsADoor = false --will tell addRoom function if there is a door at this exit
+      if previousRoomType:lower():match("door") or previousRoomType:lower():match("gate") then --check if this exit is a door or gate
+        exitIsADoor = true 
+      end --if previousRoomType:lower():match("door") or previousRoomType:lower():match("gate")
+      parthiaMap.room.exits[exit] = { door = exitIsADoor } --mark that this direction is a door or a gate so the mapper can add a door later.
+      if exit == "up" then --if this exit allows player to move up or down
+        parthiaMap.upAvailable = true --needed because go u could be short for something other than go up
+        parthiaMap.room.exits[exit].description = previousRoomType --keep track of a description of the exit. Use this to compair against movement commands like go ladder
+      elseif exit == "down" then
+        parthiaMap.downAvailable = true --needed because go d, could be used as short for go door
+        parthiaMap.room.exits[exit].description = previousRoomType --keep track of a description of the exit. Use this to compair against movement commands like go ladder
+      end --if exit == "up"
+    end --if table.contains(parthiaMap.directions, exit)
+    previousRoomType = exit --Keep track of the last room type used.
+  end --for string.gmatch( line, "0020ff\"&gt;(%P+)&lt;\/" )
   
-  if displayToScreen then 
-    if mode then --mapping was enabled
-      pecho("Parthia map enabled.\n")
-    else --mapping was disabled
-      pecho("Parthia map disabled.\n")
-    end --if mode
-    dontForgetToSave() --remind player to save their changes
-  end --if displayToScreen
-  
-end --parthiaMap.setEnabled(mode, displayToScreen)</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.getStepsGoUp()</name>
-					<packageName></packageName>
-					<script>--[[
-Used to check if steps that go in non vertical directions go up or down.
+  local tmpCurrentRoomType = exitEcho:match("^You arrive at (%P+)%p")
+  if tmpCurrentRoomType then --if something was found above.
+    if parthiaMap.getEnabled() then --if player is using parthiaMap
+      parthiaMap.room.name = tmpCurrentRoomType --collect this description for a room name.
+    end --if parthiaMap.getEnabled()
+  end --if tmpCurrentRoomType
 
-Useage: 
-if parthiaMap.getStepsGoUp() then
-  --code that adds to z movement here
-else
-  --code that removes from z movement here
-end
+  --collection direction walked for mapper
+    if not parthiaMap.dirtectionCollected then --if we have not collection a movement direction yet do so now.
+      parthiaMap.directionWalked = exitEcho:match(" You are facing (%a+)%.")
+      if parthiaMap.directionWalked then
+        mapDebug("function addlinksToDirections, Direction walked: "..parthiaMap.directionWalked)
+      else
+        mapDebug("function addlinksToDirections, could collect direction walked")
+      end --if parthiaMap.directionWalked
+    end --if not parthiaMap.dirtectionCollected
+    parthiaMap.dirtectionCollected = false --reset directionCollected for next movement.
 
-This function is used in parthiaMap.Move function
+end --function parthiaMap.findSpecialExits()</script>
+								<eventHandlerList />
+							</Script>
+						</ScriptGroup>
+					</ScriptGroup>
+					<ScriptGroup isActive="yes" isFolder="yes">
+						<name>direction</name>
+						<packageName></packageName>
+						<script></script>
+						<eventHandlerList />
+						<Script isActive="yes" isFolder="no">
+							<name>parthiaMap.getShortDirection(dir)</name>
+							<packageName></packageName>
+							<script>--returns the short hand version of a dirrection.
+--Currently only needed because function setDoor requires shorthand direction
+function parthiaMap.getShortDirection(dir)
+  if dir then
+    if type(dir) ~= "string" then
+      tecErrorNotification("parthiaMap.getShortDirection, sent a non string variable for argument 1. Expected string, receive a "..type(dir))
+    end
+  else
+    tecErrorNotification("parthiaMap.getShortDirection, requires a string for argument 1.")
+  end
+  
+  
+  if dir == "north" then --return the oposite of the direction walked in to find where player entered this room
+    return "n"
+  elseif dir == "northeast" then
+    return "ne"
+  elseif dir == "east" then
+    return "e"
+  elseif dir == "southeast" then
+    return "se"
+  elseif dir == "south" then
+    return "s"
+  elseif dir == "southwest" then
+    return "sw"
+  elseif dir == "west" then
+    return "w"
+  elseif dir == "northwest" then
+    return "nw"
+  elseif dir == "u" or dir == "up" then
+    return "u"
+  elseif dir == "down" or dir == "d" then
+    return "d"
+  end --if dir ==
+
+end</script>
+							<eventHandlerList />
+						</Script>
+						<Script isActive="yes" isFolder="no">
+							<name>parthiaMap.detectDirection(dir)</name>
+							<packageName></packageName>
+							<script>--[[
+finds the direction that the player moved.
+Includes special movements like "go door" or "go 3 door"
+
+Useage
+parthiaMap.detectDirection("up")
 ]]--
-function parthiaMap.getStepsGoUp()
-  return parthiaMap.stepsGoUp
-end --function parthiaMap.getStepsGo()</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.setStepsGoUp(mode, displayToScreen)</name>
-					<packageName></packageName>
-					<script>--[[
+
+--used to tell detectDirection what is NOT going to be z movement.
+--Made outside the function so it is not recreated each time the function is called. Wasting processing time.
+parthiaMap.notZMovement = {
+  "east", "eas", "ea", "e",
+  "southeast", "se",
+  "south", "sout", "sou", "so", "s",
+  "southwest", "sw",
+  "west", "wes", "we", "w",
+  "northwest", "nw",
+  "north", "nort", "nor", "no", "n",
+  "northeast", "ne",
+  "leave", "leav", "lea", "le"
+}
+
+local zMovement = {
+  "up", "u",
+  "down", "d"
+}
+
+--returns the room id a special exit leads to
+--intended to be used with captured user movement commands that are special exit commands.
+local function specialExitMatch(playerCmd)
+  if playerCmd then
+    if type(playerCmd) ~= "string" then
+      tecErrorNotification("function specialExitMatch, argument 1 expected string variable receive a "..type(playerCmd))
+      return
+    end --if type(playerCmd) ~= "string"
+  else 
+    tecErrorNotification("function specialExitMatch, argument 1 expected received nil")
+  end --if playerCmd
+  
+  playerCmd = playerCmd:lower() --make certain variables are lower case, so matching will be more accurate
+  parthiaMap.specialExitAttempted = true --records if a special exit was attempted. Used to automatically create a special exit for mappers.
+  
+  local plCmdExitNum = playerCmd:match("^%s*(%d+)%s") --capture the number at the start of the line, if it is there.
+  local plCmdExitDesc = playerCmd:match("^%s*%d*%s*(.+)%s*") --capture the description of the exit provided in the player's command
+  
+  mapDebug("function specialExitMatch, playerCmd: \""..playerCmd.."\" plCmdExitNum: "..tostring(plCmdExitNum).." plCmdExitDesc: \""..plCmdExitDesc.."\"\n")
+  
+  if plCmdExitNum == nil then plCmdExitNum = 1 end --if the player did not specify an exit number check for the first match
+  plCmdExitNum = tonumber(plCmdExitNum) --convert it to number for future matching
+
+  spExits = getSpecialExitsSwap(parthiaMap.room.id) --collect special exits in this room
+  
+  --check if players command perfectly matches a special exit a mapper created
+  --sort the table in order the rooms these exits appear in the SKOOT 6 message
+  local sortedSpExits = {}
+  for exitDesc,exitRoomID in pairs(spExits) do
+    ----check if the players command perfectly matches a special exit.
+    if exitDesc == playerCmd then
+      mapDebug("function specialExitMatch, found perfect special exit match for player command: "..playerCmd.." to roomID: "..exitRoomID..". Inside if exitDesc == playerCmd")
+      parthiaMap.specialExitMovement = exitRoomID
+      return exitRoomID --found the correct exit type. Return it's room ID
+    end --if exitDesc == playercmd
+    --sort the exits table
+    local sortKey = tonumber(exitDesc:match("#(%d)$"))
+    if sortKey then
+      table.insert(sortedSpExits, sortKey, exitDesc)
+    else
+      mapDebug("&lt;orange&gt;function specialExitMatch, failed to find a room order for exit: "..exitDesc.."&lt;reset&gt;")
+    end --if sortKey
+  end --for pairs(spExits)
+  
+  --find the exit the player is looking for in the sortedSpExits table
+  local i = 0 --iterator to keep track of how may times the exit exitDesc (exit description from the players command) is found in this rooms special exits table
+  for _,v in pairs(sortedSpExits) do
+    if v:match(plCmdExitDesc) then --if the exit type the player is checking for exists.
+      i = i + 1 --increase match iterator
+      if i == plCmdExitNum then --if the exit number matches the number the player input.
+        for exitDesc, exitRoomID in pairs(spExits) do
+          if v == exitDesc then
+            mapDebug("function specialExitMatch, found special exit match at: \""..v.."\" to roomID: "..exitRoomID.."\n")
+            parthiaMap.specialExitMovement = exitRoomID --record id to global variable
+            return exitRoomID --found the correct exit type. Return it's room ID
+          end --if v == exitDesc
+        end --for pairs(spExits)
+      end --if i == plCmdExitNum
+    end --if v:match(plCmdExitDesc)
+  end --for pairs(sortedSpExits)
+
+  mapDebug("&lt;orange&gt;function specialExitMatch, failed to find a special exit from command player ran.&lt;reset&gt;\n")
+
+end --local function specialExitMatch(exit)
+
+function parthiaMap.detectDirection(playerCmd)
+  playerCmd = playerCmd or parthiaMap.directionWalked
+  playerCmd = playerCmd:lower()
+  parthiaMap.playerCmd = playerCmd --record the command the player used
+  
+  --if this is Z movement
+  if table.contains(zMovement, playerCmd) then
+    if parthiaMap.upAvailable then --if it is possible for the player to move up
+      if playerCmd == "up" then --player is going up
+        parthiaMap.directionWalked = "up"
+        parthiaMap.dirtectionCollected = true
+        mapDebug("function detectDirection, directionWalked up found.")
+        return
+      elseif parthiaMap.room.exits["up"].description:match(playerCmd) then
+        parthiaMap.directionWalked = "up"
+        parthiaMap.dirtectionCollected = true
+        mapDebug("function detectDirection, directionWalked up found.")
+        return
+      end --if parthiaMap.room.exits["up"].description:match(playerCmd)
+    end --if parthiaMap.upAvailable
+    
+    if parthiaMap.downAvailable then --if it is possible for the player to move down
+      if playerCmd == "down" then --player is going down
+        parthiaMap.directionWalked = "down"
+        parthiaMap.dirtectionCollected = true
+        mapDebug("function parthiaMap.horizontalTracking, directionWalked down found.")
+        return
+      elseif parthiaMap.room.exits["down"].description:match(playerCmd) then
+        parthiaMap.directionWalked = "down"
+        parthiaMap.dirtectionCollected = true
+        mapDebug("function parthiaMap.horizontalTracking, directionWalked down found.")
+        return
+      end --if parthiaMap.room.exits["down"].description:match(playerCmd)
+    end --if parthiaMap.downAvailable
+  elseif table.contains(parthiaMap.notZMovement, playerCmd) then
+    --code to adjust standardmovement goes here.
+  else --if the input is not a standard movement, a special exit command was used
+    specialExitMatch(playerCmd) --find what exit, than room ID this command leads to
+  end --if not table.contains(parthiaMap.notZMovement, playerCmd)
+end --parthiaMap.horizontalTracking</script>
+							<eventHandlerList />
+						</Script>
+						<Script isActive="yes" isFolder="no">
+							<name>parthiaMap.setStepsGoUp(mode, displayToScreen)</name>
+							<packageName></packageName>
+							<script>--[[
 sets variable parthiaMap.stepsGoUp
 This variable is true by default. Seting is function parthiaMap.config
 if true steps go up, add to Z access
@@ -11069,378 +11596,40 @@ function parthiaMap.setStepsGoUp(mode, displayToScreen)
   end --if displayToScreen
   
 end --parthiaMap.setStepsGoUp(mode, displayToScreen)</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.setCharacterLocation(id, displayToScreen)</name>
-					<packageName></packageName>
-					<script>--[[
-sets the room the current character is in
-This function is called in alias `parthia map character move`, functions parthiaMap.Move, parthiaMap.addRoom, and parthiaMap.checkCharacter
-usage:
-parthiaMap.setCharacterLocation(id, displayToScreen)
-  id, is a room id.
-  displayToScreen, controls if messages are shown on main console.
-examples:
-  parthiaMap.setCharacterLocation(3) --sets the characters location on the parthia map to room id 3. Messages on only displayed to debug and error consoles.
-  local errorFound = parthiaMap.setCharacterLocation(3) --sets the characters location on the parthia map to room id 3. Messages on only displayed to debug and error consoles. If errors are found a message describing them is put into variable errorFound
-  parthiaMap.setCharacterLocation(3, true) --sets the characters location on the parthia map to room id 3. Messages displayed on main console and all error and debug consoles.
-]]--
-function parthiaMap.setCharacterLocation(id, displayToScreen)
-  id = id or parthiaMap.room.id --set id to current rooms id
-  displayToScreen = fuzzyBoolean(displayToScreen)
-  
-  if id then
-    local roomsAreaID = getRoomArea(id) --check if this room id has an area set.
-    if roomsAreaID then --all rooms are know to have areas. We are using this to verify this room exists.
-      parthiaMap.room.id = id --update the current room's id
-    else --the room does not exist
-      local errorFound = "Attempted to change character location to room id: "..id.." the room was not found."
-      if displayToScreen then pecho(errorFound) end
-      tecWarningNotification("function parthiaMap.setCharacterLocation, "..errorFound)
-      return roomsAreaID
-    end --if roomExists
-    centerview(id) --highly characters room on the map
-    parthiaMap.currentAreaID = roomsAreaID --collect the area ID of the current room
-    --reset movement variables to defaults
-    parthiaMap.playerClimbed = false
-    parthiaMap.specialExitMovement = false
-    parthiaMap.specialExitAttempted = false --records if a special exit was attempted. Used to automatically create a special exit for mappers.
-    parthiaMap.entryIndex = 1 --index used to tell what exit was entered through to get to current room
-    parthiaMap.exitIndex = 1 --index used to tell what exit was exited through from previous room to get to current room
-    if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name] then --if the current character has location in the map save table.
-      parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].roomID = id --record the id to the map settings save table
-      parthiaMap.room.id = id --record the ID to the mapper current room's id.
-      local errorFound = parthiaTableSave(parthiaMap.saveTable, parthiaMap.savePath, false, false) --save the location change to file. So location is know on startup.
-      if errorFound then --an error was found
-        if displayToScreen then --display error message to file
-          tecErrorNotification("function parthiaMap.setCharacterLocation, "..errorFound)
-        else --do not display error message to file.
-          tecErrorNotification("function parthiaMap.setCharacterLocation, "..errorFound, false)
-        end --if displayToScreen
-      end --if errorFound
-      if displayToScreen then pecho("Player in room id: "..tostring(id)..".\n") end
-    else
-      tecWarningNotification("function parthiaMap.setCharacterLocation, table key parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name] unavailable.")
-    end --if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name]
-    parthiaMap.roomUserDataCheck() --check userdata stores
-  else --no room id is available
-    local errorFound = "No room ID after data verification.\n"
-    if displayToScreen then pecho(errorFound) end
-    tecWarningNotification("function parthiaMap.setCharacterLocation, "..errorFound)
-    return errorFound
-  end --if id
-end --function parthiaMap.setCharacterLocation(id, displayToScreen)</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.checkCharacter()</name>
-					<packageName></packageName>
-					<script>--[[
-This function changes the character that is currently logged in and on the map
-It is called in trigger: `stats` within function setStatsCheckActive(false), only when it is sent false. Indicating stats collection and space filtering has completed
-This function needs the character name to run. the stats filter is what collects the playername
-]]--
-function parthiaMap.checkCharacter(displayToScreen)
-  local character = ""
-  if parthiaPlayer.CurrentCharacter.name then --if logged into a character account
-    character = parthiaPlayer.CurrentCharacter.name
-  else --if the stats command does not work, the player is in the welcome room
-    character = "Welcome Room ID"
-    parthiaPlayer.CurrentCharacter.name = character
-  end --if parthiaPlayer.CurrentCharacter.name
-  displayToScreen = fuzzyBoolean(displayToScreen)
-  if not parthiaMap.saveTable[character] then --if this character does not exist in the table parthiaMap uses to save
-    parthiaMap.saveTable[character] = {}
-    if displayToScreen then pecho("A character name of \""..character.."\", was not found in save file.") end
-    mapDebug("function parthiaMap.checkCharacter, created table for character \""..character.."\" in the parthiaMap.saveTable table.")
-  end --if not parthiaMap.saveTable[character]
-  
-  if parthiaMap.saveTable[character].roomID then --if the player had a previously saved location
-    local errorFound = parthiaMap.setCharacterLocation(parthiaMap.saveTable[character].roomID) --sets the current characters location and centers map view on that room
-    if errorFound then --if an error occured while attempting to set the current character's location
-      local errorMessage = "Unable to move character, error recived from setCharacterLocation is: "..errorFound
-      if displayToScreen then pecho(errorMessage) end
-      tecWarningNotification("function parthiaMap.checkCharacter, received error from parthiaMap.setCharacterLocation. Error was: "..errorMessage)
-    else --no errors found
-      local parthiaMessage = "Moved character "..character.." to room ID: "..parthiaMap.saveTable[character].roomID.."\n"
-      if displayToScreen then pecho(parthiaMessage) end
-      mapDebug("function parthiaMap.checkCharacter, "..parthiaMessage)
-    end --if errorFound
---code for finding a room hash here
-  end --if parthiaMap.saveTable[character].roomID
-end --parthiaMap.loadCharater(character)</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.setMapping(displayToScreen)</name>
-					<packageName></packageName>
-					<script>function parthiaMap.setMapping(displayToScreen)
-  --enable or disable new map creation
-  if parthiaMap.mapping then
-    parthiaMap.mapping = false
-    if displayToScreen then pecho("&lt;green&gt;Mapping stopped.&lt;reset&gt;\n") end
-  else
-    parthiaMap.mapping = true
-    if displayToScreen then pecho("&lt;green&gt;Mapping started.&lt;reset&gt;\n") end
-  end
-end</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.help()</name>
-					<packageName></packageName>
-					<script>function parthiaMappingTutorial()
-  pecho("\nVerify mapping is enabled with: ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map enable", 
-    [[parthiaMap.setEnabled(true, true)]],
-    "Enable parthia map", true)
-  pecho("\nTell parthia you want to make new maps with: ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map mapping", 
-    [[parthiaMap.setMapping(true)]],
-    "Toggle new map creation", true)
-  pecho(" or ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/map", 
-    [[parthiaMap.setMapping(true)]],
-    "Toggle new map creation", true)
-  pecho(".\n\nIf wanting to map a new area or no areas exist. Create a new area with command: ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map area add", 
-    [[printCmdLine("parthia map area add ");
-      pecho("Now type the name you would like to give to the new area.\n")]],
-    "create new area", true)
-  pecho(" or ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapareaadd", 
-    [[printCmdLine("/mapareaadd ");
-      pecho("Now type the name you would like to give to the new area.\n")]],
-    "create new area", true)
-    pecho(". If they do no already exist it is recommended to create an area for the welcome Area and at least one for the game world.\n")
-    pecho("\nTo support a second character in game you would need to place them in a know room and run: ")
-      pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map character move", 
-    [[printCmdLine("parthia map character move ");
-      pecho("Now type the room id you would like to move to and press enter.\n")]],
-    "move to room id", true)
-  pecho(" or ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapmove", 
-    [[printCmdLine("/mapmove ");
-      pecho("Now type the room id you would like to move to and press enter.\n")]],
-    "move to room id", true)
-  pecho(". Using the room id you know the character is currently in.\n")
-end
-
-function parthiaMap.help()
- pecho("Parthia map commands are\n")
-
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map enable", 
-    [[parthiaMap.setEnabled(true, true)]],
-    "Enable parthia map", true)
-  pecho(", enable parthia map.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map disable", 
-    [[parthiaMap.setEnabled(false, true)]],
-    "Enable parthia map", true)
-  pecho(", enable parthia map.\n")
-
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map mapping", 
-    [[parthiaMap.setMapping(true)]],
-    "Toggle new map creation", true)
-  pecho(" or ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/map", 
-    [[parthiaMap.setMapping(true)]],
-    "Toggle new map creation", true)
-  pecho(", toggle new map creation on or off.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map steps go up", 
-    [[parthiaMap.setStepsGoUp(true, true)]],
-    "Steps and ramps go up", true)
-  pecho(" or ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapup", 
-    [[parthiaMap.setStepsGoUp(true, true)]],
-    "Steps and ramps go down", true)
-  pecho(", while mapping steps and ramps go up.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map steps go down", 
-    [[parthiaMap.setStepsGoUp(false, true)]],
-    "Steps and ramps go down", true)
-  pecho(" or ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapdown", 
-    [[parthiaMap.setStepsGoUp(false, true)]],
-    "Steps and ramps go down", true)    
-  pecho(", while mapping steps and ramps go down.\n")
-
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map character move", 
-    [[printCmdLine("parthia map character move ");
-      pecho("Now type the room id you would like to move to and press enter.\n")]],
-    "move to room id", true)
-  pecho(" or ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapmove", 
-    [[printCmdLine("/mapmove ");
-      pecho("Now type the room id you would like to move to and press enter.\n")]],
-    "move to room id", true)
-  pecho(", move to a room id on the map.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map area add", 
-    [[printCmdLine("parthia map area add ");
-      pecho("Now type the name you would like to give to the new area.\n")]],
-    "create new area", true)
-  pecho(" or ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapareaadd", 
-    [[printCmdLine("/mapareaadd ");
-      pecho("Now type the name you would like to give to the new area.\n")]],
-    "create new area", true)
-  pecho(", create new area.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map area remove", 
-    [[printCmdLine("parthia map area remove ");
-      pecho("Now type the name or id of the area to remove and press enter.\n")]],
-    "create new area", true)
-  pecho(" or ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/maparearemove", 
-    [[printCmdLine("/maparearemove ");
-      pecho("Now type the name or id of the area to remove and press enter.\n")]],
-    "create new area", true)    
-  pecho(", create new area.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map area clear", 
-    [[printCmdLine("parthia map area clear ");
-      pecho("Now type the id of the area to clear the rooms from.\n")]],
-    "clear rooms from area", true)
-  pecho(" or ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapareaclear", 
-    [[printCmdLine("/mapareaclear ");
-      pecho("Now type the id of the area to clear the rooms from.\n")]],
-    "clear rooms from area", true)    
-  pecho(", clear rooms from an area.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map character area", 
-    [[printCmdLine("parthia map character area ");
-      pecho("Now type the name of the area to remove and press enter.\n")]],
-    "change mapping area", true)
-  pecho(" or ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/maparea", 
-    [[printCmdLine("/maparea ");
-      pecho("Now type the name of the area to remove and press enter.\n")]],
-    "change mapping area", true)    
-  pecho(", change the area being mapped.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map danger", 
-    [[printCmdLine("parthia map danger ");
-      pecho("Now input how many combat ranks a character should have to safely enter the rooms you are mapping.\n")]],
-    "change mapping area", true)
-  pecho(" or ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapdanger", 
-    [[printCmdLine("/mapdanger ");
-      pecho("Now input how many combat ranks a character should have to safely enter the rooms you are mapping.\n")]],
-    "change mapping area", true)    
-  pecho(", change the area being mapped.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Mapping tutorial", 
-    [[parthiaMappingTutorial()]],
-    "Click for basic mapping tutorial", true)
-  pecho(", display a basic mapping tutorial.\n")
-end --function parthiaMap.help()</script>
-					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.delayMove()</name>
-					<packageName></packageName>
-					<script>function parthiaMap.delayMove()
-
-  if parthiaMap.moveNeeded then --if movement has not happened yet
-    parthiaMap.Move() 
-  end --if parthiaMap.moveNeeded
-
-end --function parthiaMap.delayMove()</script>
-					<eventHandlerList />
-				</Script>
-				<ScriptGroup isActive="yes" isFolder="yes">
-					<name>danger</name>
-					<packageName></packageName>
-					<script></script>
-					<eventHandlerList />
-					<Script isActive="yes" isFolder="no">
-						<name>parthiaMap.setDanger(danger)</name>
-						<packageName></packageName>
-						<script>function parthiaMap.setDanger(danger, displayToScreen)
-  
-  danger = tonumber(danger) or 0
-  displayToScreen = fuzzyBoolean(displayToScreen)
-  
-  if type(danger) ~= "number" then
-    tecErrorNotification("function parthiaMap.setDanger, argument received is a "..type(danger).." should be a number.")
-    return
-  end --if type(danger) ~= "number"
-  
-  parthiaMap.danger = danger
-  if displayToScreen then
-    pecho("Util this command is run again rooms will have their danger rating set to "..danger..".\n")
-  end --if displayToScreen
-  
-end --function parthiaMap.setDanger</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>parthiaMap.getDanger()</name>
-						<packageName></packageName>
-						<script>function parthiaMap.getDanger()
-  return parthiaMap.danger
-end --function parthiaMap.getDanger</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>parthiaMap.checkDanger()</name>
-						<packageName></packageName>
-						<script>--[[
-checks if the danger rating has changed
-If it has, it checks if danger is higher than current characters combat ranks
-if it is, a message is displayed
-]]--
-function parthiaMap.checkDanger(danger)
-
-  danger = tonumber(danger) or 0
-  local characterCombatRanks = tonumber(parthiaPlayer.CurrentCharacter.combatRanks)
-
-  if not (danger == parthiaMap.previousDanger) then --if the danger rating has changed
-    if danger &gt; characterCombatRanks then --if the players combat ranks is fewer than this rooms danger rating
-      local dangerRating = (danger - characterCombatRanks) / danger * 100--get how low the player is on ranks.
-      if dangerRating &lt; 0 then
-        dangerRating = false
-      elseif dangerRating &lt;= 25 then
-        dangerRating = "slightly"
-      elseif dangerRating &lt;= 50 then
-        dangerRating = "moderately"
-      elseif dangerRating &lt;= 75 then
-        dangerRating = "very"
-      elseif dangerRating &gt; 76 then
-        dangerRating = "extremely"
-      end --if dangerRating elseif
-
-      if dangerRating then --if danger rating was greater than 0
-        if parthiaGetTips() then --if the game tips system is enabled
-          pecho("\nYou feel a shiver through you body and get a feeling that you are entering a place that is "..dangerRating.." dangerous for you.\n")
-        end --if parthiaGetTips()
-      end --if dangerRating
-    end --if danger &gt; parthiaPlayer.CurrentCharacter.combatRanks
-  end --if not (danger == parthiaMap.previousDanger)
-
-  parthiaMap.previousDanger = danger --record the current room's danger rating.
-
-end --function parthiaMap.checkDanger()</script>
-						<eventHandlerList />
-					</Script>
+							<eventHandlerList />
+						</Script>
+						<Script isActive="yes" isFolder="no">
+							<name>parthiaMap.getEntranceDirection(directionWalked)</name>
+							<packageName></packageName>
+							<script>--Returns the opposit direction it is passed.
+function parthiaMap.getEntranceDirection(directionWalked)
+  dir = directionWalked or parthiaMap.directionWalked
+  if dir == "north" then --return the oposite of the direction walked in to find where player entered this room
+    return "south"
+  elseif dir == "northeast" then
+    return "southwest"
+  elseif dir == "east" then
+    return "west"
+  elseif dir == "southeast" then
+    return "northwest"
+  elseif dir == "south" then
+    return "north"
+  elseif dir == "southwest" then
+    return "northeast"
+  elseif dir == "west" then
+    return "east"
+  elseif dir == "northwest" then
+    return "southeast"
+  elseif dir == "u" or dir == "up" then
+    return "down"
+  elseif dir == "down" then
+    return "up"
+  end --if dir ==
+end </script>
+							<eventHandlerList />
+						</Script>
+					</ScriptGroup>
 				</ScriptGroup>
-				<Script isActive="yes" isFolder="no">
-					<name>parthiaMap.roomUserDataCheck(roomID)</name>
-					<packageName></packageName>
-					<script>--[[
-Called in function parthiaMap.setCharacterLocation, so this function will trigger after any successful movement.
-Any user data recorded to the mapper should have a function to receive variables from this function
-]]--
-function parthiaMap.roomUserDataCheck(roomID)
-  roomID = roomID or parthiaMap.room.id
-  parthiaMap.checkDanger(getRoomUserData(roomID, "danger"))
-end</script>
-					<eventHandlerList />
-				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>tips</name>
