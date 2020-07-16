@@ -232,6 +232,19 @@ for direction, show in string.gmatch( line, ",?(%a+),(%a+)" ) do
   end --if show == "show"
 end --for string.gmatch( line, "(%a%a?),(?%d+)" )
 
+--this is the first message that guarentees a full movement has occured. Start new movement
+if parthiaMap.getEnabled() then --if player is using parthiaMap
+  parthiaMap.upAvailable = false
+  parthiaMap.downAvailable = false
+  parthiaMap.TECMapRooms = {} --clear the rooms table so it will not overlap
+  parthiaMap.trackPreviousRoom() --movement complete keep track of what the previous room was
+  if parthiaMap.entranceEcho then --if there was no room entrance echo message collect, this is movement without light. Skip things that require light.
+    parthiaMap.room.entranceEcho = parthiaMap.entranceEcho --record the echo to a variable to sort data from it at a later time.
+    parthiaMap.entranceEcho = false --clear the exits echo message
+    parthiaMap.findSpecialExits() --find special exit names for this room and direction walked if not collected already
+  end --if parthiaMap.entranceEcho
+end --if parthiaMap.getEnabled()
+
 deleteLine() --remove line from main console. line variable remains unchanged.</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -1118,6 +1131,8 @@ end
 
 if tecUsername then tecUsername = nil end --remove the username, it is no longer needed
 
+parthiaMap.notMovement = true --parthia map will skip the next movement check. Movement will be completed by script `setStatsCheckActive(mode)` when trigger `stats` is done collecting character data.
+
 --Set default text in room characters window
 tecResetRoomCharacterWindow()
 
@@ -1934,20 +1949,12 @@ tecRoomCharRefreshNotification()</script>
 
 setCharacterCanSee(true) --tell parthia if the play can or can not see currently
 
-if parthiaMap.getEnabled() then --if player is using parthiaMap
-  parthiaMap.upAvailable = false
-  parthiaMap.downAvailable = false
-  parthiaMap.TECMapRooms = {} --clear the rooms table so it will not overlap
-  parthiaMap.trackPreviousRoom() --movement complete keep track of what the previous room was
-  parthiaMap.room.exitEcho = line --record the echo to a variable to sort data from it at a later time.
-  parthiaMap.findSpecialExits() --find special exit names for this room and direction walked if not collected already
-end --if parthiaMap.getEnabled()
+parthiaMap.entranceEcho = line --record the echo to a variable to sort data from it at a later time.
 
 --Set default text in room characters window
 tecResetRoomCharacterWindow()
 
---stop waiting for the drover, so it will not auto follow after a player has walked away while waiting for a drover.
-parthiaSetWaitForDrover(false)
+parthiaSetWaitForDrover(false) --stop waiting for the drover, so it will not auto follow after a player has walked away while waiting for a drover.
 
 addLinksToDirections() --add links to directions in main window. Collect room types for Help Developers commands.
 
@@ -2200,6 +2207,36 @@ end --if parthiaStopRan</script>
 					<integer>3</integer>
 				</regexCodePropertyList>
 			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>player moves</name>
+				<script>--occurs when player starts a movement
+parthiaMap.descriptionOfExitUsed = matches[2] --stores the description of the exit player used.
+mapDebug("trigger player moves, collected exit description: "..matches[2])
+
+parthiaSetWaitForDrover(false) --stop waiting for the drover, so it will not auto follow after a player has walked away while waiting for a drover.
+
+if matches[3] then --collect a direction walked if it was found
+    parthiaMap.detectDirection(matches[3])
+end --if matches[3]</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^You \w+ through (?:a|an) ((?:\w+\s*)+)\.$</string>
+					<string>^You \w+ to (?:a|an) ((?:\w+\s*)+), to the (\w+)\.$</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
 		</TriggerGroup>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>parthia mapper</name>
@@ -2250,30 +2287,6 @@ end --if parthiaMap.getEnabled()</script>
 					<integer>1</integer>
 					<integer>1</integer>
 					<integer>3</integer>
-				</regexCodePropertyList>
-			</Trigger>
-			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>collect exit description</name>
-				<script>parthiaMap.descriptionOfExitUsed = matches[2] --stores the description of the exit player used.
-mapDebug("trigger collect exit description, collected exit description: "..matches[2])
-</script>
-				<triggerType>0</triggerType>
-				<conditonLineDelta>0</conditonLineDelta>
-				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
-				<mFgColor>#ff0000</mFgColor>
-				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
-				<colorTriggerFgColor>#000000</colorTriggerFgColor>
-				<colorTriggerBgColor>#000000</colorTriggerBgColor>
-				<regexCodeList>
-					<string>^You walk through (?:a|an) (.+)\.$</string>
-					<string>^You walk to (?:a|an) (.+),</string>
-				</regexCodeList>
-				<regexCodePropertyList>
-					<integer>1</integer>
-					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
 		</TriggerGroup>

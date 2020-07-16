@@ -9687,7 +9687,7 @@ parthiaMap = parthiaMap or {} --table to hold the mapper data.
 --parthiaMap.stepsGoUp = true --if true steps add 1 to Z. If false steps remove 1 from z
 --parthiaMap.playerClimbed = false --sets to true when a player climbs in trigger "player climbed"
 --parthiaMap.currentAreaID = 1 --the area id that the players current room is in
---parthiaMap.room.exitEcho = "" --the message that echos to screen as a player enters a room, that lists a description for this rooms exits
+--parthiaMap.room.entranceEcho = "" --the message that echos to screen as a player enters a room, that lists a description for this rooms exits
 --parthiaMap.specialExitMovement = false --sets to the room id the exit leads to when player runs a command that uses a special exit.
 --parthiaMap.specialExitAttempted = false --records if a special exit was attempted. Used to automatically create a special exit for mappers.
 --parthiaMap.playerCmd = false --the command the player used during this movement. be a carinal direction if player used a shorthand for one
@@ -10682,10 +10682,6 @@ functions that are used during movement calculation
 						<script>--refer to script group `Parthia Map` for details on this function
 function parthiaMap.Move(room, previousRoom, directionWalked)
   parthiaMap.moveNeeded = false --Movement needs to be delayed because sometimes there is not SKOOT 10 message. This is used to track if movement has already begun. Used in function parthiaMap.delayMove()
-  if parthiaMap.notMovement then --if the trigger that called this function was not from movement. Stop the function
-    parthiaMap.notMovement = false
-    return
-  end --if parthiaMap.notMovement
   room = room or parthiaMap.room
   previousRoom = previousRoom or parthiaMap.previousRoom
   directionWalked = directionWalked or parthiaMap.directionWalked
@@ -10705,6 +10701,12 @@ function parthiaMap.Move(room, previousRoom, directionWalked)
       mapDebug("function parthiaMap.Move, was not able to collect room size or position in TEC Map, if next room is a new room it will not be created.")
     end --if parthiaMap.mapping
   end --if room.xpos and room.ypos and room.size
+  
+  if parthiaMap.notMovement then --if the trigger that called this function was not from movement. Stop the function
+    parthiaMap.notMovement = false
+    mapDebug("function parthiaMap.Move, parthiaMap.notMovement was set to true, skipping this movement.")
+    return
+  end --if parthiaMap.notMovement
 
   if previousRoom then --if we are not mapping the first room
   
@@ -11367,7 +11369,7 @@ players runs `go 2 door`
 mapper 
 ]]--
 function parthiaMap.findSpecialExits(exitEcho)
-  exitEcho = exitEcho or parthiaMap.room.exitEcho
+  exitEcho = exitEcho or parthiaMap.room.entranceEcho
   local previousRoomType = ""
   parthiaMap.room.specialExits = {}
   local spExitToDir = {} --keep track of special exits for directions
@@ -11602,8 +11604,7 @@ function parthiaMap.detectDirection(playerCmd)
     end --if match(parthiaMap.directionWalked, "^"..playerCmd)
   end --if type(parthiaMap.directionWalked) == "string"
   
-  --if this is Z movement
-  if table.contains(zMovement, playerCmd) then
+  if table.contains(zMovement, playerCmd) then ----if this is Z movement
     if parthiaMap.upAvailable then --if it is possible for the player to move up
       if playerCmd == "up" or playerCmd == "u" then --player is going up
         parthiaMap.directionWalked = "up"
