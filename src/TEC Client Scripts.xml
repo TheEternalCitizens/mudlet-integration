@@ -3899,6 +3899,61 @@ function round(num, numDecimalPlaces)
 end</script>
 					<eventHandlerList />
 				</Script>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>can character see</name>
+					<packageName></packageName>
+					<script></script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>getCharacterCanSee()</name>
+						<packageName></packageName>
+						<script>--[[
+Returns true if players has vision, false if they do not.
+
+Used in
+Anything that needs to know if the player has vision. Made for mapping engine.
+
+Usage:
+vision = getCharacterCanSee()
+]]--
+function getCharacterCanSee()
+  return parthiaCharacterCanSee
+end --function getCharacterCanSee()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>setCharacterCanSee(mode,displayToScreen)</name>
+						<packageName></packageName>
+						<script>--[[
+Used to set if character can see.
+
+used it:
+Any trigger that shows a vision change.
+triggers `vision loss`, `player looks` and `player enters a room`.
+
+Usaged
+setCharacterCanSee(false) --tells parthia player can not see
+setCharacterCanSee(true) --tells parthia player can see
+setCharacterCanSee(true, true) --tells parthia player can see and display an echo to screen.
+]]--
+function setCharacterCanSee(mode,displayToScreen)
+  mode = fuzzyBoolean(mode)
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  
+  if not parthiaCharacterCanSee == mode then --only do set if the mode does not match the mode last set. Lightening debug log
+  
+    parthiaCharacterCanSee = mode
+    
+    if displayToScreen then pecho("CharacterCanSee set to: "..tostring(parthiaCharacterCanSee)..".\n") end --display message to screen if asked
+    
+    debugToDisplay("function setCharacterCanSee, set CharacterCanSee to "..tostring(parthiaCharacterCanSee)) 
+  
+  end --if not parthiaCharacterCanSee == mode
+
+end --function setCharacterCanSee(mode,displayToScreen)</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>GUI</name>
@@ -10282,6 +10337,12 @@ used in:
   parthiaMap.Move, when player moves while mapping but the two rooms are not already connected.
 ]]--
 function parthiaMap.connectRooms()
+
+  if not getCharacterCanSee() then --if the character mapping can not see.
+    pecho("&lt;green&gt;You can not create new maps without light.&lt;reset&gt;\n")
+    return --stop the function.
+  end --if not getCharacterCanSee()
+
   local entryDir = parthiaMap.getEntranceDirection()
   local exitDir = parthiaMap.directionWalked
   local entryIndex = parthiaMap.entryIndex --index used to tell what exit was entered through to get to current room
@@ -10391,6 +10452,12 @@ parthiaMap.addRoom("current rooms data table", "previous room data table")
 parthiaMap.addRoom() --adds a room using parthiaMap.room as the current room and parthiaMap.previousRoom as the previous room table
 ]]--
 function parthiaMap.addRoom(room, previousRoom)
+
+  if not getCharacterCanSee() then --if the character mapping can not see.
+    pecho("&lt;green&gt;You can not create new maps without light.&lt;reset&gt;\n")
+    return --stop the function.
+  end --if not getCharacterCanSee()
+
   room = room or parthiaMap.room
   previousRoom = previousRoom or parthiaMap.previousRoom
 

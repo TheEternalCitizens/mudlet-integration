@@ -1932,6 +1932,8 @@ tecRoomCharRefreshNotification()</script>
 				<name>Player enters a room</name>
 				<script>--triggers when the player enters a new room.
 
+setCharacterCanSee(true) --tell parthia if the play can or can not see currently
+
 if parthiaMap.getEnabled() then --if player is using parthiaMap
   parthiaMap.upAvailable = false
   parthiaMap.downAvailable = false
@@ -1993,7 +1995,7 @@ tecRoomCharRefreshNotification()</script>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Vision loss</name>
 				<script>--Triggers when the player can not see.
-</script>
+setCharacterCanSee(false) --tell parthia if the play can or can not see currently</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -2006,9 +2008,11 @@ tecRoomCharRefreshNotification()</script>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
 					<string>It is too dark to see anything.</string>
+					<string>Your immediate surroundings are obscured by darkness.</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>3</integer>
+					<integer>2</integer>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
@@ -2048,6 +2052,7 @@ end --if lookRan then
 
 if line:match("You are facing") then --if line has "You are facing" in it we want to use the directions clicks.
   addLinksToDirections() --add links to directions in main window. Collect room types for Help Developers commands.
+  setCharacterCanSee(true) --tell parthia if the play can or can not see currently
 else --if the line does NOT have "You are facing" in it we want to use the character clicks.
   addLinksToCharacters("look")
 end --if line:match("You are facing")
