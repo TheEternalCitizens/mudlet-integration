@@ -9682,7 +9682,6 @@ parthiaMap = parthiaMap or {} --table to hold the mapper data.
 --parthiaMap.previousRoomID = nil --will hold the ID of the previous room the player is in
 --parthiaMap.exits = {} --holds the exits for the current room, collected in function addLinksToDirections()
 --parthiaMap.coords = {} --location in the current area
---parthiaMap.dirtectionCollected = false --used to tell mapper if a movement direction has been collected. Is collected in functions parthiaMap.findSpecialExits and parthiaMap.detectDirection. Used in parthiaMap.Move
 --parthiaMap.upAvailable = false --keeps track of it player can move up in this area. Used to track movement commands like go ladder
 --parthiaMap.downAvailable = false --keeps track of it player can move up in this area. Used to track movement commands like go ladder
 --parthiaMap.stepsGoUp = true --if true steps add 1 to Z. If false steps remove 1 from z
@@ -9974,9 +9973,6 @@ function parthiaMap.resetRoom()
   parthiaMap.room.exits = {} --holds the exits for the current room, collected in function addLinksToDirections()
   parthiaMap.room.coords = {} --location in the current area
   parthiaMap.room.size = nil --size of the room, collection in function parthiaDrawMapRooms()
-  if not parthiaMap.dirtectionCollected then --if resetRoom is called after directionWalk was collected do not reset directionWalked
-    parthiaMap.directionWalked = "NOT COLLECTED" --direction the player has walked
-  end --if not parthiaMap.dirtectionCollected
   parthiaMap.TECMapRooms = {} --rooms that appear on the map
   parthiaMap.TECMapExits = {} --exits that appear on the map
   parthiaMap.room.confirmedExits = {} --exits that have been confirmed to be in this room.
@@ -10254,6 +10250,7 @@ function parthiaMap.setCharacterLocation(id, displayToScreen)
     parthiaMap.specialExitAttempted = false --records if a special exit was attempted. Used to automatically create a special exit for mappers.
     parthiaMap.entryIndex = 1 --index used to tell what exit was entered through to get to current room
     parthiaMap.exitIndex = 1 --index used to tell what exit was exited through from previous room to get to current room
+    parthiaMap.directionWalked = false --direction the player has walked
     if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name] then --if the current character has location in the map save table.
       parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].roomID = id --record the id to the map settings save table
       parthiaMap.room.id = id --record the ID to the mapper current room's id.
@@ -11428,16 +11425,7 @@ function parthiaMap.findSpecialExits(exitEcho)
     end --if parthiaMap.getEnabled()
   end --if tmpCurrentRoomType
 
-  --collection direction walked for mapper
-    if not parthiaMap.dirtectionCollected then --if we have not collection a movement direction yet do so now.
-      parthiaMap.directionWalked = exitEcho:match(" You are facing (%a+)%.")
-      if parthiaMap.directionWalked then
-        mapDebug("function addlinksToDirections, Direction walked: "..parthiaMap.directionWalked)
-      else
-        mapDebug("function addlinksToDirections, could collect direction walked")
-      end --if parthiaMap.directionWalked
-    end --if not parthiaMap.dirtectionCollected
-    parthiaMap.dirtectionCollected = false --reset directionCollected for next movement.
+  parthiaMap.detectDirection(exitEcho:match(" You are facing (%a+)%.")) --record direction player walked 
 
 end --function parthiaMap.findSpecialExits()</script>
 								<eventHandlerList />
@@ -11504,15 +11492,28 @@ parthiaMap.detectDirection("up")
 --Made outside the function so it is not recreated each time the function is called. Wasting processing time.
 parthiaMap.notZMovement = {
   "east", "eas", "ea", "e",
-  "southeast", "se",
+  "se",
   "south", "sout", "sou", "so", "s",
-  "southwest", "sw",
+  "sw",
   "west", "wes", "we", "w",
-  "northwest", "nw",
+  "nw",
   "north", "nort", "nor", "no", "n",
-  "northeast", "ne",
-  "leave", "leav", "lea", "le"
+  "ne",
+  "leave", "leav", "lea", "le",
+  "1","2","3","4","6","7","8","9"
 }
+
+--this table is used to detect the short hand version of movement directions the player may input.
+parthiaMap.directionsTable = {}
+parthiaMap.directionsTable.east = { "east", "eas", "ea", "e", "6", 6 }
+parthiaMap.directionsTable.southeast = {"se", "3", 3}
+parthiaMap.directionsTable.south = { "south", "sout", "sou", "so", "s", "2", 2 } 
+parthiaMap.directionsTable.southwest = {"sw", "1", 1 }
+parthiaMap.directionsTable.west = { "west", "wes", "we", "w", "4", 4}
+parthiaMap.directionsTable.northwest = { "nw", "7", 7 }
+parthiaMap.directionsTable.north = { "north", "nort", "nor", "no", "n", "8", 8 }
+parthiaMap.directionsTable.northeast = { "ne", "9", 9}
+
 
 local zMovement = {
   "up", "u",
@@ -11585,41 +11586,57 @@ local function specialExitMatch(playerCmd)
 end --local function specialExitMatch(exit)
 
 function parthiaMap.detectDirection(playerCmd)
-  playerCmd = playerCmd or parthiaMap.directionWalked
+  
+  --verify data
+  --playerCmd = playerCmd or parthiaMap.directionWalked
+  if not playerCmd then --if an argument was not passed
+    tecWarningNotification("function parthiaMap.detectDirection, argument required did not receive on.")
+    return --stop the function, argument is required.
+  end --if not playerCmd
   playerCmd = playerCmd:lower()
   parthiaMap.playerCmd = playerCmd --record the command the player used
+  --below, to avoid errors when movement starts but the game stops it. Check if the direction player is moving in is different, if it is stop the check
+  if type(parthiaMap.directionWalked) == "string" then --if directionWalked is a string rather than false
+    if parthiaMap.directionWalked:match("^"..playerCmd) then --if the function is attempting to use the same direction twice in a row.
+      return --using same direction twice, do not collect change.
+    end --if match(parthiaMap.directionWalked, "^"..playerCmd)
+  end --if type(parthiaMap.directionWalked) == "string"
   
   --if this is Z movement
   if table.contains(zMovement, playerCmd) then
     if parthiaMap.upAvailable then --if it is possible for the player to move up
-      if playerCmd == "up" then --player is going up
+      if playerCmd == "up" or playerCmd == "u" then --player is going up
         parthiaMap.directionWalked = "up"
-        parthiaMap.dirtectionCollected = true
-        mapDebug("function detectDirection, directionWalked up found.")
+        mapDebug("function parthiaMap.detectDirection, directionWalked up found.")
         return
       elseif parthiaMap.room.exits["up"].description:match(playerCmd) then
         parthiaMap.directionWalked = "up"
-        parthiaMap.dirtectionCollected = true
-        mapDebug("function detectDirection, directionWalked up found.")
+        mapDebug("function parthiaMap.detectDirection, directionWalked up found.")
         return
       end --if parthiaMap.room.exits["up"].description:match(playerCmd)
     end --if parthiaMap.upAvailable
     
     if parthiaMap.downAvailable then --if it is possible for the player to move down
-      if playerCmd == "down" then --player is going down
+      if playerCmd == "down" or playerCmd == "d" then --player is going down
         parthiaMap.directionWalked = "down"
-        parthiaMap.dirtectionCollected = true
-        mapDebug("function parthiaMap.horizontalTracking, directionWalked down found.")
+        mapDebug("function parthiaMap.detectDirection, directionWalked down found.")
         return
       elseif parthiaMap.room.exits["down"].description:match(playerCmd) then
         parthiaMap.directionWalked = "down"
-        parthiaMap.dirtectionCollected = true
-        mapDebug("function parthiaMap.horizontalTracking, directionWalked down found.")
+        mapDebug("function parthiaMap.detectDirection, directionWalked down found.")
         return
       end --if parthiaMap.room.exits["down"].description:match(playerCmd)
     end --if parthiaMap.downAvailable
-  elseif table.contains(parthiaMap.notZMovement, playerCmd) then
-    --code to adjust standardmovement goes here.
+  elseif table.contains(parthiaMap.notZMovement, playerCmd) then --If this is a non Z standard movement
+    for direction,tbl in pairs(parthiaMap.directionsTable) do
+      for _,v in ipairs(tbl) do
+        if playerCmd == v then --if the command player sent matches something in the parthiaMap.directionsTable
+          parthiaMap.directionWalked = direction --record the direction the player walked
+          mapDebug("function parthiaMap.detectDirection, directionWalked "..direction.." found.")
+          return --found what we are looking for stop the check
+        end
+      end --for ipairs(tbl)
+    end --for pairs(parthiaMap.directionsTable)
   else --if the input is not a standard movement, a special exit command was used
     specialExitMatch(playerCmd) --find what exit, than room ID this command leads to
   end --if not table.contains(parthiaMap.notZMovement, playerCmd)

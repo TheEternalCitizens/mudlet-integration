@@ -2107,8 +2107,8 @@ end --if getHelpDevs()</script>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>You are in the middle of something.</name>
 				<script>if parthiaMap.getEnabled() then --if player is using parthiaMap
-  parthiaMap.dirtectionCollected = false
-  mapDebug("trigger You are in the middle of something., possible failed movement found set directionCollected to false.")
+  parthiaMap.directionWalked = false --direction the player has walked
+  mapDebug("trigger You are in the middle of something., possible failed movement found set parthiaMap.directionWalked to false.")
 end --if parthiaMap.getEnabled()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -2220,8 +2220,8 @@ end --if parthiaStopRan</script>
 				<name>failed movement</name>
 				<script>--in case player types goes a direction that is not available than goes in a different direction
 if parthiaMap.getEnabled() then --if player is using parthiaMap
-  parthiaMap.dirtectionCollected = false
-  mapDebug("trigger failed movement, possible failed movement found set directionCollected to false.")
+  parthiaMap.directionWalked = false --direction the player has walked
+  mapDebug("trigger failed movement, possible failed movement found set parthiaMap.directionWalked to false.")
 end --if parthiaMap.getEnabled()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -2255,7 +2255,8 @@ end --if parthiaMap.getEnabled()</script>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>collect exit description</name>
 				<script>parthiaMap.descriptionOfExitUsed = matches[2] --stores the description of the exit player used.
-mapDebug("trigger collect exit description, collected exit description: "..matches[2])</script>
+mapDebug("trigger collect exit description, collected exit description: "..matches[2])
+</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
