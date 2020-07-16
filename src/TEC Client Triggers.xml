@@ -65,7 +65,7 @@ mapRoomsLC = 1 --Just a loop counter so we can go through rooms easily.
 parthiaDrawMapRooms()
 
 --We want the map zoom level, but not 100 times.
-if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
+--if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
 
 deleteLine() --remove line from main console. line variable remains unchanged.
 
@@ -141,7 +141,7 @@ mapRoom[150]:hide() --mapRoom[150] is used to show exits off message on resize
 mapRoom[150]:lower()
 
 --We want the map zoon level, but not 100 times...
-if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
+--if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
 
 deleteLine() --remove line from main console. line variable remains unchanged.
 

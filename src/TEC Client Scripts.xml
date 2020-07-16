@@ -3718,11 +3718,11 @@ function addLinksToCharacters(checkType)
         tmpCharacterType = tmpCharacterType:gsub("%(unconscious%)","") --Removed the unconscious state from tmpCharacterType
 
       if not table.contains(checkedCharactersTable, tmpCharacterType) then --if the character type has NOT been processed
-        debugToDisplay("function addLinksToCharacters, look passed, setting links for "..tmpCharacterType)
+        displayDebug("function addLinksToCharacters, look passed, setting links for "..tmpCharacterType)
         checkedCharactersTable[tmpCharacterType] = "" --add character type to the checkedCharactersTable
         if getHelpDevs() then --if player has help devs set collect room types
           if not table.contains(parthiaDirectionsTable, tmpCharacterType) then --if tmpCharacterType is not a direction
-            debugToDisplay("function addLinksToCharacters, look passed, adding "..tmpCharacterType.." to HelpDevsData.NPCTypes table.")
+            displayDebug("function addLinksToCharacters, look passed, adding "..tmpCharacterType.." to HelpDevsData.NPCTypes table.")
             HelpDevsData.NPCTypes[tmpCharacterType] = "" --collect name to table.
           end --if not table.contains(parthiaDirectionsTable, tmpCharacterType)
         end --if getHelpDevs()
@@ -3743,7 +3743,7 @@ function addLinksToCharacters(checkType)
       charactersInRoomList = charactersInRoomList:gsub(" are here.","") --remove from list
       charactersInRoomList = charactersInRoomList:gsub(" and ",", ") --replace and with a
       charactersInRoomList = charactersInRoomList:gsub("%,%,",",") --the line above sometimes creats ,, if it did fix it.
-      debugToDisplay("function addLinksToCharacters, walk passed, temp Character list: "..charactersInRoomList)
+      displayDebug("function addLinksToCharacters, walk passed, temp Character list: "..charactersInRoomList)
       local tmpCharacterTable = {} --will hold character types
       for tmpCharacterType in string.gmatch( charactersInRoomList, " ([^,]+),?" ) do --detect characters as the player enters a room
         tmpCharacterType = tmpCharacterType:gsub("^an ","") --remove from the begining of the string
@@ -3751,15 +3751,15 @@ function addLinksToCharacters(checkType)
         tmpCharacterType = tmpCharacterType:gsub("^A ","") --remove from the begining of the string
         tmpCharacterType = tmpCharacterType:gsub("^a ","") --remove from the begining of the string
         if not table.contains(tmpCharacterTable, tmpCharacterType) then --if tmpCharacterType does not exist in tmpCharacterTable add it
-          debugToDisplay("function addLinksToCharacters, walk passed, adding "..tmpCharacterType.." to the tmpCharacterTable.")
+          displayDebug("function addLinksToCharacters, walk passed, adding "..tmpCharacterType.." to the tmpCharacterTable.")
           tmpCharacterTable[tmpCharacterType] = "" --add character to tmpCharacterTable
         end --if not table.contains(tmpCharacterTable, tmpCharacterType)
       end --for tmpCharacterType
       for k, v in pairs(tmpCharacterTable) do --loop through the tmpCharacterTable
-        debugToDisplay("function addLinksToCharacters, walk passed, adding links in main for "..k)
+        displayDebug("function addLinksToCharacters, walk passed, adding links in main for "..k)
         if getHelpDevs() then --if player has help devs set collect room types
           if not table.contains(HelpDevsData.NPCTypes, k) then --if the NPCType is not already in the NPCType table
-            debugToDisplay("function addLinksToCharacters, walked passed, adding "..k.." to HelpDevsData.NPCTypes table.")
+            displayDebug("function addLinksToCharacters, walked passed, adding "..k.." to HelpDevsData.NPCTypes table.")
             HelpDevsData.NPCTypes[k] = "" --collect NPC Type to table.
           end --if not table.contains(HelpDevsData.NPCTypes, k then)
         end --if getHelpDevs()
@@ -8903,7 +8903,7 @@ function echoLeftRoomCharacterWindows(message)
   --display messages to side of the screen
   hecho(roomCharacters.console.name,message) --send message or standard room character window
   hecho(MultiWindow.roomCharacters.console.name,message) --send message to room character multi window
-  debugToDisplay("function echoLeftRoomCharacterWindows, message: "..message)
+  displayDebug("function echoLeftRoomCharacterWindows, message: "..message)
 end --function echoLeftRoomCharacterWindows()</script>
 						<eventHandlerList />
 					</Script>
@@ -8917,7 +8917,7 @@ end --function echoLeftRoomCharacterWindows()</script>
   --display messages to side of the screen
   hecho(roomCharacters.rightConsole.name,message) --send message or standard room character window
   hecho(MultiWindow.roomCharacters.rightConsole.name,message) --send message to room character multi window
-  debugToDisplay("function echoRightRoomCharacterWindows, message: "..message)
+  displayDebug("function echoRightRoomCharacterWindows, message: "..message)
 end --function echoLeftRoomCharacterWindows()</script>
 						<eventHandlerList />
 					</Script>
@@ -11097,7 +11097,7 @@ function sortAdjacentRooms()
       if exitTable.open then --make certain the exit is open, if it is not there is no room that it connects to.
         --If this is a corner exit, find the room it leads to, put that room in the parthiaMap.room.confirmedExits[exitDirection].room table
         if exitDirection == "northwest" or exitDirection == "southwest" or exitDirection == "southeast" or exitDirection == "northeast" then --if this is a corner exit
-        mapDebug("function sortAdjacentRooms, checking for room at exit: "..exitDirection)
+        --mapDebug("function sortAdjacentRooms, checking for room at exit: "..exitDirection)
           --The math for all diaginal movement is the same only variables change
           if not parthiaMap.room.corners then --if the table does not already exist
             parthiaMap.room.corners = {} 
@@ -11119,12 +11119,12 @@ function sortAdjacentRooms()
               adjacentRoomCorner.northeast = {xpos = adjacentRoom.xpos, ypos = adjacentRoom.ypos+adjacentRoom.size}
               adjacentRoomCorner.southeast = {xpos = adjacentRoom.xpos, ypos = adjacentRoom.ypos}
               adjacentRoomCorner.southwest = {xpos = adjacentRoom.xpos+adjacentRoom.size, ypos = adjacentRoom.ypos}
-              mapDebug("\tfunction sortAdjacentRooms, checking room, adjacentRoom.xpos: "..adjacentRoom.xpos.." adjacentRoom.ypos: "..adjacentRoom.ypos.." adjacentRoom.size: "..adjacentRoom.size)
-              mapDebug("\tfunction sortAdjacentRooms, compairing adjacentRoomCorner[exitDirection].xpos: "..adjacentRoomCorner[exitDirection].xpos.." to parthiaMap.room.corners[exitDirection].xpos "
-              ..parthiaMap.room.corners[exitDirection].xpos.." AND adjacentRoomCorner[exitDirection].ypos: "..adjacentRoomCorner[exitDirection].ypos
-              .." to parthiaMap.room.corners[exitDirection].ypos: "..parthiaMap.room.corners[exitDirection].ypos)
+              --mapDebug("\tfunction sortAdjacentRooms, checking room, adjacentRoom.xpos: "..adjacentRoom.xpos.." adjacentRoom.ypos: "..adjacentRoom.ypos.." adjacentRoom.size: "..adjacentRoom.size)
+              --mapDebug("\tfunction sortAdjacentRooms, compairing adjacentRoomCorner[exitDirection].xpos: "..adjacentRoomCorner[exitDirection].xpos.." to parthiaMap.room.corners[exitDirection].xpos "
+              --  ..parthiaMap.room.corners[exitDirection].xpos.." AND adjacentRoomCorner[exitDirection].ypos: "..adjacentRoomCorner[exitDirection].ypos
+              --  .." to parthiaMap.room.corners[exitDirection].ypos: "..parthiaMap.room.corners[exitDirection].ypos)
               if  (adjacentRoomCorner[exitDirection].xpos == parthiaMap.room.corners[exitDirection].xpos) and (adjacentRoomCorner[exitDirection].ypos == parthiaMap.room.corners[exitDirection].ypos) then --if the appropriate corners of the two rooms are aligned this is the correct room for this exit.
-                mapDebug("function sortAdjacentRooms, parthiaMap.room.adjacentRooms.xpos: "..adjacentRoomCorner[exitDirection].xpos.." parthiaMap.room.adjacentRooms.ypos: "..adjacentRoomCorner[exitDirection].ypos.." is "..exitDirection.." of the current room.")
+                --mapDebug("function sortAdjacentRooms, parthiaMap.room.adjacentRooms.xpos: "..adjacentRoomCorner[exitDirection].xpos.." parthiaMap.room.adjacentRooms.ypos: "..adjacentRoomCorner[exitDirection].ypos.." is "..exitDirection.." of the current room.")
                 exitTable.room = adjacentRoom --record info for this room in the appropriate exit table
                 adjacentRoom.sorted = true --this room does not need to be checked again.
                 break --found this exit no need to keep looking.
