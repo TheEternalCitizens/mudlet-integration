@@ -9554,7 +9554,7 @@ end --function getNumpadNaviation()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
-			<ScriptGroup isActive="no" isFolder="yes">
+			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>Parthia Map</name>
 				<packageName></packageName>
 				<script>--[[
@@ -11596,6 +11596,26 @@ function parthiaMap.setStepsGoUp(mode, displayToScreen)
   end --if displayToScreen
   
 end --parthiaMap.setStepsGoUp(mode, displayToScreen)</script>
+							<eventHandlerList />
+						</Script>
+						<Script isActive="yes" isFolder="no">
+							<name>parthiaMap.getStepsGoUp()</name>
+							<packageName></packageName>
+							<script>--[[
+Used to check if steps that go in non vertical directions go up or down.
+
+Useage: 
+if parthiaMap.getStepsGoUp() then
+  --code that adds to z movement here
+else
+  --code that removes from z movement here
+end
+
+This function is used in parthiaMap.Move function
+]]--
+function parthiaMap.getStepsGoUp()
+  return parthiaMap.stepsGoUp
+end --function parthiaMap.getStepsGo()</script>
 							<eventHandlerList />
 						</Script>
 						<Script isActive="yes" isFolder="no">
