@@ -2216,7 +2216,7 @@ mapDebug("trigger player moves, collected exit description: "..matches[2])
 parthiaSetWaitForDrover(false) --stop waiting for the drover, so it will not auto follow after a player has walked away while waiting for a drover.
 
 if matches[3] then --collect a direction walked if it was found
-    parthiaMap.detectDirection(matches[3])
+  parthiaMap.detectDirection(matches[3])
 end --if matches[3]</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>

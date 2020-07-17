@@ -10933,8 +10933,6 @@ Fix is probably using the two room sizes to resolve.
     end --if parthiaMap.mapping
   end --if roomFound[0]
   
-  parthiaMap.save(false) --movement successful, save new room ID to file.
-  
   mapDebug("function parthiaMap.Move, Completed mapping space that was previously unmapped.")
 
 end --parthiaMap.Move(room, previousRoom, directionWalked)</script>
