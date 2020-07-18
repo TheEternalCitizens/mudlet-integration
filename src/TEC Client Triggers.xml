@@ -105,12 +105,10 @@ if not string.starts(line, "SKOOT") then --do not run if this is a SKOOT message
   parthiaDrawMapRooms()--draw the rooms, use data from global line variable
   deleteLine() --remove line from main console. line variable remains unchanged.
 
-  --tell person mapping they need to recapture the room
-  if parthiaMap.mapping then --if new maps are currently being created
-    pecho("&lt;red&gt;Lag error server side. Please move back erase this room and attempt again.\n&lt;reset&gt;")
-  end --if parthiaMap.mapping
-end
-</script>
+  --tell person mapping why this room was not created
+  parthiaMap.stopRoomCreation("&lt;green&gt;Lag error server side. Maleformed map room data. Please return to the previous room and attempt again.\n&lt;reset&gt;")
+  
+end --if not string.starts(line, "SKOOT")</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -182,12 +180,10 @@ if not string.starts(line, "SKOOT") and
   tecMap_back:lower() --lower the background behind the exits.
   deleteLine() --remove line from main console. line variable remains unchanged.
   
-  --tell person mapping they need to recapture the room
-  if parthiaMap.mapping then --if new maps are currently being created
-    pecho("&lt;red&gt;Lag error server side. Please move back erase this room and attempt again.\n&lt;reset&gt;")
-  end --if parthiaMap.mapping
-end --if not string.starts(line, "SKOOT")
-</script>
+  --tell person mapping why this room was not created
+  parthiaMap.stopRoomCreation("&lt;green&gt;Lag error server side. Maleformed map exits data. Please return to the previous room and attempt again.\n&lt;reset&gt;")
+
+end --if not string.starts(line, "SKOOT")</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -242,6 +238,12 @@ if parthiaMap.getEnabled() then --if player is using parthiaMap
     parthiaMap.room.entranceEcho = parthiaMap.entranceEcho --record the echo to a variable to sort data from it at a later time.
     parthiaMap.entranceEcho = false --clear the exits echo message
     parthiaMap.findSpecialExits() --find special exit names for this room and direction walked if not collected already
+  else --no room entranceEcho available.
+    if getCharacterCanSee() then
+      parthiaMap.stopRoomCreation("The entrance message when entering a room was not received. Return to the previous room and try again.")
+    else
+      parthiaMap.stopRoomCreation("Your character has to see for new map creation. Please use a light source. Return to the previous room and try again.")
+    end --if getCharacterCanSee()
   end --if parthiaMap.entranceEcho
 end --if parthiaMap.getEnabled()
 

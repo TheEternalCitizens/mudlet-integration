@@ -9652,6 +9652,8 @@ parthiaMap.config() and parthiaMap.load function are called in script `Post Init
 
 Create option to disable mapping if colored text is disabled. Then when it is found, notify the player the parthia map can not work with colored text disabled. 
 
+Make mapper save coordnate and area id to file as secondary location restoration method. Incase room id is unavailable.
+
 know room coordinates
 Vet (Town Square) - [11400, -1200, 0]
 Seld (Town Square) - [32800, -1520, 0]
@@ -9696,7 +9698,8 @@ parthiaMap = parthiaMap or {} --table to hold the mapper data.
 --parthiaMap.descriptionOfExitUsed = "" --stores the description of the exit player used.
 --parthiaMap.moveNeeded = false --Movement needs to be delayed because sometimes there is not SKOOT 10 message. This is used to track if movement has already begun. Used in function parthiaMap.delayMove()
 --parthiaMap.danger = 0 --Used to show a message to player if they have fewer combat ranks than the danger rating
---parthiaMap.previousDanger = 0 --Tracks the last change in danger level to avoid repeated danger messages to player</script>
+--parthiaMap.previousDanger = 0 --Tracks the last change in danger level to avoid repeated danger messages to player
+--parthiaMap.creationStopReason = false --if a reason comes up to stop new room creation this will be a string to tell map creator why it was stopped.</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
 					<name>parthiaMap.help()</name>
@@ -9977,6 +9980,7 @@ function parthiaMap.resetRoom()
   parthiaMap.TECMapExits = {} --exits that appear on the map
   parthiaMap.room.confirmedExits = {} --exits that have been confirmed to be in this room.
   parthiaMap.room.specialExits = {} --store special exit descriptions
+  parthiaMap.stopRoomCreation(false) --clear any stop room creation messages
 end --function parthiaMap.resetRoom()</script>
 							<eventHandlerList />
 						</Script>
@@ -10335,10 +10339,10 @@ used in:
 ]]--
 function parthiaMap.connectRooms()
 
-  if not getCharacterCanSee() then --if the character mapping can not see.
-    pecho("&lt;green&gt;You can not create new maps without light.&lt;reset&gt;\n")
+  if parthiaMap.getRoomCreationStop() then --if there is a reason not to create a new room.
+    pecho("\n&lt;green&gt;"..parthiaMap.getRoomCreationStop().."\nFound while attempting to connect room exits.&lt;reset&gt;\n")
     return --stop the function.
-  end --if not getCharacterCanSee()
+  end --if parthiaMap.getRoomCreationStop()
 
   local entryDir = parthiaMap.getEntranceDirection()
   local exitDir = parthiaMap.directionWalked
@@ -10450,10 +10454,10 @@ parthiaMap.addRoom() --adds a room using parthiaMap.room as the current room and
 ]]--
 function parthiaMap.addRoom(room, previousRoom)
 
-  if not getCharacterCanSee() then --if the character mapping can not see.
-    pecho("&lt;green&gt;You can not create new maps without light.&lt;reset&gt;\n")
+  if parthiaMap.getRoomCreationStop() then --if there is a reason not to create a new room.
+    pecho("\n&lt;green&gt;"..parthiaMap.getRoomCreationStop().."\nFound while attempting to create a new room.&lt;reset&gt;\n")
     return --stop the function.
-  end --if not getCharacterCanSee()
+  end --if parthiaMap.getRoomCreationStop()
 
   room = room or parthiaMap.room
   previousRoom = previousRoom or parthiaMap.previousRoom
@@ -10501,6 +10505,43 @@ function parthiaMap.addRoom(room, previousRoom)
 end --function parthiaMap.addRoom()</script>
 						<eventHandlerList />
 					</Script>
+					<ScriptGroup isActive="yes" isFolder="yes">
+						<name>stop room creation</name>
+						<packageName></packageName>
+						<script></script>
+						<eventHandlerList />
+						<Script isActive="yes" isFolder="no">
+							<name>parthiaMap.stopRoomCreation(reason)</name>
+							<packageName></packageName>
+							<script>--[[
+Used when a situation arises that would create an incomplete room. No light, or partial SKOOT messages for example.
+
+Used in
+
+usage
+parthiaMap.stopRoomCreation("You can not create a new room without light.")
+]]--
+function parthiaMap.stopRoomCreation(reason)
+
+  if not type(reason) == "string" and not type(reason) == "boolean" then
+    tecWarningNotification("function parthiaMap.stopRoomCreation, argument 1 expected a string or boolean received a "..type(reason))
+  end --if not type(reason) == "string"
+  
+  parthiaMap.creationStopReason = reason
+
+end --function parthiaMap.stopRoomCreation(reason)</script>
+							<eventHandlerList />
+						</Script>
+						<Script isActive="yes" isFolder="no">
+							<name>parthiaMap.getRoomCreationStop()</name>
+							<packageName></packageName>
+							<script>--if a reason comes up to stop new room creation this will be a string to tell map creator why it was stopped.
+function parthiaMap.getRoomCreationStop()
+  return parthiaMap.creationStopReason
+end --function parthiaMap.getRoomCreationStop()</script>
+							<eventHandlerList />
+						</Script>
+					</ScriptGroup>
 				</ScriptGroup>
 				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>UserData</name>
@@ -10745,7 +10786,7 @@ function parthiaMap.Move(room, previousRoom, directionWalked)
                     exitIndex = previousRoomExitsKey
                     break --stop the loop found what we are looking for
                   end --if  previousRoomExit.room.xpos + parthiaMap.room.confirmedExits[entryDir][entryIndex].room.xpos == targetCoord
-                end
+                end --if currentRoomExits.room and previousRoomExit.open
               end --for ipairs(parthiaMap.room.confirmedExits[entryDir])
             end --if previousRoomExit.room
           end --for ipairs(parthiaMap.previousRoom.confirmedExits[dir])
@@ -10922,9 +10963,11 @@ Fix is probably using the two room sizes to resolve.
     parthiaMap.room.id = roomFound[0] --set the room id
     mapDebug("Lost room found ID: "..parthiaMap.room.id)
     if parthiaMap.mapping then --if player is creating new maps
-      parthiaMap.connectRooms() --connect the exit nodes for the room player is in and the one they moved from
+      if parthiaMap.previousRoom.id then --make certain the previous room had an ID. If room creation was stopped with parthiaMap.stopRoomCreation there will be none
+        parthiaMap.connectRooms() --connect the exit nodes for the room player is in and the one they moved from
+      end --if parthiaMap.previousRoom.id
+      parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
     end --if parthiaMap.mapping
-    parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
   else --no unexpected room found
     if parthiaMap.mapping then --if player is creating new maps
       parthiaMap.addRoom() --we are mapping in a space with no previous room, add one.
