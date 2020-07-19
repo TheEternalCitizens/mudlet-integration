@@ -106,7 +106,7 @@ if not string.starts(line, "SKOOT") then --do not run if this is a SKOOT message
   deleteLine() --remove line from main console. line variable remains unchanged.
 
   --tell person mapping why this room was not created
-  parthiaMap.stopRoomCreation("&lt;green&gt;Lag error server side. Maleformed map room data. Please return to the previous room and attempt again.\n&lt;reset&gt;")
+  parthiaMap.stopRoomCreation("Lag error server side. Maleformed map room data. Please return to the previous room and attempt again.\n")
   
 end --if not string.starts(line, "SKOOT")</script>
 				<triggerType>0</triggerType>
@@ -181,7 +181,7 @@ if not string.starts(line, "SKOOT") and
   deleteLine() --remove line from main console. line variable remains unchanged.
   
   --tell person mapping why this room was not created
-  parthiaMap.stopRoomCreation("&lt;green&gt;Lag error server side. Maleformed map exits data. Please return to the previous room and attempt again.\n&lt;reset&gt;")
+  parthiaMap.stopRoomCreation("Lag error server side. Maleformed map exits data. Please return to the previous room and attempt again.\n")
 
 end --if not string.starts(line, "SKOOT")</script>
 				<triggerType>0</triggerType>
@@ -210,23 +210,7 @@ https://wiki.mudlet.org/w/Manual:String_Functions#string.gmatch.2C_utf8.gmatch
 https://www.lua.org/pil/20.2.html
 ]]--
 
---get all directions and if they should be showed from the skoot 7 message
-for direction, show in string.gmatch( line, ",?(%a+),(%a+)" ) do
-  
-  displayDebug("trigger Compass, setting dirrection "..direction.." to "..show)
-  
-  --if the direction is u or d convert it into up or down.
-  if direction == "u" then direction = "up"
-  elseif direction == "d" then direction = "down" end
-  
-  if show == "show" then --if the direction should be shown.
-    MultiWindow.Compass.lit(direction) --show the direction as active in the MultiWindow compass
-    tecCompass.lit(direction) --show the direction as active in the standard tec compass
-  else --if the compass direction should be inactive
-    MultiWindow.Compass.unlit(direction) --show the direction as inactive in the MultiWindow compass
-    tecCompass.unlit(direction) --show the direction as inactive in the standard tec compass
-  end --if show == "show"
-end --for string.gmatch( line, "(%a%a?),(?%d+)" )
+deleteLine() --remove line from main console. line variable remains unchanged.
 
 --this is the first message that guarentees a full movement has occured. Start new movement
 if parthiaMap.getEnabled() then --if player is using parthiaMap
@@ -247,7 +231,25 @@ if parthiaMap.getEnabled() then --if player is using parthiaMap
   end --if parthiaMap.entranceEcho
 end --if parthiaMap.getEnabled()
 
-deleteLine() --remove line from main console. line variable remains unchanged.</script>
+--get all directions and if they should be showed from the skoot 7 message
+for direction, show in string.gmatch( line, ",?(%a+),(%a+)" ) do
+  
+  displayDebug("trigger Compass, setting dirrection "..direction.." to "..show)
+  
+  --if the direction is u or d convert it into up or down.
+  if direction == "u" then direction = "up"
+  elseif direction == "d" then direction = "down" end
+  
+  if show == "show" then --if the direction should be shown.
+    MultiWindow.Compass.lit(direction) --show the direction as active in the MultiWindow compass
+    tecCompass.lit(direction) --show the direction as active in the standard tec compass
+    parthiaMap.recordCompass(direction, true) --record direction on the compass and if it is shown
+  else --if the compass direction should be inactive
+    MultiWindow.Compass.unlit(direction) --show the direction as inactive in the MultiWindow compass
+    tecCompass.unlit(direction) --show the direction as inactive in the standard tec compass
+    parthiaMap.recordCompass(direction, false) --record direction on the compass and if it is shown
+  end --if show == "show"
+end --for string.gmatch( line, "(%a%a?),(?%d+)" )</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>

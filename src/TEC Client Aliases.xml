@@ -1138,8 +1138,32 @@ pecho("Cleared room and previousRoom tables.\n")</script>
 					<regex>^parthia map danger (.*)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
+					<name>parthia map userdata</name>
+					<script>if matches[3] then --if there is a second argument
+  parthiaMap.echoUserData(matches[2], matches[3])
+else
+  parthiaMap.echoUserData(matches[2])
+end --if matches[3]</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia map userdata(?:\s+(\w+\d*))?(?:\s+(\w*\d*))?$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia map unique</name>
+					<script>if matches[2] then --if there is an argument
+  parthiaMap.makeRoomUnique(parthiaMap.room.id, matches[2]) --verrifies current room is unique then makes it unique. Tells mapper to compass direction passed
+else
+  parthiaMap.makeRoomUnique() --verrifies current room is unique then makes it unique.
+end --matches[2]</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>parthia map unique(?:\s+((?:\w+|\d+)))?</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
 					<name>/map</name>
-					<script>local cmd, arg = matches[2]:match("^(%a+)%s*(.*)")
+					<script>local cmd = matches[2] or false
+local arg = matches[3] or false
+local arg2 = matches[4] or false
 
 if cmd then
   if cmd == "up" then
@@ -1151,7 +1175,7 @@ if cmd then
   elseif cmd == "areaadd" then
     parthiaMap.addArea(arg) --add the new map area
   elseif cmd == "arearemove" then
-    parthiaMap.removeArea(arg, true) --remove the area, display success or failure to screen
+      parthiaMap.removeArea(arg, true) --remove the area, display success or failure to screen
   elseif cmd == "areaclear" then
     parthiaMap.clearAreaRooms(arg)
   elseif cmd == "area" then
@@ -1159,16 +1183,28 @@ if cmd then
   elseif cmd == "coord" then
     pecho("Command not created yet.\n")
   elseif cmd == "danger" then
-    parthiaMap.setDanger(arg, true)
+    parthiaMap.setDanger(arg, true) --set danager level for rooms being created
   elseif cmd == "unique" then
+    if arg then --if there is an argument
+      parthiaMap.makeRoomUnique(parthiaMap.room.id, arg) --verrifies current room is unique then makes it unique. Tells mapper to compass direction passed
+    else
+      parthiaMap.makeRoomUnique() --verrifies current room is unique then makes it unique.
+    end --if arg == ""
+  elseif cmd == "stock" then
     pecho("Command not created yet.\n")
-  elseif cmd == "first" then
+  elseif cmd == "learn" then
     pecho("Command not created yet.\n")
-  elseif cmd == "store" then
-    pecho("Command not created yet.\n")
+  elseif cmd == "help" then
+    parthiaMap.help()
+  elseif cmd == "userdata" then
+    if arg2 then --if there is a second argument
+      parthiaMap.echoUserData(arg, arg2) --display user data if it exists
+    else
+      parthiaMap.echoUserData(arg) --display user data if it exists
+    end --if arg2
   else
-    pecho("No mapping command: "..cmd.."\n")
-  end
+    pecho("&lt;yellow&gt;No mapping command: "..cmd.."&lt;reset&gt;\n")
+  end --if cmd == elseif
 
 else --no additional text after /map in command
 
@@ -1178,7 +1214,7 @@ else --no additional text after /map in command
 end --if cmd</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^/map(.*)$</regex>
+					<regex>^/map(\w+)?(?:\s+(\w+\d*))?(?:\s+(\w*\d*))?$</regex>
 				</Alias>
 			</AliasGroup>
 			<Alias isActive="yes" isFolder="no">

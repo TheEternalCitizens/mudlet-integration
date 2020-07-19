@@ -9654,6 +9654,10 @@ Create option to disable mapping if colored text is disabled. Then when it is fo
 
 Make mapper save coordnate and area id to file as secondary location restoration method. Incase room id is unavailable.
 
+When done with system find all "--uncomment on completion" and remove the comment to make them code
+
+create room delete function, that will search connected rooms and remove the delted room from the existing rooms exit data
+
 know room coordinates
 Vet (Town Square) - [11400, -1200, 0]
 Seld (Town Square) - [32800, -1520, 0]
@@ -9846,6 +9850,28 @@ function parthiaMap.help()
       pecho("Now input how many combat ranks a character should have to safely enter the rooms you are mapping.\n")]],
     "change mapping area", true)    
   pecho(", change the area being mapped.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map unique", 
+    [[printCmdLine("parthia map unique ");
+      pecho("&lt;red&gt;Make a room unique only when it is required.&lt;reset&gt; Having too many unique rooms can slow down Parthia's startup, and make movement lag.\nIf you are mapping a room with a boat dock input the direction the boat arrives. Press enter if mapping a standard room.\n")]],
+    "make room unique", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapunique", 
+    [[printCmdLine("/mapunique ");
+      pecho("&lt;red&gt;Make a room unique only when it is required.&lt;reset&gt; Having too many unique rooms can slow down Parthia's startup, and make movement lag.\nIf you are mapping a room with a boat dock input the direction the boat arrives. Press enter if mapping a standard room.\n")]],
+    "make room unique", true)    
+  pecho(", check if room can be made unique.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map userdata", 
+    [[printCmdLine("parthia map userdata ");
+      pecho("Now input a user data store name, and optionally a room id.\n")]],
+    "view map user data", true)
+  pecho(" or ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;/mapuserdata", 
+    [[printCmdLine("/mapuserdata ");
+      pecho("Now input a user data store name, and optionally a room id.\n")]],
+    "view map user data", true)    
+  pecho(", view map userdata.\n")
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Mapping tutorial", 
     [[parthiaMappingTutorial()]],
@@ -10457,6 +10483,10 @@ function parthiaMap.addRoom(room, previousRoom)
   if parthiaMap.getRoomCreationStop() then --if there is a reason not to create a new room.
     pecho("\n&lt;green&gt;"..parthiaMap.getRoomCreationStop().."\nFound while attempting to create a new room.&lt;reset&gt;\n")
     return --stop the function.
+  elseif not parthiaMap.getCompass() then
+    pecho("\n&lt;green&gt;No compass table to add room. Please return to the previous room and attempt again.&lt;reset&gt;\n")
+  elseif not parthiaMap.room.SKOOT7 then
+    pecho("\n&lt;green&gt;No SKOOT 7 message recorded. Please return to the previous room and attempt again.&lt;reset&gt;\n")
   end --if parthiaMap.getRoomCreationStop()
 
   room = room or parthiaMap.room
@@ -10497,8 +10527,9 @@ function parthiaMap.addRoom(room, previousRoom)
     end --if parthiaMap.previousRoom
     
     --set room's user data
-    setRoomUserData(room.id, "danger", parthiaMap.getDanger())
-    --setRoomUserData(341, "some table", yajl.to_string({name = "bub", age = 23}))
+    setRoomUserData(room.id, "danger", parthiaMap.getDanger()) --store danger or combatskill ranks recommended for this room
+    setRoomUserData(room.id, "compass", yajl.to_string(parthiaMap.getCompass())) --store compass table to file.
+    setRoomUserData(room.id, "SKOOT7", parthiaMap.room.SKOOT7) --store the SKOOT 7 message. Incase it is needed.
     
     parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
   end --if parthiaMap.mapping
@@ -10522,12 +10553,14 @@ usage
 parthiaMap.stopRoomCreation("You can not create a new room without light.")
 ]]--
 function parthiaMap.stopRoomCreation(reason)
-
-  if not type(reason) == "string" and not type(reason) == "boolean" then
-    tecWarningNotification("function parthiaMap.stopRoomCreation, argument 1 expected a string or boolean received a "..type(reason))
-  end --if not type(reason) == "string"
   
-  parthiaMap.creationStopReason = reason
+  if type(reason) == "string" then --if argument is a string
+    parthiaMap.creationStopReason = reason
+  elseif reason == false then --if argument is false
+    parthiaMap.creationStopReason = false
+  else --unsupported argument type received
+    tecWarningNotification("function parthiaMap.stopRoomCreation, argument 1 expected a string or false received a "..type(reason))
+  end --if type(reason) == "string"
 
 end --function parthiaMap.stopRoomCreation(reason)</script>
 							<eventHandlerList />
@@ -10706,9 +10739,379 @@ There needs to be a a table containing all unique room's userData stores. This a
 Check room against unique room userData stores BEFORE other movement calculations
 If there is light, check room description first. Those will be simple string comparisons.
 
+--storage
+record unique tables for all rooms created.
+When creating a new unique room this allows for verification that the room is unique.
+
 ]]--</script>
 						<eventHandlerList />
+						<ScriptGroup isActive="yes" isFolder="yes">
+							<name>Exit Used</name>
+							<packageName></packageName>
+							<script>--[[
+"You walk through EXITTYPE" and "You walk to ROOMTYPE, to the DIRECTIONWALKED"
+message that echo when someone walks.
+
+works if there is no light.
+
+ROOMTYPE matches the room's name in mudlet map database
+EXITTYPE will be in the 'command or LUA script' section of the special exits field in the mudlet mapper database
+]]--</script>
+							<eventHandlerList />
+						</ScriptGroup>
+						<ScriptGroup isActive="yes" isFolder="yes">
+							<name>room entrace echo</name>
+							<packageName></packageName>
+							<script>--[[
+Checks for unique room data against the room's entrance echo.
+Room name after "You arrive at "
+exits description after "You see "
+people are before "is here." or "are here." People has to ONLY be used if the room was found to be otherwise unique
+
+Only works when there is light
+]]--</script>
+							<eventHandlerList />
+							<ScriptGroup isActive="yes" isFolder="yes">
+								<name>room type</name>
+								<packageName></packageName>
+								<script>--[[
+This can be matched against the room's name in mudlet mapper.
+]]--</script>
+								<eventHandlerList />
+							</ScriptGroup>
+							<ScriptGroup isActive="yes" isFolder="yes">
+								<name>people</name>
+								<packageName></packageName>
+								<script>--[[
+Going to wait on developing until it is found to be required.
+
+Must ONLY be used when all it was found the room.
+Will require an echo to ask if people are permanent residents of the room.
+
+]]--</script>
+								<eventHandlerList />
+							</ScriptGroup>
+							<ScriptGroup isActive="yes" isFolder="yes">
+								<name>exit description</name>
+								<packageName></packageName>
+								<script>--[[
+Exit descriptions that echo after room type and people in room
+]]--</script>
+								<eventHandlerList />
+							</ScriptGroup>
+						</ScriptGroup>
+						<ScriptGroup isActive="yes" isFolder="yes">
+							<name>SKOOT 6 &amp; 10 tec map rooms &amp; exits</name>
+							<packageName></packageName>
+							<script>--[[
+Checks the data in the SKOOT 6 and 10 messages.
+
+When it is dark ONLY adjacent connected rooms are displayed.
+  So only the current room and adjacent rooms will be checked.
+Has to support skipping the check of a single direction, for ships. The way `SKOOT 7 compass` does.
+]]--</script>
+							<eventHandlerList />
+						</ScriptGroup>
+						<ScriptGroup isActive="yes" isFolder="yes">
+							<name>SKOOT 7 compass</name>
+							<packageName></packageName>
+							<script>--[[
+Compaires the current room's SKOOT 7 against the unique databases
+
+Due to boats and ferries this can be off by a single direction
+To start, I will ignore this to see if they work.
+As it will be matches more exact for all other checks.
+]]--</script>
+							<eventHandlerList />
+							<Script isActive="yes" isFolder="no">
+								<name>parthiaMap.recordCompass(direction, show)</name>
+								<packageName></packageName>
+								<script>--[[
+Records the data from the trigger `Compass` that occurs when the SKOOT 7 message is sent.
+Tracks each direction and if it is shown.
+]]--
+function parthiaMap.recordCompass(direction, show)
+  
+  if parthiaMap.getEnabled then --if mudlet mapper is enabled
+    if not type(direction) == "string" then
+      tecWarningNotification("function parthiaMap.recordCompass, argument 1 expected string, received a "..type(direction))
+      parthiaMap.stopRoomCreation("Failed to collect a direction from the SKOOT 7 compass message.\n")
+      return
+    end --if type(direction) == "string"
+    if not type(show) == "boolean" then
+      tecWarningNotification("function parthiaMap.recordCompass, argument 2 expected boolean, received a "..type(boolean))
+      parthiaMap.stopRoomCreation("Failed to collect a show from the SKOOT 7 compass message.\n")
+      return
+    end --if type(direction) == "boolean"
+
+    if not parthiaMap.room.compass then --if the compass table does not exist
+      parthiaMap.room.compass = {} --make an empty compass table
+    end --if parthiaMap.room
+    if not parthiaMap.room.SKOOT7 then --If the SKOOT 7 message has not been recorded.
+      parthiaMap.room.SKOOT7 = line --record it now.
+    end --if not parthiaMap.room.SKOOT7
+    
+    parthiaMap.room.compass[direction] = show --record the compass direction
+
+  end --if parthiaMap.getEnabled
+
+end --function parthiaMap.recordCompass(direction, show)</script>
+								<eventHandlerList />
+							</Script>
+							<Script isActive="yes" isFolder="no">
+								<name>parthiaMap.getCompass()</name>
+								<packageName></packageName>
+								<script>function parthiaMap.getCompass()
+
+  return parthiaMap.room.compass
+
+end --function parthiaMap.getCompass()</script>
+								<eventHandlerList />
+							</Script>
+							<Script isActive="yes" isFolder="no">
+								<name>parthiaMap.checkCompass()</name>
+								<packageName></packageName>
+								<script>--[[
+receives a compass user data store or compass table from the parthiaMap.uniqueTable
+checks if the current room's compass message matches this rooms compass message
+returns true if a match was found. Returns false if no match was found
+
+used in script `parthiaMap.makeRoomUnique` and `parthiaMap.newRoomUniqueCheck`
+
+usage:
+  parthiaMap.checkCompass(compassUserData, skipDirection, roomID)
+  compassUserData, is a user data store or compass table from parthiaMap.uniqueTable
+  skipDirection, option specify a direction you need to skip on compass checks.
+  roomID, the room id that is currently being checked checked for a match
+  
+examples:
+  You will likely never need this
+]]--
+function parthiaMap.checkCompass(compassUserData, skipDirection, roomID)
+
+  if parthiaMap.room.compass then --make certain this room recorded a compass SKOOT 7 message
+    if not type(compassUserData) == "string" or type(compassUserData) == "table" then --only check if all data is available.
+      tecWarningNotification("function parthiaMap.checkCompass, argument 1 expected string received "..type(compassUserData))
+      return false
+    elseif not type(skipDirection) == "string" then
+      skipDirection = "" --make it nothing so it will not match
+    elseif not type(roomID) == "number" then --if room id was not sent or is the incorrect argument type
+      roomID = false --set it to false
+    end --if type(compassUserData) == "string"
+  else --no parthiaMap.room.compass table
+    tecWarningNotification("function parthiaMap.checkCompass, failed parthiaMap.room.compass table is missing.")
+    return false
+  end --if parthiaMap.room
+  
+  if type(compassUserData) == "string" then --if data to check against is a string.
+    if compassUserData == "" then --if there was no compass user data store
+      if roomID then --if a roomID argument was passed
+--uncomment on completion        tecWarningNotification("function parthiaMap.checkCompass, room "..roomID.." has no compass user data store.")
+      end --if roomID
+      return false
+    else --if there is usefull data stores.
+      compassUserData = yajl.to_value(compassUserData) --convert user data from a string to a table
+    end --if compassUserData == ""
+  end --if type(compassUserData) == "string"
+  
+  if type(compassUserData) == "table" then
+    for k,v in pairs(compassUserData) do --loop through the user data table
+      if skipDirection ~= k then --if this is not a direction to skip.
+        if not parthiaMap.room.compass[k] == v then --if the keys do not match
+          return false --match failed.
+        end --if not parthiaMap.room.compass[k] == v
+      end --if not skipDirection == k
+    end --for pairs(compassUserData)
+  else --compassUserData failed to convert to a table
+    tecWarningNotification("function parthiaMap.checkCompass, failed to convert compassUserData to a table.")
+    return false
+  end --if type(compassUserData) == "table"
+  
+  mapDebug("function parthiaMap.checkCompass, match found.")
+  return true --no data mismatch found
+
+end --function parthiaMap.checkCompass()</script>
+								<eventHandlerList />
+							</Script>
+						</ScriptGroup>
+						<Script isActive="yes" isFolder="no">
+							<name>parthiaMap.newRoomUniqueCheck()</name>
+							<packageName></packageName>
+							<script>--[[
+  checks if a newly created room exists in the parthiaMap.uniqueTable.
+]]--
+
+function parthiaMap.newRoomUniqueCheck()
+  
+end --function parthiaMap.uniqueCheck()</script>
+							<eventHandlerList />
+						</Script>
+						<Script isActive="yes" isFolder="no">
+							<name>parthiaMap.createUniqueCacheTable()</name>
+							<packageName></packageName>
+							<script>function parthiaMap.createUniqueCacheTable(displayToScreen)
+  if not parthiaMap.getEnabled then
+    return --stop the function mapper is not in use.
+  end --if not parthiaMap.getEnabled
+  
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  
+  local worldRooms = getRooms() --create table of all room numbers and names
+  parthiaMap.uniqueTable = {} --create a table to chache unique rooms user data
+  
+  if displayToScreen then pecho("[ Info ]  - Loading map room cache.\n") end
+  
+  for k,_ in ipairs(worldRooms) do --loop through all the world rooms
+    if getRoomUserData(k, "unique") == 1 then --if the room has been set as a unique room
+      
+      local tbl = {} --create a temp table to store this rooms unique user data.
+      
+      --collect compass message from room
+      local compassMessage = getRoomUserData(k, "compass")
+      if compassMessage then --verify all variables needed were collected successfully
+        tbl.compass = yajl.to_value(compassMessage)
+        table.insert(parthiaMap.uniqueTable, tbl) --create a table for this room
+      else
+        tecWarningNotification("function parthiaMap.createUniqueTable(), found unique room id "..k.." but no compass message.")
+      end --if compassMessage then
+      
+    end --if getRoomUserData(k, "unique") == 1
+  end --for ipairs(worldRooms)
+
+end --function parthiaMap.createUniqueCacheTable()</script>
+							<eventHandlerList />
+						</Script>
+						<Script isActive="yes" isFolder="no">
+							<name>parthiaMap.makeRoomUnique(roomID)</name>
+							<packageName></packageName>
+							<script>--[[
+searches through all mapped rooms.
+Checks for a room that matches itself.
+If it does not find one, flags this room as unique.
+
+used in alias `parthia map unique` and `/map`
+
+DONOT use this as an automated method.
+There should be AS FEW unique rooms as possible.
+
+Usage:
+  parthiaMap.makeRoomUnique(roomID, compassSkipDir)
+  roomID, is the id of the room attempting to be made unique
+  compassSkipDir, optional, a direction to skip during compass and map checks
+
+Examples: 
+  parthiaMap.makeRoomUnique(parthiaMap.room.id, "west") --attempt to make current room unique. If it is tell it to skip the west diruection during a compass check.
+  parthiaMap.makeRoomUnique(22) --attempt to make room 22 unique
+]]--
+function parthiaMap.makeRoomUnique(roomID, compassSkipDir)
+  roomID = roomID or parthiaMap.room.id
+
+  --if player sent a direction to skip
+  local dirBad = true --will throw an error message if direction is bad
+  if type(compassSkipDir) == "string" then --if compassSkipDir was sent and is a string
+    compassSkipDir = compassSkipDir:lower() --make it lower case for easier verification
+    for direction,tbl in pairs(parthiaMap.directionsTable) do --use the direction table to verify direction pass via command
+      for _,v in ipairs(tbl) do
+        if compassSkipDir == v then --if the command player sent matches something in the parthiaMap.directionsTable
+          pecho("&lt;green&gt;Direction "..direction.." will be skipped when the compass and map is verified for this room.&lt;reset&gt;\n")
+          direction = parthiaMap.getShortDirection(direction) --record direction that is compatible with skoot messages short hand directions
+          dirBad = false --tell function received a good direction
+          mapDebug("function compassSkipDir, arguemnt 2 is direction "..direction)
+        end --if compassSkipDir == v
+      end --for ipairs(tbl)
+    end --for pairs(parthiaMap.directionsTable)
+  else
+    dirBad = false --no argument sent, so no compass direction to skip.
+  end --if type(compassSkipDir) == "string"
+  if dirBad then --if the argument received is not a compass direction
+    pecho("&lt;green&gt;Received argument : "..compassSkipDir..", it is not a know direction to skip on the compass check. Please correct and attempt again.&lt;reset&gt;\n")
+    return false
+  end --if dirBad
+  
+  pecho("&lt;green&gt;Please wait, verifing room is unique.&lt;reset&gt;\n")
+  pecho("If you are mapping a room with a ship, you can specify the direction the ship arrives. For example &lt;green&gt;/mapunique w&lt;reset&gt; or &lt;green&gt;parthia map unique w&lt;reset&gt; and the mapper will know not to check the west exit for compass or map data.\n")
+  pecho("&lt;red&gt;Make a room unique only when it is required.&lt;reset&gt; Having too many unique rooms can slow down Parthia's startup, and make movement lag.\n")
+  local worldRooms = getRooms() --create table of all room numbers and names
+  --verify there is no other rooms with this room's unique data.
+  for testRoomID,_ in ipairs(worldRooms) do --loop through all the world rooms
+    --Below there will be an if statement with and for ever room check type.
+    --if they are all true than the room is not unique. There is(are) other matche(s).
+    --in order of easist and most meaningful checks. So room exits echo message first. Than room type.
+    if parthiaMap.checkCompass(getRoomUserData(testRoomID, "compass"), compassSkipDir, testRoomID) then --Does the compass also match
+      if not testRoomID == roomID then --skip the current room it will always match
+        pecho("&lt;yellow&gt;Room "..roomID.." is not unique. There is at least one match with room id: "..testRoomID.."&lt;reset&gt;\n")
+        return false --room is not unique stop the function
+      end --if not testRoomID == roomID
+    end --if room unique checks
+  end --for ipairs(worldRooms)
+  
+  --setRoomUserData(room.id, "unique", 1) --tell parthia this room is unique
+  if compassSkipDir then --if a skip direction was specified.
+    --setRoomUserData(room.id, "CompassDirectionSkip", direction) --tell parthia to skip a direction
+  end --if compassSkipDir
+  --parthiaMap.createUniqueCacheTable() --refresh the uniqueCacheTable
+  
+  pecho("&lt;green&gt;Room successfully made unique.&lt;reset&gt;\n")
+  
+end --function parthiaMap.makeRoomUnique(roomID)</script>
+							<eventHandlerList />
+						</Script>
 					</ScriptGroup>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaMap.echoUserData(userDataKey, roomID)</name>
+						<packageName></packageName>
+						<script>--[[
+Allows for easily viewing a userData store in the mudlet database.
+
+Used in alias `parthia map userdata` and `/map`
+
+usage:
+  parthiaMap.echoUserData(userDataKey, roomID)
+  userDataKey, key to check for the room's user data entry
+  roomID, the room id to check for the user data entry
+
+examples:
+  parthiaMap.echoUserData("compass") --echo the compass userdata store for the current room
+  parthiaMap.echoUserData("danger", 22) --echo the danger userdata store for the room 22
+]]--
+function parthiaMap.echoUserData(userDataKey, roomID)
+
+  local helpMessage = "Command format &lt;green&gt;/mapuserdata userdatakey roomid&lt;reset&gt; or &lt;green&gt;parthia map userdata userdatakey roomid&lt;reset&gt;\n"
+    .."userdatakey is a data store like danager or compass.\n"
+    .."roomid is optional. The number of a room as it appears on the Parthia Map.\n"
+    
+  if not type(userDataKey) == "string" then
+    pecho("&lt;yellow&gt;Argument 1 has to be a string.&lt;reset&gt;\n"..helpMessage)
+  end
+  if roomID then --if a second argument was received
+    if tonumber(roomID) then --check if it is a number
+      roomID = tonumber(roomID)
+    else --if it is not a number
+      pecho("&lt;yellow&gt;Argument 2 has to be a number, or absent for current room.&lt;reset&gt;\n"..helpMessage)
+      return
+    end --if tonumber(roomID)
+  else --if no second argument was received.
+    if parthiaMap.room.id then --if the current room has been mapped
+      roomID = parthiaMap.room.id --use current room's id
+    else --if the current room has not been mapped
+      pecho("&lt;yellow&gt;You are in an unmapped room and did not specify a room id.&lt;reset&gt;\n"..helpMessage)
+      return
+    end --if parthiaMap.room.id
+  end --if roomID
+
+  local userDataMessage = getRoomUserData(roomID, userDataKey)
+  if userDataMessage then --if the message was received
+    if userDataMessage == "" then --if the userData store was empty
+      pecho("&lt;yellow&gt;UserData entry "..userDataKey.." does not exist in room id "..roomID.."&lt;reset&gt;\n")
+    else --found data in the user data store
+      pecho("&lt;green&gt;Room "..roomID..", UserData "..userDataKey..": "..userDataMessage.."&lt;reset&gt;\n") --Check a user data store
+    end --if userDataMessage == ""
+  else --user data key does not exist in the room id provided.
+    pecho("&lt;yellow&gt;UserData entry "..userDataKey.." does not exist in room id "..roomID.."&lt;reset&gt;\n")
+  end --if userDataMessage
+end --function parthiaMap.echoUserData(userDataKey)</script>
+						<eventHandlerList />
+					</Script>
 				</ScriptGroup>
 				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>movement</name>
@@ -10820,14 +11223,14 @@ function parthiaMap.Move(room, previousRoom, directionWalked)
               end --if previousExits[dir]
             end --if not parthiaMap.specialExitAttempted
           else --not creating new maps.
-              local previousExits = getRoomExits(previousRoom.id)--exits in previous room holds neighboring room IDs.
-              if previousExits[dir] then --The last room the character was in has this rooms ID in its exits table
-                room.coords = {getRoomCoordinates(previousExits[dir])}
-                room.id = previousExits[dir] --collect the current room's id
-                parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
-                mapDebug("function parthiaMap.Move, able to get current room ID "..room.id.." from previous rooms exits table.")
-                return room.id --stop function return id moved to
-              end --if previousExits[dir]
+            local previousExits = getRoomExits(previousRoom.id)--exits in previous room holds neighboring room IDs.
+            if previousExits[dir] then --The last room the character was in has this rooms ID in its exits table
+              room.coords = {getRoomCoordinates(previousExits[dir])}
+              room.id = previousExits[dir] --collect the current room's id
+              parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
+              mapDebug("function parthiaMap.Move, able to get current room ID "..room.id.." from previous rooms exits table.")
+              return room.id --stop function return id moved to
+            end --if previousExits[dir]
           end --if parthiaMap.mapping
         end --if parthiaMap.specialExitMovement else
       end --if parthiaMap.currentAreaID == previousArea then
@@ -11676,7 +12079,7 @@ function parthiaMap.detectDirection(playerCmd)
           parthiaMap.directionWalked = direction --record the direction the player walked
           mapDebug("function parthiaMap.detectDirection, directionWalked "..direction.." found.")
           return --found what we are looking for stop the check
-        end
+        end --if playerCmd == v
       end --for ipairs(tbl)
     end --for pairs(parthiaMap.directionsTable)
   else --if the input is not a standard movement, a special exit command was used
