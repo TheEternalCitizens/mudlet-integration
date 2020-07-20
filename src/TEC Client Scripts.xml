@@ -10717,7 +10717,7 @@ SKOOT 6 &amp; 10
 Only useable for adjacent connected rooms. In the dark these are the only ones that show up.
 When checking remove the room.open variables and compair the tables.
 
---check skoot 7
+DONE--check skoot 7
 SKOOT 7:
 Changes when a ship is or is not docked! Not when doors are opened or closed. 
 Each direction and it corrisponding show or none has to be checked seperately. Because we need to allow of a single one to be incorrect due to ships and wagons.
@@ -10731,10 +10731,10 @@ EXITTYPE is the exit in that direction the player walked. This exit will be in t
 
 --light available--
 
-Room description:
+DONE Room description:
 You arrive at ROOMTYPE. (CHARACTERNAME(s) is here.)? You are facing DIRECTION. You see EXITS
-ROOMTYPE will always be the same.
-EXITS will always be the same. Even the color codes should match.
+DONE ROOMTYPE will always be the same.
+DONE EXITS will always be the same. Even the color codes should match.
 
 --retreval
 There needs to be a a table containing all unique room's userData stores. This allows for rapid comparison.
@@ -11959,13 +11959,13 @@ parthiaMap.detectDirection("up")
 --Made outside the function so it is not recreated each time the function is called. Wasting processing time.
 parthiaMap.notZMovement = {
   "east", "eas", "ea", "e",
-  "se",
+  "se", "southeast",
   "south", "sout", "sou", "so", "s",
-  "sw",
+  "sw", "southwest",
   "west", "wes", "we", "w",
-  "nw",
+  "nw", "northwest",
   "north", "nort", "nor", "no", "n",
-  "ne",
+  "ne", "northeast",
   "leave", "leav", "lea", "le",
   "1","2","3","4","6","7","8","9"
 }
@@ -11973,13 +11973,13 @@ parthiaMap.notZMovement = {
 --this table is used to detect the short hand version of movement directions the player may input.
 parthiaMap.directionsTable = {}
 parthiaMap.directionsTable.east = { "east", "eas", "ea", "e", "6", 6 }
-parthiaMap.directionsTable.southeast = {"se", "3", 3}
+parthiaMap.directionsTable.southeast = {"se", "southeast", "3", 3}
 parthiaMap.directionsTable.south = { "south", "sout", "sou", "so", "s", "2", 2 } 
-parthiaMap.directionsTable.southwest = {"sw", "1", 1 }
+parthiaMap.directionsTable.southwest = {"sw", "southwest", "1", 1 }
 parthiaMap.directionsTable.west = { "west", "wes", "we", "w", "4", 4}
-parthiaMap.directionsTable.northwest = { "nw", "7", 7 }
+parthiaMap.directionsTable.northwest = { "nw", "northwest", "7", 7 }
 parthiaMap.directionsTable.north = { "north", "nort", "nor", "no", "n", "8", 8 }
-parthiaMap.directionsTable.northeast = { "ne", "9", 9}
+parthiaMap.directionsTable.northeast = { "ne", "northeast", "9", 9}
 
 
 local zMovement = {
@@ -11990,14 +11990,21 @@ local zMovement = {
 --returns the room id a special exit leads to
 --intended to be used with captured user movement commands that are special exit commands.
 local function specialExitMatch(playerCmd)
+
   if playerCmd then
     if type(playerCmd) ~= "string" then
-      tecErrorNotification("function specialExitMatch, argument 1 expected string variable receive a "..type(playerCmd))
+      tecWarningNotification("function specialExitMatch, argument 1 expected string variable receive a "..type(playerCmd))
       return
     end --if type(playerCmd) ~= "string"
   else 
-    tecErrorNotification("function specialExitMatch, argument 1 expected received nil")
+    tecWarningNotification("function specialExitMatch, argument 1 expected received nil")
+    return
   end --if playerCmd
+  
+  if not parthiaMap.room.id then 
+    tecWarningNotification("function specialExitMatch, missing parthiaMap.room.id.")
+    return
+  end --room id required for this function to work.
   
   playerCmd = playerCmd:lower() --make certain variables are lower case, so matching will be more accurate
   parthiaMap.specialExitAttempted = true --records if a special exit was attempted. Used to automatically create a special exit for mappers.
@@ -12053,7 +12060,6 @@ local function specialExitMatch(playerCmd)
 end --local function specialExitMatch(exit)
 
 function parthiaMap.detectDirection(playerCmd)
-  
   --verify data
   --playerCmd = playerCmd or parthiaMap.directionWalked
   if not playerCmd then --if an argument was not passed

@@ -2216,6 +2216,7 @@ end --if parthiaStopRan</script>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>player moves</name>
 				<script>--occurs when player starts a movement
+
 parthiaMap.descriptionOfExitUsed = matches[2] --stores the description of the exit player used.
 mapDebug("trigger player moves, collected exit description: "..matches[2])
 
