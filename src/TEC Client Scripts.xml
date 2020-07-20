@@ -10778,26 +10778,23 @@ This can be matched against the room's name in mudlet mapper.
 								<Script isActive="yes" isFolder="no">
 									<name>parthiaMap.checkName(verifyRoomID, roomID)</name>
 									<packageName></packageName>
-									<script>function parthiaMap.checkName(verifyRoomID, roomID)
-  roomID = roomID or parthiaMap.room.id
+									<script>function parthiaMap.checkName(verifyRoomID, roomName)
+  roomName = roomName or parthiaMap.room.name --argument 2 defaults to local room's name
   
   if not type(verifyRoomID) == "number" then
     tecWarningNotification("function parthiaMap.checkName, argument 1 number expected received a "..type(verifyRoomID))
-  elseif not type(verifyRoomID) == "number" then
-    tecWarningNotification("function parthiaMap.checkName, argument 2 number expected received a "..type(roomID))
+  elseif not type(roomName) == "string" then
+    tecWarningNotification("function parthiaMap.checkName, argument 2 number expected received a "..type(roomName))
   end --if not type(verifyRoomID) == "number"
   
-  local verifyRoomName = getRoomName(verifyRoomID)
-  local roomName = getRoomName(roomID)
+  local verifyRoomName = getRoomName(verifyRoomID) --collect the room name to verify against
   
-  if verifyRoomID ~= roomID then --make certain not to just simply test the same room
-    if verifyRoomName == roomName then
-      pecho("Room name match found at room id "..verifyRoomID.."\n")
-      return true
-    else
-      return false
-    end --if verifyRoomName == roomName
-  end --if verifyRoomID ~= roomID
+  if verifyRoomName == roomName then --if the names match.
+    pecho("Room name match found at room id "..verifyRoomID.."\n")
+    return true
+  else --the names do not match
+    return false
+  end --if verifyRoomName == roomName
   
 end --function parthiaMap.checkName()</script>
 									<eventHandlerList />
@@ -11038,8 +11035,8 @@ function parthiaMap.makeRoomUnique(roomID, compassSkipDir)
     --if they are all true than the room is not unique. There is(are) other matche(s).
     --in order of easist and most meaningful checks. So room exits echo message first. Than room type.
 --    if verifyRoomID ~= roomID then --make certain not to check the same room
-      --if  parthiaMap.checkName(verifyRoomID) --check if the name also matches
-      if  parthiaMap.checkCompass(verifyRoomID, compassSkipDir) 
+      if  parthiaMap.checkName(verifyRoomID) --check if the name also matches
+--      if  parthiaMap.checkCompass(verifyRoomID, compassSkipDir) 
       then --all of the above checks return true
          --skip the current room it will always match
           pecho("&lt;yellow&gt;Room "..roomID.." is not unique. There is at least one match with room id: "..verifyRoomID.."&lt;reset&gt;\n")
