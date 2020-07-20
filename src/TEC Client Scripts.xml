@@ -10974,7 +10974,15 @@ end --function parthiaMap.uniqueCheck()</script>
 						<Script isActive="yes" isFolder="no">
 							<name>parthiaMap.createUniqueCacheTable()</name>
 							<packageName></packageName>
-							<script>function parthiaMap.createUniqueCacheTable(displayToScreen)
+							<script>--[[
+Looks through all rooms
+any with userData key of "unique", have their id and name stored to the cache table
+
+usage, this will be used to compare against.
+Because room name is a short string that will require very few cycles to test.
+If the name matches the check function will use the id to check other userData stores
+]]--
+function parthiaMap.createUniqueCacheTable(displayToScreen)
   if not parthiaMap.getEnabled then
     return --stop the function mapper is not in use.
   end --if not parthiaMap.getEnabled
@@ -10988,18 +10996,7 @@ end --function parthiaMap.uniqueCheck()</script>
   
   for k,_ in ipairs(worldRooms) do --loop through all the world rooms
     if getRoomUserData(k, "unique") == 1 then --if the room has been set as a unique room
-      
-      local tbl = {} --create a temp table to store this rooms unique user data.
-      
-      --collect compass message from room
-      local compassMessage = getRoomUserData(k, "compass")
-      if compassMessage then --verify all variables needed were collected successfully
-        tbl.compass = yajl.to_value(compassMessage)
-        table.insert(parthiaMap.uniqueTable, tbl) --create a table for this room
-      else
-        tecWarningNotification("function parthiaMap.createUniqueTable(), found unique room id "..k.." but no compass message.")
-      end --if compassMessage then
-      
+      table.insert(parthiaMap.uniqueTable,getRoomName(k),k) --save the room id and name to a table
     end --if getRoomUserData(k, "unique") == 1
   end --for ipairs(worldRooms)
 
