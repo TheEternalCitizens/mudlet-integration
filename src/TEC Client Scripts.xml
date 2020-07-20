@@ -10483,8 +10483,6 @@ function parthiaMap.addRoom(room, previousRoom)
   if parthiaMap.getRoomCreationStop() then --if there is a reason not to create a new room.
     pecho("\n&lt;green&gt;"..parthiaMap.getRoomCreationStop().."\nFound while attempting to create a new room.&lt;reset&gt;\n")
     return --stop the function.
-  elseif not parthiaMap.getCompass() then
-    pecho("\n&lt;green&gt;No compass table to add room. Please return to the previous room and attempt again.&lt;reset&gt;\n")
   elseif not parthiaMap.room.SKOOT7 then
     pecho("\n&lt;green&gt;No SKOOT 7 message recorded. Please return to the previous room and attempt again.&lt;reset&gt;\n")
   end --if parthiaMap.getRoomCreationStop()
@@ -10528,7 +10526,6 @@ function parthiaMap.addRoom(room, previousRoom)
     
     --set room's user data
     setRoomUserData(room.id, "danger", parthiaMap.getDanger()) --store danger or combatskill ranks recommended for this room
-    setRoomUserData(room.id, "compass", yajl.to_string(parthiaMap.getCompass())) --store compass table to file.
     setRoomUserData(room.id, "SKOOT7", parthiaMap.room.SKOOT7) --store the SKOOT 7 message. Incase it is needed.
     
     parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
@@ -10788,17 +10785,19 @@ This can be matched against the room's name in mudlet mapper.
     tecWarningNotification("function parthiaMap.checkName, argument 1 number expected received a "..type(verifyRoomID))
   elseif not type(verifyRoomID) == "number" then
     tecWarningNotification("function parthiaMap.checkName, argument 2 number expected received a "..type(roomID))
-  end
+  end --if not type(verifyRoomID) == "number"
   
   local verifyRoomName = getRoomName(verifyRoomID)
   local roomName = getRoomName(roomID)
   
-  if verifyRoomName == roomName then
-    pecho("Room name match found at room id "..verifyRoomID.."\n")
-    return true
-  else
-    return false
-  end
+  if verifyRoomID ~= roomID then --make certain not to just simply test the same room
+    if verifyRoomName == roomName then
+      pecho("Room name match found at room id "..verifyRoomID.."\n")
+      return true
+    else
+      return false
+    end --if verifyRoomName == roomName
+  end --if verifyRoomID ~= roomID
   
 end --function parthiaMap.checkName()</script>
 									<eventHandlerList />
@@ -10849,111 +10848,90 @@ As it will be matches more exact for all other checks.
 ]]--</script>
 							<eventHandlerList />
 							<Script isActive="yes" isFolder="no">
-								<name>parthiaMap.recordCompass(direction, show)</name>
+								<name>parthiaMap.checkCompass(verifyRoomID, skootMessage, skipDirection)</name>
 								<packageName></packageName>
 								<script>--[[
-Records the data from the trigger `Compass` that occurs when the SKOOT 7 message is sent.
-Tracks each direction and if it is shown.
-]]--
-function parthiaMap.recordCompass(direction, show)
-  
-  if parthiaMap.getEnabled then --if mudlet mapper is enabled
-    if not type(direction) == "string" then
-      tecWarningNotification("function parthiaMap.recordCompass, argument 1 expected string, received a "..type(direction))
-      parthiaMap.stopRoomCreation("Failed to collect a direction from the SKOOT 7 compass message.\n")
-      return
-    end --if type(direction) == "string"
-    if not type(show) == "boolean" then
-      tecWarningNotification("function parthiaMap.recordCompass, argument 2 expected boolean, received a "..type(boolean))
-      parthiaMap.stopRoomCreation("Failed to collect a show from the SKOOT 7 compass message.\n")
-      return
-    end --if type(direction) == "boolean"
-
-    if not parthiaMap.room.compass then --if the compass table does not exist
-      parthiaMap.room.compass = {} --make an empty compass table
-    end --if parthiaMap.room
-    if not parthiaMap.room.SKOOT7 then --If the SKOOT 7 message has not been recorded.
-      parthiaMap.room.SKOOT7 = line --record it now.
-    end --if not parthiaMap.room.SKOOT7
-    
-    parthiaMap.room.compass[direction] = show --record the compass direction
-
-  end --if parthiaMap.getEnabled
-
-end --function parthiaMap.recordCompass(direction, show)</script>
-								<eventHandlerList />
-							</Script>
-							<Script isActive="yes" isFolder="no">
-								<name>parthiaMap.getCompass()</name>
-								<packageName></packageName>
-								<script>function parthiaMap.getCompass()
-
-  return parthiaMap.room.compass
-
-end --function parthiaMap.getCompass()</script>
-								<eventHandlerList />
-							</Script>
-							<Script isActive="yes" isFolder="no">
-								<name>parthiaMap.checkCompass()</name>
-								<packageName></packageName>
-								<script>--[[
-receives a compass user data store or compass table from the parthiaMap.uniqueTable
-checks if the current room's compass message matches this rooms compass message
-returns true if a match was found. Returns false if no match was found
 
 used in script `parthiaMap.makeRoomUnique` and `parthiaMap.newRoomUniqueCheck`
 
 usage:
-  parthiaMap.checkCompass(compassUserData, skipDirection, roomID)
-  compassUserData, is a user data store or compass table from parthiaMap.uniqueTable
-  skipDirection, option specify a direction you need to skip on compass checks.
-  roomID, the room id that is currently being checked checked for a match
+  
   
 examples:
   You will likely never need this
 ]]--
-function parthiaMap.checkCompass(compassUserData, skipDirection, roomID)
-
-  if parthiaMap.room.compass then --make certain this room recorded a compass SKOOT 7 message
-    if not type(compassUserData) == "string" or type(compassUserData) == "table" then --only check if all data is available.
-      tecWarningNotification("function parthiaMap.checkCompass, argument 1 expected string received "..type(compassUserData))
-      return false
-    elseif not type(skipDirection) == "string" then
-      skipDirection = "" --make it nothing so it will not match
-    elseif not type(roomID) == "number" then --if room id was not sent or is the incorrect argument type
-      roomID = false --set it to false
-    end --if type(compassUserData) == "string"
-  else --no parthiaMap.room.compass table
-    tecWarningNotification("function parthiaMap.checkCompass, failed parthiaMap.room.compass table is missing.")
+function parthiaMap.checkCompass(verifyRoomID, skootMessage, skipDirection)
+--[[
+  pecho("\n")
+  pecho("verifyRoomID: "..verifyRoomID.." skootMessage "..skootMessage)
+  if skipDirection then pecho(" skipDirection "..skipDirection) end
+  pecho("\n")
+]]--
+  
+  if not type(verifyRoomID) == "number" then
+    tecWarningNotification("function parthiaMap.checkCompass, argument 1 number expected received a "..type(verifyRoomID))
     return false
-  end --if parthiaMap.room
-  
-  if type(compassUserData) == "string" then --if data to check against is a string.
-    if compassUserData == "" then --if there was no compass user data store
-      if roomID then --if a roomID argument was passed
---uncomment on completion        tecWarningNotification("function parthiaMap.checkCompass, room "..roomID.." has no compass user data store.")
-      end --if roomID
+  end --if not type(verifyRoomID) == "number"
+  if skootMessage then
+    if type(skootMessage) == "string" then
+      if table.contains(parthiaMap.directionsTable, skootMessage) then --if argument 2 is the skipDirection
+        skipDirection = skootMessage
+        if parthiaMap.room.SKOOT7 then
+          skootMessage = parthiaMap.room.SKOOT7 --argument 2 default is the current rooms SKOOT 7 message
+        else
+          tecWarningNotification("function parthiaMap.checkCompass, argument 2 was a skipDirection and parthiaMap.room.SKOOT7 does not exist.")
+          return false
+        end --if parthiaMap.room.SKOOT7
+      end --if table.contains(parthiaMap.directionsTable, skootMessage)
+    else
+      tecWarningNotification("function parthiaMap.checkCompass, argument 2 string expected received a "..type(skootMessage))
       return false
-    else --if there is usefull data stores.
-      compassUserData = yajl.to_value(compassUserData) --convert user data from a string to a table
-    end --if compassUserData == ""
-  end --if type(compassUserData) == "string"
+    end --if not type(skootMessage) == "string"
+  else --no argument 2
+    if parthiaMap.room.SKOOT7 then
+      skootMessage = parthiaMap.room.SKOOT7 --argument 2 default is the current rooms SKOOT 7 message
+    else
+      tecWarningNotification("function parthiaMap.checkCompass, not passed argument 2, parthiaMap.room.SKOOT7 does not exist.")
+      return false
+    end --if parthiaMap.room.SKOOT7
+  end --if skootMessage
+  if skipDirection then
+    if not type(skipDirection) == "string" then
+      tecWarningNotification("function parthiaMap.checkCompass, argument 3 string expected received a "..type(skipDirection))
+      return false
+    end --if not type(skipDirection) == "string"
+  end --if skipDirection
   
-  if type(compassUserData) == "table" then
-    for k,v in pairs(compassUserData) do --loop through the user data table
-      if skipDirection ~= k then --if this is not a direction to skip.
-        if not parthiaMap.room.compass[k] == v then --if the keys do not match
-          return false --match failed.
-        end --if not parthiaMap.room.compass[k] == v
-      end --if not skipDirection == k
-    end --for pairs(compassUserData)
-  else --compassUserData failed to convert to a table
-    tecWarningNotification("function parthiaMap.checkCompass, failed to convert compassUserData to a table.")
+--[[
+  pecho("\n")
+  pecho("verifyRoomID: "..verifyRoomID.." skootMessage "..skootMessage)
+  if skipDirection then pecho(" skipDirection "..skipDirection) end
+  pecho("\n")
+]]--
+  local verifySkootMessage = getRoomUserData(verifyRoomID, "SKOOT7")
+  if verifySkootMessage then
+    if verifySkootMessage == "" then
+--uncomment on completion      tecWarningNotification("function parthiaMap.checkCompass, room "..verifyRoomID.." does not contain a SKOOT7 message.")
+      return false
+    else --skoot message existed in room
+--pecho("\n"..verifySkootMessage.."\n"..skootMessage.."\n")
+      if skipDirection then --skip direction exists.
+        skipDirection = parthiaMap.getShortDirection(skipDirection) --get the short version of the direction, this is how it skows in the SKOOT 7 message
+        local skipPattern = skipDirection..",%a+," --make a pattern to use in gsub
+        verifySkootMessage = verifySkootMessage:gsub(skipPattern,"") --remove the direction from the string
+        skootMessage = skootMessage:gsub(skipPattern,"") --remove the direction from the string
+--pecho("\n"..verifySkootMessage.."\n"..skootMessage.."\n")
+      end --if skipDirection
+      if verifySkootMessage == skootMessage then --if the skoot messages match
+        return true --return a positive match found
+      else --skoot messages do not match
+        return false --return no match found
+      end --if verifySkootMessage == skootMessage
+    end --if verifySkootMessage
+  else --room data returned nil
+--uncomment on completion    tecWarningNotification("function parthiaMap.checkCompass, room "..verifyRoomID.." does not contain a SKOOT7 message.")
     return false
-  end --if type(compassUserData) == "table"
-  
-  mapDebug("function parthiaMap.checkCompass, match found.")
-  return true --no data mismatch found
+  end --if verifySkootMessage
 
 end --function parthiaMap.checkCompass()</script>
 								<eventHandlerList />
@@ -11004,7 +10982,7 @@ end --function parthiaMap.createUniqueCacheTable()</script>
 							<eventHandlerList />
 						</Script>
 						<Script isActive="yes" isFolder="no">
-							<name>parthiaMap.makeRoomUnique(roomID)</name>
+							<name>parthiaMap.makeRoomUnique(roomID, compassSkipDir)</name>
 							<packageName></packageName>
 							<script>--[[
 searches through all mapped rooms.
@@ -11036,9 +11014,9 @@ function parthiaMap.makeRoomUnique(roomID, compassSkipDir)
       for _,v in ipairs(tbl) do
         if compassSkipDir == v then --if the command player sent matches something in the parthiaMap.directionsTable
           pecho("&lt;green&gt;Direction "..direction.." will be skipped when the compass and map is verified for this room.&lt;reset&gt;\n")
-          direction = parthiaMap.getShortDirection(direction) --record direction that is compatible with skoot messages short hand directions
+          compassSkipDir = direction --change to the full direction name
           dirBad = false --tell function received a good direction
-          mapDebug("function compassSkipDir, arguemnt 2 is direction "..direction)
+          mapDebug("function makeRoomUnique, compassSkipDir arguemnt 2 is direction "..direction)
         end --if compassSkipDir == v
       end --for ipairs(tbl)
     end --for pairs(parthiaMap.directionsTable)
@@ -11059,14 +11037,15 @@ function parthiaMap.makeRoomUnique(roomID, compassSkipDir)
     --Below there will be an if statement with and for ever room check type.
     --if they are all true than the room is not unique. There is(are) other matche(s).
     --in order of easist and most meaningful checks. So room exits echo message first. Than room type.
-    if  parthiaMap.checkName(verifyRoomID) --check if the name also matches
-    --if  parthiaMap.checkCompass(getRoomUserData(verifyRoomID, "compass"), compassSkipDir, verifyRoomID) 
-    then --all of the above checks return true
-      if verifyRoomID ~= roomID then --skip the current room it will always match
-        pecho("&lt;yellow&gt;Room "..roomID.." is not unique. There is at least one match with room id: "..verifyRoomID.."&lt;reset&gt;\n")
-        return false --room is not unique stop the function
-      end --if not verifyRoomID == roomID
-    end --if room unique checks
+--    if verifyRoomID ~= roomID then --make certain not to check the same room
+      --if  parthiaMap.checkName(verifyRoomID) --check if the name also matches
+      if  parthiaMap.checkCompass(verifyRoomID, compassSkipDir) 
+      then --all of the above checks return true
+         --skip the current room it will always match
+          pecho("&lt;yellow&gt;Room "..roomID.." is not unique. There is at least one match with room id: "..verifyRoomID.."&lt;reset&gt;\n")
+          return false --room is not unique stop the function
+      end --if room unique checks
+--    end --if not verifyRoomID == roomID
   end --for ipairs(worldRooms)
   
   --setRoomUserData(room.id, "unique", 1) --tell parthia this room is unique

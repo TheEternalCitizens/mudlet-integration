@@ -243,13 +243,15 @@ for direction, show in string.gmatch( line, ",?(%a+),(%a+)" ) do
   if show == "show" then --if the direction should be shown.
     MultiWindow.Compass.lit(direction) --show the direction as active in the MultiWindow compass
     tecCompass.lit(direction) --show the direction as active in the standard tec compass
-    parthiaMap.recordCompass(direction, true) --record direction on the compass and if it is shown
   else --if the compass direction should be inactive
     MultiWindow.Compass.unlit(direction) --show the direction as inactive in the MultiWindow compass
     tecCompass.unlit(direction) --show the direction as inactive in the standard tec compass
-    parthiaMap.recordCompass(direction, false) --record direction on the compass and if it is shown
   end --if show == "show"
-end --for string.gmatch( line, "(%a%a?),(?%d+)" )</script>
+end --for string.gmatch( line, "(%a%a?),(?%d+)" )
+
+if not parthiaMap.room.SKOOT7 then --if it has not been alrady
+  parthiaMap.room.SKOOT7 = line --record the skoot message to a string
+end --if not parthiaMap.room.SKOOT7</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
