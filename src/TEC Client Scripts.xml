@@ -10778,6 +10778,31 @@ Only works when there is light
 This can be matched against the room's name in mudlet mapper.
 ]]--</script>
 								<eventHandlerList />
+								<Script isActive="yes" isFolder="no">
+									<name>parthiaMap.checkName(verifyRoomID, roomID)</name>
+									<packageName></packageName>
+									<script>function parthiaMap.checkName(verifyRoomID, roomID)
+  roomID = roomID or parthiaMap.room.id
+  
+  if not type(verifyRoomID) == "number" then
+    tecWarningNotification("function parthiaMap.checkName, argument 1 number expected received a "..type(verifyRoomID))
+  elseif not type(verifyRoomID) == "number" then
+    tecWarningNotification("function parthiaMap.checkName, argument 2 number expected received a "..type(roomID))
+  end
+  
+  local verifyRoomName = getRoomName(verifyRoomID)
+  local roomName = getRoomName(roomID)
+  
+  if verifyRoomName == roomName then
+    pecho("Room name match found at room id "..verifyRoomID.."\n")
+    return true
+  else
+    return false
+  end
+  
+end --function parthiaMap.checkName()</script>
+									<eventHandlerList />
+								</Script>
 							</ScriptGroup>
 							<ScriptGroup isActive="yes" isFolder="yes">
 								<name>people</name>
@@ -11033,15 +11058,17 @@ function parthiaMap.makeRoomUnique(roomID, compassSkipDir)
   pecho("&lt;red&gt;Make a room unique only when it is required.&lt;reset&gt; Having too many unique rooms can slow down Parthia's startup, and make movement lag.\n")
   local worldRooms = getRooms() --create table of all room numbers and names
   --verify there is no other rooms with this room's unique data.
-  for testRoomID,_ in ipairs(worldRooms) do --loop through all the world rooms
+  for verifyRoomID,_ in ipairs(worldRooms) do --loop through all the world rooms
     --Below there will be an if statement with and for ever room check type.
     --if they are all true than the room is not unique. There is(are) other matche(s).
     --in order of easist and most meaningful checks. So room exits echo message first. Than room type.
-    if parthiaMap.checkCompass(getRoomUserData(testRoomID, "compass"), compassSkipDir, testRoomID) then --Does the compass also match
-      if not testRoomID == roomID then --skip the current room it will always match
-        pecho("&lt;yellow&gt;Room "..roomID.." is not unique. There is at least one match with room id: "..testRoomID.."&lt;reset&gt;\n")
+    if  parthiaMap.checkName(verifyRoomID) --check if the name also matches
+    --if  parthiaMap.checkCompass(getRoomUserData(verifyRoomID, "compass"), compassSkipDir, verifyRoomID) 
+    then --all of the above checks return true
+      if verifyRoomID ~= roomID then --skip the current room it will always match
+        pecho("&lt;yellow&gt;Room "..roomID.." is not unique. There is at least one match with room id: "..verifyRoomID.."&lt;reset&gt;\n")
         return false --room is not unique stop the function
-      end --if not testRoomID == roomID
+      end --if not verifyRoomID == roomID
     end --if room unique checks
   end --for ipairs(worldRooms)
   
