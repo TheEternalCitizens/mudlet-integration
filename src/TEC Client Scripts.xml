@@ -10485,6 +10485,10 @@ function parthiaMap.addRoom(room, previousRoom)
     return --stop the function.
   elseif not parthiaMap.room.SKOOT7 then
     pecho("\n&lt;green&gt;No SKOOT 7 message recorded. Please return to the previous room and attempt again.&lt;reset&gt;\n")
+  elseif not parthiaMap.room.entranceEcho then
+    pecho("\n&lt;green&gt;No entrance echo message recorded. Please return to the previous room and attempt again.&lt;reset&gt;\n")
+  elseif not parthiaMap.room.exitsEcho then
+    pecho("\n&lt;green&gt;No exits echo message recorded. Please return to the previous room and attempt again.&lt;reset&gt;\n")
   end --if parthiaMap.getRoomCreationStop()
 
   room = room or parthiaMap.room
@@ -10526,7 +10530,9 @@ function parthiaMap.addRoom(room, previousRoom)
     
     --set room's user data
     setRoomUserData(room.id, "danger", parthiaMap.getDanger()) --store danger or combatskill ranks recommended for this room
-    setRoomUserData(room.id, "SKOOT7", parthiaMap.room.SKOOT7) --store the SKOOT 7 message. Incase it is needed.
+    setRoomUserData(room.id, "SKOOT7", parthiaMap.room.SKOOT7) --store the SKOOT 7 message.
+    setRoomUserData(room.id, "entranceEcho", parthiaMap.room.entranceEcho) --store the entrance echo message
+    setRoomUserData(room.id, "exitsEcho", parthiaMap.room.exitsEcho) --store the exits echo message, that appears in the entrance echo message
     
     parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
   end --if parthiaMap.mapping
@@ -10784,13 +10790,12 @@ This can be matched against the room's name in mudlet mapper.
   if not type(verifyRoomID) == "number" then
     tecWarningNotification("function parthiaMap.checkName, argument 1 number expected received a "..type(verifyRoomID))
   elseif not type(roomName) == "string" then
-    tecWarningNotification("function parthiaMap.checkName, argument 2 number expected received a "..type(roomName))
+    tecWarningNotification("function parthiaMap.checkName, argument 2 string expected received a "..type(roomName))
   end --if not type(verifyRoomID) == "number"
   
   local verifyRoomName = getRoomName(verifyRoomID) --collect the room name to verify against
   
   if verifyRoomName == roomName then --if the names match.
-    pecho("Room name match found at room id "..verifyRoomID.."\n")
     return true
   else --the names do not match
     return false
@@ -10808,6 +10813,7 @@ Going to wait on developing until it is found to be required.
 
 Must ONLY be used when all it was found the room.
 Will require an echo to ask if people are permanent residents of the room.
+If used all standard names "iridine soldier" "worker" would need to be automatically removed from the list.
 
 ]]--</script>
 								<eventHandlerList />
@@ -10819,6 +10825,36 @@ Will require an echo to ask if people are permanent residents of the room.
 Exit descriptions that echo after room type and people in room
 ]]--</script>
 								<eventHandlerList />
+								<Script isActive="yes" isFolder="no">
+									<name>parthiaMap.checkExitsEcho(verifyRoomID, exitsEcho)</name>
+									<packageName></packageName>
+									<script>function parthiaMap.checkExitsEcho(verifyRoomID, exitsEcho)
+  
+  exitsEcho = exitsEcho or parthiaMap.room.exitsEcho --argument 2 defaults to local room's name
+  
+  if not type(verifyRoomID) == "number" then
+    tecWarningNotification("function parthiaMap.checkExitsEcho, argument 1 number expected received a "..type(verifyRoomID))
+    return false
+  elseif not type(exitsEcho) == "string" then
+    if parthiaMap.room.exitsEcho then
+      tecWarningNotification("function parthiaMap.checkExitsEcho, argument 2 string expected received a "..type(exitsEcho))
+    else
+      tecWarningNotification("function parthiaMap.checkExitsEcho, argument 2 was not passed and parthiaMap.roomexitsEcho does not exist.")
+    end --if parthiaMap.room.exitsEcho
+    return false --exitsEcho is not a string stop function
+  end --if not type(verifyRoomID) == "number"
+  
+  local verifyExitsEcho = getRoomUserData(verifyRoomID, "exitsEcho") --collect the verification room's exits echo to verify against
+  
+  if verifyExitsEcho == exitsEcho then --if the exits echo matches the exits echo of the verification room
+    return true --return true on match
+  else --the names do not match
+    return false --return false on non match
+  end --if verifyExitsEcho == exitsEcho
+  
+end --function parthiaMap.checkExitsEcho()</script>
+									<eventHandlerList />
+								</Script>
 							</ScriptGroup>
 						</ScriptGroup>
 						<ScriptGroup isActive="yes" isFolder="yes">
@@ -11035,12 +11071,12 @@ function parthiaMap.makeRoomUnique(roomID, compassSkipDir)
     --if they are all true than the room is not unique. There is(are) other matche(s).
     --in order of easist and most meaningful checks. So room exits echo message first. Than room type.
 --    if verifyRoomID ~= roomID then --make certain not to check the same room
-      if  parthiaMap.checkName(verifyRoomID) --check if the name also matches
+--    if  parthiaMap.checkName(verifyRoomID) --check if the name also matches
 --      if  parthiaMap.checkCompass(verifyRoomID, compassSkipDir) 
+      if parthiaMap.checkExitsEcho(verifyRoomID) --check if exits echo message also matches
       then --all of the above checks return true
-         --skip the current room it will always match
-          pecho("&lt;yellow&gt;Room "..roomID.." is not unique. There is at least one match with room id: "..verifyRoomID.."&lt;reset&gt;\n")
-          return false --room is not unique stop the function
+        pecho("&lt;yellow&gt;Room "..roomID.." is not unique. There is at least one match with room id: "..verifyRoomID.."&lt;reset&gt;\n")
+        return false --room is not unique stop the function
       end --if room unique checks
 --    end --if not verifyRoomID == roomID
   end --for ipairs(worldRooms)
@@ -11104,7 +11140,7 @@ function parthiaMap.echoUserData(userDataKey, roomID)
     if userDataMessage == "" then --if the userData store was empty
       pecho("&lt;yellow&gt;UserData entry "..userDataKey.." does not exist in room id "..roomID.."&lt;reset&gt;\n")
     else --found data in the user data store
-      pecho("&lt;green&gt;Room "..roomID..", UserData "..userDataKey..": "..userDataMessage.."&lt;reset&gt;\n") --Check a user data store
+      pecho("&lt;green&gt;Room "..roomID..", UserData "..userDataKey..":&lt;reset&gt; "..userDataMessage.."\n") --Check a user data store
     end --if userDataMessage == ""
   else --user data key does not exist in the room id provided.
     pecho("&lt;yellow&gt;UserData entry "..userDataKey.." does not exist in room id "..roomID.."&lt;reset&gt;\n")
@@ -11866,12 +11902,14 @@ function parthiaMap.findSpecialExits(exitEcho)
   
   local tmpCurrentRoomType = exitEcho:match("^You arrive at (%P+)%p")
   if tmpCurrentRoomType then --if something was found above.
-    if parthiaMap.getEnabled() then --if player is using parthiaMap
       parthiaMap.room.name = tmpCurrentRoomType --collect this description for a room name.
-    end --if parthiaMap.getEnabled()
   end --if tmpCurrentRoomType
 
   parthiaMap.detectDirection(exitEcho:match(" You are facing (%a+)%.")) --record direction player walked 
+
+  if not parthiaMap.room.exitsEcho then --if the exits echo has not already been
+    parthiaMap.room.exitsEcho = exitEcho:match("%. You see (.*)$") --record the exits echo
+  end --parthiaMap.room.exitsEcho
 
 end --function parthiaMap.findSpecialExits()</script>
 								<eventHandlerList />
