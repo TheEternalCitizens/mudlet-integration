@@ -255,7 +255,7 @@ for direction, show in string.gmatch( line, ",?(%a+),(%a+)" ) do
     MultiWindow.Compass.unlit(direction) --show the direction as inactive in the MultiWindow compass
     tecCompass.unlit(direction) --show the direction as inactive in the standard tec compass
   end --if show == "show"
-end --for string.gmatch( line, "(%a%a?),(?%d+)" )</script>
+end --for string.gmatch( line, ",?(%a+),(%a+)" )</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -858,7 +858,7 @@ end</script>
 					<integer>4</integer>
 				</regexCodePropertyList>
 			</Trigger>
-			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>skills</name>
 				<script>--[[
 to collect data when the character runs the commands we will want aliases for all the ways
@@ -2318,7 +2318,7 @@ end --if parthiaMap.getEnabled()</script>
 			<regexCodePropertyList />
 			<TriggerGroup isActive="no" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Courses 4 Part</name>
-				<script>if line:match([[&lt;/font&gt;&lt;font color="#000000"&gt;You are on a wide, grassy field. Little divots across the turf indicate that one or several horses have run across it at some point, perhaps in cavalry practice. The short grass is barely two inches high, and looks to be meticulously kept that way. Jutting from the ground is a brightly glowing lantern hanging from a pole. &lt;/font&gt;]]) then
+				<script>if line:match([[&lt;/font&gt;&lt;font color=%"#%x+%"&gt;You are on a wide, grassy field. Little divots across the turf indicate that one or several horses have run across it at some point, perhaps in cavalry practice. The short grass is barely two inches high, and looks to be meticulously kept that way. Jutting from the ground is a brightly glowing lantern hanging from a pole. &lt;/font&gt;]]) then
   if courses.lookRan then 
     tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go south")]])
@@ -2345,7 +2345,7 @@ elseif line:match("&lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are no longer bus
   tempTimer(1, [[send("go south")]])
 elseif line:match("^You arrive at a mud pit. ") then
   tempTimer(1, [[send("jump rope")]])
-elseif line:match([[   &lt;/font&gt;&lt;font color="#000000"&gt;You approach the start of a training course. This challenge is a muddy pit with a beam erected over it. Swinging from the beam is a muddy rope. It looks as though you have to jump at the rope to swing across the pit.  &lt;/font&gt;]]) then
+elseif line:match([[   &lt;/font&gt;&lt;font color=%"#%x+%"&gt;You approach the start of a training course. This challenge is a muddy pit with a beam erected over it. Swinging from the beam is a muddy rope. It looks as though you have to jump at the rope to swing across the pit.  &lt;/font&gt;]]) then
   if courses.lookRan then
     tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("jump rope")]])
@@ -2354,7 +2354,7 @@ elseif line:match([[   &lt;/font&gt;&lt;font color="#000000"&gt;You approach the
   end
 elseif line:match([[^You arrive at a path through swinging weights. ]]) then
   tempTimer(1, [[send("go path")]])
-elseif line:match([[   &lt;/font&gt;&lt;font color="#000000"&gt;This is the second test on this training course. Here you must test your agility by going along a path that has heavy bags of sand swinging across it. The object is to not get hit.  &lt;/font&gt;$]]) then
+elseif line:match([[&lt;/font&gt;&lt;font color=%"#%x+%"&gt;This is the second test on this training course. Here you must test your agility by going along a path that has heavy bags of sand swinging across it. The object is to not get hit.  &lt;/font&gt;$]]) then
   if courses.lookRan then
     tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go path")]])
@@ -2363,7 +2363,7 @@ elseif line:match([[   &lt;/font&gt;&lt;font color="#000000"&gt;This is the seco
   end --if courses.lookRan
 elseif line:match([[^You arrive at a circular track. ]]) then
   tempTimer(1, [[send("go track")]])
-elseif line:match([[   &lt;/font&gt;&lt;font color="#000000"&gt;This third training area involves a circular track that has a pole spinning around it. You must go along the track, running laps and stay in front of the pole or it will knock you flat.  &lt;/font&gt;$]]) then
+elseif line:match([[&lt;/font&gt;&lt;font color=%"#%x+%"&gt;This third training area involves a circular track that has a pole spinning around it. You must go along the track, running laps and stay in front of the pole or it will knock you flat.  &lt;/font&gt;$]]) then
   if courses.lookRan then
     tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go track")]])
@@ -2372,7 +2372,7 @@ elseif line:match([[   &lt;/font&gt;&lt;font color="#000000"&gt;This third train
   end --if courses.lookRan
 elseif line:match([[^You arrive at a bed of hot coals. ]]) then
   tempTimer(1, [[send("go coal")]])
-elseif line:match([[&lt;/font&gt;&lt;font color="#000000"&gt;This place is the last test on this course. You must prove your willpower by walking across the bed of hot coals.  &lt;/font&gt;$]]) then
+elseif line:match([[&lt;/font&gt;&lt;font color=%"#%x+%"&gt;This place is the last test on this course. You must prove your willpower by walking across the bed of hot coals.  &lt;/font&gt;$]]) then
   if courses.lookRan then
     tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go coal")]])
