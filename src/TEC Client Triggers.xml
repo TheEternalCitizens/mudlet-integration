@@ -73,6 +73,11 @@ deleteLine() --remove line from main console. line variable remains unchanged.
 if parthiaMap.getEnabled() then --if player is using parthiaMap
   parthiaMap.moveNeeded = true --Movement needs to be delayed because sometimes there is not SKOOT 10 message. This is used to track if movement has already begun. Used in function parthiaMap.delayMove()
   tempTimer(.25, "parthiaMap.delayMove()")
+  if parthiaMap.mapping then --record only if mapping
+    if not parthiaMap.room.SKOOT6 then --if this skoot message has not been recorded.
+      parthiaMap.room.SKOOT6 = string.gsub( line, "(%-?%d+,%-?%d+,%d+,#%x+,)%d+%.?%d*,?", "%1") --record the skoot message without the light variables
+    end --if not parthiaMap.room.SKOOT6
+  end --if parthiaMap.mapping
 end --if parthiaMap.getEnabled()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -229,6 +234,9 @@ if parthiaMap.getEnabled() then --if player is using parthiaMap
       parthiaMap.stopRoomCreation("Your character has to see for new map creation. Please use a light source. Return to the previous room and try again.")
     end --if getCharacterCanSee()
   end --if parthiaMap.entranceEcho
+  if not parthiaMap.room.SKOOT7 then --if it has not been alrady
+    parthiaMap.room.SKOOT7 = line --record the skoot message to a string
+  end --if not parthiaMap.room.SKOOT7
 end --if parthiaMap.getEnabled()
 
 --get all directions and if they should be showed from the skoot 7 message
@@ -247,11 +255,7 @@ for direction, show in string.gmatch( line, ",?(%a+),(%a+)" ) do
     MultiWindow.Compass.unlit(direction) --show the direction as inactive in the MultiWindow compass
     tecCompass.unlit(direction) --show the direction as inactive in the standard tec compass
   end --if show == "show"
-end --for string.gmatch( line, "(%a%a?),(?%d+)" )
-
-if not parthiaMap.room.SKOOT7 then --if it has not been alrady
-  parthiaMap.room.SKOOT7 = line --record the skoot message to a string
-end --if not parthiaMap.room.SKOOT7</script>
+end --for string.gmatch( line, "(%a%a?),(?%d+)" )</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>

@@ -10485,10 +10485,16 @@ function parthiaMap.addRoom(room, previousRoom)
     return --stop the function.
   elseif not parthiaMap.room.SKOOT7 then
     pecho("\n&lt;green&gt;No SKOOT 7 message recorded. Please return to the previous room and attempt again.&lt;reset&gt;\n")
+    return
   elseif not parthiaMap.room.entranceEcho then
     pecho("\n&lt;green&gt;No entrance echo message recorded. Please return to the previous room and attempt again.&lt;reset&gt;\n")
+    return
   elseif not parthiaMap.room.exitsEcho then
     pecho("\n&lt;green&gt;No exits echo message recorded. Please return to the previous room and attempt again.&lt;reset&gt;\n")
+    return
+  elseif not parthiaMap.room.SKOOT6 then
+    pecho("\n&lt;green&gt;No SKOOT 6 message recorded. Please return to the previous room and attempt again.&lt;reset&gt;\n")
+    return
   end --if parthiaMap.getRoomCreationStop()
 
   room = room or parthiaMap.room
@@ -10533,6 +10539,7 @@ function parthiaMap.addRoom(room, previousRoom)
     setRoomUserData(room.id, "SKOOT7", parthiaMap.room.SKOOT7) --store the SKOOT 7 message.
     setRoomUserData(room.id, "entranceEcho", parthiaMap.room.entranceEcho) --store the entrance echo message
     setRoomUserData(room.id, "exitsEcho", parthiaMap.room.exitsEcho) --store the exits echo message, that appears in the entrance echo message
+    setRoomUserData(room.id, "SKOOT6", parthiaMap.room.SKOOT6) --store the SKOOT 6 message, with the light variable removed.
     
     parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
   end --if parthiaMap.mapping
@@ -10763,47 +10770,47 @@ for performance purposes, before doing ANY unique checks. First see if the playe
 ]]--</script>
 						<eventHandlerList />
 						<Script isActive="yes" isFolder="no">
-							<name>parthiaMap.strMatchDataStore(verifyRoomID, str, dataStoreKey)</name>
+							<name>parthiaMap.strMatchUserData(verifyRoomID, userDataKey, str)</name>
 							<packageName></packageName>
 							<script>--[[
 compares a string passed to it against a user data store.
 
 used in: functions `parthiaMap.makeRoomUnique`, `parthiaMap.changingRoom`, parthiaMap.playerLost`
 
-Usage: parthiaMap.strMatchDataStore(verifyRoomID, dataStoreKey, str)
+Usage: parthiaMap.strMatchUserData(verifyRoomID, userDataKey, str)
   verifyRoomID, number, is the room id you want to verify the string against
-  dataStoreKey, is the user data store key you would like to verify the string against
-  str, optional, a string you would like to compare against a room's user data store. If not specified will use parthiaMap.room[dataStoreKey] string instead
+  userDataKey, is the user data store key you would like to verify the string against
+  str, optional, a string you would like to compare against a room's user data store. If not specified will use parthiaMap.room[userDataKey] string instead
   
 Examples:
-parthiaMap.strMatchDataStore(22, "SKOOT7") --verify current room's SKOOT 7 message against room 22s skoot message.
-parthiaMap.strMatchDataStore(22, "exitsEcho", getRoomUserData(55, "exitsEcho")) --compare the exit echo messages of room 22 and 55
+parthiaMap.strMatchUserData(22, "SKOOT7") --verify current room's SKOOT 7 message against room 22s skoot message.
+parthiaMap.strMatchUserData(22, "exitsEcho", getRoomUserData(55, "exitsEcho")) --compare the exit echo messages of room 22 and 55
 ]]--
 
-function parthiaMap.strMatchDataStore(verifyRoomID, dataStoreKey, str)
+function parthiaMap.strMatchUserData(verifyRoomID, userDataKey, str)
   
-  str = str or parthiaMap.room[dataStoreKey]
+  str = str or parthiaMap.room[userDataKey]
   
   if not type(verifyRoomID) == "number" then
-    tecWarningNotification("function parthiaMap.strMatchDataStore, argument 1 number expected received a "..type(verifyRoomID))
+    tecWarningNotification("function parthiaMap.strMatchUserData, argument 1 number expected received a "..type(verifyRoomID))
     return false
-  elseif not type(dataStoreKey) == "string" then
-    tecWarningNotification("function parthiaMap.strMatchDataStore, argument 2 string expected received a "..type(dataStoreKey))
+  elseif not type(userDataKey) == "string" then
+    tecWarningNotification("function parthiaMap.strMatchUserData, argument 2 string expected received a "..type(userDataKey))
     return false --str is not a string stop function
   elseif not type(str) == "string" then
-    if parthiaMap.room[dataStoreKey] then
-      tecWarningNotification("function parthiaMap.strMatchDataStore, argument 3 string expected received a "..type(str))
+    if parthiaMap.room[userDataKey] then
+      tecWarningNotification("function parthiaMap.strMatchUserData, argument 3 string expected received a "..type(str))
       return false --str is not a string stop function
     else
-      tecWarningNotification("function parthiaMap.strMatchDataStore, argument 3 not passed and parthiaMap.room."..dataStoreKey.." does not exist.")
-    end --if parthiaMap.room[dataStoreKey]
+      tecWarningNotification("function parthiaMap.strMatchUserData, argument 3 not passed and parthiaMap.room."..userDataKey.." does not exist.")
+    end --if parthiaMap.room[userDataKey]
   end --if not type(verifyRoomID) == "number" elseif
   
-  local verifyStr = getRoomUserData(verifyRoomID, dataStoreKey) --collect the verification room's exits echo to verify against
+  local verifyStr = getRoomUserData(verifyRoomID, userDataKey) --collect the verification room's exits echo to verify against
   
   if verifyStr then
     if verifyStr == "" then
---uncomment on completion      tecWarningNotification("function parthiaMap.strMatchDataStore, room "..verifyRoomID.." does not contain a user data key "..dataStoreKey..".")
+--uncomment on completion      tecWarningNotification("function parthiaMap.strMatchUserData, room "..verifyRoomID.." does not contain a user data key "..userDataKey..".")
       return false
     else --skoot message existed in room
       if verifyStr == str then --if the skoot messages match
@@ -10813,11 +10820,66 @@ function parthiaMap.strMatchDataStore(verifyRoomID, dataStoreKey, str)
       end --if verifystr == skootMessage
     end --if verifystr
   else --room data returned nil
---uncomment on completion    tecWarningNotification("function parthiaMap.strMatchDataStore, room "..verifyRoomID.." does not contain a user data key "..dataStoreKey..".")
+--uncomment on completion    tecWarningNotification("function parthiaMap.strMatchUserData, room "..verifyRoomID.." does not contain a user data key "..userDataKey..".")
     return false
   end --if verifystr
 
-end --function parthiaMap.strMatchDataStore()</script>
+end --function parthiaMap.strMatchUserData()</script>
+							<eventHandlerList />
+						</Script>
+						<Script isActive="yes" isFolder="no">
+							<name>parthiaMap.variableStrMatchUserData(verifyRoomID, userDataKey, str)</name>
+							<packageName></packageName>
+							<script>--[[
+Used to match a string that changes against one in a data store.
+]]--
+
+function parthiaMap.variableStrMatchUserData(verifyRoomID, userDataKey, str)
+ str = str or parthiaMap.room[userDataKey]
+  
+  if not type(verifyRoomID) == "number" then
+    tecWarningNotification("function parthiaMap.variableStrMatchUserData, argument 1 number expected received a "..type(verifyRoomID))
+    return false
+  elseif not type(userDataKey) == "string" then
+    tecWarningNotification("function parthiaMap.variableStrMatchUserData, argument 2 string expected received a "..type(userDataKey))
+    return false --str is not a string stop function
+  elseif not type(str) == "string" then
+    if parthiaMap.room[userDataKey] then
+      tecWarningNotification("function parthiaMap.variableStrMatchUserData, argument 3 string expected received a "..type(str))
+      return false --str is not a string stop function
+    else
+      tecWarningNotification("function parthiaMap.variableStrMatchUserData, argument 3 not passed and parthiaMap.room."..userDataKey.." does not exist.")
+    end --if parthiaMap.room[userDataKey]
+  end --if not type(verifyRoomID) == "number" elseif
+  
+  local verifyStr = getRoomUserData(verifyRoomID, userDataKey) --collect the verification room's exits echo to verify against
+  
+  if verifyStr then
+    if verifyStr == "" then
+--uncomment on completion      tecWarningNotification("function parthiaMap.variableStrMatchUserData, room "..verifyRoomID.." does not contain a user data key "..userDataKey..".")
+      return false
+    else --skoot message existed in room
+      local largeStr
+      local smallStr
+      if #verifyStr &gt; #str  then
+        largeStr = verifyStr
+        smallStr = str
+      else
+        largeStr = str
+        smallStr = verifyStr
+      end
+      smallStr = ReplaceStringMagicChar(smallStr) --ecscape magic characters in the string
+      if string.match(largeStr, "^"..smallStr) then --if the skoot messages match
+        return true --return a positive match found
+      else --skoot messages do not match
+        return false --return no match found
+      end --if verifystr == skootMessage
+    end --if verifystr
+  else --room data returned nil
+--uncomment on completion    tecWarningNotification("function parthiaMap.variableStrMatchUserData, room "..verifyRoomID.." does not contain a user data key "..userDataKey..".")
+    return false
+  end --if verifyStr
+end --function parthiaMap.variableStrMatchUserData(verifyRoomID, str, userDataKey)</script>
 							<eventHandlerList />
 						</Script>
 						<ScriptGroup isActive="yes" isFolder="yes">
