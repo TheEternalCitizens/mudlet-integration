@@ -11602,7 +11602,7 @@ xpos, number the xposition of the room on the current TEC Map
 ypos, number the yposition of the room on the current TEC Map
 
 example
-room.area = parthiaMap.setRoomArea(2, -1, -1) --Makes the table below
+room.area = parthiaMap.getRoomArea(2, -1, -1) --Makes the table below
 {
   {
     true,
@@ -11626,13 +11626,13 @@ function parthiaMap.getRoomArea(size, xpos, ypos)
 
   --Make certain the argument passed is a table and has all the required variables
   if type(size) ~=  "number" then
-    tecErrorNotification("function parthiaMap.setRoomArea, argument 1 expected number received a "..type(size))
+    tecErrorNotification("function parthiaMap.getRoomArea, argument 1 expected number received a "..type(size))
     return
   elseif type(xpos) ~= "number" then
-    tecErrorNotification("function parthiaMap.setRoomArea, argument 1 expected number received a "..type(xpos))
+    tecErrorNotification("function parthiaMap.getRoomArea, argument 1 expected number received a "..type(xpos))
     return
   elseif type(ypos) ~=  "number" then
-    tecErrorNotification("function parthiaMap.setRoomArea, argument 1 expected number received a "..type(ypos))
+    tecErrorNotification("function parthiaMap.getRoomArea, argument 1 expected number received a "..type(ypos))
     return
   end 
   
@@ -11648,7 +11648,7 @@ function parthiaMap.getRoomArea(size, xpos, ypos)
   
   return roomArea
   
-end --function parthiaMap.setRoomArea(size, xpos, ypos)
+end --function parthiaMap.getRoomArea(size, xpos, ypos)
 
 
 --[[ Previous version of this function
