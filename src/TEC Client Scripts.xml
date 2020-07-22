@@ -11010,6 +11010,67 @@ When it is dark ONLY adjacent connected rooms are displayed.
 Has to support skipping the check of a single direction, for ships. The way `SKOOT 7 compass` does.
 ]]--</script>
 							<eventHandlerList />
+							<Script isActive="yes" isFolder="no">
+								<name>parthiaMap.createMapVerification()</name>
+								<packageName></packageName>
+								<script>--[[
+creates a table from the SKOOT 6 and 10 data.
+Storing data for the players current room and adjacent rooms only.
+This is what we know with 100% certainty will show up on the TEC Map without light
+]]--
+function parthiaMap.createMapVerification()
+  
+  --create a table to store verification data
+  parthiaMap.room.mapVerification = {}
+  parthiaMap.room.mapVerification.currentRoom = {}
+  
+  --copy the confirmed exits table, but leave out its indexing system
+  for k,v in pairs(parthiaMap.room.confirmedExits) do
+    parthiaMap.room.mapVerification.currentRoom[k] = v[1]
+  end --for pairs(parthiaMap.room.confirmedExits)
+  
+  for exitDirection,exitTable in pairs(parthiaMap.room.mapVerification.currentRoom) do
+  
+    --erase uneeded variables
+    exitTable.open = nil --erase any open bools
+    exitTable.sorted = nil --erase any sorted bools
+    
+    if exitTable.room then --If the exit leads to a room
+      exitTable.room.sorted = nil  --if a room is on the other side of this exit, erase it's sorted bool
+      
+      --match room exits to rooms
+      if exitTable.room.size and exitTable.room.xpos and exitTable.room.ypos then --make certain required variables exist.
+        local roomArea = parthiaMap.getRoomArea(exitTable.room.size, exitTable.room.xpos, exitTable.room.ypos) --get the area of this room
+        for _,exitToCheck in ipairs(parthiaMap.TECMapExits) do --loop through all exits that appear on the tec map when player is in this room
+        local xposRounded = round(exitToCheck.xpos)
+        local yposRounded = round(exitToCheck.ypos)
+          if roomArea[xposRounded] then --if the exit shares a xposition with the current room on the TECMap
+            if roomArea[xposRounded][yposRounded] then --if the exit shares both an x and y position with the current room.
+              if not exitTable.room.exits then exitTable.room.exits = {} end
+              table.insert(exitTable.room.exits, table.deepcopy(exitToCheck)) --exit on map is one for this room. Keep track of it
+            end --if roomArea[xposRounded][yposRounded]
+          end --if roomArea[xposRounded]
+        end --for ipairs(parthiaMap.TECMapExits)
+      else --required variables not present
+        local erroFound = "function parthiaMap.createMapVerification(), room exists in exit "..exitDirection.." but lacked size, ypos and or xpos."
+        if parthiaMap.mapping then --if player is mapping
+          parthiaMap.stopRoomCreation(errorFound) --stop the creation of the room
+        end --if parthiaMap.mapping
+        tecWarningNotification(erroFound)
+      end --if exitTable.room.size and exitTable.room.xpos and exitTable.room.ypos
+      
+    end --if exitTable.room
+    
+  end --for pairs(parthiaMap.room.mapVerification.currentRoom)
+  
+  --add current room size and position last to make sorting above easier
+  parthiaMap.room.mapVerification.currentRoom.size = parthiaMap.room.size
+  parthiaMap.room.mapVerification.currentRoom.xpos = parthiaMap.room.xpos
+  parthiaMap.room.mapVerification.currentRoom.ypos = parthiaMap.room.ypos
+
+end --function parthiaMap.createMapVerification()</script>
+								<eventHandlerList />
+							</Script>
 						</ScriptGroup>
 						<ScriptGroup isActive="yes" isFolder="yes">
 							<name>SKOOT 7 compass</name>
