@@ -13532,9 +13532,7 @@ function authenticationInput(_, userInput)
     --clear the password off the screen.
     local tecMainLastLine = (getLastLineNumber("main") - 1)
     moveCursor(1,tecMainLastLine) --Move cursor to second from the newest line in main console
-    selectString(tecPassword,1) --Select the password in main.
-    replace("") --Replaced the selected password with.
-    deselect() --Don't forget your deselects!
+    deleteLine() --prevent the password from being collected by mudlet's `logging game output to file` button
     pecho("Sending login request to The Eternal City.\n"
           .."A black command window will appear which sends the request.\n")
     
