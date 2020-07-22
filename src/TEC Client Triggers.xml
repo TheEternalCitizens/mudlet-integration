@@ -49,6 +49,8 @@ deleteLine() --remove line from main console. line variable remains unchanged.
 				<name>TEC Map Rooms</name>
 				<script>--SKOOT 6, provides room sizes and positions for map
 
+deleteLine() --remove line from main console. line variable remains unchanged.
+
 --We are about to draw a new map, so hide all the rooms.
 --We are not going to bother with setting room sizes and moving moves to off screen
 --that are not being used unless we find a need for it.
@@ -66,8 +68,6 @@ parthiaDrawMapRooms()
 
 --We want the map zoom level, but not 100 times.
 --if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
-
-deleteLine() --remove line from main console. line variable remains unchanged.
 
 --SKOOT 10 is our last room data message. Use data collected from TEC to manage parthiaMap
 if parthiaMap.getEnabled() then --if player is using parthiaMap
@@ -135,6 +135,8 @@ end --if not string.starts(line, "SKOOT")</script>
 				<name>TEC map exits</name>
 				<script>--SKOOT 10 is Exit position on the map
 
+deleteLine() --remove line from main console. line variable remains unchanged.
+
 mapExitsLC = 1 --Just a loop counter so we can go through rooms easily.
 
 parthiaDrawMapExits()
@@ -145,8 +147,6 @@ mapRoom[150]:lower()
 
 --We want the map zoon level, but not 100 times...
 --if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
-
-deleteLine() --remove line from main console. line variable remains unchanged.
 
 --SKOOT 10 is our last room data message. Use data collected from TEC to manage parthiaMap
 if parthiaMap.getEnabled() then --if player is using parthiaMap
@@ -858,7 +858,7 @@ end</script>
 					<integer>4</integer>
 				</regexCodePropertyList>
 			</Trigger>
-			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>skills</name>
 				<script>--[[
 to collect data when the character runs the commands we will want aliases for all the ways

@@ -6812,6 +6812,7 @@ colourArray[2] = Math.min(Math.max(Math.round(colourArray[2] * 1 + (light * 8)),
 --Not looking for that comma in earlier messages might cause future
 --pattern searches to fail.
 function parthiaDrawMapRooms()
+  
   for xpos, ypos, size, tecMapRoomcolor in string.gmatch( line, "(-?%d+),(-?%d+),(%d+),(#%x+),%d+[.%d*]?,?" ) do
   
     --TEC uses grid logic for their map. xposition is up to 120 +-.
@@ -6858,6 +6859,7 @@ function parthiaDrawMapRooms()
     mapRoom[mapRoomsLC]:show() --Now show the room.
     mapRoomsLC = mapRoomsLC +1 --Iterate so we can do this again.
   end --end gmatch room data search loop
+  
 end --function parthiaDrawMapRooms()</script>
 					<eventHandlerList />
 				</Script>
@@ -6877,6 +6879,7 @@ open if the Exit is open. 1 is open 0 is closed.
 ]]--
 
 function parthiaDrawMapExits()
+
   --look through line for the data pattern to get exit data. Input them into variables.
   for xpos, ypos, exitDirection, exitOpen in string.gmatch( line, "(-?%d+),(-?%d+),(%w+),(%d+),?" ) do
 --[[  
@@ -6922,6 +6925,7 @@ function parthiaDrawMapExits()
   
     mapExitsLC = mapExitsLC +1 --Iterate so we can do this again on a new exit.
   end --end gmatch room data search loop
+  
 end --function parthiaDrawMapExits()</script>
 					<eventHandlerList />
 				</Script>
@@ -10303,6 +10307,7 @@ function parthiaMap.setCharacterLocation(id, displayToScreen)
     tecWarningNotification("function parthiaMap.setCharacterLocation, "..errorFound)
     return errorFound
   end --if id
+
 end --function parthiaMap.setCharacterLocation(id, displayToScreen)</script>
 						<eventHandlerList />
 					</Script>
@@ -11216,7 +11221,7 @@ function parthiaMap.Move(room, previousRoom, directionWalked)
   local x,y,z = 0,0,0 --coordinates for current location
   local dir = directionWalked --direction player walked
   if room.xpos and room.ypos and room.size then --if we have the data to set the current rooms area set to rooms area
-    parthiaMap.setRoomArea() --set the area of the current room
+    parthiaMap.room.area = parthiaMap.getRoomArea(room.size, room.xpos , room.ypos) --set the area of the current room
     parthiaMap.findAdjacentRooms() --find what rooms are by the players current room
     parthiaMap.findRoomExits() --finds exits on the TEC Map for the room the player is in
   else
@@ -11582,15 +11587,71 @@ end --function parthiaMap.trackTECMapExits(direction, xpos, ypos)</script>
 							<script></script>
 							<eventHandlerList />
 							<Script isActive="yes" isFolder="no">
-								<name>parthiaMap.setRoomArea()</name>
+								<name>parthiaMap.setRoomArea(size, xpos, ypos)</name>
 								<packageName></packageName>
 								<script>--[[
-sets area of a room. Default is players current room.
-requires the "room" passed to it is a table that has variables:
-room.size, number the size of the room
-room.xpos, number the xposition of the room on the current TEC Map
-room.ypos, number the yposition of the room on the current TEC Map
+sets area of a room. According to it's X and Y position. Returns the area as a table.
+received size, x position and y position of the room.
+Returns a table that is the area of the room.
+
+used in script `parthiaMap.move` and `parthiaMap.createMapVerification`
+
+Usage
+size, number the size of the room
+xpos, number the xposition of the room on the current TEC Map
+ypos, number the yposition of the room on the current TEC Map
+
+example
+room.area = parthiaMap.setRoomArea(2, -1, -1) --Makes the table below
+{
+  {
+    true,
+    [0] = true,
+    [-1] = true
+  },
+  [0] = {
+    true,
+    [0] = true,
+    [-1] = true
+  },
+  [-1] = {
+    true,
+    [0] = true,
+    [-1] = true
+  }
+}
 ]]--
+
+function parthiaMap.getRoomArea(size, xpos, ypos)
+
+  --Make certain the argument passed is a table and has all the required variables
+  if type(size) ~=  "number" then
+    tecErrorNotification("function parthiaMap.setRoomArea, argument 1 expected number received a "..type(size))
+    return
+  elseif type(xpos) ~= "number" then
+    tecErrorNotification("function parthiaMap.setRoomArea, argument 1 expected number received a "..type(xpos))
+    return
+  elseif type(ypos) ~=  "number" then
+    tecErrorNotification("function parthiaMap.setRoomArea, argument 1 expected number received a "..type(ypos))
+    return
+  end 
+  
+  local roomArea = {} --create table to hold room area.
+  
+  --create a table that represents the squeres the room covers on the TEC Map
+  for xi=0, size do --loop until the room size is reached.
+    roomArea[(xpos+xi)] = {} --create a table for xposition. That is the coordinates the room is painted on the TEC map.
+    for yi=0, size do --loop until the room size is reached
+      roomArea[(xpos+xi)][(ypos+yi)] = true --fill the xposition table to show what the room covers on the y access of the TEC map
+    end --for yi=0, size
+  end --for xi=0, size
+  
+  return roomArea
+  
+end --function parthiaMap.setRoomArea(size, xpos, ypos)
+
+
+--[[ Previous version of this function
 function parthiaMap.setRoomArea(room)
   room = room or parthiaMap.room --collect room table.
   --Make certain the argument passed is a table and has all the required variables
@@ -11621,7 +11682,8 @@ function parthiaMap.setRoomArea(room)
       room.area[(room.xpos+xi)][(room.ypos+yi)] = true --fill the xposition table to show what the room covers on the y access of the TEC map
     end --for yi=0, room.size
   end --for xi=0, room.size
-end --function parthiaMap.setRoomArea(room)</script>
+end --function parthiaMap.setRoomArea(room)
+]]--</script>
 								<eventHandlerList />
 							</Script>
 							<Script isActive="yes" isFolder="no">
@@ -11776,7 +11838,7 @@ local function sortRoomExits(roomExits)
     if roomExits.direction == "hor" or roomExits.direction == "ver" then -- if this is an east, west, north or south exit
       --Math needed to determin north sout east and west is the same. We only need to change the variables being checked.
       --The sidesTable sorts the variables we need when determening which direction this exit refers to.
-      local sidesTable = { 
+      local sidesTable = {
         { exit = "east", --direction currently being looked for
           axisPoint = roomXMax, --point on the axis the exit needs to be on for this direction
           exitAxis = xposRounded, --the axis point of the exit for this direction

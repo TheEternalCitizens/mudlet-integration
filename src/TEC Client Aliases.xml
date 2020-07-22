@@ -1150,11 +1150,8 @@ end --if matches[3]</script>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia map unique</name>
-					<script>if matches[2] then --if there is an argument
-  parthiaMap.makeRoomUnique(parthiaMap.room.id, matches[2]) --verrifies current room is unique then makes it unique. Tells mapper to compass direction passed
-else
-  parthiaMap.makeRoomUnique() --verrifies current room is unique then makes it unique.
-end --matches[2]</script>
+					<script>parthiaMap.makeRoomUnique() --verrifies current room is unique then makes it unique.
+</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>parthia map unique(?:\s+((?:\w+|\d+)))?</regex>
@@ -1185,11 +1182,7 @@ if cmd then
   elseif cmd == "danger" then
     parthiaMap.setDanger(arg, true) --set danager level for rooms being created
   elseif cmd == "unique" then
-    if arg then --if there is an argument
-      parthiaMap.makeRoomUnique(parthiaMap.room.id, arg) --verrifies current room is unique then makes it unique. Tells mapper to compass direction passed
-    else
-      parthiaMap.makeRoomUnique() --verrifies current room is unique then makes it unique.
-    end --if arg == ""
+    parthiaMap.makeRoomUnique() --verrifies current room is unique then makes it unique.
   elseif cmd == "stock" then
     pecho("Command not created yet.\n")
   elseif cmd == "learn" then
