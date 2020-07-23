@@ -11060,25 +11060,25 @@ Storing data for the players current room and adjacent rooms only.
 This is what we know with 100% certainty will show up on the TEC Map without light
 ]]--
 function parthiaMap.createMapVerification()
-  parthiaStartRunTime()
+
   --create a table to store verification data
   parthiaMap.room.mapVerification = {}
   parthiaMap.room.mapVerification.currentRoom = {}
-  
+
   --copy the confirmed exits table, but leave out its indexing system
   for k,v in pairs(parthiaMap.room.confirmedExits) do
     parthiaMap.room.mapVerification.currentRoom[k] = v[1]
   end --for pairs(parthiaMap.room.confirmedExits)
-  
+
   for exitDirection,exitTable in pairs(parthiaMap.room.mapVerification.currentRoom) do
-  
+
     --erase uneeded variables
     exitTable.open = nil --erase any open bools
     exitTable.sorted = nil --erase any sorted bools
-    
+
     if exitTable.room then --If the exit leads to a room
       exitTable.room.sorted = nil  --if a room is on the other side of this exit, erase it's sorted bool
-      
+
       --match room exits to rooms
       if exitTable.room.size and exitTable.room.xpos and exitTable.room.ypos then --make certain required variables exist.
         local roomArea = parthiaMap.getRoomArea(exitTable.room.size, exitTable.room.xpos, exitTable.room.ypos) --get the area of this room
@@ -11099,16 +11099,16 @@ function parthiaMap.createMapVerification()
         end --if parthiaMap.mapping
         tecWarningNotification(erroFound)
       end --if exitTable.room.size and exitTable.room.xpos and exitTable.room.ypos
-      
+
     end --if exitTable.room
-    
+
   end --for pairs(parthiaMap.room.mapVerification.currentRoom)
-  
+
   --add current room size and position last to make sorting above easier
   parthiaMap.room.mapVerification.currentRoom.size = parthiaMap.room.size
   parthiaMap.room.mapVerification.currentRoom.xpos = parthiaMap.room.xpos
   parthiaMap.room.mapVerification.currentRoom.ypos = parthiaMap.room.ypos
-parthiaStopRunTime()
+
 end --function parthiaMap.createMapVerification()</script>
 								<eventHandlerList />
 							</Script>
@@ -11844,182 +11844,7 @@ in the case of multiple exits in the same direction we need to determine which i
 We will check for matching rooms to exits by the exits in the parthiaMap.room.confirmedExits table this way we are not needlessly doing matches.
 ]]--
 
---for each know exit, find what room it leads to than track that.
-function sortAdjacentRooms()
-  
-  for exitDirection,directionExitsTable in pairs(parthiaMap.room.confirmedExits) do --loop through exits know to be for this room
-    for _, exitTable in ipairs(directionExitsTable) do
-      if exitTable.open then --make certain the exit is open, if it is not there is no room that it connects to.
-        --If this is a corner exit, find the room it leads to, put that room in the parthiaMap.room.confirmedExits[exitDirection].room table
-        if exitDirection == "northwest" or exitDirection == "southwest" or exitDirection == "southeast" or exitDirection == "northeast" then --if this is a corner exit
-        --mapDebug("function sortAdjacentRooms, checking for room at exit: "..exitDirection)
-          --The math for all diaginal movement is the same only variables change
-          if not parthiaMap.room.corners then --if the table does not already exist
-            parthiaMap.room.corners = {} 
-            parthiaMap.room.corners.northwest = { --where the northwest corner is for the current room
-             xpos = parthiaMap.room.xpos, --nw's x position
-             ypos = parthiaMap.room.ypos --nw's y position
-            }
-            parthiaMap.room.corners.northeast = { xpos = parthiaMap.room.xpos+parthiaMap.room.size, ypos = parthiaMap.room.ypos, }
-            parthiaMap.room.corners.southeast = { xpos = parthiaMap.room.xpos+parthiaMap.room.size, ypos = parthiaMap.room.ypos+parthiaMap.room.size, }
-            parthiaMap.room.corners.southwest = { xpos = parthiaMap.room.xpos , ypos = parthiaMap.room.ypos+parthiaMap.room.size}
-          end --if not parthiaMap.room.corners
-          for k,adjacentRoom in ipairs(parthiaMap.room.adjacentRooms) do --loop through rooms know to be adjacent of the players room
-            if not adjacentRoom.sorted then --if the proper exit for this room has not been found yet.
-              local adjacentRoomCorner = {} --Checking for rooms in a corner use the same math for all corners. Only variables change. Use this table to use those variables
-              adjacentRoomCorner.northwest = { --store the x y coords of the corner in this room that matches up with the northwest corner of the players current room
-                xpos = adjacentRoom.xpos+adjacentRoom.size, --x for the corner we want to check
-                ypos = adjacentRoom.ypos+adjacentRoom.size --y for the corner we want to check 
-              } --cornerTable.northwest
-              adjacentRoomCorner.northeast = {xpos = adjacentRoom.xpos, ypos = adjacentRoom.ypos+adjacentRoom.size}
-              adjacentRoomCorner.southeast = {xpos = adjacentRoom.xpos, ypos = adjacentRoom.ypos}
-              adjacentRoomCorner.southwest = {xpos = adjacentRoom.xpos+adjacentRoom.size, ypos = adjacentRoom.ypos}
-              --mapDebug("\tfunction sortAdjacentRooms, checking room, adjacentRoom.xpos: "..adjacentRoom.xpos.." adjacentRoom.ypos: "..adjacentRoom.ypos.." adjacentRoom.size: "..adjacentRoom.size)
-              --mapDebug("\tfunction sortAdjacentRooms, compairing adjacentRoomCorner[exitDirection].xpos: "..adjacentRoomCorner[exitDirection].xpos.." to parthiaMap.room.corners[exitDirection].xpos "
-              --  ..parthiaMap.room.corners[exitDirection].xpos.." AND adjacentRoomCorner[exitDirection].ypos: "..adjacentRoomCorner[exitDirection].ypos
-              --  .." to parthiaMap.room.corners[exitDirection].ypos: "..parthiaMap.room.corners[exitDirection].ypos)
-              if  (adjacentRoomCorner[exitDirection].xpos == parthiaMap.room.corners[exitDirection].xpos) and (adjacentRoomCorner[exitDirection].ypos == parthiaMap.room.corners[exitDirection].ypos) then --if the appropriate corners of the two rooms are aligned this is the correct room for this exit.
-                --mapDebug("function sortAdjacentRooms, parthiaMap.room.adjacentRooms.xpos: "..adjacentRoomCorner[exitDirection].xpos.." parthiaMap.room.adjacentRooms.ypos: "..adjacentRoomCorner[exitDirection].ypos.." is "..exitDirection.." of the current room.")
-                exitTable.room = adjacentRoom --record info for this room in the appropriate exit table
-                adjacentRoom.sorted = true --this room does not need to be checked again.
-                break --found this exit no need to keep looking.
-              end --if  (cornerTable[exitDirection].xpos == parthiaMap.room.xpos) and (cornerTable[exitDirection].ypos == parthiaMap.room.ypos)
-            end --if not roomTable.sorted
-          end --for ipairs(parthiaMap.room.adjacentRooms)
-        elseif exitDirection == "north" or exitDirection == "south" or exitDirection == "east" or exitDirection == "west" then
-          for k,adjacentRoom in ipairs(parthiaMap.room.adjacentRooms) do --loop through rooms know to be adjacent of the players room
-            local sidesTable = {} --track where the sides for this room are
-            sidesTable.north = { --remember each side is a line
-              axisMin = adjacentRoom.xpos, --where n starts for this room. Furthest west location
-              axisMax = adjacentRoom.xpos+adjacentRoom.size, --where n ends for this room. Furthest east location
-              oppositeAxis = adjacentRoom.ypos+adjacentRoom.size, --Where n is on y or it's north south location
-              exitAxis = exitTable.xpos, --where the exit is on x, east west
-              exitOppositeAxis = round(exitTable.ypos) --where the exit is on y, north south
-            } --sidesTable
-            sidesTable.south = { axisMin = adjacentRoom.xpos, axisMax = adjacentRoom.xpos+adjacentRoom.size, oppositeAxis = adjacentRoom.ypos , exitAxis = exitTable.xpos, exitOppositeAxis = round(exitTable.ypos)}
-            sidesTable.east = { axisMin = adjacentRoom.ypos, axisMax = adjacentRoom.ypos+adjacentRoom.size, oppositeAxis = adjacentRoom.xpos , exitAxis = exitTable.ypos, exitOppositeAxis = round(exitTable.xpos)}
-            sidesTable.west = { axisMin = adjacentRoom.ypos, axisMax = adjacentRoom.ypos+adjacentRoom.size, oppositeAxis = adjacentRoom.xpos+adjacentRoom.size, exitAxis = exitTable.ypos, exitOppositeAxis = round(exitTable.xpos) }
-            --using variables above is the exit we are checking within the side of the adjacent that shares a side with the current room
-            if sidesTable[exitDirection].exitAxis &gt;= sidesTable[exitDirection].axisMin and sidesTable[exitDirection].exitAxis &lt;= sidesTable[exitDirection].axisMax
-            and sidesTable[exitDirection].exitOppositeAxis == sidesTable[exitDirection].oppositeAxis then
-              exitTable.room = adjacentRoom --record info for this room in the appropriate exit table
-              adjacentRoom.sorted = true --this room does not need to be checked again.
-            end --if sidesTable[exitDirection].exitAxis &gt;= sidesTable[exitDirection].axisMin and sidesTable[exitDirection].exitAxis &lt;= sidesTable[exitDirection].axisMax and sidesTable[exitDirection].exitOppositeAxis == sidesTable[exitDirection].oppositeAxis
-          end --for ipairs(parthiaMap.room.adjacentRooms)
-        end --if exitDirection.match("northwest")
-      end --if exitTable.open
-    end --for ipairs(directionExitsTable)
-  end --for pairs(parthiaMap.room.confirmedExits)
-end --function sortAdjacentRooms()
 
---[[
-function sortRoomExits, takes exit's xpos ypos and direction than decides what room exit it belongs to
-  this function is called in another inside a loop. So it can stop the current check when an exit is sorted
-
-if the exit is at the lowest x, highest y and dir is "northwest" that is the northwest exit
-if the exit is at the highest x, highest y and dir is "northeast" that is the ne exit
-if the exit is at the lowest x, lowest y and dir is "northeast" that is the southwest exit
-if the exit is at the highest x, lowest y and dir is "northwest" that is the se exit
-if the exit is on the highest x and dir is "hor" that is the east exit
-if the exit is on the lowest x and dir is "hor" that is the west exit
-if the exit is on the highest y and dir is "ver" that is the south exit, Yes that is correct. Highest.
-if the exit is on the lowest y and dir is "ver" that is the north exit
-]]--
-local function sortRoomExits(roomExits)
-  
-    --track the location of the room's exits
-    local xposRounded = round(roomExits.xpos) --round the positions. They have length, so they are slightly off point so they are centered between the two rooms.
-    local yposRounded = round(roomExits.ypos) --round the positions. They have length, so they are slightly off point so they are centered between the two rooms.
-    
-    --track the area of the room
-    local roomXMin = parthiaMap.room.xpos
-    local roomXMax = parthiaMap.room.xpos + parthiaMap.room.size
-    local roomYMin = parthiaMap.room.ypos
-    local roomYMax = parthiaMap.room.ypos + parthiaMap.room.size
-    
-    if roomExits.direction == "hor" or roomExits.direction == "ver" then -- if this is an east, west, north or south exit
-      --Math needed to determin north sout east and west is the same. We only need to change the variables being checked.
-      --The sidesTable sorts the variables we need when determening which direction this exit refers to.
-      local sidesTable = {
-        { exit = "east", --direction currently being looked for
-          axisPoint = roomXMax, --point on the axis the exit needs to be on for this direction
-          exitAxis = xposRounded, --the axis point of the exit for this direction
-          exitOppositeAxis = roomExits.ypos, --opposite axis of this exit for this direction
-          oppositeAxisMin = roomYMin, --The lowest the exit can be on the opposit axis
-          oppositeAxisMax = roomYMax, --The highest the exit can be on the opposit axis
-          acceptableDirection = "hor" --an acceptable orentation for the exit's direction on the map
-        }, --end table {exit = "east...}
-        { exit = "west", axisPoint = roomXMin,  exitAxis = xposRounded, exitOppositeAxis = roomExits.ypos, oppositeAxisMin = roomYMin, oppositeAxisMax = roomYMax, acceptableDirection = "hor"},
-        { exit = "north", axisPoint = roomYMin,  exitAxis = yposRounded, exitOppositeAxis = roomExits.xpos, oppositeAxisMin = roomXMin, oppositeAxisMax = roomXMax, acceptableDirection = "ver"},
-        { exit = "south", axisPoint = roomYMax,  exitAxis = yposRounded, exitOppositeAxis = roomExits.xpos, oppositeAxisMin = roomXMin, oppositeAxisMax = roomXMax, acceptableDirection = "ver"},
-      } --end sidesTable
-      for _,side in ipairs(sidesTable) do --Loop through the sidesTable above
-        if side.axisPoint == side.exitAxis then --if the side we are checking shares an access point with the exit.
-          if side.exitOppositeAxis &gt;= side.oppositeAxisMin and side.exitOppositeAxis &lt;= side.oppositeAxisMax then --Make certain the exit is in the current rooms area
-              if side.acceptableDirection == roomExits.direction then --if the orientation for the exit is correct for this side
-                if not parthiaMap.room.confirmedExits[side.exit] then --if the exit side is not already tracked and confirmed             
-                  parthiaMap.room.confirmedExits[side.exit] = {}
-                  table.insert(parthiaMap.room.confirmedExits[side.exit], roomExits)
-                  return --Found the side this exit belongs on. No further checks needed.     
-                else --a table has already been created for this exit.
-                  local position
-                  if side.exit == "east" or side.exit == "west" then
-                    position = "ypos"
-                  elseif side.exit == "north" or side.exit == "south" then
-                    position = "xpos"
-                  else
-                    local errorFound = "failed to find position while sorting multiple exits for a single side."
-                    tecWarningNotification("function parthiaMap.sortRoomExits, "..errorFound)
-                    return errorFound
-                  end --if side.exit == "east" or side.exit == "west"
-                  
-                  table.insert(parthiaMap.room.confirmedExits[side.exit], roomExits) --insert this exit into
-                  return --Found the side this exit belongs on. No further checks needed.
-
-                end --if not parthiaMap.room.confirmedExits[side.exit]
-              end --if acceptableDirection == roomExits.direction
-          end --if side.exitOppositeAxis &gt;= side.oppositeAxisMin and side.exitOppositeAxis &lt;= side.oppositeAxisMax
-        end --if side.axisPoint == side.exitAxis
-      end --for ipairs(sidesTable)
-    elseif roomExits.direction == "nw" or roomExits.direction == "ne" then
-      --Math needed to determin corners is the same. We only need to change the variables being checked.
-      --The cornerTable sorts the variables we need when determening which direction this exit refers to.
-      local cornerTable = {
-        { x = roomXMin, --acceptable x point for the exit we are checking for
-          y = roomYMin, --acceptable y point for the exit we are checking for
-          direction = "nw", --direction the exit icon is oriented in
-          skipDir = "ne", --a exit icon direction that can be skipped for this cornerTable
-          exit = "northwest" --what direction we are checking for
-        }, --end table {exit = "northwest"}
-        { x = roomXMax, y = roomYMin, direction = "ne", skipDir = "nw", exit = "northeast" },
-        { x = roomXMin, y = roomYMax, direction = "ne", skipDir = "nw", exit = "southwest" },
-        { x = roomXMax, y = roomYMax, direction = "nw", skipDir = "ne", exit = "southeast" },
-      } --end cornerTable
-      for k,corner in ipairs(cornerTable) do --loop through the variables in the cornerTable above 
-        --mapDebug("function sortRoomExits, for exit: "..corner.exit.." corner.x: "..corner.x.. " to xposRounded: "..xposRounded)
-        if corner.x == xposRounded then --does the exit's xposition match the x position for this corner?
-          --mapDebug("\tChecking corner.y: "..corner.y.. " to yposRounded: "..yposRounded)
-          if corner.y == yposRounded then --does the exit's yposition match the y position for this corner?
-            --mapDebug("\tChecking corner.direction: "..corner.direction.." agains roomExits.direction: "..roomExits.direction)
-            if roomExits.direction == corner.direction then --is the orentation for the exit's icon on the TEC Map of the corrent type for this corner?
-              if not parthiaMap.room.confirmedExits[corner.exit] then --make certain the corner is was not already sorted
-                parthiaMap.room.confirmedExits[corner.exit] = {}
-                table.insert(parthiaMap.room.confirmedExits[corner.exit],roomExits)
-                return --found what we were looking for
-              else --for some reason this exit has already been sorted!
-                tecWarningNotification("function sortRoomExits, found second corner.direction:"..corner.direction.." exit.")
-              end --if not parthiaMap.room.confirmedExits["northwest"]
-            elseif roomExits.direction == skipDir then --this is an exit for a nearby room
-              return --stop the check, this exit is for a different room
-            end --if roomExits.direction == corner.direction
-          end --if corner.y == yposRounded
-        end --if corner.x == xposRounded
-      end --for ipairs(cornerTable)
-    else --the exit is of an unknown type.
-      tecWarningNotification("function sortRoomExits, found an exit with an unknown direction. Expected northwest ne hor or ver, received: "..roomExits.direction)
-    end --if roomExits.direction == "hor" or roomExits.direction == "ver", elseif roomExits.direction == "nw" or roomExits.direction == "ne"
-    
-end --local function sortRoomExits()
 
 function parthiaMap.findRoomExits()
   parthiaMap.room.TECMapExits = {} --make or reset table to store exits that appear in this rooms area.
@@ -12036,11 +11861,13 @@ function parthiaMap.findRoomExits()
     end --if parthiaMap.room.area[xposRounded]
   end --for k,exitToCheck in ipairs(parthiaMap.TECMapExits)
   
+  parthiaMap.room.confirmedExits = {}
+  
   for _,roomExits in ipairs(parthiaMap.room.TECMapExits) do --loop through exits that are in this room's area
-    sortRoomExits(roomExits) --sort the exits clearly labeling which exit is what direction. 
+    sortRoomExits(roomExits, parthiaMap.room.confirmedExits) --sort the exits clearly labeling which exit is what direction. 
   end --for k,roomExits in ipairs(parthiaMap.room.TECMapExits)
   
-  sortAdjacentRooms() --local function for each know exit, find what room it leads to than track that.
+  sortAdjacentRooms(parthiaMap.room.confirmedExits) --local function for each know exit, find what room it leads to than track that.
   
 end --function parthiaMap.findRoomExits()</script>
 								<eventHandlerList />
@@ -12121,6 +11948,191 @@ function parthiaMap.findSpecialExits(exitEcho)
   end --parthiaMap.room.exitsEcho
 
 end --function parthiaMap.findSpecialExits()</script>
+								<eventHandlerList />
+							</Script>
+							<Script isActive="yes" isFolder="no">
+								<name>sortRoomExits(roomExits, roomTable)</name>
+								<packageName></packageName>
+								<script>--[[
+function sortRoomExits, takes exit's xpos ypos and direction than decides what room exit it belongs to
+  this function is called in another inside a loop. So it can stop the current check when an exit is sorted
+
+if the exit is at the lowest x, highest y and dir is "northwest" that is the northwest exit
+if the exit is at the highest x, highest y and dir is "northeast" that is the ne exit
+if the exit is at the lowest x, lowest y and dir is "northeast" that is the southwest exit
+if the exit is at the highest x, lowest y and dir is "northwest" that is the se exit
+if the exit is on the highest x and dir is "hor" that is the east exit
+if the exit is on the lowest x and dir is "hor" that is the west exit
+if the exit is on the highest y and dir is "ver" that is the south exit, Yes that is correct. Highest.
+if the exit is on the lowest y and dir is "ver" that is the north exit
+]]--
+function sortRoomExits(roomExits, roomTable)
+  
+    --track the location of the room's exits
+    local xposRounded = round(roomExits.xpos) --round the positions. They have length, so they are slightly off point so they are centered between the two rooms.
+    local yposRounded = round(roomExits.ypos) --round the positions. They have length, so they are slightly off point so they are centered between the two rooms.
+    
+    --track the area of the room
+    local roomXMin = parthiaMap.room.xpos
+    local roomXMax = parthiaMap.room.xpos + parthiaMap.room.size
+    local roomYMin = parthiaMap.room.ypos
+    local roomYMax = parthiaMap.room.ypos + parthiaMap.room.size
+    
+    if roomExits.direction == "hor" or roomExits.direction == "ver" then -- if this is an east, west, north or south exit
+      --Math needed to determin north sout east and west is the same. We only need to change the variables being checked.
+      --The sidesTable sorts the variables we need when determening which direction this exit refers to.
+      local sidesTable = {
+        { exit = "east", --direction currently being looked for
+          axisPoint = roomXMax, --point on the axis the exit needs to be on for this direction
+          exitAxis = xposRounded, --the axis point of the exit for this direction
+          exitOppositeAxis = roomExits.ypos, --opposite axis of this exit for this direction
+          oppositeAxisMin = roomYMin, --The lowest the exit can be on the opposit axis
+          oppositeAxisMax = roomYMax, --The highest the exit can be on the opposit axis
+          acceptableDirection = "hor" --an acceptable orentation for the exit's direction on the map
+        }, --end table {exit = "east...}
+        { exit = "west", axisPoint = roomXMin,  exitAxis = xposRounded, exitOppositeAxis = roomExits.ypos, oppositeAxisMin = roomYMin, oppositeAxisMax = roomYMax, acceptableDirection = "hor"},
+        { exit = "north", axisPoint = roomYMin,  exitAxis = yposRounded, exitOppositeAxis = roomExits.xpos, oppositeAxisMin = roomXMin, oppositeAxisMax = roomXMax, acceptableDirection = "ver"},
+        { exit = "south", axisPoint = roomYMax,  exitAxis = yposRounded, exitOppositeAxis = roomExits.xpos, oppositeAxisMin = roomXMin, oppositeAxisMax = roomXMax, acceptableDirection = "ver"},
+      } --end sidesTable
+      for _,side in ipairs(sidesTable) do --Loop through the sidesTable above
+        if side.axisPoint == side.exitAxis then --if the side we are checking shares an access point with the exit.
+          if side.exitOppositeAxis &gt;= side.oppositeAxisMin and side.exitOppositeAxis &lt;= side.oppositeAxisMax then --Make certain the exit is in the current rooms area
+              if side.acceptableDirection == roomExits.direction then --if the orientation for the exit is correct for this side
+                if not roomTable[side.exit] then --if the exit side is not already tracked and confirmed             
+                  roomTable[side.exit] = {}
+                  table.insert(roomTable[side.exit], roomExits)
+                  return --Found the side this exit belongs on. No further checks needed.     
+                else --a table has already been created for this exit.
+                  local position
+                  if side.exit == "east" or side.exit == "west" then
+                    position = "ypos"
+                  elseif side.exit == "north" or side.exit == "south" then
+                    position = "xpos"
+                  else
+                    local errorFound = "failed to find position while sorting multiple exits for a single side."
+                    tecWarningNotification("function parthiaMap.sortRoomExits, "..errorFound)
+                    return errorFound
+                  end --if side.exit == "east" or side.exit == "west"
+                  
+                  table.insert(roomTable[side.exit], roomExits) --insert this exit into
+                  return --Found the side this exit belongs on. No further checks needed.
+
+                end --if not roomTable[side.exit]
+              end --if acceptableDirection == roomExits.direction
+          end --if side.exitOppositeAxis &gt;= side.oppositeAxisMin and side.exitOppositeAxis &lt;= side.oppositeAxisMax
+        end --if side.axisPoint == side.exitAxis
+      end --for ipairs(sidesTable)
+    elseif roomExits.direction == "nw" or roomExits.direction == "ne" then
+      --Math needed to determin corners is the same. We only need to change the variables being checked.
+      --The cornerTable sorts the variables we need when determening which direction this exit refers to.
+      local cornerTable = {
+        { x = roomXMin, --acceptable x point for the exit we are checking for
+          y = roomYMin, --acceptable y point for the exit we are checking for
+          direction = "nw", --direction the exit icon is oriented in
+          skipDir = "ne", --a exit icon direction that can be skipped for this cornerTable
+          exit = "northwest" --what direction we are checking for
+        }, --end table {exit = "northwest"}
+        { x = roomXMax, y = roomYMin, direction = "ne", skipDir = "nw", exit = "northeast" },
+        { x = roomXMin, y = roomYMax, direction = "ne", skipDir = "nw", exit = "southwest" },
+        { x = roomXMax, y = roomYMax, direction = "nw", skipDir = "ne", exit = "southeast" },
+      } --end cornerTable
+      for k,corner in ipairs(cornerTable) do --loop through the variables in the cornerTable above 
+        --mapDebug("function sortRoomExits, for exit: "..corner.exit.." corner.x: "..corner.x.. " to xposRounded: "..xposRounded)
+        if corner.x == xposRounded then --does the exit's xposition match the x position for this corner?
+          --mapDebug("\tChecking corner.y: "..corner.y.. " to yposRounded: "..yposRounded)
+          if corner.y == yposRounded then --does the exit's yposition match the y position for this corner?
+            --mapDebug("\tChecking corner.direction: "..corner.direction.." agains roomExits.direction: "..roomExits.direction)
+            if roomExits.direction == corner.direction then --is the orentation for the exit's icon on the TEC Map of the corrent type for this corner?
+              if not roomTable[corner.exit] then --make certain the corner is was not already sorted
+                roomTable[corner.exit] = {}
+                table.insert(roomTable[corner.exit],roomExits)
+                return --found what we were looking for
+              else --for some reason this exit has already been sorted!
+                tecWarningNotification("function sortRoomExits, found second corner.direction:"..corner.direction.." exit.")
+              end --if not roomTable["northwest"]
+            elseif roomExits.direction == skipDir then --this is an exit for a nearby room
+              return --stop the check, this exit is for a different room
+            end --if roomExits.direction == corner.direction
+          end --if corner.y == yposRounded
+        end --if corner.x == xposRounded
+      end --for ipairs(cornerTable)
+    else --the exit is of an unknown type.
+      tecWarningNotification("function sortRoomExits, found an exit with an unknown direction. Expected northwest ne hor or ver, received: "..roomExits.direction)
+    end --if roomExits.direction == "hor" or roomExits.direction == "ver", elseif roomExits.direction == "nw" or roomExits.direction == "ne"
+    
+end --local function sortRoomExits()</script>
+								<eventHandlerList />
+							</Script>
+							<Script isActive="yes" isFolder="no">
+								<name>sortAdjacentRooms()</name>
+								<packageName></packageName>
+								<script>--for each know exit, find what room it leads to than track that.
+function sortAdjacentRooms(exitsTable)
+  
+  for exitDirection,directionExitsTable in pairs(exitsTable) do --loop through exits know to be for this room
+    for _, exitTable in ipairs(directionExitsTable) do
+      if exitTable.open then --make certain the exit is open, if it is not there is no room that it connects to.
+        --If this is a corner exit, find the room it leads to, put that room in the parthiaMap.room.confirmedExits[exitDirection].room table
+        if exitDirection == "northwest" or exitDirection == "southwest" or exitDirection == "southeast" or exitDirection == "northeast" then --if this is a corner exit
+        --mapDebug("function sortAdjacentRooms, checking for room at exit: "..exitDirection)
+          --The math for all diaginal movement is the same only variables change
+          if not parthiaMap.room.corners then --if the table does not already exist
+            parthiaMap.room.corners = {} 
+            parthiaMap.room.corners.northwest = { --where the northwest corner is for the current room
+             xpos = parthiaMap.room.xpos, --nw's x position
+             ypos = parthiaMap.room.ypos --nw's y position
+            }
+            parthiaMap.room.corners.northeast = { xpos = parthiaMap.room.xpos+parthiaMap.room.size, ypos = parthiaMap.room.ypos, }
+            parthiaMap.room.corners.southeast = { xpos = parthiaMap.room.xpos+parthiaMap.room.size, ypos = parthiaMap.room.ypos+parthiaMap.room.size, }
+            parthiaMap.room.corners.southwest = { xpos = parthiaMap.room.xpos , ypos = parthiaMap.room.ypos+parthiaMap.room.size}
+          end --if not parthiaMap.room.corners
+          for k,adjacentRoom in ipairs(parthiaMap.room.adjacentRooms) do --loop through rooms know to be adjacent of the players room
+            if not adjacentRoom.sorted then --if the proper exit for this room has not been found yet.
+              local adjacentRoomCorner = {} --Checking for rooms in a corner use the same math for all corners. Only variables change. Use this table to use those variables
+              adjacentRoomCorner.northwest = { --store the x y coords of the corner in this room that matches up with the northwest corner of the players current room
+                xpos = adjacentRoom.xpos+adjacentRoom.size, --x for the corner we want to check
+                ypos = adjacentRoom.ypos+adjacentRoom.size --y for the corner we want to check 
+              } --cornerTable.northwest
+              adjacentRoomCorner.northeast = {xpos = adjacentRoom.xpos, ypos = adjacentRoom.ypos+adjacentRoom.size}
+              adjacentRoomCorner.southeast = {xpos = adjacentRoom.xpos, ypos = adjacentRoom.ypos}
+              adjacentRoomCorner.southwest = {xpos = adjacentRoom.xpos+adjacentRoom.size, ypos = adjacentRoom.ypos}
+              --mapDebug("\tfunction sortAdjacentRooms, checking room, adjacentRoom.xpos: "..adjacentRoom.xpos.." adjacentRoom.ypos: "..adjacentRoom.ypos.." adjacentRoom.size: "..adjacentRoom.size)
+              --mapDebug("\tfunction sortAdjacentRooms, compairing adjacentRoomCorner[exitDirection].xpos: "..adjacentRoomCorner[exitDirection].xpos.." to parthiaMap.room.corners[exitDirection].xpos "
+              --  ..parthiaMap.room.corners[exitDirection].xpos.." AND adjacentRoomCorner[exitDirection].ypos: "..adjacentRoomCorner[exitDirection].ypos
+              --  .." to parthiaMap.room.corners[exitDirection].ypos: "..parthiaMap.room.corners[exitDirection].ypos)
+              if  (adjacentRoomCorner[exitDirection].xpos == parthiaMap.room.corners[exitDirection].xpos) and (adjacentRoomCorner[exitDirection].ypos == parthiaMap.room.corners[exitDirection].ypos) then --if the appropriate corners of the two rooms are aligned this is the correct room for this exit.
+                --mapDebug("function sortAdjacentRooms, parthiaMap.room.adjacentRooms.xpos: "..adjacentRoomCorner[exitDirection].xpos.." parthiaMap.room.adjacentRooms.ypos: "..adjacentRoomCorner[exitDirection].ypos.." is "..exitDirection.." of the current room.")
+                exitTable.room = adjacentRoom --record info for this room in the appropriate exit table
+                adjacentRoom.sorted = true --this room does not need to be checked again.
+                break --found this exit no need to keep looking.
+              end --if  (cornerTable[exitDirection].xpos == parthiaMap.room.xpos) and (cornerTable[exitDirection].ypos == parthiaMap.room.ypos)
+            end --if not roomTable.sorted
+          end --for ipairs(parthiaMap.room.adjacentRooms)
+        elseif exitDirection == "north" or exitDirection == "south" or exitDirection == "east" or exitDirection == "west" then
+          for k,adjacentRoom in ipairs(parthiaMap.room.adjacentRooms) do --loop through rooms know to be adjacent of the players room
+            local sidesTable = {} --track where the sides for this room are
+            sidesTable.north = { --remember each side is a line
+              axisMin = adjacentRoom.xpos, --where n starts for this room. Furthest west location
+              axisMax = adjacentRoom.xpos+adjacentRoom.size, --where n ends for this room. Furthest east location
+              oppositeAxis = adjacentRoom.ypos+adjacentRoom.size, --Where n is on y or it's north south location
+              exitAxis = exitTable.xpos, --where the exit is on x, east west
+              exitOppositeAxis = round(exitTable.ypos) --where the exit is on y, north south
+            } --sidesTable
+            sidesTable.south = { axisMin = adjacentRoom.xpos, axisMax = adjacentRoom.xpos+adjacentRoom.size, oppositeAxis = adjacentRoom.ypos , exitAxis = exitTable.xpos, exitOppositeAxis = round(exitTable.ypos)}
+            sidesTable.east = { axisMin = adjacentRoom.ypos, axisMax = adjacentRoom.ypos+adjacentRoom.size, oppositeAxis = adjacentRoom.xpos , exitAxis = exitTable.ypos, exitOppositeAxis = round(exitTable.xpos)}
+            sidesTable.west = { axisMin = adjacentRoom.ypos, axisMax = adjacentRoom.ypos+adjacentRoom.size, oppositeAxis = adjacentRoom.xpos+adjacentRoom.size, exitAxis = exitTable.ypos, exitOppositeAxis = round(exitTable.xpos) }
+            --using variables above is the exit we are checking within the side of the adjacent that shares a side with the current room
+            if sidesTable[exitDirection].exitAxis &gt;= sidesTable[exitDirection].axisMin and sidesTable[exitDirection].exitAxis &lt;= sidesTable[exitDirection].axisMax
+            and sidesTable[exitDirection].exitOppositeAxis == sidesTable[exitDirection].oppositeAxis then
+              exitTable.room = adjacentRoom --record info for this room in the appropriate exit table
+              adjacentRoom.sorted = true --this room does not need to be checked again.
+            end --if sidesTable[exitDirection].exitAxis &gt;= sidesTable[exitDirection].axisMin and sidesTable[exitDirection].exitAxis &lt;= sidesTable[exitDirection].axisMax and sidesTable[exitDirection].exitOppositeAxis == sidesTable[exitDirection].oppositeAxis
+          end --for ipairs(parthiaMap.room.adjacentRooms)
+        end --if exitDirection.match("northwest")
+      end --if exitTable.open
+    end --for ipairs(directionExitsTable)
+  end --for pairs(parthiaMap.room.confirmedExits)
+end --function sortAdjacentRooms()</script>
 								<eventHandlerList />
 							</Script>
 						</ScriptGroup>
