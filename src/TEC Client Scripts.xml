@@ -12287,6 +12287,8 @@ end --local function specialExitMatch(exit)
 
 function parthiaMap.detectDirection(playerCmd)
 
+  if parthiaMap.directionWalked then return end --if the direction was already collected do not attempt again.
+
   --verify data
   --playerCmd = playerCmd or parthiaMap.directionWalked
   if not playerCmd then --if an argument was not passed
