@@ -3954,6 +3954,47 @@ end --function setCharacterCanSee(mode,displayToScreen)</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
+				<Script isActive="yes" isFolder="no">
+					<name>track run time</name>
+					<packageName></packageName>
+					<script>--[[
+A very easy drop in and take out method for tracking the execution time for a function or process.
+
+Example
+
+function niceHat()
+  parthiaStartRunTime()
+  
+  pecho("Testing execution time.")
+  
+  parthiaStopRunTime()
+end --function niceHat
+
+The example above would output to screen: 
+Parthia Run Time: {
+  minutes = 0,
+  negative = false,
+  milliSeconds = 0,
+  hours = 0,
+  days = 0,
+  seconds = 0
+}
+
+]]--
+
+
+function parthiaStartRunTime()
+  parthiaStopWatch = createStopWatch(true)
+end --parthiaStartRunTime()
+
+function parthiaStopRunTime()
+  getStopWatchBrokenDownTime(parthiaStopWatch)
+  local tbl = getStopWatchBrokenDownTime(parthiaStopWatch)
+  pecho("\n----\nParthia Run Time \ndays: "..tbl.days.."\nhours: "..tbl.hours.."\nminutes: "..tbl.minutes.."\nseconds "..tbl.seconds.."\nmilliseconds "..tbl.milliSeconds.."\n----\n")
+  deleteStopWatch(parthiaStopWatch)
+end</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>GUI</name>
@@ -6925,7 +6966,7 @@ function parthiaDrawMapExits()
   
     mapExitsLC = mapExitsLC +1 --Iterate so we can do this again on a new exit.
   end --end gmatch room data search loop
-  
+
 end --function parthiaDrawMapExits()</script>
 					<eventHandlerList />
 				</Script>
@@ -11019,7 +11060,7 @@ Storing data for the players current room and adjacent rooms only.
 This is what we know with 100% certainty will show up on the TEC Map without light
 ]]--
 function parthiaMap.createMapVerification()
-  
+  parthiaStartRunTime()
   --create a table to store verification data
   parthiaMap.room.mapVerification = {}
   parthiaMap.room.mapVerification.currentRoom = {}
@@ -11067,7 +11108,7 @@ function parthiaMap.createMapVerification()
   parthiaMap.room.mapVerification.currentRoom.size = parthiaMap.room.size
   parthiaMap.room.mapVerification.currentRoom.xpos = parthiaMap.room.xpos
   parthiaMap.room.mapVerification.currentRoom.ypos = parthiaMap.room.ypos
-
+parthiaStopRunTime()
 end --function parthiaMap.createMapVerification()</script>
 								<eventHandlerList />
 							</Script>
@@ -12245,6 +12286,7 @@ local function specialExitMatch(playerCmd)
 end --local function specialExitMatch(exit)
 
 function parthiaMap.detectDirection(playerCmd)
+
   --verify data
   --playerCmd = playerCmd or parthiaMap.directionWalked
   if not playerCmd then --if an argument was not passed
