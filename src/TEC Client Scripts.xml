@@ -6888,12 +6888,12 @@ function parthiaDrawMapRooms()
     elseif tecMapRoomcolor == "#00ff00" then --room color is green, means rooms of simular type
       mapRoom[mapRoomsLC]:setStyleSheet(mapRoomStyleGreen) --make room green on tecMap
       if parthiaMap.getEnabled() then --if player is using parthiaMap
-        parthiaMap.trackTECMapRooms(size, xpos, ypos) --keep track of where this room is for parthiaMap
+        parthiaMap.trackTECMapRooms(size, xpos, ypos, tecMapRoomcolor) --keep track of where this room is for parthiaMap
   	  end --if parthiaMap.getEnabled()
     else --all other rooms
       mapRoom[mapRoomsLC]:setStyleSheet(mapRoomStyleWhite) --make room white on TEC Map
       if parthiaMap.getEnabled() then --if player is using parthiaMap
-        parthiaMap.trackTECMapRooms(size, xpos, ypos) --keep track of where this room is for parthiaMap
+        parthiaMap.trackTECMapRooms(size, xpos, ypos, tecMapRoomcolor) --keep track of where this room is for parthiaMap
       end --if parthiaMap.getEnabled() then --if player is using parthiaMap
     end --if tecMapRoomcolor == "#ff0000"
   	
@@ -11059,56 +11059,216 @@ creates a table from the SKOOT 6 and 10 data.
 Storing data for the players current room and adjacent rooms only.
 This is what we know with 100% certainty will show up on the TEC Map without light
 ]]--
-function parthiaMap.createMapVerification()
 
-  --create a table to store verification data
-  parthiaMap.room.mapVerification = {}
-  parthiaMap.room.mapVerification.currentRoom = {}
+--loop through rooms find room's adjacent to the room that is currently having data gathered
+--done this way to stop the function when a room is found. Than go to an outside loop to get the next room to check
+local function loopRooms(TECMapRoom, adjacentRooms, roomArea)
+  for xi=0, TECMapRoom.size do --loop through the possible adjacent room's x position
+    if roomArea[(TECMapRoom.xpos+xi)] then --if the rooms share a x position
+      for yi=0, TECMapRoom.size do --loop through the possible adjacent room's y position
+        if roomArea[(TECMapRoom.xpos+xi)][(TECMapRoom.ypos+yi)] then --if the rooms share BOTH a x AND y position these rooms are side by size.
+          table.insert(adjacentRooms, table.deepcopy(TECMapRoom)) --record room into adjacent room table. Need need to return it, was passed as a reference.
+          return --match found, do not check this room any longer.
+        end --if parthiaMap.room.area[(TECMapRoom.xpos+xi)][(TECMapRoom.ypos+yi)]
+      end --for yi=0, TECMapRoom.size
+    end --if parthiaMap.room.area[(TECMapRoom.xpos+xi)]
+  end --for xi=0, TECMapRoom.size
+end --function loopRooms(TECMapRoom)
 
-  --copy the confirmed exits table, but leave out its indexing system
-  for k,v in pairs(parthiaMap.room.confirmedExits) do
-    parthiaMap.room.mapVerification.currentRoom[k] = v[1]
-  end --for pairs(parthiaMap.room.confirmedExits)
+--find what exits belong to the room being tracked for verification
+local function mapVerSortAdjacentRooms(exitsTable, roomArea, size, xpos, ypos)
 
-  for exitDirection,exitTable in pairs(parthiaMap.room.mapVerification.currentRoom) do
+  cornerTable = {} --create a table to store coordinates for the corners of this room
+  cornerTable.northwest = { --where the northwest corner is for the current room
+   xpos = xpos, --nw's x position
+   ypos = ypos --nw's y position
+  }
+  cornerTable.northeast = { xpos = xpos+size, ypos = ypos, }
+  cornerTable.southeast = { xpos = xpos+size, ypos = ypos+size, }
+  cornerTable.southwest = { xpos = xpos , ypos = ypos+size}
+  
+  --find rooms next to this room
+  local adjacentRooms = {}
+  for k,roomToCheck in ipairs(parthiaMap.TECMapRooms) do --loop through the rooms found on the Alice TEC Map
+    loopRooms(roomToCheck, adjacentRooms, roomArea) --use the function above because we would like to stop checking when the room is known to be adjacent.
+  end --for k,roomToCheck in ipairs(parthiaMap.TECMapRooms)
 
-    --erase uneeded variables
-    exitTable.open = nil --erase any open bools
-    exitTable.sorted = nil --erase any sorted bools
+  for exitDirection,directionExitsTable in pairs(exitsTable) do --loop through exits know to be for this room
+--pecho("\nmapVerSortAdjacentRooms, exitDirection"..exitDirection.." directionExitsTable: "..tostring(directionExitsTable))  
+    if type(directionExitsTable) == "table" then
+      for _, exitTable in ipairs(directionExitsTable) do
+        if exitTable.open then --make certain the exit is open, if it is not there is no room that it connects to.
+          --If this is a corner exit, find the room it leads to, put that room in the parthiaMap.room.confirmedExits[exitDirection].room table
+          if exitDirection == "northwest" or exitDirection == "southwest" or exitDirection == "southeast" or exitDirection == "northeast" then --if this is a corner exit
+          --mapDebug("function sortAdjacentRooms, checking for room at exit: "..exitDirection)
+          --The math for all diaginal movement is the same only variables change
+          
+            for k,adjacentRoom in ipairs(adjacentRooms) do --loop through rooms know to be adjacent of the players room
+              if not adjacentRoom.sorted then --if the proper exit for this room has not been found yet.
+                local adjacentRoomCorner = {} --Checking for rooms in a corner use the same math for all corners. Only variables change. Use this table to use those variables
+                adjacentRoomCorner.northwest = { --store the x y coords of the corner in this room that matches up with the northwest corner of the players current room
+                  xpos = adjacentRoom.xpos+adjacentRoom.size, --x for the corner we want to check
+                  ypos = adjacentRoom.ypos+adjacentRoom.size --y for the corner we want to check 
+                } --cornerTable.northwest
+                adjacentRoomCorner.northeast = {xpos = adjacentRoom.xpos, ypos = adjacentRoom.ypos+adjacentRoom.size}
+                adjacentRoomCorner.southeast = {xpos = adjacentRoom.xpos, ypos = adjacentRoom.ypos}
+                adjacentRoomCorner.southwest = {xpos = adjacentRoom.xpos+adjacentRoom.size, ypos = adjacentRoom.ypos}
+                --mapDebug("\tfunction sortAdjacentRooms, checking room, adjacentRoom.xpos: "..adjacentRoom.xpos.." adjacentRoom.ypos: "..adjacentRoom.ypos.." adjacentRoom.size: "..adjacentRoom.size)
+                --mapDebug("\tfunction sortAdjacentRooms, compairing adjacentRoomCorner[exitDirection].xpos: "..adjacentRoomCorner[exitDirection].xpos.." to cornerTable[exitDirection].xpos "
+                --  ..cornerTable[exitDirection].xpos.." AND adjacentRoomCorner[exitDirection].ypos: "..adjacentRoomCorner[exitDirection].ypos
+                --  .." to cornerTable[exitDirection].ypos: "..cornerTable[exitDirection].ypos)
+                if  (adjacentRoomCorner[exitDirection].xpos == cornerTable[exitDirection].xpos) and (adjacentRoomCorner[exitDirection].ypos == cornerTable[exitDirection].ypos) then --if the appropriate corners of the two rooms are aligned this is the correct room for this exit.
+                  --mapDebug("function sortAdjacentRooms, parthiaMap.room.adjacentRooms.xpos: "..adjacentRoomCorner[exitDirection].xpos.." parthiaMap.room.adjacentRooms.ypos: "..adjacentRoomCorner[exitDirection].ypos.." is "..exitDirection.." of the current room.")
+                  exitTable.room = adjacentRoom --record info for this room in the appropriate exit table
+                  adjacentRoom.sorted = true --this room does not need to be checked again.
+                  break --found this exit no need to keep looking.
+                end --if  (cornerTable[exitDirection].xpos == xpos) and (cornerTable[exitDirection].ypos == ypos)
+              end --if not roomTable.sorted
+            end --for ipairs(parthiaMap.room.adjacentRooms)
+            
+          elseif exitDirection == "north" or exitDirection == "south" or exitDirection == "east" or exitDirection == "west" then
+          
+            for k,adjacentRoom in ipairs(adjacentRooms) do --loop through rooms know to be adjacent of the players room
+              local sidesTable = {} --track where the sides for this room are
+              sidesTable.north = { --remember each side is a line
+                axisMin = adjacentRoom.xpos, --where n starts for this room. Furthest west location
+                axisMax = adjacentRoom.xpos+adjacentRoom.size, --where n ends for this room. Furthest east location
+                oppositeAxis = adjacentRoom.ypos+adjacentRoom.size, --Where n is on y or it's north south location
+                exitAxis = exitTable.xpos, --where the exit is on x, east west
+                exitOppositeAxis = round(exitTable.ypos) --where the exit is on y, north south
+              } --sidesTable
+              sidesTable.south = { axisMin = adjacentRoom.xpos, axisMax = adjacentRoom.xpos+adjacentRoom.size, oppositeAxis = adjacentRoom.ypos , exitAxis = exitTable.xpos, exitOppositeAxis = round(exitTable.ypos)}
+              sidesTable.east = { axisMin = adjacentRoom.ypos, axisMax = adjacentRoom.ypos+adjacentRoom.size, oppositeAxis = adjacentRoom.xpos , exitAxis = exitTable.ypos, exitOppositeAxis = round(exitTable.xpos)}
+              sidesTable.west = { axisMin = adjacentRoom.ypos, axisMax = adjacentRoom.ypos+adjacentRoom.size, oppositeAxis = adjacentRoom.xpos+adjacentRoom.size, exitAxis = exitTable.ypos, exitOppositeAxis = round(exitTable.xpos) }
+              --using variables above is the exit we are checking within the side of the adjacent that shares a side with the current room
+              if sidesTable[exitDirection].exitAxis &gt;= sidesTable[exitDirection].axisMin and sidesTable[exitDirection].exitAxis &lt;= sidesTable[exitDirection].axisMax
+              and sidesTable[exitDirection].exitOppositeAxis == sidesTable[exitDirection].oppositeAxis then
+                exitTable.room = adjacentRoom --record info for this room in the appropriate exit table
+                adjacentRoom.sorted = true --this room does not need to be checked again.
+              end --if sidesTable[exitDirection].exitAxis &gt;= sidesTable[exitDirection].axisMin and sidesTable[exitDirection].exitAxis &lt;= sidesTable[exitDirection].axisMax and sidesTable[exitDirection].exitOppositeAxis == sidesTable[exitDirection].oppositeAxis
+            end --for ipairs(parthiaMap.room.adjacentRooms)
+          end --if exitDirection.match("northwest")
+          
+        end --if exitTable.open
+      end --for ipairs(directionExitsTable)
+    end --if tpye(exitTable) == "table"
+  end --for pairs(exitsTable)
 
+end --function sortAdjacentRooms()
+
+--check if a room has already been recorded by the verification process
+local function roomRecorded(xpos, ypos, roomTbl)
+  if roomTbl.xpos == xpos and roomTbl.ypos == ypos and roomTbl.mapVerComp then
+    return true --room was found and was previously verified
+  end --if v.xpos == xpos and v.ypos == ypos
+  for k,v in pairs(roomTbl) do --loop through the table passed
+    if type(v) == "table" then
+      if v.room then --if there is a room in the table.
+        if roomRecorded(xpos, ypos, v.room) then --pass that room to this function
+          return true --room already verified do not verify again
+        end --if roomRecorded(xpos,ypos, v.room)
+      end --if v.room
+    end --if type(v) == "table"
+  end --for k,V in pairs(roomTbl)
+end --local function roomRecorded(xpos,ypos)
+
+local function descendRooms(exitTable, exitSide)
+--pecho("\ndescendRooms. exitSide: "..exitSide..", exitTable: "..tostring(exitTable))
+  if type(exitTable) == "table" then --do not conitunue unless this key is a table
+--pecho("\ntable check pass.")
     if exitTable.room then --If the exit leads to a room
-      exitTable.room.sorted = nil  --if a room is on the other side of this exit, erase it's sorted bool
-
-      --match room exits to rooms
+--pecho("\nexitTable.room")
+      exitTable.room.sorted = nil --removed sorted flags collected from movement system.  
+      
       if exitTable.room.size and exitTable.room.xpos and exitTable.room.ypos then --make certain required variables exist.
+
+        --check if this room has already been recorded
+        for _,roomTbl in pairs(parthiaMap.room.mapVerification) do --loop through all recorded rooms
+          if roomRecorded(exitTable.room.xpos, exitTable.room.ypos, roomTbl) then --if the room was in the verification table
+            return --room was verified skip it
+          end --if roomRecorded(exitTable.room.xpos, exitTable.room.ypos, roomTbl)
+        end --for pairs(parthiaMap.room.mapVerification)
+
+--parthiaStartRunTime()
+--[[
+the time from here to the stop run time on the other side of this loop is sometimes up to 15 miliseconds.
+Switching the if room[xposRounded] to using strait math dramatically INCREASES execution time
+]]-- 
+        --Find exits that touch this room
         local roomArea = parthiaMap.getRoomArea(exitTable.room.size, exitTable.room.xpos, exitTable.room.ypos) --get the area of this room
+        local possibleRoomExits = {} --an table to hold the rooms exits
         for _,exitToCheck in ipairs(parthiaMap.TECMapExits) do --loop through all exits that appear on the tec map when player is in this room
-        local xposRounded = round(exitToCheck.xpos)
-        local yposRounded = round(exitToCheck.ypos)
+          local xposRounded = round(exitToCheck.xpos) --round position to nearest whole number
+          local yposRounded = round(exitToCheck.ypos) --round position to nearest whole number
           if roomArea[xposRounded] then --if the exit shares a xposition with the current room on the TECMap
             if roomArea[xposRounded][yposRounded] then --if the exit shares both an x and y position with the current room.
-              if not exitTable.room.exits then exitTable.room.exits = {} end
-              table.insert(exitTable.room.exits, table.deepcopy(exitToCheck)) --exit on map is one for this room. Keep track of it
+              table.insert(possibleRoomExits, table.deepcopy(exitToCheck)) --exit on map is one for this room. Keep track of it
             end --if roomArea[xposRounded][yposRounded]
           end --if roomArea[xposRounded]
         end --for ipairs(parthiaMap.TECMapExits)
+--parthiaStopRunTime()
+
+        for _,possibleRoomExit in ipairs(possibleRoomExits) do --loop through exits that are in this room's area
+          sortRoomExits(possibleRoomExit, exitTable.room, exitTable.room.size, exitTable.room.xpos, exitTable.room.ypos) --Verify exit belongs to this room, than find what direction that exit leads to
+        end --for ipairs(possibleRoomExits)
+      
+        --Removed the exit that was used to decend into this room from the table
+        if exitTable.room[parthiaMap.getEntranceDirection(exitSide)] then exitTable.room[parthiaMap.getEntranceDirection(exitSide)] = nil end
+
+        --find rooms next to this one. Discover what exit leads to them. Place the room in the proper exit table for the current room
+        mapVerSortAdjacentRooms(exitTable.room, roomArea, exitTable.room.size, exitTable.room.xpos, exitTable.room.ypos)
+  
+        --removed the exit data in separate table that is created from sortRoomExits function
+        for roomExitTableSide,roomExitTable in pairs(exitTable.room) do
+          if type(roomExitTable) == "table" then exitTable.room[roomExitTableSide] = table.deepcopy(roomExitTable[1]) end
+        end --for pairs(exitTable.room)
+  
+        exitTable.room.mapVerComp = true --tell function this room has already been verified.
+        
+        --descend into the newly tracked room, find and track rooms within its exits
+        for k,v in pairs(exitTable.room) do
+          if type(v) == "table" then descendRooms(v,k) end --pass the room's table to this function
+        end --for pairs(exitTable.room)
+
       else --required variables not present
-        local erroFound = "function parthiaMap.createMapVerification(), room exists in exit "..exitDirection.." but lacked size, ypos and or xpos."
+        local erroFound = "function parthiaMap.createMapVerification(), room exists in exit "..exitSide.." but lacked size, ypos and or xpos."
         if parthiaMap.mapping then --if player is mapping
           parthiaMap.stopRoomCreation(errorFound) --stop the creation of the room
         end --if parthiaMap.mapping
         tecWarningNotification(erroFound)
       end --if exitTable.room.size and exitTable.room.xpos and exitTable.room.ypos
-
+  
     end --if exitTable.room
+  end --if type(exitTable) ~= "table"
+end --descendRooms(exitTable)
 
-  end --for pairs(parthiaMap.room.mapVerification.currentRoom)
+function parthiaMap.createMapVerification()
+--parthiaStartRunTime() --gather execution time for full app
+--UIManagerClearMainWindow() --clear the screen
+  
+  --create a table to store verification data
+  parthiaMap.room.mapVerification = {}
+  parthiaMap.room.mapVerification.currentRoom = {}
 
-  --add current room size and position last to make sorting above easier
+  --copy the confirmed exits table, removing nested table
+  for exitSide,roomExitTable in pairs(parthiaMap.room.confirmedExits) do
+    parthiaMap.room.mapVerification.currentRoom[exitSide] = table.deepcopy(roomExitTable[1])
+  end --fir pairs(parthiaMap.room.confirmedExits)
+
+  --add current room size, position and color. Tell mapper this room has been verified
   parthiaMap.room.mapVerification.currentRoom.size = parthiaMap.room.size
   parthiaMap.room.mapVerification.currentRoom.xpos = parthiaMap.room.xpos
   parthiaMap.room.mapVerification.currentRoom.ypos = parthiaMap.room.ypos
+  parthiaMap.room.mapVerification.currentRoom.color = "#FF0000"
+  parthiaMap.room.mapVerification.currentRoom.mapVerComp = true --tell function this room has already been verified.
 
+  --Find and sort all rooms and exits in the SKOOT 6 and 10 messages
+  for exitSide,exitTable in pairs(parthiaMap.room.mapVerification.currentRoom) do
+    if type(exitTable) == "table" then descendRooms(exitTable, exitSide) end --descend into rooms mapping all exits for all rooms
+  end --for pairs(parthiaMap.room.mapVerification.currentRoom)
+
+--display(parthiaMap.room.mapVerification)
+--parthiaStopRunTime()
 end --function parthiaMap.createMapVerification()</script>
 								<eventHandlerList />
 							</Script>
@@ -11624,7 +11784,7 @@ This is called in function parthiaDrawMapRooms() and collects the rooms size xpo
 
 --ADD ERROR CHECKING!!!!!!!!!!!!!!!!!
 
-function parthiaMap.trackTECMapRooms(size, xpos, ypos)
+function parthiaMap.trackTECMapRooms(size, xpos, ypos, color)
   if not parthiaMap.TECMapRooms then
     parthiaMap.TECMapRooms = {}
   end
@@ -11639,6 +11799,7 @@ function parthiaMap.trackTECMapRooms(size, xpos, ypos)
     parthiaMap.TECMapRooms[#parthiaMap.TECMapRooms].size = tonumber(size/10) --collect the size for parthiaMap
     parthiaMap.TECMapRooms[#parthiaMap.TECMapRooms].xpos = tonumber(xpos/10) --used to calculate area of room and where other rooms should be created while mapping
     parthiaMap.TECMapRooms[#parthiaMap.TECMapRooms].ypos = tonumber(ypos/10) --used to calculate area of room and where other rooms should be created while mapping
+    parthiaMap.TECMapRooms[#parthiaMap.TECMapRooms].color = color
   else --the table was not created
     tecErrorNotification([[function parthiaMap.trackTECMapRooms, failed to make a room table at parthiaMap.TECMapRooms[]]..(#parthiaMap.TECMapRooms+1).."]")
   end --if parthiaMap.TECMapRooms[#parthiaMap.TECMapRooms]
@@ -11689,7 +11850,7 @@ end --function parthiaMap.trackTECMapExits(direction, xpos, ypos)</script>
 							<script></script>
 							<eventHandlerList />
 							<Script isActive="yes" isFolder="no">
-								<name>parthiaMap.setRoomArea(size, xpos, ypos)</name>
+								<name>parthiaMap.getRoomArea(size, xpos, ypos)</name>
 								<packageName></packageName>
 								<script>--[[
 sets area of a room. According to it's X and Y position. Returns the area as a table.
@@ -11864,7 +12025,7 @@ function parthiaMap.findRoomExits()
   parthiaMap.room.confirmedExits = {}
   
   for _,roomExits in ipairs(parthiaMap.room.TECMapExits) do --loop through exits that are in this room's area
-    sortRoomExits(roomExits, parthiaMap.room.confirmedExits) --sort the exits clearly labeling which exit is what direction. 
+    sortRoomExits(roomExits, parthiaMap.room.confirmedExits, parthiaMap.room.size, parthiaMap.room.xpos, parthiaMap.room.ypos) --sort the exits clearly labeling which exit is what direction. 
   end --for k,roomExits in ipairs(parthiaMap.room.TECMapExits)
   
   sortAdjacentRooms(parthiaMap.room.confirmedExits) --local function for each know exit, find what room it leads to than track that.
@@ -11966,17 +12127,17 @@ if the exit is on the lowest x and dir is "hor" that is the west exit
 if the exit is on the highest y and dir is "ver" that is the south exit, Yes that is correct. Highest.
 if the exit is on the lowest y and dir is "ver" that is the north exit
 ]]--
-function sortRoomExits(roomExits, roomTable)
+function sortRoomExits(roomExits, roomTable, size, xpos, ypos)
   
     --track the location of the room's exits
     local xposRounded = round(roomExits.xpos) --round the positions. They have length, so they are slightly off point so they are centered between the two rooms.
     local yposRounded = round(roomExits.ypos) --round the positions. They have length, so they are slightly off point so they are centered between the two rooms.
     
     --track the area of the room
-    local roomXMin = parthiaMap.room.xpos
-    local roomXMax = parthiaMap.room.xpos + parthiaMap.room.size
-    local roomYMin = parthiaMap.room.ypos
-    local roomYMax = parthiaMap.room.ypos + parthiaMap.room.size
+    local roomXMin = xpos
+    local roomXMax = xpos + size
+    local roomYMin = ypos
+    local roomYMax = ypos + size
     
     if roomExits.direction == "hor" or roomExits.direction == "ver" then -- if this is an east, west, north or south exit
       --Math needed to determin north sout east and west is the same. We only need to change the variables being checked.
