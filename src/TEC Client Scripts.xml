@@ -3665,7 +3665,7 @@ function addLinksToDirections()
       while selectString(tmpRoomType, iterator ) &gt; -1 do --select iterator detected room type
         if tmpRoomType:lower() == "upwards" then tmpRoomType = "up" end --if upwards is room type detected, turn it to up
         if tmpRoomType:lower() == "downwards" then tmpRoomType = "down" end --if downwards is room type detected, turn it to down
-        setLink( [[send("go ]]..tmpRoomType..[[")]], "walk here") --make the selected room type clickable by the player, so they can walk to that room
+        setLink( [[sendMovement("]]..tmpRoomType..[[", "go ", false)]], "walk here") --make the selected room type clickable by the player, so they can walk to that room
         deselect() --dont forget your deselects
         iterator = iterator + 1 --increase loop's iterator
       end --if selectString(tmpRoomType, 1 ) &gt; -1
@@ -3993,6 +3993,51 @@ function parthiaStopRunTime()
   pecho("\n----\nParthia Run Time \ndays: "..tbl.days.."\nhours: "..tbl.hours.."\nminutes: "..tbl.minutes.."\nseconds "..tbl.seconds.."\nmilliseconds "..tbl.milliSeconds.."\n----\n")
   deleteStopWatch(parthiaStopWatch)
 end</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>sendMovement(movDir, movType, echoSend)</name>
+					<packageName></packageName>
+					<script>function sendMovement(movDir, movType, echoSend)
+  
+  --default echoSend to false.
+  if type(echoSend) == "boolean" then
+    echoSend = fuzzyBoolean(echoSend) --error check the echoSend argument
+  else --unsupported data type received, default echoSend to false
+    echoSend = false
+  end -- if echoSend == nil
+  
+  --default movType to "go ". If it is a string make certain there is a space at the end
+  if movType == nil then 
+    movType = "go " 
+  elseif type(movType) == "string" then --if the movement type is a string.
+    if not movType:match("%s$") then movType = movType.." " end --if there is no space at the end of the movement type, put one there.
+  else --unsupported data type, default to "go "
+    movType = "go "
+    tecWarningNotification("function sendMovement, received an unknown data type for argument 2 movType. Defaulting to \"go \".")
+  end --if movType == nil
+
+  if type(movDir) == "string" then --if a string was passed.
+    movDir = movDir:lower() --get the lower case version of the string for matching.
+  else --received an unsupported data type
+    tecErrorNotification("function sendMovement, argument 1 expected a string received a "..type(movDir).." movType is: "..movType..". Please report! An issue here will be address very rapidly.")
+  end --if type(movDir) == "string"
+
+  for direction,tbl in pairs(parthiaMap.directionsTable) do
+    for _,v in ipairs(tbl) do
+      if movDir == v then --if the command player sent matches something in the parthiaMap.directionsTable
+        send(movType..direction, echoSend) --send the command to the server
+        debugToDisplay("function parthiaMap.sendMovement, direction: "..direction.."| movType: "..movType)
+        return --found what we are looking for stop the check
+      end --if movDir == v
+    end --for ipairs(tbl)
+  end --for ipairs(tbl)
+  
+  --non standard movement direction send now
+  send(movType..movDir, echoSend) --send the command to the server
+  debugToDisplay("function parthiaMap.sendMovement, movDir: "..movDir.."| movType: "..movType)
+
+end --function parthiaMap.sendMovement(movDir, echoSend)</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -12379,6 +12424,8 @@ parthiaMap.directionsTable.west = { "west", "wes", "we", "w", "4", 4}
 parthiaMap.directionsTable.northwest = { "nw", "northwest", "7", 7 }
 parthiaMap.directionsTable.north = { "north", "nort", "nor", "no", "n", "8", 8 }
 parthiaMap.directionsTable.northeast = { "ne", "northeast", "9", 9}
+parthiaMap.directionsTable.up = { "u", "up"}
+parthiaMap.directionsTable.down = { "d", "down" }
 
 
 local zMovement = {
@@ -12906,7 +12953,7 @@ tecCompass.se = Geyser.Label:new({
 --go in that direction
 function tecCompass.click(name)
   parthiaMap.detectDirection(name) --track up and down movement
-  send(name)
+  sendMovement(name, "go ", false)
 end --tecCompass.click
 
 --border for up and down macros when a room is available in that direction
@@ -13611,8 +13658,6 @@ MultiWindow.Compass.s = Geyser.Label:new({ name = "MultiWindow.Compass.s", },Mul
 MultiWindow.Compass.ne = Geyser.Label:new({ name = "MultiWindow.Compass.ne", },MultiWindow.Compass.row3)
 MultiWindow.Compass.e = Geyser.Label:new({ name = "MultiWindow.Compass.e", },MultiWindow.Compass.row3)
 MultiWindow.Compass.se = Geyser.Label:new({ name = "MultiWindow.Compass.se", },MultiWindow.Compass.row3)
---function that occurs when a label above is clicked, 
---function MultiWindow.Compass.click(name) send(name) end --send the name of the
 MultiWindow.Compass.click = tecCompass.click --send the name of the 
 function MultiWindow.Compass.lit(name) --When a player can go in the direction, make the label an active image
   if name == "up" or name == "down" then --if it is overlay for up or down label

@@ -2286,18 +2286,20 @@ end --if parthiaMap.getEnabled()</script>
 					<string>That is an invalid direction.</string>
 					<string>You are not next to anything.</string>
 					<string>It is too dark to see where you are going.</string>
-					<string>^You don't see a &amp;quot;.+&amp;quot; here\.$</string>
-					<string>is closed\.$</string>
 					<string>You are not next to anything.</string>
+					<string>The water is too deep to continue any further in that direction.</string>
+					<string>is closed\.$</string>
+					<string>^You don't see a &amp;quot;.+&amp;quot; here\.$</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>3</integer>
 					<integer>3</integer>
 					<integer>3</integer>
 					<integer>3</integer>
-					<integer>1</integer>
-					<integer>1</integer>
 					<integer>3</integer>
+					<integer>3</integer>
+					<integer>1</integer>
+					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
 		</TriggerGroup>

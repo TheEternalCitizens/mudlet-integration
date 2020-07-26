@@ -1512,30 +1512,53 @@ parthiaMap to detect direction player has moved in.
 			<regex></regex>
 			<Alias isActive="yes" isFolder="no">
 				<name>go direction</name>
-				<script>send("go "..matches[2], false)
+				<script>--send("go "..matches[2], false)
+sendMovement(matches[2], "go ", false) --send "go direction", do not echo send to screen
 debugToDisplay("alias go direction, called. Direction "..matches[2])
 parthiaMap.detectDirection(matches[2])</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^go\s+(.+)$</regex>
+				<regex>^(?i)go\s+(.+)$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>climb direction</name>
-				<script>send("climb "..matches[2], false)
+				<script>--send("climb "..matches[2], false)
+sendMovement(matches[2], "climb ", false)
 debugToDisplay("alias climb direction, called. Direction "..matches[2])
 parthiaMap.detectDirection(matches[2])</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^cli(?:m|mb)?\s+(.+)$</regex>
+				<regex>^(?i)cli(?:m|mb)?\s+(.+)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>crawl direction</name>
+				<script>--send("climb "..matches[2], false)
+sendMovement(matches[2], "crawl ", false)
+debugToDisplay("alias climb direction, called. Direction "..matches[2])
+parthiaMap.detectDirection(matches[2])</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^(?i)craw(?:l)?\s+(.+)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>limp direction</name>
+				<script>--send("climb "..matches[2], false)
+sendMovement(matches[2], "crawl ", false)
+debugToDisplay("alias climb direction, called. Direction "..matches[2])
+parthiaMap.detectDirection(matches[2])</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^(?i)limp\s+(.+)$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>retreat direction</name>
-				<script>send("retreat "..matches[2], false)
+				<script>--send("retreat "..matches[2], false)
+sendMovement(matches[2], "retreat ", false)
 debugToDisplay("alias retreat direction, called. Direction: "..matches[2])
 parthiaMap.detectDirection(matches[2])</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^ret(?:r|re|rea|reat)?\s+(.+)$</regex>
+				<regex>^(?i)ret(?:r|re|rea|reat)?\s+(.+)$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>walk direction</name>
@@ -1544,16 +1567,18 @@ command is only walk. Full word. No shorthand
 command will continue to allow the player to walk after it is initially called.
 we do not want to collect anything but "walk wordNoMoreSpaces" so we do not capture. Walk to location
 ]]--
-send("walk "..matches[2], false)
+--send("walk "..matches[2], false)
+sendMovement(matches[2], "walk ", false)
 debugToDisplay("alias walk direction, called. Direction: "..matches[2])
 parthiaMap.detectDirection(matches[2])</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^walk\s+(\w+)$</regex>
+				<regex>^(?i)walk\s+(\w+)$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>movement input</name>
-				<script>send(matches[2], false)
+				<script>--send(matches[2], false)
+sendMovement(matches[2], "go ", false)
 mapDebug("alias movement input, called. Direction found: "..matches[2])
 parthiaMap.detectDirection(matches[2])</script>
 				<command></command>

@@ -27,7 +27,7 @@ runTECRoomObjectCheck()</script>
 				<name>KeyPad 9 -&gt; Walk NE</name>
 				<packageName></packageName>
 				<script></script>
-				<command>NE</command>
+				<command>go northeast</command>
 				<keyCode>57</keyCode>
 				<keyModifier>536870912</keyModifier>
 			</Key>
@@ -35,7 +35,7 @@ runTECRoomObjectCheck()</script>
 				<name>KeyPad 8 -&gt; Walk N</name>
 				<packageName></packageName>
 				<script></script>
-				<command>N</command>
+				<command>go north</command>
 				<keyCode>56</keyCode>
 				<keyModifier>536870912</keyModifier>
 			</Key>
@@ -43,7 +43,7 @@ runTECRoomObjectCheck()</script>
 				<name>KeyPad 7 -&gt; Walk NW</name>
 				<packageName></packageName>
 				<script></script>
-				<command>NW</command>
+				<command>go northwest</command>
 				<keyCode>55</keyCode>
 				<keyModifier>536870912</keyModifier>
 			</Key>
@@ -51,7 +51,7 @@ runTECRoomObjectCheck()</script>
 				<name>KeyPad 6 -&gt; Walk E</name>
 				<packageName></packageName>
 				<script></script>
-				<command>E</command>
+				<command>go east</command>
 				<keyCode>54</keyCode>
 				<keyModifier>536870912</keyModifier>
 			</Key>
@@ -67,7 +67,7 @@ runTECRoomObjectCheck()</script>
 				<name>KeyPad 4 -&gt; Walk W</name>
 				<packageName></packageName>
 				<script></script>
-				<command>W</command>
+				<command>go west</command>
 				<keyCode>52</keyCode>
 				<keyModifier>536870912</keyModifier>
 			</Key>
@@ -75,7 +75,7 @@ runTECRoomObjectCheck()</script>
 				<name>KeyPad 3 - &gt; Walk SE</name>
 				<packageName></packageName>
 				<script></script>
-				<command>SE</command>
+				<command>go southeast</command>
 				<keyCode>51</keyCode>
 				<keyModifier>536870912</keyModifier>
 			</Key>
@@ -83,7 +83,7 @@ runTECRoomObjectCheck()</script>
 				<name>KeyPad 2 -&gt; Walk S</name>
 				<packageName></packageName>
 				<script></script>
-				<command>S</command>
+				<command>go south</command>
 				<keyCode>50</keyCode>
 				<keyModifier>536870912</keyModifier>
 			</Key>
@@ -91,7 +91,7 @@ runTECRoomObjectCheck()</script>
 				<name>KeyPad 1 - Walk SW</name>
 				<packageName></packageName>
 				<script></script>
-				<command>SW</command>
+				<command>go southwest</command>
 				<keyCode>49</keyCode>
 				<keyModifier>536870912</keyModifier>
 			</Key>
@@ -99,7 +99,7 @@ runTECRoomObjectCheck()</script>
 				<name>KeyPad Minus -&gt; Up</name>
 				<packageName></packageName>
 				<script></script>
-				<command>UP</command>
+				<command>go up</command>
 				<keyCode>45</keyCode>
 				<keyModifier>536870912</keyModifier>
 			</Key>
@@ -107,7 +107,7 @@ runTECRoomObjectCheck()</script>
 				<name>KeyPad plus -&gt; Down</name>
 				<packageName></packageName>
 				<script></script>
-				<command>Down</command>
+				<command>go down</command>
 				<keyCode>43</keyCode>
 				<keyModifier>536870912</keyModifier>
 			</Key>
