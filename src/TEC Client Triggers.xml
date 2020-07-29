@@ -49,6 +49,8 @@ deleteLine() --remove line from main console. line variable remains unchanged.
 				<name>TEC Map Rooms</name>
 				<script>--SKOOT 6, provides room sizes and positions for map
 
+deleteLine() --remove line from main console. line variable remains unchanged.
+
 --We are about to draw a new map, so hide all the rooms.
 --We are not going to bother with setting room sizes and moving moves to off screen
 --that are not being used unless we find a need for it.
@@ -65,14 +67,17 @@ mapRoomsLC = 1 --Just a loop counter so we can go through rooms easily.
 parthiaDrawMapRooms()
 
 --We want the map zoom level, but not 100 times.
-if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
-
-deleteLine() --remove line from main console. line variable remains unchanged.
+--if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
 
 --SKOOT 10 is our last room data message. Use data collected from TEC to manage parthiaMap
 if parthiaMap.getEnabled() then --if player is using parthiaMap
   parthiaMap.moveNeeded = true --Movement needs to be delayed because sometimes there is not SKOOT 10 message. This is used to track if movement has already begun. Used in function parthiaMap.delayMove()
   tempTimer(.25, "parthiaMap.delayMove()")
+  if parthiaMap.mapping then --record only if mapping
+    if not parthiaMap.room.SKOOT6 then --if this skoot message has not been recorded.
+      parthiaMap.room.SKOOT6 = string.gsub( line, "(%-?%d+,%-?%d+,%d+,#%x+,)%d+%.?%d*,?", "%1") --record the skoot message without the light variables
+    end --if not parthiaMap.room.SKOOT6
+  end --if parthiaMap.mapping
 end --if parthiaMap.getEnabled()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -105,12 +110,10 @@ if not string.starts(line, "SKOOT") then --do not run if this is a SKOOT message
   parthiaDrawMapRooms()--draw the rooms, use data from global line variable
   deleteLine() --remove line from main console. line variable remains unchanged.
 
-  --tell person mapping they need to recapture the room
-  if parthiaMap.mapping then --if new maps are currently being created
-    pecho("&lt;red&gt;Lag error server side. Please move back erase this room and attempt again.\n&lt;reset&gt;")
-  end --if parthiaMap.mapping
-end
-</script>
+  --tell person mapping why this room was not created
+  parthiaMap.stopRoomCreation("Lag error server side. Maleformed map room data. Please return to the previous room and attempt again.\n")
+  
+end --if not string.starts(line, "SKOOT")</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -132,6 +135,8 @@ end
 				<name>TEC map exits</name>
 				<script>--SKOOT 10 is Exit position on the map
 
+deleteLine() --remove line from main console. line variable remains unchanged.
+
 mapExitsLC = 1 --Just a loop counter so we can go through rooms easily.
 
 parthiaDrawMapExits()
@@ -141,9 +146,7 @@ mapRoom[150]:hide() --mapRoom[150] is used to show exits off message on resize
 mapRoom[150]:lower()
 
 --We want the map zoon level, but not 100 times...
-if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
-
-deleteLine() --remove line from main console. line variable remains unchanged.
+--if getTECMapDebugMode() then debugToDisplay("Map Zoom "..tostring(mapZoom)) end
 
 --SKOOT 10 is our last room data message. Use data collected from TEC to manage parthiaMap
 if parthiaMap.getEnabled() then --if player is using parthiaMap
@@ -182,12 +185,10 @@ if not string.starts(line, "SKOOT") and
   tecMap_back:lower() --lower the background behind the exits.
   deleteLine() --remove line from main console. line variable remains unchanged.
   
-  --tell person mapping they need to recapture the room
-  if parthiaMap.mapping then --if new maps are currently being created
-    pecho("&lt;red&gt;Lag error server side. Please move back erase this room and attempt again.\n&lt;reset&gt;")
-  end --if parthiaMap.mapping
-end --if not string.starts(line, "SKOOT")
-</script>
+  --tell person mapping why this room was not created
+  parthiaMap.stopRoomCreation("Lag error server side. Maleformed map exits data. Please return to the previous room and attempt again.\n")
+
+end --if not string.starts(line, "SKOOT")</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -214,6 +215,30 @@ https://wiki.mudlet.org/w/Manual:String_Functions#string.gmatch.2C_utf8.gmatch
 https://www.lua.org/pil/20.2.html
 ]]--
 
+deleteLine() --remove line from main console. line variable remains unchanged.
+
+--this is the first message that guarentees a full movement has occured. Start new movement
+if parthiaMap.getEnabled() then --if player is using parthiaMap
+  parthiaMap.upAvailable = false
+  parthiaMap.downAvailable = false
+  parthiaMap.TECMapRooms = {} --clear the rooms table so it will not overlap
+  parthiaMap.trackPreviousRoom() --movement complete keep track of what the previous room was
+  if parthiaMap.entranceEcho then --if there was no room entrance echo message collect, this is movement without light. Skip things that require light.
+    parthiaMap.room.entranceEcho = parthiaMap.entranceEcho --record the echo to a variable to sort data from it at a later time.
+    parthiaMap.entranceEcho = false --clear the exits echo message
+    parthiaMap.findSpecialExits() --find special exit names for this room and direction walked if not collected already
+  else --no room entranceEcho available.
+    if getCharacterCanSee() then
+      parthiaMap.stopRoomCreation("The entrance message when entering a room was not received. Return to the previous room and try again.")
+    else
+      parthiaMap.stopRoomCreation("Your character has to see for new map creation. Please use a light source. Return to the previous room and try again.")
+    end --if getCharacterCanSee()
+  end --if parthiaMap.entranceEcho
+  if not parthiaMap.room.SKOOT7 then --if it has not been alrady
+    parthiaMap.room.SKOOT7 = line --record the skoot message to a string
+  end --if not parthiaMap.room.SKOOT7
+end --if parthiaMap.getEnabled()
+
 --get all directions and if they should be showed from the skoot 7 message
 for direction, show in string.gmatch( line, ",?(%a+),(%a+)" ) do
   
@@ -230,9 +255,7 @@ for direction, show in string.gmatch( line, ",?(%a+),(%a+)" ) do
     MultiWindow.Compass.unlit(direction) --show the direction as inactive in the MultiWindow compass
     tecCompass.unlit(direction) --show the direction as inactive in the standard tec compass
   end --if show == "show"
-end --for string.gmatch( line, "(%a%a?),(?%d+)" )
-
-deleteLine() --remove line from main console. line variable remains unchanged.</script>
+end --for string.gmatch( line, ",?(%a+),(%a+)" )</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -1118,6 +1141,8 @@ end
 
 if tecUsername then tecUsername = nil end --remove the username, it is no longer needed
 
+parthiaMap.notMovement = true --parthia map will skip the next movement check. Movement will be completed by script `setStatsCheckActive(mode)` when trigger `stats` is done collecting character data.
+
 --Set default text in room characters window
 tecResetRoomCharacterWindow()
 
@@ -1932,20 +1957,14 @@ tecRoomCharRefreshNotification()</script>
 				<name>Player enters a room</name>
 				<script>--triggers when the player enters a new room.
 
-if parthiaMap.getEnabled() then --if player is using parthiaMap
-  parthiaMap.upAvailable = false
-  parthiaMap.downAvailable = false
-  parthiaMap.TECMapRooms = {} --clear the rooms table so it will not overlap
-  parthiaMap.trackPreviousRoom() --movement complete keep track of what the previous room was
-  parthiaMap.room.exitEcho = line --record the echo to a variable to sort data from it at a later time.
-  parthiaMap.findSpecialExits() --find special exit names for this room and direction walked if not collected already
-end --if parthiaMap.getEnabled()
+setCharacterCanSee(true) --tell parthia if the play can or can not see currently
+
+parthiaMap.entranceEcho = line --record the echo to a variable to sort data from it at a later time.
 
 --Set default text in room characters window
 tecResetRoomCharacterWindow()
 
---stop waiting for the drover, so it will not auto follow after a player has walked away while waiting for a drover.
-parthiaSetWaitForDrover(false)
+parthiaSetWaitForDrover(false) --stop waiting for the drover, so it will not auto follow after a player has walked away while waiting for a drover.
 
 addLinksToDirections() --add links to directions in main window. Collect room types for Help Developers commands.
 
@@ -1993,7 +2012,7 @@ tecRoomCharRefreshNotification()</script>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Vision loss</name>
 				<script>--Triggers when the player can not see.
-</script>
+setCharacterCanSee(false) --tell parthia if the play can or can not see currently</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -2006,9 +2025,11 @@ tecRoomCharRefreshNotification()</script>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
 					<string>It is too dark to see anything.</string>
+					<string>Your immediate surroundings are obscured by darkness.</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>3</integer>
+					<integer>2</integer>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
@@ -2048,6 +2069,7 @@ end --if lookRan then
 
 if line:match("You are facing") then --if line has "You are facing" in it we want to use the directions clicks.
   addLinksToDirections() --add links to directions in main window. Collect room types for Help Developers commands.
+  setCharacterCanSee(true) --tell parthia if the play can or can not see currently
 else --if the line does NOT have "You are facing" in it we want to use the character clicks.
   addLinksToCharacters("look")
 end --if line:match("You are facing")
@@ -2102,8 +2124,8 @@ end --if getHelpDevs()</script>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>You are in the middle of something.</name>
 				<script>if parthiaMap.getEnabled() then --if player is using parthiaMap
-  parthiaMap.dirtectionCollected = false
-  mapDebug("trigger You are in the middle of something., possible failed movement found set directionCollected to false.")
+  parthiaMap.directionWalked = false --direction the player has walked
+  mapDebug("trigger You are in the middle of something., possible failed movement found set parthiaMap.directionWalked to false.")
 end --if parthiaMap.getEnabled()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -2195,6 +2217,52 @@ end --if parthiaStopRan</script>
 					<integer>3</integer>
 				</regexCodePropertyList>
 			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>player moves</name>
+				<script>--occurs when player starts a movement
+
+parthiaSetWaitForDrover(false) --stop waiting for the drover, so it will not auto follow after a player has walked away while waiting for a drover.
+
+--collect map data
+if parthiaMap.getEnabled() then --if parthia map is enabled
+  parthiaMap.descriptionOfExitUsed = matches[2] --stores the description of the exit player used.
+  mapDebug("trigger player moves, collected exit description: "..matches[2])
+  if matches[3] then --collect a direction walked if it was found
+    parthiaMap.detectDirection(matches[3])
+    parthiaMap.toExit = true --tell mapper if an exit that echos "walk to" was used
+  end --if matches[3]
+end --if parthiaMap.getEnabled()
+
+--previous patterns that have failed.
+--^You \w+ to (?:a|an) ((?:\w+\s*)+), to the (\w+)\.$
+--^You \w+ to (?:a|an) ((?:[a-zA-z0-9]+\s*)+), to the (\w+)\.$
+--^You \w+ to (?:a\s|an\s|the\s|The\s)?((?:[a-zA-z0-9\.]+\-?\s*)+), to the (\w+)\.$
+--You climb down the stone steps, gingerly stepping into the chilled waters of the frigidarium.</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^You \w+ through (?:a\s|an\s|the\s|The\s|some\s)(.+)\.$</string>
+					<string>^You \w+ to (?:a\s|an\s|the\s|The\s|some\s)?((?:[^,]+\s*)+), to the (\w+)\.$</string>
+					<string>^You climb (?:a\s|an\s|the\s|The\s|some\s)((?:[^,]+\s*)+)\.$</string>
+					<string>^You \w+ (?:up|down)\s(?:a\s|an\s|the\s|The\s|some\s)(?:\w+\s*)+ to (?:a\s|an\s|the\s|The\s)((?:[^,]+\s*)+), to the (\w+)\.$</string>
+					<string>^You climb down (?:a\s|an\s|the\s|The\s|some\s)((?:[^,]+\s*)+), </string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
 		</TriggerGroup>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>parthia mapper</name>
@@ -2215,8 +2283,8 @@ end --if parthiaStopRan</script>
 				<name>failed movement</name>
 				<script>--in case player types goes a direction that is not available than goes in a different direction
 if parthiaMap.getEnabled() then --if player is using parthiaMap
-  parthiaMap.dirtectionCollected = false
-  mapDebug("trigger failed movement, possible failed movement found set directionCollected to false.")
+  parthiaMap.directionWalked = false --direction the player has walked
+  mapDebug("trigger failed movement, possible failed movement found set parthiaMap.directionWalked to false.")
 end --if parthiaMap.getEnabled()</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -2233,39 +2301,18 @@ end --if parthiaMap.getEnabled()</script>
 					<string>That is an invalid direction.</string>
 					<string>You are not next to anything.</string>
 					<string>It is too dark to see where you are going.</string>
-					<string>^You don't see a &amp;quot;.+&amp;quot; here\.$</string>
-					<string>is closed\.$</string>
 					<string>You are not next to anything.</string>
+					<string>The water is too deep to continue any further in that direction.</string>
+					<string>is closed\.$</string>
+					<string>^You don't see a &amp;quot;.+&amp;quot; here\.$</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>3</integer>
 					<integer>3</integer>
 					<integer>3</integer>
 					<integer>3</integer>
-					<integer>1</integer>
-					<integer>1</integer>
 					<integer>3</integer>
-				</regexCodePropertyList>
-			</Trigger>
-			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>collect exit description</name>
-				<script>parthiaMap.descriptionOfExitUsed = matches[2] --stores the description of the exit player used.
-mapDebug("trigger collect exit description, collected exit description: "..matches[2])</script>
-				<triggerType>0</triggerType>
-				<conditonLineDelta>0</conditonLineDelta>
-				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
-				<mFgColor>#ff0000</mFgColor>
-				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
-				<colorTriggerFgColor>#000000</colorTriggerFgColor>
-				<colorTriggerBgColor>#000000</colorTriggerBgColor>
-				<regexCodeList>
-					<string>^You walk through (?:a|an) (.+)\.$</string>
-					<string>^You walk to (?:a|an) (.+),</string>
-				</regexCodeList>
-				<regexCodePropertyList>
+					<integer>3</integer>
 					<integer>1</integer>
 					<integer>1</integer>
 				</regexCodePropertyList>
@@ -2288,7 +2335,7 @@ mapDebug("trigger collect exit description, collected exit description: "..match
 			<regexCodePropertyList />
 			<TriggerGroup isActive="no" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Courses 4 Part</name>
-				<script>if line:match([[&lt;/font&gt;&lt;font color="#000000"&gt;You are on a wide, grassy field. Little divots across the turf indicate that one or several horses have run across it at some point, perhaps in cavalry practice. The short grass is barely two inches high, and looks to be meticulously kept that way. Jutting from the ground is a brightly glowing lantern hanging from a pole. &lt;/font&gt;]]) then
+				<script>if line:match([[&lt;/font&gt;&lt;font color=%"#%x+%"&gt;You are on a wide, grassy field. Little divots across the turf indicate that one or several horses have run across it at some point, perhaps in cavalry practice. The short grass is barely two inches high, and looks to be meticulously kept that way. Jutting from the ground is a brightly glowing lantern hanging from a pole. &lt;/font&gt;]]) then
   if courses.lookRan then 
     tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go south")]])
@@ -2315,7 +2362,7 @@ elseif line:match("&lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are no longer bus
   tempTimer(1, [[send("go south")]])
 elseif line:match("^You arrive at a mud pit. ") then
   tempTimer(1, [[send("jump rope")]])
-elseif line:match([[   &lt;/font&gt;&lt;font color="#000000"&gt;You approach the start of a training course. This challenge is a muddy pit with a beam erected over it. Swinging from the beam is a muddy rope. It looks as though you have to jump at the rope to swing across the pit.  &lt;/font&gt;]]) then
+elseif line:match([[   &lt;/font&gt;&lt;font color=%"#%x+%"&gt;You approach the start of a training course. This challenge is a muddy pit with a beam erected over it. Swinging from the beam is a muddy rope. It looks as though you have to jump at the rope to swing across the pit.  &lt;/font&gt;]]) then
   if courses.lookRan then
     tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("jump rope")]])
@@ -2324,7 +2371,7 @@ elseif line:match([[   &lt;/font&gt;&lt;font color="#000000"&gt;You approach the
   end
 elseif line:match([[^You arrive at a path through swinging weights. ]]) then
   tempTimer(1, [[send("go path")]])
-elseif line:match([[   &lt;/font&gt;&lt;font color="#000000"&gt;This is the second test on this training course. Here you must test your agility by going along a path that has heavy bags of sand swinging across it. The object is to not get hit.  &lt;/font&gt;$]]) then
+elseif line:match([[&lt;/font&gt;&lt;font color=%"#%x+%"&gt;This is the second test on this training course. Here you must test your agility by going along a path that has heavy bags of sand swinging across it. The object is to not get hit.  &lt;/font&gt;$]]) then
   if courses.lookRan then
     tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go path")]])
@@ -2333,7 +2380,7 @@ elseif line:match([[   &lt;/font&gt;&lt;font color="#000000"&gt;This is the seco
   end --if courses.lookRan
 elseif line:match([[^You arrive at a circular track. ]]) then
   tempTimer(1, [[send("go track")]])
-elseif line:match([[   &lt;/font&gt;&lt;font color="#000000"&gt;This third training area involves a circular track that has a pole spinning around it. You must go along the track, running laps and stay in front of the pole or it will knock you flat.  &lt;/font&gt;$]]) then
+elseif line:match([[&lt;/font&gt;&lt;font color=%"#%x+%"&gt;This third training area involves a circular track that has a pole spinning around it. You must go along the track, running laps and stay in front of the pole or it will knock you flat.  &lt;/font&gt;$]]) then
   if courses.lookRan then
     tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go track")]])
@@ -2342,7 +2389,7 @@ elseif line:match([[   &lt;/font&gt;&lt;font color="#000000"&gt;This third train
   end --if courses.lookRan
 elseif line:match([[^You arrive at a bed of hot coals. ]]) then
   tempTimer(1, [[send("go coal")]])
-elseif line:match([[&lt;/font&gt;&lt;font color="#000000"&gt;This place is the last test on this course. You must prove your willpower by walking across the bed of hot coals.  &lt;/font&gt;$]]) then
+elseif line:match([[&lt;/font&gt;&lt;font color=%"#%x+%"&gt;This place is the last test on this course. You must prove your willpower by walking across the bed of hot coals.  &lt;/font&gt;$]]) then
   if courses.lookRan then
     tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go coal")]])

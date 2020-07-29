@@ -364,7 +364,7 @@ tecClientReset(true)</script>
 				<packageName></packageName>
 				<regex>^parthia tab font size (.*)$</regex>
 			</Alias>
-			<Alias isActive="yes" isFolder="no">
+			<Alias isActive="no" isFolder="no">
 				<name>parthia update</name>
 				<script>DownloadGitScripts() --Begin downloading updates</script>
 				<command></command>
@@ -1138,8 +1138,29 @@ pecho("Cleared room and previousRoom tables.\n")</script>
 					<regex>^parthia map danger (.*)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
+					<name>parthia map userdata</name>
+					<script>if matches[3] then --if there is a second argument
+  parthiaMap.echoUserData(matches[2], matches[3])
+else
+  parthiaMap.echoUserData(matches[2])
+end --if matches[3]</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia map userdata(?:\s+(\w+\d*))?(?:\s+(\w*\d*))?$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia map unique</name>
+					<script>parthiaMap.makeRoomUnique() --verrifies current room is unique then makes it unique.
+</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>parthia map unique(?:\s+((?:\w+|\d+)))?</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
 					<name>/map</name>
-					<script>local cmd, arg = matches[2]:match("^(%a+)%s*(.*)")
+					<script>local cmd = matches[2] or false
+local arg = matches[3] or false
+local arg2 = matches[4] or false
 
 if cmd then
   if cmd == "up" then
@@ -1151,7 +1172,7 @@ if cmd then
   elseif cmd == "areaadd" then
     parthiaMap.addArea(arg) --add the new map area
   elseif cmd == "arearemove" then
-    parthiaMap.removeArea(arg, true) --remove the area, display success or failure to screen
+      parthiaMap.removeArea(arg, true) --remove the area, display success or failure to screen
   elseif cmd == "areaclear" then
     parthiaMap.clearAreaRooms(arg)
   elseif cmd == "area" then
@@ -1159,16 +1180,24 @@ if cmd then
   elseif cmd == "coord" then
     pecho("Command not created yet.\n")
   elseif cmd == "danger" then
-    parthiaMap.setDanger(arg, true)
+    parthiaMap.setDanger(arg, true) --set danager level for rooms being created
   elseif cmd == "unique" then
+    parthiaMap.makeRoomUnique() --verrifies current room is unique then makes it unique.
+  elseif cmd == "stock" then
     pecho("Command not created yet.\n")
-  elseif cmd == "first" then
+  elseif cmd == "learn" then
     pecho("Command not created yet.\n")
-  elseif cmd == "store" then
-    pecho("Command not created yet.\n")
+  elseif cmd == "help" then
+    parthiaMap.help()
+  elseif cmd == "userdata" then
+    if arg2 then --if there is a second argument
+      parthiaMap.echoUserData(arg, arg2) --display user data if it exists
+    else
+      parthiaMap.echoUserData(arg) --display user data if it exists
+    end --if arg2
   else
-    pecho("No mapping command: "..cmd.."\n")
-  end
+    pecho("&lt;yellow&gt;No mapping command: "..cmd.."&lt;reset&gt;\n")
+  end --if cmd == elseif
 
 else --no additional text after /map in command
 
@@ -1178,7 +1207,7 @@ else --no additional text after /map in command
 end --if cmd</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^/map(.*)$</regex>
+					<regex>^/map(\w+)?(?:\s+(\w+\d*))?(?:\s+(\w*\d*))?$</regex>
 				</Alias>
 			</AliasGroup>
 			<Alias isActive="yes" isFolder="no">
@@ -1483,30 +1512,53 @@ parthiaMap to detect direction player has moved in.
 			<regex></regex>
 			<Alias isActive="yes" isFolder="no">
 				<name>go direction</name>
-				<script>send("go "..matches[2], false)
+				<script>--send("go "..matches[2], false)
+sendMovement(matches[2], "go ", false) --send "go direction", do not echo send to screen
 debugToDisplay("alias go direction, called. Direction "..matches[2])
 parthiaMap.detectDirection(matches[2])</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^go\s+(.+)$</regex>
+				<regex>^(?i)go\s+(.+)$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>climb direction</name>
-				<script>send("climb "..matches[2], false)
+				<script>--send("climb "..matches[2], false)
+sendMovement(matches[2], "climb ", false)
 debugToDisplay("alias climb direction, called. Direction "..matches[2])
 parthiaMap.detectDirection(matches[2])</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^cli(?:m|mb)?\s+(.+)$</regex>
+				<regex>^(?i)cli(?:m|mb)?\s+(.+)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>crawl direction</name>
+				<script>--send("climb "..matches[2], false)
+sendMovement(matches[2], "crawl ", false)
+debugToDisplay("alias climb direction, called. Direction "..matches[2])
+parthiaMap.detectDirection(matches[2])</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^(?i)craw(?:l)?\s+(.+)$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>limp direction</name>
+				<script>--send("climb "..matches[2], false)
+sendMovement(matches[2], "crawl ", false)
+debugToDisplay("alias climb direction, called. Direction "..matches[2])
+parthiaMap.detectDirection(matches[2])</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^(?i)limp\s+(.+)$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>retreat direction</name>
-				<script>send("retreat "..matches[2], false)
+				<script>--send("retreat "..matches[2], false)
+sendMovement(matches[2], "retreat ", false)
 debugToDisplay("alias retreat direction, called. Direction: "..matches[2])
 parthiaMap.detectDirection(matches[2])</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^ret(?:r|re|rea|reat)?\s+(.+)$</regex>
+				<regex>^(?i)ret(?:r|re|rea|reat)?\s+(.+)$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>walk direction</name>
@@ -1515,16 +1567,18 @@ command is only walk. Full word. No shorthand
 command will continue to allow the player to walk after it is initially called.
 we do not want to collect anything but "walk wordNoMoreSpaces" so we do not capture. Walk to location
 ]]--
-send("walk "..matches[2], false)
+--send("walk "..matches[2], false)
+sendMovement(matches[2], "walk ", false)
 debugToDisplay("alias walk direction, called. Direction: "..matches[2])
 parthiaMap.detectDirection(matches[2])</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^walk\s+(\w+)$</regex>
+				<regex>^(?i)walk\s+(\w+)$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>movement input</name>
-				<script>send(matches[2], false)
+				<script>--send(matches[2], false)
+sendMovement(matches[2], "go ", false)
 mapDebug("alias movement input, called. Direction found: "..matches[2])
 parthiaMap.detectDirection(matches[2])</script>
 				<command></command>
