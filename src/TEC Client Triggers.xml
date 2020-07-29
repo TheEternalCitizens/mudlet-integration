@@ -2221,14 +2221,23 @@ end --if parthiaStopRan</script>
 				<name>player moves</name>
 				<script>--occurs when player starts a movement
 
-parthiaMap.descriptionOfExitUsed = matches[2] --stores the description of the exit player used.
-mapDebug("trigger player moves, collected exit description: "..matches[2])
-
 parthiaSetWaitForDrover(false) --stop waiting for the drover, so it will not auto follow after a player has walked away while waiting for a drover.
 
-if matches[3] then --collect a direction walked if it was found
-  parthiaMap.detectDirection(matches[3])
-end --if matches[3]</script>
+--collect map data
+if parthiaMap.getEnabled() then --if parthia map is enabled
+  parthiaMap.descriptionOfExitUsed = matches[2] --stores the description of the exit player used.
+  mapDebug("trigger player moves, collected exit description: "..matches[2])
+  if matches[3] then --collect a direction walked if it was found
+    parthiaMap.detectDirection(matches[3])
+    parthiaMap.toExit = true --tell mapper if an exit that echos "walk to" was used
+  end --if matches[3]
+end --if parthiaMap.getEnabled()
+
+--previous patterns that have failed.
+--^You \w+ to (?:a|an) ((?:\w+\s*)+), to the (\w+)\.$
+--^You \w+ to (?:a|an) ((?:[a-zA-z0-9]+\s*)+), to the (\w+)\.$
+--^You \w+ to (?:a\s|an\s|the\s|The\s)?((?:[a-zA-z0-9\.]+\-?\s*)+), to the (\w+)\.$
+--You climb down the stone steps, gingerly stepping into the chilled waters of the frigidarium.</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -2240,10 +2249,16 @@ end --if matches[3]</script>
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>^You \w+ through (?:a|an) ((?:\w+\s*)+)\.$</string>
-					<string>^You \w+ to (?:a|an) ((?:\w+\s*)+), to the (\w+)\.$</string>
+					<string>^You \w+ through (?:a\s|an\s|the\s|The\s|some\s)(.+)\.$</string>
+					<string>^You \w+ to (?:a\s|an\s|the\s|The\s|some\s)?((?:[^,]+\s*)+), to the (\w+)\.$</string>
+					<string>^You climb (?:a\s|an\s|the\s|The\s|some\s)((?:[^,]+\s*)+)\.$</string>
+					<string>^You \w+ (?:up|down)\s(?:a\s|an\s|the\s|The\s|some\s)(?:\w+\s*)+ to (?:a\s|an\s|the\s|The\s)((?:[^,]+\s*)+), to the (\w+)\.$</string>
+					<string>^You climb down (?:a\s|an\s|the\s|The\s|some\s)((?:[^,]+\s*)+), </string>
 				</regexCodeList>
 				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
 					<integer>1</integer>
 					<integer>1</integer>
 				</regexCodePropertyList>

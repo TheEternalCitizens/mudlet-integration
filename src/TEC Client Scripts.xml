@@ -9793,7 +9793,8 @@ parthiaMap = parthiaMap or {} --table to hold the mapper data.
 --parthiaMap.moveNeeded = false --Movement needs to be delayed because sometimes there is not SKOOT 10 message. This is used to track if movement has already begun. Used in function parthiaMap.delayMove()
 --parthiaMap.danger = 0 --Used to show a message to player if they have fewer combat ranks than the danger rating
 --parthiaMap.previousDanger = 0 --Tracks the last change in danger level to avoid repeated danger messages to player
---parthiaMap.creationStopReason = false --if a reason comes up to stop new room creation this will be a string to tell map creator why it was stopped.</script>
+--parthiaMap.creationStopReason = false --if a reason comes up to stop new room creation this will be a string to tell map creator why it was stopped.
+--parthiaMap.toExit = false --tell mapper if an exit that echos "walk to" was used.</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
 					<name>parthiaMap.help()</name>
@@ -10371,6 +10372,8 @@ function parthiaMap.setCharacterLocation(id, displayToScreen)
     parthiaMap.entryIndex = 1 --index used to tell what exit was entered through to get to current room
     parthiaMap.exitIndex = 1 --index used to tell what exit was exited through from previous room to get to current room
     parthiaMap.directionWalked = false --direction the player has walked
+    parthiaMap.descriptionOfExitUsed = false --description of the ext player last used.
+    parthiaMap.toExit = false --tell mapper if an exit that echos "walk to" was used
     if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name] then --if the current character has location in the map save table.
       parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].roomID = id --record the id to the map settings save table
       parthiaMap.room.id = id --record the ID to the mapper current room's id.
@@ -10466,34 +10469,119 @@ function parthiaMap.connectRooms()
   local entryIndex = parthiaMap.entryIndex --index used to tell what exit was entered through to get to current room
   local exitIndex = parthiaMap.exitIndex --index used to tell what exit was exited through from previous room to get to current room
   local plCmdExitDesc = parthiaMap.playerCmd:match("^%d*%s*(.+)%s*") --capture the description of the exit provided in the player's command
+  local errorFound = false --used to detect if an error occured.
+  local resolutionMessage = " Please go to the previous room remove this room and attempt again."
+
+  --verify required variables are present.
+  if not entryDir then
+    errorFound = "function parthiaMap.connectRooms, no entryDir variable."
+  elseif not parthiaMap.previousRoom.id then
+    errorFound = "function parthiaMap.connectRooms, no parthiaMap.previousRoom.id variable."
+  elseif not parthiaMap.room.id then
+    errorFound = "function parthiaMap.connectRooms, no parthiaMap.room.id variable."
+  end --if not entryDir
+  if erroFound then --stop function is variables are not present
+    pecho("&lt;green&gt;"..errorFound..resolutionMessage.."&lt;reset&gt;\n")
+    return false
+  end --if erroFound
 
   if not parthiaMap.specialExitAttempted then --if the movement was a cardinal direction
     --connect exit stubs that appear on map.
     mapDebug("function parthiaMap.connectRooms, connecting previous room ID: "..parthiaMap.previousRoom.id.." to current room ID "..parthiaMap.room.id.." using previous room exit "..parthiaMap.directionWalked..". In if not parthiaMap.specialExitAttempted.")
     setExit(parthiaMap.previousRoom.id, parthiaMap.room.id, parthiaMap.directionWalked)
-    mapDebug("function parthiaMap.connectRooms, connecting current room ID: "..parthiaMap.room.id.." to previous room ID "..parthiaMap.previousRoom.id.." using current room exit "..parthiaMap.getEntranceDirection().."In if not parthiaMap.specialExitAttempted.")
-    setExit(parthiaMap.room.id, parthiaMap.previousRoom.id, parthiaMap.getEntranceDirection())
+    mapDebug("function parthiaMap.connectRooms, connecting current room ID: "..parthiaMap.room.id.." to previous room ID "..parthiaMap.previousRoom.id.." using current room exit "..parthiaMap.getEntranceDirection()..". In if not parthiaMap.specialExitAttempted.")
+    setExit(parthiaMap.room.id, parthiaMap.previousRoom.id, entryDir)
   end --if not parthiaMap.specialExitAttempted
 
-  --get the special exit that leads to the previous room
-  local entrySpecialExit = "" --will store what special exit leads to previous room
-  for spExitName,spExitTbl in pairs(parthiaMap.room.specialExits) do --look through the special exits in this room
-    if parthiaMap.descriptionOfExitUsed:lower() == spExitName:lower() then
-      entrySpecialExit = spExitName:lower()
-      break --stop as we found what we are looking for
-    end --ipairs(spExitTbl)
-  end --for pairs(parthiaMap.room.specialExits)
+  if not parthiaMap.descriptionOfExitUsed then --verify required data is present.
+    tecErrorNotification("function parthiaMap.connectRooms, parthiaMap.descriptionOfExitUsed is nil.")
+    return false
+  end --if parthiaMap.descriptionOfExitUsed
+  
+  --get exit name in this room that leads to the previous room
+  local entrySpecialExit = false --will store what special exit leads to previous room
+  if parthiaMap.toExit then
+    for spExitName,spExitTbl in pairs(parthiaMap.room.specialExits) do --Try to exact match exit names with the exit that was used to exits in this room
+      if parthiaMap.previousRoom.name:lower() == spExitName:lower() then
+        entrySpecialExit = spExitName:lower()
+        break --stop as we found what we are looking for
+      end --ipairs(spExitTbl)
+    end --for pairs(parthiaMap.room.specialExits)
+    if not entrySpecialExit then --failed to find the entrySpecialExit
+      for spExitName,spExitTbl in pairs(parthiaMap.room.specialExits) do --Try to partially match exit names with the exit that was used to exits in this room
+        local spExitMatch = ReplaceStringMagicChar(parthiaMap.previousRoom.name:lower()) --get the lower case version of the string, ecscaping all magic characters.
+        if spExitName:lower():match(spExitMatch) then --attempt to find something that contains the partial exit name.
+          entrySpecialExit = spExitName:lower() --record the matched exit
+          pecho("\n&lt;green&gt;Mapper not able to find full match of previous room's name \""..parthiaMap.previousRoom.name:lower().."\" in this rooms special exits list. Special exit match for room: "..parthiaMap.room.id.." to room: "..parthiaMap.previousRoom.id..". Guessed special exit to previous room as: "..entrySpecialExit..".&lt;reset&gt;")
+          break --found what was needed stop loop
+        end --if spExitName:lower():match(spExitMatch)
+      end --for(parthiaMap.previousRoom.specialExits)
+    end --if not entrySpecialExit then
+  else --an exit that echos "You movemntType to a roomType" was not used. "You movementType through exitDescription" was used
+    for spExitName,spExitTbl in pairs(parthiaMap.room.specialExits) do --Try to exact match exit names with the exit that was used to exits in this room
+      if spExitName:lower() == parthiaMap.descriptionOfExitUsed:lower() then --attempt to find something that contains the partial exit name.
+        entrySpecialExit = spExitName:lower() --record the matched exit
+        break --found what was needed stop loop
+      end --if spExitName:lower():match(spExitMatch)
+    end --for(parthiaMap.previousRoom.specialExits)
+    if not entrySpecialExit then --failed to find the entrySpecialExit
+      for spExitName,spExitTbl in pairs(parthiaMap.room.specialExits) do --Try to partially match exit names with the exit that was used to exits in this room
+        local spExitMatch = ReplaceStringMagicChar(parthiaMap.descriptionOfExitUsed:lower()) --get the lower case version of the string, ecscaping all magic characters.
+        if spExitName:lower():match(spExitMatch) then --attempt to find something that contains the partial exit name.
+          entrySpecialExit = spExitName:lower() --record the matched exit
+          pecho("\n&lt;green&gt;Mapper not able to find full match of the exit used \""..parthiaMap.descriptionOfExitUsed:lower().."\" that leads to the previous room. Special exit match for room: "..parthiaMap.room.id.." to room: "..parthiaMap.previousRoom.id..". Guessed special exit to previous room as: "..entrySpecialExit..".&lt;reset&gt;")
+          break --found what was needed stop loop
+        end --if spExitName:lower():match(spExitMatch)
+      end --for(parthiaMap.previousRoom.specialExits)
+    end --if not entrySpecialExit then
+  end --if parthiaMap.toExit
+  if not entrySpecialExit then --failed to find the entrySpecialExit
+    tecErrorNotification("function parthiaMap.connectRooms, entrySpecialExit was not collected.")
+    return false
+  end --if not entrySpecialExit
   
   --get the special exit used to get to this room
-  local exitedSpecialExit = ""
+  local exitedSpecialExit = false
   for spExitName,spExitTbl in pairs(parthiaMap.previousRoom.specialExits) do --look through the special exits in this room
     if parthiaMap.descriptionOfExitUsed:lower() == spExitName:lower() then
       exitedSpecialExit = spExitName:lower()
+      break --found what was needed stop loop
     end --ipairs(spExitTbl)
   end --for pairs(parthiaMap.room.specialExits)
+  if not exitedSpecialExit then
+    for spExitName,spExitTbl in pairs(parthiaMap.previousRoom.specialExits) do
+      local spExitMatch = ReplaceStringMagicChar(parthiaMap.descriptionOfExitUsed:lower()) --get the lower case version of the string, ecscaping all magic characters.
+      if spExitName:lower():match(spExitMatch) then --attempt to find something that contains the partial exit name.
+        exitedSpecialExit = spExitName:lower() --record the matched exit
+        pecho("\n&lt;green&gt;Mapper not able to find full match of the special exit that leads from the previous room to this room. Special exit match for room: "..parthiaMap.previousRoom.id.." to "..parthiaMap.room.id..". Guessed special exit from previous room to this room as: "..exitedSpecialExit..".&lt;reset&gt;")
+        break --found what was needed stop loop
+      end --if spExitName:lower():match(spExitMatch)
+    end --for(parthiaMap.previousRoom.specialExits)
+    if not exitedSpecialExit then --failed to find the exitedSpecialExit by matching also
+      tecErrorNotification("function parthiaMap.connectRooms, exitedSpecialExit was not collected.")
+      return false
+    end --if not exitedSpecialExit
+  end --if not exitedSpecialExit
+  
+  --make unique exit, a special exit that does not appear on the exits echo list. Requires the person mapping to manually use the exit.
+  if parthiaMap.specialExitAttempted then --if a special exit was attempted this movement.
+    if not plCmdExitDesc then
+      errorFound = "function parthiaMap.connectRooms, variable plCmdExitDesc missing. Skipping check for unique exit usage."
+    end
+    if erroFound then --stop function is variables are not present
+      pecho("&lt;green&gt;"..errorFound.."&lt;reset&gt;\n")
+      errorFound = false
+    else
+      local uniqueExit = exitedSpecialExit:match(plCmdExitDesc) --if the players command is not already about to be mapped. 
+      if not uniqueExit then --if there was no match to the
+        addSpecialExit(parthiaMap.previousRoom.id, parthiaMap.room.id, parthiaMap.playerCmd)
+        mapDebug("function parthiaMap.connectRooms, unique exit from room id: "..parthiaMap.previousRoom.id.." to room id: "..parthiaMap.room.id.." exit type: \""..parthiaMap.playerCmd.."\"")
+      end --if not uniqueExit
+    end --if errorFound
+  end --if parthiaMap.specialExitAttempted
   
   --find what order the previous room appeared in the SKOOT 6 message
-  local entrySpecialExitRoomOrder = ""
+  local entrySpecialExitRoomOrder = false
   for k,v in ipairs(parthiaMap.room.adjacentRooms) do --loop through rooms that are next to this one
     --find the previous room in the adjacentRooms table
     if  parthiaMap.room.confirmedExits[entryDir]
@@ -10506,8 +10594,16 @@ function parthiaMap.connectRooms()
       end ----find the order the room appear in on SKOOT 6 message
     end --if  parthiaMap.room.confirmedExits[entryDir]
   end --ipairs(parthiaMap.room.adjacentRooms)
+  if not entrySpecialExitRoomOrder then
+    if #parthiaMap.room.confirmedExits == 0 then --this is a room with no or only up and or down exits
+      entrySpecialExitRoomOrder = 1
+    else --failed to find the room in the confirmedExits table. Give room an out of bounds number.
+      entrySpecialExitRoomOrder = 20
+      pecho("\n&lt;yellow&gt;function parthiaMap.connectRooms, entrySpecialExitRoomOrder was not collected, defaulting to 20. Room: "..parthiaMap.room.id.." exit: "..entrySpecialExit.." please find the exits order number and update it in the exits window.&lt;reset&gt;")
+    end
+  end --if not entrySpecialExitRoomOrder
   --find the order this room appeared in the previous rooms SKOOT 6 message
-  local exitedSpecialExitRoomOrder = ""
+  local exitedSpecialExitRoomOrder = false
   for k,v in ipairs(parthiaMap.previousRoom.adjacentRooms) do --loop through rooms that are next to this one
     --find the previous room in the adjacentRooms table
     if  parthiaMap.previousRoom.confirmedExits[exitDir]
@@ -10520,31 +10616,30 @@ function parthiaMap.connectRooms()
       end --find the order the room appear in on SKOOT 6 message
     end --if parthiaMap.previousRoom.confirmedExits[exitDir]
   end --ipairs(parthiaMap.room.adjacentRooms)
-
-  --make unique exit, a special exit that does not appear on the exits echo list. Requires the person mapping to manually use the exit.
-  if parthiaMap.specialExitAttempted then --if a special exit was attempted this movement.
-    local uniqueExit = exitedSpecialExit:match(plCmdExitDesc) --if the players command is not already about to be mapped. 
-    if not uniqueExit then --if there was no match to the
-      addSpecialExit(parthiaMap.previousRoom.id, parthiaMap.room.id, parthiaMap.playerCmd)
-      mapDebug("function parthiaMap.connectRooms, unique exit from room id: "..parthiaMap.previousRoom.id.." to room id: "..parthiaMap.room.id.." exit type: \""..parthiaMap.playerCmd.."\"")
-    end --if not uniqueExit
-  end --if parthiaMap.specialExitAttempted
-
+  if not exitedSpecialExitRoomOrder then
+    if #parthiaMap.previousRoom.confirmedExits == 0 then --this is a room with no or only up and or down exits
+      exitedSpecialExitRoomOrder = 1
+    else --failed to find the room in the confirmedExits table. Give room an out of bounds number.
+      exitedSpecialExitRoomOrder = 20
+      pecho("\n&lt;yellow&gt;function parthiaMap.connectRooms, exitedSpecialExitRoomOrder was not collected, defaulting to 20. Room: "..parthiaMap.room.id.." exit: "..exitedSpecialExit.." please find the exits order number and update it in the exits window.&lt;reset&gt;")
+    end --if #parthiaMap.previousRoom.confirmedExits == 0
+  end --if not entrySpecialExitRoomOrder
+  
   --if movement is up or down. Create the special exit now. Stopping further data sorting
   if entryDir == "up" or entryDir == "down" then 
-    addSpecialExit(parthiaMap.previousRoom.id, parthiaMap.room.id, exitedSpecialExit)
-    mapDebug("function parthiaMap.connectRooms, special exit from room id: "..parthiaMap.previousRoom.id.." to room id: "..parthiaMap.room.id.." exit type: \""..exitedSpecialExit.."\"")
-    addSpecialExit(parthiaMap.room.id, parthiaMap.previousRoom.id, entrySpecialExit)
-    mapDebug("function parthiaMap.connectRooms, special exit from room id: "..parthiaMap.room.id.." to room id: "..parthiaMap.previousRoom.id.." exit type: \""..exitedSpecialExit.."\"")
-    return --function has done what was needed. Stop it.
+    addSpecialExit(parthiaMap.previousRoom.id, parthiaMap.room.id, exitedSpecialExit.."@#"..exitedSpecialExitRoomOrder)
+    mapDebug("function parthiaMap.connectRooms, special exit from room id: "..parthiaMap.previousRoom.id.." to room id: "..parthiaMap.room.id.." exit type: \""..exitedSpecialExit.."\". Inside if entryDir == \"up\" or entryDir == \"down\"")
+    addSpecialExit(parthiaMap.room.id, parthiaMap.previousRoom.id, entrySpecialExit.."@#"..entrySpecialExitRoomOrder)
+    mapDebug("function parthiaMap.connectRooms, special exit from room id: "..parthiaMap.room.id.." to room id: "..parthiaMap.previousRoom.id.." exit type: \""..exitedSpecialExit.."\". Inside if entryDir == \"up\" or entryDir == \"down\"")
+    return true --function has done what was needed. Stop it.
   end --if entryDir == "up" or entryDir == "down"
   
   --create a standard special exit.
   --parthiaMap.previousRoom.id, parthiaMap.room.id, parthiaMap.directionWalked
   addSpecialExit(parthiaMap.previousRoom.id, parthiaMap.room.id, exitedSpecialExit.."@#"..exitedSpecialExitRoomOrder)
-  mapDebug("function parthiaMap.connectRooms, special exit from room id: "..parthiaMap.previousRoom.id.." to room id: "..parthiaMap.room.id.." exit type: \""..exitedSpecialExit.."@#"..exitedSpecialExitRoomOrder.."\". Inside else of if parthiaMap.specialExitAttempted.")
+  mapDebug("function parthiaMap.connectRooms, special exit from room id: "..parthiaMap.previousRoom.id.." to room id: "..parthiaMap.room.id.." exit type: \""..exitedSpecialExit.."@#"..exitedSpecialExitRoomOrder.."\".")
   addSpecialExit(parthiaMap.room.id, parthiaMap.previousRoom.id, entrySpecialExit.."@#"..entrySpecialExitRoomOrder)
-  mapDebug("function parthiaMap.connectRooms, special exit from room id: "..parthiaMap.room.id.." to room id: "..parthiaMap.previousRoom.id.." exit type: \""..exitedSpecialExit.."@#"..exitedSpecialExitRoomOrder.."\". Inside else of if parthiaMap.specialExitAttempted")
+  mapDebug("function parthiaMap.connectRooms, special exit from room id: "..parthiaMap.room.id.." to room id: "..parthiaMap.previousRoom.id.." exit type: \""..entrySpecialExit.."@#"..entrySpecialExitRoomOrder.."\".")
 
   if parthiaMap.specialExitAttempted then --special movement while mapping used
     if #parthiaMap.room.confirmedExits[entryDir] &lt; 2 then
@@ -10555,6 +10650,8 @@ function parthiaMap.connectRooms()
       pecho("&lt;green&gt;Multiple exits found in each room of movement. You will need to return to the previous room to map the path from this room, to the previous room.&lt;reset&gt;\n")
     end --if #parthiaMap.room.confirmedExits[entryDir] &lt; 2
   end --if parthiaMap.specialExitAttempted
+  
+  return true --completed no errors encountered
 end --function parthiaMap.connectRooms()</script>
 						<eventHandlerList />
 					</Script>
@@ -10585,6 +10682,9 @@ function parthiaMap.addRoom(room, previousRoom)
     return
   elseif not parthiaMap.room.SKOOT6 then
     pecho("\n&lt;green&gt;No SKOOT 6 message recorded. Please return to the previous room and attempt again.&lt;reset&gt;\n")
+    return
+  elseif not parthiaMap.descriptionOfExitUsed then --verify required data is present.
+    pecho("\n&lt;green&gt;Unable to record the description of the exit used to enter this room. Please return to the previous room and attempt again.&lt;reset&gt;\n")
     return
   end --if parthiaMap.getRoomCreationStop()
 
@@ -12144,7 +12244,13 @@ function parthiaMap.findSpecialExits(exitEcho)
   
   local tmpCurrentRoomType = exitEcho:match("^You arrive at (%P+)%p")
   if tmpCurrentRoomType then --if something was found above.
-      parthiaMap.room.name = tmpCurrentRoomType --collect this description for a room name.
+    --if the name starts with "a " "an " "the " or blank spaces. Remove them.
+    if tmpCurrentRoomType:match("^a ") then tmpCurrentRoomType = tmpCurrentRoomType:gsub("^a ", "") end
+    if tmpCurrentRoomType:match("^an ") then tmpCurrentRoomType = tmpCurrentRoomType:gsub("^an ", "") end
+    if tmpCurrentRoomType:match("^the ") then tmpCurrentRoomType = tmpCurrentRoomType:gsub("^the ", "") end
+    if tmpCurrentRoomType:match("^The ") then tmpCurrentRoomType = tmpCurrentRoomType:gsub("^The ", "") end
+    if tmpCurrentRoomType:match("^ ") then tmpCurrentRoomType = tmpCurrentRoomType:gsub("^%s+", "") end
+    parthiaMap.room.name = tmpCurrentRoomType --collect this description for a room name.
   end --if tmpCurrentRoomType
 
   parthiaMap.detectDirection(exitEcho:match(" You are facing (%a+)%.")) --record direction player walked 
