@@ -10393,6 +10393,7 @@ function parthiaMap.setCharacterLocation(id, displayToScreen)
       else --do not display error message to file.
         tecErrorNotification("function parthiaMap.setCharacterLocation, "..errorFound, false)
       end --if displayToScreen
+      return errorFound
     end --if errorFound
     if displayToScreen then pecho("Player in room id: "..tostring(id)..".\n") end
   else
@@ -10436,8 +10437,22 @@ function parthiaMap.checkCharacter(displayToScreen)
       if displayToScreen then pecho(parthiaMessage) end
       mapDebug("function parthiaMap.checkCharacter, "..parthiaMessage)
     end --if errorFound
---code for finding a room hash here
+  else
+    mapDebug("function parthiaMap.checkCharacter, did not recover room id. Character could be off mapped area.")
   end --if parthiaMap.saveTable[character].roomID
+  
+  --record coordinates and area if they were retreaved.
+  if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].coords then 
+    parthiaMap.room.coords = parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].coords --load characters last coordinates
+  else --coordinates were not found
+    tecWarningNotification("function parthiaMap.checkCharacter, did not recover coordinates.")
+  end --if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].coords
+  if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].areaID then 
+    parthiaMap.currentAreaID = parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].areaID 
+  else --currentAreaID was not found
+    tecWarningNotification("function parthiaMap.checkCharacter, did not recover currentAreaID.")
+  end --load characters last area id
+  
 end --parthiaMap.loadCharater(character)</script>
 						<eventHandlerList />
 					</Script>
