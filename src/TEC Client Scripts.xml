@@ -10732,7 +10732,6 @@ function parthiaMap.addRoom(room, previousRoom)
     setRoomUserData(room.id, "exitsEcho", parthiaMap.room.exitsEcho) --store the exits echo message, that appears in the entrance echo message
     setRoomUserData(room.id, "SKOOT6", parthiaMap.room.SKOOT6) --store the SKOOT 6 message, with the light variable removed.
     
-    parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
   end --if parthiaMap.mapping
 end --function parthiaMap.addRoom()</script>
 						<eventHandlerList />
@@ -11642,7 +11641,7 @@ function parthiaMap.Move(room, previousRoom, directionWalked)
   if parthiaMap.notMovement then --if the trigger that called this function was not from movement. Stop the function
     parthiaMap.notMovement = false
     mapDebug("function parthiaMap.Move, parthiaMap.notMovement was set to true, skipping this movement.")
-    return
+    return 0
   end --if parthiaMap.notMovement
 
   if previousRoom then --if we are not mapping the first room
@@ -11653,7 +11652,7 @@ function parthiaMap.Move(room, previousRoom, directionWalked)
       parthiaMap.room.id = previousRoom.id --record the corrent room id.
       parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved. Also resets special movement booleans.
       mapDebug("function parthiaMap.Move, found room within room. No movement room id copied.")
-      return --stop the movement
+      return parthiaMap.room.id--stop the movement, notifing that movement completed correct
     end --if  next(parthiaMap.room.confirmedExits) == nil and next(parthiaMap.room.specialExits) == nil
   
     --find the keys needed for exited and entered exits.
@@ -11862,7 +11861,6 @@ Fix is probably using the two room sizes to resolve.
       if parthiaMap.previousRoom.id then --make certain the previous room had an ID. If room creation was stopped with parthiaMap.stopRoomCreation there will be none
         parthiaMap.connectRooms() --connect the exit nodes for the room player is in and the one they moved from
       end --if parthiaMap.previousRoom.id
-      parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
     end --if parthiaMap.mapping
   else --no unexpected room found
     if parthiaMap.mapping then --if player is creating new maps
@@ -11872,8 +11870,15 @@ Fix is probably using the two room sizes to resolve.
     end --if parthiaMap.mapping
   end --if roomFound[0]
   
+  parthiaMap.setCharacterLocation() --set the character's location
   mapDebug("function parthiaMap.Move, Completed mapping space that was previously unmapped.")
-
+  
+  --return a room id if one was recorded. 0 if not.
+  if room.id then
+    return room.id
+  else
+    return 0 --tell system movement completed but room creation was not.
+  end
 end --parthiaMap.Move(room, previousRoom, directionWalked)</script>
 						<eventHandlerList />
 					</Script>
