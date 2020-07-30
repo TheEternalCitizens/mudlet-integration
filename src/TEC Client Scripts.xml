@@ -10378,7 +10378,7 @@ function parthiaMap.setCharacterLocation(id, displayToScreen)
       tecWarningNotification("function parthiaMap.setCharacterLocation, "..errorFound)
     end --if roomExists
   else --no room id is available
-    id = 0 --set id to 0 if we do not know what it should be. This will tell engine to use parthiaMap.room.coords instead for movement
+    id = false --set id to 0 if we do not know what it should be. This will tell engine to use parthiaMap.room.coords instead for movement
     parthiaMap.room.id = id --record the ID to the mapper current room's id.
   end --if id
     
