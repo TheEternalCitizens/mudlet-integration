@@ -4040,6 +4040,16 @@ end</script>
 end --function parthiaMap.sendMovement(movDir, echoSend)</script>
 					<eventHandlerList />
 				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaSetDiscordID()</name>
+					<packageName></packageName>
+					<script>--https://wiki.mudlet.org/w/Manual:Discord_Functions
+function parthiaSetDiscordID()
+  --setDiscordApplicationID("738761219556638840")
+  setDiscordGame("Parthia, The Eternal City")
+end</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>GUI</name>
@@ -14086,7 +14096,9 @@ end --if getHelpDevs()
 parthiaMap.config() --load default settings for mapping system
 parthiaMap.load() --load mapping data from file.
 
-parthiaStopScripts(false) --make certain script triggers are not running on startup</script>
+parthiaStopScripts(false) --make certain script triggers are not running on startup
+
+parthiaSetDiscordID() --inform discord what game the logged in player is playing.</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
 					<name>UIManager</name>
