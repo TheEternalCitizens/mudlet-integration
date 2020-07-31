@@ -14015,7 +14015,7 @@ function authenticationInput(_, userInput)
       debugToDisplay("function authenticationInput, found cookie file at the start of login, attempting to delete.")
       os.remove(cookieFile) --remove the authentication cookie
     end --if io.exists(cookieFile)
-    cURLCommand = cURLCommand..[[ -X POST https://login.eternalcitygame.com/login.php -b biscuit=test -c "]]..cookieFile..[[" -d "submit=true&amp;uname=]]..tecUsername:lower()..[[&amp;pwd=]]..tecPassword..[["]]
+    cURLCommand = cURLCommand..[[ --ssl-no-revoke -X POST https://login.eternalcitygame.com/login.php -b biscuit=test -c "]]..cookieFile..[[" -d "submit=true&amp;uname=]]..tecUsername:lower()..[[&amp;pwd=]]..tecPassword..[[" ]]
     tecPassword = nil --remove the password it is not longer needed
     --if debug message for cURLCommand added, remove password first
     
