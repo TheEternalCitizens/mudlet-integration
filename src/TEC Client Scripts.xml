@@ -4040,6 +4040,16 @@ end</script>
 end --function parthiaMap.sendMovement(movDir, echoSend)</script>
 					<eventHandlerList />
 				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaSetDiscordID()</name>
+					<packageName></packageName>
+					<script>--https://wiki.mudlet.org/w/Manual:Discord_Functions
+function parthiaSetDiscordID()
+  --setDiscordApplicationID("738761219556638840")
+  setDiscordGame("Parthia, The Eternal City")
+end</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>GUI</name>
@@ -10350,6 +10360,18 @@ examples:
   parthiaMap.setCharacterLocation(3, true) --sets the characters location on the parthia map to room id 3. Messages displayed on main console and all error and debug consoles.
 ]]--
 function parthiaMap.setCharacterLocation(id, displayToScreen)
+  
+  --reset movement variables to defaults
+  parthiaMap.playerClimbed = false
+  parthiaMap.specialExitMovement = false
+  parthiaMap.specialExitAttempted = false --records if a special exit was attempted. Used to automatically create a special exit for mappers.
+  parthiaMap.entryIndex = 1 --index used to tell what exit was entered through to get to current room
+  parthiaMap.exitIndex = 1 --index used to tell what exit was exited through from previous room to get to current room
+  parthiaMap.directionWalked = false --direction the player has walked
+  parthiaMap.descriptionOfExitUsed = false --description of the ext player last used.
+  parthiaMap.toExit = false --tell mapper if an exit that echos "walk to" was used
+  
+  --make certain arguments are good
   id = id or parthiaMap.room.id --set id to current rooms id
   displayToScreen = fuzzyBoolean(displayToScreen)
   
@@ -10357,45 +10379,36 @@ function parthiaMap.setCharacterLocation(id, displayToScreen)
     local roomsAreaID = getRoomArea(id) --check if this room id has an area set.
     if roomsAreaID then --all rooms are know to have areas. We are using this to verify this room exists.
       parthiaMap.room.id = id --update the current room's id
+      parthiaMap.roomUserDataCheck() --check userdata stores
+      centerview(id) --highly characters room on the map
+      parthiaMap.currentAreaID = roomsAreaID --collect the area ID of the current room
     else --the room does not exist
       local errorFound = "Attempted to change character location to room id: "..id.." the room was not found."
       if displayToScreen then pecho(errorFound) end
       tecWarningNotification("function parthiaMap.setCharacterLocation, "..errorFound)
-      return roomsAreaID
     end --if roomExists
-    centerview(id) --highly characters room on the map
-    parthiaMap.currentAreaID = roomsAreaID --collect the area ID of the current room
-    --reset movement variables to defaults
-    parthiaMap.playerClimbed = false
-    parthiaMap.specialExitMovement = false
-    parthiaMap.specialExitAttempted = false --records if a special exit was attempted. Used to automatically create a special exit for mappers.
-    parthiaMap.entryIndex = 1 --index used to tell what exit was entered through to get to current room
-    parthiaMap.exitIndex = 1 --index used to tell what exit was exited through from previous room to get to current room
-    parthiaMap.directionWalked = false --direction the player has walked
-    parthiaMap.descriptionOfExitUsed = false --description of the ext player last used.
-    parthiaMap.toExit = false --tell mapper if an exit that echos "walk to" was used
-    if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name] then --if the current character has location in the map save table.
-      parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].roomID = id --record the id to the map settings save table
-      parthiaMap.room.id = id --record the ID to the mapper current room's id.
-      local errorFound = parthiaTableSave(parthiaMap.saveTable, parthiaMap.savePath, false, false) --save the location change to file. So location is know on startup.
-      if errorFound then --an error was found
-        if displayToScreen then --display error message to file
-          tecErrorNotification("function parthiaMap.setCharacterLocation, "..errorFound)
-        else --do not display error message to file.
-          tecErrorNotification("function parthiaMap.setCharacterLocation, "..errorFound, false)
-        end --if displayToScreen
-      end --if errorFound
-      if displayToScreen then pecho("Player in room id: "..tostring(id)..".\n") end
-    else
-      tecWarningNotification("function parthiaMap.setCharacterLocation, table key parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name] unavailable.")
-    end --if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name]
-    parthiaMap.roomUserDataCheck() --check userdata stores
   else --no room id is available
-    local errorFound = "No room ID after data verification.\n"
-    if displayToScreen then pecho(errorFound) end
-    tecWarningNotification("function parthiaMap.setCharacterLocation, "..errorFound)
-    return errorFound
+    id = false --set id to 0 if we do not know what it should be. This will tell engine to use parthiaMap.room.coords instead for movement
+    parthiaMap.room.id = id --record the ID to the mapper current room's id.
   end --if id
+    
+  if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name] then --if the current character has location in the map save table.
+    parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].roomID = id --record the id to the map settings save table
+    if parthiaMap.currentAreaID then parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].areaID = parthiaMap.currentAreaID end --record the current area ID
+    if parthiaMap.room.coords then parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].coords = parthiaMap.room.coords end --record the player's coordinates in the current area
+    local errorFound = parthiaTableSave(parthiaMap.saveTable, parthiaMap.savePath, false, false) --save the location change to file. So location is know on startup.
+    if errorFound then --an error was found
+      if displayToScreen then --display error message to file
+        tecErrorNotification("function parthiaMap.setCharacterLocation, "..errorFound)
+      else --do not display error message to file.
+        tecErrorNotification("function parthiaMap.setCharacterLocation, "..errorFound, false)
+      end --if displayToScreen
+      return errorFound
+    end --if errorFound
+    if displayToScreen then pecho("Player in room id: "..tostring(id)..".\n") end
+  else
+    tecWarningNotification("function parthiaMap.setCharacterLocation, table key parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name] unavailable.")
+  end --if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name]
 
 end --function parthiaMap.setCharacterLocation(id, displayToScreen)</script>
 						<eventHandlerList />
@@ -10434,8 +10447,22 @@ function parthiaMap.checkCharacter(displayToScreen)
       if displayToScreen then pecho(parthiaMessage) end
       mapDebug("function parthiaMap.checkCharacter, "..parthiaMessage)
     end --if errorFound
---code for finding a room hash here
+  else
+    mapDebug("function parthiaMap.checkCharacter, did not recover room id. Character could be off mapped area.")
   end --if parthiaMap.saveTable[character].roomID
+  
+  --record coordinates and area if they were retreaved.
+  if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].coords then 
+    parthiaMap.room.coords = parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].coords --load characters last coordinates
+  else --coordinates were not found
+    tecWarningNotification("function parthiaMap.checkCharacter, did not recover coordinates.")
+  end --if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].coords
+  if parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].areaID then 
+    parthiaMap.currentAreaID = parthiaMap.saveTable[parthiaPlayer.CurrentCharacter.name].areaID 
+  else --currentAreaID was not found
+    tecWarningNotification("function parthiaMap.checkCharacter, did not recover currentAreaID.")
+  end --load characters last area id
+  
 end --parthiaMap.loadCharater(character)</script>
 						<eventHandlerList />
 					</Script>
@@ -10732,7 +10759,6 @@ function parthiaMap.addRoom(room, previousRoom)
     setRoomUserData(room.id, "exitsEcho", parthiaMap.room.exitsEcho) --store the exits echo message, that appears in the entrance echo message
     setRoomUserData(room.id, "SKOOT6", parthiaMap.room.SKOOT6) --store the SKOOT 6 message, with the light variable removed.
     
-    parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
   end --if parthiaMap.mapping
 end --function parthiaMap.addRoom()</script>
 						<eventHandlerList />
@@ -11642,7 +11668,7 @@ function parthiaMap.Move(room, previousRoom, directionWalked)
   if parthiaMap.notMovement then --if the trigger that called this function was not from movement. Stop the function
     parthiaMap.notMovement = false
     mapDebug("function parthiaMap.Move, parthiaMap.notMovement was set to true, skipping this movement.")
-    return
+    return 0
   end --if parthiaMap.notMovement
 
   if previousRoom then --if we are not mapping the first room
@@ -11653,7 +11679,7 @@ function parthiaMap.Move(room, previousRoom, directionWalked)
       parthiaMap.room.id = previousRoom.id --record the corrent room id.
       parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved. Also resets special movement booleans.
       mapDebug("function parthiaMap.Move, found room within room. No movement room id copied.")
-      return --stop the movement
+      return parthiaMap.room.id--stop the movement, notifing that movement completed correct
     end --if  next(parthiaMap.room.confirmedExits) == nil and next(parthiaMap.room.specialExits) == nil
   
     --find the keys needed for exited and entered exits.
@@ -11862,7 +11888,6 @@ Fix is probably using the two room sizes to resolve.
       if parthiaMap.previousRoom.id then --make certain the previous room had an ID. If room creation was stopped with parthiaMap.stopRoomCreation there will be none
         parthiaMap.connectRooms() --connect the exit nodes for the room player is in and the one they moved from
       end --if parthiaMap.previousRoom.id
-      parthiaMap.setCharacterLocation() --center on the new room, make certain character location gets saved
     end --if parthiaMap.mapping
   else --no unexpected room found
     if parthiaMap.mapping then --if player is creating new maps
@@ -11872,8 +11897,15 @@ Fix is probably using the two room sizes to resolve.
     end --if parthiaMap.mapping
   end --if roomFound[0]
   
+  parthiaMap.setCharacterLocation() --set the character's location
   mapDebug("function parthiaMap.Move, Completed mapping space that was previously unmapped.")
-
+  
+  --return a room id if one was recorded. 0 if not.
+  if room.id then
+    return room.id
+  else
+    return 0 --tell system movement completed but room creation was not.
+  end
 end --parthiaMap.Move(room, previousRoom, directionWalked)</script>
 						<eventHandlerList />
 					</Script>
@@ -13983,7 +14015,7 @@ function authenticationInput(_, userInput)
       debugToDisplay("function authenticationInput, found cookie file at the start of login, attempting to delete.")
       os.remove(cookieFile) --remove the authentication cookie
     end --if io.exists(cookieFile)
-    cURLCommand = cURLCommand..[[ -X POST https://login.eternalcitygame.com/login.php -b biscuit=test -c "]]..cookieFile..[[" -d "submit=true&amp;uname=]]..tecUsername:lower()..[[&amp;pwd=]]..tecPassword..[["]]
+    cURLCommand = cURLCommand..[[ --ssl-no-revoke -X POST https://login.eternalcitygame.com/login.php -b biscuit=test -c "]]..cookieFile..[[" -d "submit=true&amp;uname=]]..tecUsername:lower()..[[&amp;pwd=]]..tecPassword..[[" ]]
     tecPassword = nil --remove the password it is not longer needed
     --if debug message for cURLCommand added, remove password first
     
@@ -14064,7 +14096,9 @@ end --if getHelpDevs()
 parthiaMap.config() --load default settings for mapping system
 parthiaMap.load() --load mapping data from file.
 
-parthiaStopScripts(false) --make certain script triggers are not running on startup</script>
+parthiaStopScripts(false) --make certain script triggers are not running on startup
+
+parthiaSetDiscordID() --inform discord what game the logged in player is playing.</script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
 					<name>UIManager</name>
