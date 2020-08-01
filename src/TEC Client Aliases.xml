@@ -364,7 +364,7 @@ tecClientReset(true)</script>
 				<packageName></packageName>
 				<regex>^parthia tab font size (.*)$</regex>
 			</Alias>
-			<Alias isActive="no" isFolder="no">
+			<Alias isActive="yes" isFolder="no">
 				<name>parthia update</name>
 				<script>DownloadGitScripts() --Begin downloading updates</script>
 				<command></command>
@@ -1419,11 +1419,11 @@ tecRoomCharRefreshNotification()</script>
 			</AliasGroup>
 			<Alias isActive="yes" isFolder="no">
 				<name>look</name>
-				<script>send("look",false)
+				<script>send(matches[2],false)
 lookRan = true --tell triggers player has run the look command</script>
 				<command></command>
 				<packageName></packageName>
-				<regex>^(?i)(?:l(?:ook|oo|o)?)\s*$</regex>
+				<regex>^(?i)((?:l(?:ook|oo|o)?))\s*$</regex>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>skills</name>
@@ -1577,8 +1577,13 @@ parthiaMap.detectDirection(matches[2])</script>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>movement input</name>
-				<script>--send(matches[2], false)
-sendMovement(matches[2], "go ", false)
+				<script>send(matches[2], false)
+--[[
+created to resolve an issue where a player attempting to walk in a diaginol direction that does not exist, would trigger the special exit movement.
+Do a different direction and echo they were going the direction indicated by the command. This will break the Parthiamap. However this would highjack all movement input.
+Rendering input at @ prompts like @ macro useless.
+sendMovement(matches[2], "go ", false) 
+]]--
 mapDebug("alias movement input, called. Direction found: "..matches[2])
 parthiaMap.detectDirection(matches[2])</script>
 				<command></command>
