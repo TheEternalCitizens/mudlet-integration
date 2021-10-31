@@ -284,42 +284,42 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
     },
     healthBackground = {
       folder = getMudletHomeDir()..[[/imgs/status/]], 
-      image = getMudletHomeDir()..[[/imgs/status/plank.svg]],
+      image = getMudletHomeDir()..[[/imgs/status/plank.png]],
       name = "health bar background",
     },
     healthBar = {
       folder = getMudletHomeDir()..[[/imgs/status/]], 
-      image = getMudletHomeDir()..[[/imgs/status/red gradient.svg]],
+      image = getMudletHomeDir()..[[/imgs/status/red gradient.png]],
       name = "health bar",
     },
     fatigueBackground = {
       folder = getMudletHomeDir()..[[/imgs/status/]], 
-      image = getMudletHomeDir()..[[/imgs/status/plank.svg]],
+      image = getMudletHomeDir()..[[/imgs/status/plank.png]],
       name = "fatigue bar background",
     },
     fatigueBar = {
       folder = getMudletHomeDir()..[[/imgs/status/]], 
-      image = getMudletHomeDir()..[[/imgs/status/yellow gradient.svg]],
+      image = getMudletHomeDir()..[[/imgs/status/yellow gradient.png]],
       name = "fatigue bar",
     },
     hungerBackground = {
       folder = getMudletHomeDir()..[[/imgs/status/]], 
-      image = getMudletHomeDir()..[[/imgs/status/plank.svg]],
+      image = getMudletHomeDir()..[[/imgs/status/plank.png]],
       name = "hunger bar background",
     },
     hungerBar = {
       folder = getMudletHomeDir()..[[/imgs/status/]], 
-      image = getMudletHomeDir()..[[/imgs/status/green gradient.svg]],
+      image = getMudletHomeDir()..[[/imgs/status/green gradient.png]],
       name = "hunger bar",
     },
     encumbranceBackground = {
       folder = getMudletHomeDir()..[[/imgs/status/]], 
-      image = getMudletHomeDir()..[[/imgs/status/plank.svg]],
+      image = getMudletHomeDir()..[[/imgs/status/plank.png]],
       name = "encumbrance bar background",
     },
     encumbranceBar = {
       folder = getMudletHomeDir()..[[/imgs/status/]], 
-      image = getMudletHomeDir()..[[/imgs/status/blue gradient.svg]],
+      image = getMudletHomeDir()..[[/imgs/status/blue gradient.png]],
       name = "encumbrance bar",
     },
     

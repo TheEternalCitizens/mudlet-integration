@@ -16,13 +16,13 @@ runTECRoomObjectCheck()</script>
 			<keyCode>82</keyCode>
 			<keyModifier>67108864</keyModifier>
 		</Key>
-		<KeyGroup isActive="yes" isFolder="yes">
+		<KeyGroup isActive="no" isFolder="yes">
 			<name>numpad navigation</name>
 			<packageName></packageName>
 			<script></script>
 			<command></command>
 			<keyCode>-1</keyCode>
-			<keyModifier>-1</keyModifier>
+			<keyModifier>0</keyModifier>
 			<Key isActive="yes" isFolder="no">
 				<name>KeyPad 9 -&gt; Walk NE</name>
 				<packageName></packageName>
