@@ -6211,6 +6211,56 @@ end --function parthiaStatusClick(clickType)
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
+				<Script isActive="yes" isFolder="no">
+					<name>resetStatusImages()</name>
+					<packageName></packageName>
+					<script>--Resets all the status bars to default.
+--This is here to help resolve an issue where qt no longer supports svg images on gauges.
+function resetStatusImages()
+  tecSettings.images.healthBackground = {
+    folder = getMudletHomeDir()..[[/imgs/status/]], 
+    image = getMudletHomeDir()..[[/imgs/status/plank.png]],
+    name = "health bar background",
+  }
+  tecSettings.images.healthBar = {
+    folder = getMudletHomeDir()..[[/imgs/status/]], 
+    image = getMudletHomeDir()..[[/imgs/status/red gradient.png]],
+    name = "health bar",
+  }
+  tecSettings.images.fatigueBackground = {
+    folder = getMudletHomeDir()..[[/imgs/status/]], 
+    image = getMudletHomeDir()..[[/imgs/status/plank.png]],
+    name = "fatigue bar background",
+  }
+  tecSettings.images.fatigueBar = {
+    folder = getMudletHomeDir()..[[/imgs/status/]], 
+    image = getMudletHomeDir()..[[/imgs/status/yellow gradient.png]],
+    name = "fatigue bar",
+  }
+  tecSettings.images.hungerBackground = {
+    folder = getMudletHomeDir()..[[/imgs/status/]], 
+    image = getMudletHomeDir()..[[/imgs/status/plank.png]],
+    name = "hunger bar background",
+  }
+  tecSettings.images.hungerBar = {
+    folder = getMudletHomeDir()..[[/imgs/status/]], 
+    image = getMudletHomeDir()..[[/imgs/status/green gradient.png]],
+    name = "hunger bar",
+  }
+  tecSettings.images.encumbranceBackground = {
+    folder = getMudletHomeDir()..[[/imgs/status/]], 
+    image = getMudletHomeDir()..[[/imgs/status/plank.png]],
+    name = "encumbrance bar background",
+  }
+  tecSettings.images.encumbranceBar = {
+    folder = getMudletHomeDir()..[[/imgs/status/]], 
+    image = getMudletHomeDir()..[[/imgs/status/blue gradient.png]],
+    name = "encumbrance bar",
+  }
+  tecFileSaveSettings(false)  --Save the settings changed above.
+ end  --function resetStatusImages()</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>help</name>
@@ -8002,7 +8052,7 @@ function GitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if GitUpdate.localRespitory not exist
   GitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  GitUpdate.localVersion = "0.1.51" --Must match the tag in your github release
+  GitUpdate.localVersion = "0.1.52" --Must match the tag in your github release
   GitUpdate.aliasName = "parthia update" --Name of alias user runs to process update
   --Name of the alias to check if an update is available.
   GitUpdate.updateCheckAlias = "parthia update check" 
@@ -8540,6 +8590,12 @@ local function InstallGitUpdates()
       end --for ipairs( "alias", "trigger", "timer", "keybind", "script")
     end --for ipairs(GitUpdate.removePackages) 
   end --for pairs(GitUpdate.removePackages, GitUpdate.removeModules)
+  
+  --Version 1.52 was release to fix a bug in qt not supporting svg in mudlet.
+  --This code is here to remove the setting pointing to no longer existing svg files for guages.
+  if GitUpdate.localVersion == "0.1.52" then
+    resetStatusImages()
+  end  --if GitUpdate.localVersion == "0.1.52"
   
   --resetProfile() --reset to profile so UI will properly reset.
   pecho("Loading display please wait.\n")
