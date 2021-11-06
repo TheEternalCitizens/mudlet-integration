@@ -1217,6 +1217,36 @@ end --if cmd</script>
 				<packageName></packageName>
 				<regex>^parthia tips(\s?.*)$</regex>
 			</Alias>
+			<AliasGroup isActive="yes" isFolder="yes">
+				<name>parthia auto</name>
+				<script>--[[
+Commands that work with automation
+For full details refer to 
+]]--</script>
+				<command></command>
+				<packageName></packageName>
+				<regex></regex>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia auto [group name], [repeat]</name>
+					<script>--[[
+Aliases\Parthia\parthia auto\parthia auto [group name], [repeat]
+    Calls, Scripts\Game Commands\auto\parthiaAutomationCall(parthiaCmdString)
+]]--</script>
+					<command></command>
+					<packageName></packageName>
+					<regex></regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia auto [group name], [position number] = [command], [seconds or 0], [repeat on fail]</name>
+					<script>--[[
+Aliases\Parthia\parthia auto\parthia auto [group name], [position number] = [command], [seconds or 0], [repeat on fail]
+    Calls, Scripts\Game Commands\auto\parthiaAutomationUpdate(parthiaCmdString)
+]]--</script>
+					<command></command>
+					<packageName></packageName>
+					<regex></regex>
+				</Alias>
+			</AliasGroup>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Debug</name>
