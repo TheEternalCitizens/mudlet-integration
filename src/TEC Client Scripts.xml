@@ -9741,18 +9741,20 @@ function parthiaAutomationUpdate(groupName, positionNumber, automationCommand, s
   -- if tecSettings.automation[groupName] does not exist create it
   -- tecSettings.automation is created automatically when parthia starts.
   if not tecSettings.automation[groupName] then
-    pecho("Automation group"..groupName.." does not exist. Creating it now.")
+    pecho("Automation group "..groupName.." does not exist. Creating it now.\n")
     tecSettings.automation[groupName] = {}  -- Make the group name an empty dictionary
   end  -- END if not tecSettings.automation[groupName] then
   
   -- Save the group and settings passed by the user
-  tecSettings.automation[groupName] = { 
+  tecSettings.automation[groupName][positionNumber] = { 
                                         automationCommand = automationCommand,
                                         secondsToWait = secondsToWait,
                                         repeatOnFail = repeatOnFail
                                       }
+
   -- Show user the changes they made.
-  pecho("Automation group "..groupName.." created.\nIt contains:")
+  pecho("Automation group "..groupName.." updated.\nYour update is:")
+  pecho("\n\tIn position: "..positionNumber)
   pecho("\n\tAutomation Command: "..automationCommand)
   pecho("\n\tSeconds to wait: "..secondsToWait)
   pecho("\n\tRepeat on fail: "..repeatOnFail.."\n")
