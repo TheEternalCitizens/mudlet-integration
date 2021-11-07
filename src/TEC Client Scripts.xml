@@ -9734,22 +9734,36 @@ function parthiaAutomationUpdate(groupName, positionNumber, automationCommand, s
   pecho("secondsToWait: "..secondsToWait.."\n")
   pecho("repeatOnFail: "..repeatOnFail.."\n")
   
-  --Make certain positionNumber is a number that is not zero.
+  -- Make certain positionNumber is a number that is not zero.
   if not parthiaToBoolean(positionNumber) then
     pecho('Position number (second argument in the command) can not be 0.')
     return false
   end  --if not parthiaToBoolean(positionNumber) then
   
-  --Due to the regex pattern that captured PositionNumber it is impossible for it to be a negative number.
-  --No check for positive numbers only required.
+  -- Due to the regex pattern that captured PositionNumber it is impossible for it to be a negative number.
+  -- No check for positive numbers only required.
   
-  --if tecSettings.automation[groupName] does not exist create it
-  --tecSettings.automation is created automatically when parthia starts.
+  -- if tecSettings.automation[groupName] does not exist create it
+  -- tecSettings.automation is created automatically when parthia starts.
   if not tecSettings.automation[groupName] then
     pecho("Automation group"..groupName.." does not exist. Creating it now.")
     tecSettings.automation[groupName] = {}  -- Make the group name an empty dictionary
   end  -- END if not tecSettings.automation[groupName] then
   
+  -- Save the group and settings passed by the user
+  tecSettings.automation[groupName] = { 
+                                        automationCommand = automationCommand,
+                                        secondsToWait = secondsToWait,
+                                        repeatOnFail = repeatOnFail
+                                      }
+  -- Show user the changes they made.
+  pecho("Automation group "..groupName.." created. It contains:")
+  pecho("\nAutomation Command: "..automationCommand)
+  pecho("\nSeconds to wait: "..secondsToWait)
+  pecho("\nRepeat on fail: "..repeatOnFail.."\n")
+                                        
+  -- Remind the user to save their chages
+  dontForgetToSave()
   
   return true  --function executed without error
   
