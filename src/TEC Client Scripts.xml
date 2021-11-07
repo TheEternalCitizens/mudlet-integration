@@ -9867,6 +9867,9 @@ function parthiaAutomationCall()
 
   --tecSettings.automation.[groupName][parthiaAutomationGroupPosition]
   
+  -- In case user is sending command that has no success chance reset parthiaLastCommandSuccess
+  parthiaLastCommandSuccess = false
+  
   pecho("parthiaAutomationCall called")
 
 end -- function parthiaAutomationCall()</script>
