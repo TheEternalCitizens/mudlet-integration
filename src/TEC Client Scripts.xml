@@ -9728,11 +9728,6 @@ Scripts\Game Commands\auto\parthiaAutomationUpdate(parthiaCmdString)
 ]]--
 
 function parthiaAutomationUpdate(groupName, positionNumber, automationCommand, secondsToWait, repeatOnFail)
-  pecho("groupName: "..groupName.."\n")
-  pecho("positionNumber: "..positionNumber.."\n")
-  pecho("automationCommand: "..automationCommand.."\n")
-  pecho("secondsToWait: "..secondsToWait.."\n")
-  pecho("repeatOnFail: "..repeatOnFail.."\n")
   
   -- Make certain positionNumber is a number that is not zero.
   if not parthiaToBoolean(positionNumber) then
@@ -9757,10 +9752,10 @@ function parthiaAutomationUpdate(groupName, positionNumber, automationCommand, s
                                         repeatOnFail = repeatOnFail
                                       }
   -- Show user the changes they made.
-  pecho("Automation group "..groupName.." created. It contains:")
-  pecho("\nAutomation Command: "..automationCommand)
-  pecho("\nSeconds to wait: "..secondsToWait)
-  pecho("\nRepeat on fail: "..repeatOnFail.."\n")
+  pecho("Automation group "..groupName.." created.\nIt contains:")
+  pecho("\n\tAutomation Command: "..automationCommand)
+  pecho("\n\tSeconds to wait: "..secondsToWait)
+  pecho("\n\tRepeat on fail: "..repeatOnFail.."\n")
                                         
   -- Remind the user to save their chages
   dontForgetToSave()
