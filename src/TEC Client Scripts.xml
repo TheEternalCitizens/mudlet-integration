@@ -9703,8 +9703,17 @@ Scripts\Game Commands\auto\parthiaAutomationUpdate(parthiaCmdString)
     Prompts user to save.
 ]]--
 
-function parthiaAutomationUpdate(groupName, positionNumber, automationCommand, secondsToWait, repeatOnFail])
-
+function parthiaAutomationUpdate(groupName, positionNumber, automationCommand, secondsToWait, repeatOnFail)
+  pecho("groupName: "..groupName.."\n")
+  pecho("positionNumber: "..positionNumber.."\n")
+  pecho("automationCommand: "..automationCommand.."\n")
+  pecho("secondsToWait: "..secondsToWait.."\n")
+  pecho("repeatOnFail: "..repeatOnFail.."\n")
+  
+  --Make certain positionNumber is a number that is not zero.
+  if positionNumber then
+  else
+  end  --if positionNumber
 end  -- function parthiaAutomationUpdate(groupName, positionNumber, automationCommand, secondsToWait, repeatOnFail])</script>
 						<eventHandlerList />
 					</Script>
