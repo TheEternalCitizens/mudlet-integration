@@ -9790,12 +9790,16 @@ function parthiaAutomationStart(groupName, groupRepeat)
     pecho("\nAutomation group "..groupName.." does not exist. A full help message is above.\n\n")
     return false
   end -- if not tecSettings.automation[groupName] then
+  
+  -- Record that automation has started, record the group name and how many times the group should repeat
+  parthiaAutomationRunning = { groupName = groupName, groupRepeat = groupRepeat } 
 
   -- return that the function completed successfully
   return true
 
 end  -- parthiaAutomationStart(groupName, groupRepeat)
 
+--This function will display a help message on how to start automation
 function parthiaAutomationStartHelp()
 
   -- Show this commands help message
@@ -9820,6 +9824,7 @@ function parthiaAutomationStartHelp()
   -- Suggest clicking above and fill in a command to help the user.
   pecho("\nYou can click on one of the help links above or adjust the command that auto filled in your command box.\n")
   printCmdLine("parthia automation replace_with_you_group, 0")
+
 end  -- function parthiaAutomationStartHelp()</script>
 						<eventHandlerList />
 					</Script>
@@ -10050,6 +10055,11 @@ function parthiaStopScripts(displayToScreen)
 
   if courses.running then courses.disable(displayToScreen) end --If running, disable courses scripts
   if parthiaGetWaitForDrover() then parthiaSetWaitForDrover(false, displayToScreen) end --if running, disable waiting for drover script
+  
+  -- stop automation scripts
+  if parthiaAutomationRunning then
+    parthiaAutomationStop(displayToScreen)
+  end -- if parthiaAutomationRunning then
 
 end --function parthiaStopScripts(displayToScreen)</script>
 						<eventHandlerList />
