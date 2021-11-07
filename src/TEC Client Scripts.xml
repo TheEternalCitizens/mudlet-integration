@@ -9771,13 +9771,23 @@ end  -- function parthiaAutomationUpdate(groupName, positionNumber, automationCo
 						<script>--[[
 Scripts\Game Commands\auto\parthiaAutomationStart(groupName, groupRepeat)
   Stops automation if it is already running.
+  Verifies automation group groupName exists.
+    Prompt user if it does now.
+    End function return False
   sets parthiaAutomationRunning to ([group name], [repeat])
   Call parthiaAutomationCall()
 ]]--
 function parthiaAutomationStart(groupName, groupRepeat)
-  pecho("parthiaAutomationStart\n")
-  pecho("Group Name: "..groupName.."\n")
-  pecho("Repeat: "..groupRepeat)
+
+  -- Stop already running automation
+  parthiaAutomationStop()
+  
+  -- Make certain this automation group exists.
+  if not tecSettings.automation[groupName] then
+    pecho("Automation group.."..groupName.." does not exist.\n")
+    pecho("")
+  end -- if not tecSettings.automation[groupName] then
+
 end  --parthiaAutomationStart(groupName, groupRepeat)</script>
 						<eventHandlerList />
 					</Script>
@@ -9815,7 +9825,10 @@ Scripts\Game Commands\auto\parthiaAutomationCall()
 Scripts\Game Commands\auto\parthiaAutomationStop()
     Set parthiaAutomationGroupPosition to 1
     set parthiaAutomationIterationCounter to False
-]]--</script>
+]]--
+function parthiaAutomationStop()
+  pecho("\nparthiaAutomationStop() called\n")
+end -- function parthiaAutomationStop()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
