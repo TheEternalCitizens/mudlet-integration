@@ -9776,7 +9776,6 @@ Scripts\Game Commands\auto\parthiaAutomationStart(groupName, groupRepeat)
     End function return False
   sets parthiaAutomationRunning to {[group name], [repeat]}
   Call parthiaAutomationCall()
-  
   Create a help function
 ]]--
 function parthiaAutomationStart(groupName, groupRepeat)
@@ -9793,6 +9792,9 @@ function parthiaAutomationStart(groupName, groupRepeat)
   
   -- Record that automation has started, record the group name and how many times the group should repeat
   parthiaAutomationRunning = { groupName = groupName, groupRepeat = groupRepeat } 
+
+  -- Call the function that runs the automation
+  parthiaAutomationCall()
 
   -- return that the function completed successfully
   return true
@@ -9833,26 +9835,30 @@ end  -- function parthiaAutomationStartHelp()</script>
 						<packageName></packageName>
 						<script>--[[
 Scripts\Game Commands\auto\parthiaAutomationCall()
-    Verifies the [group name] exists.
-      if it does not notify the user stop this function.
-    Run the command at tecSettings.automation.[group name][parthiaAutomationGroupPosition]  
-    if not parthiaAutomationIterationCounter
-      set parthiaAutomationIterationCounter to 1
-      Call Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
-    elseIf [repeat on fail] is false
-      Call Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
-    else [repeat on fail] is True and the command was successful
-      Call Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
-    if tecSettings.automation.[group name][position number].[seconds] is Truthy
-      Verify [seconds] is a number
-      Creates a timer set for [seconds]
-    if tecSettings.automation.[group name][position number].[seconds] is 0
-      No action needed. No code check for this. Mentioning for comprehension of work flow.
-      the trigger Triggers\Game Events\You are no longer busy will handle the rest of the automation.
-    if parthiaAutomationRunning.[repeat] is truthy
-      if parthiaAutomationIterationCounter is greater than parthiaAutomationRunning.[repeat]
-      Call Scripts\Game Commands\auto\parthiaAutomationStop()
-]]--</script>
+  Run the command at tecSettings.automation.[group name][parthiaAutomationGroupPosition]  
+  if not parthiaAutomationIterationCounter
+    set parthiaAutomationIterationCounter to 1
+    Call Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
+  elseIf [repeat on fail] is false
+    Call Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
+  else [repeat on fail] is True and the command was successful
+    Call Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
+  if tecSettings.automation.[group name][position number].[seconds] is Truthy
+    Verify [seconds] is a number
+    Creates a timer set for [seconds]
+  if tecSettings.automation.[group name][position number].[seconds] is 0
+    No action needed. No code check for this. Mentioning for comprehension of work flow.
+    the trigger Triggers\Game Events\You are no longer busy will handle the rest of the automation.
+  if parthiaAutomationRunning.[repeat] is truthy
+    if parthiaAutomationIterationCounter is greater than parthiaAutomationRunning.[repeat]
+    Call Scripts\Game Commands\auto\parthiaAutomationStop()
+]]--
+
+function parthiaAutomationCall()
+
+
+
+end -- function parthiaAutomationCall()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
