@@ -9727,15 +9727,15 @@ Scripts\Game Commands\auto\parthiaAutomationUpdate(parthiaCmdString)
   Prompts user to save.
 ]]--
 
-function parthiaAutomationUpdate(groupName, parthiaAutomationGroupPosition, automationCommand, secondsToWait, repeatOnFail)
+function parthiaAutomationUpdate(groupName, groupPosition, automationCommand, secondsToWait, repeatOnFail)
   
-  -- Make certain parthiaAutomationGroupPosition is a number that is not zero.
-  if not parthiaToBoolean(parthiaAutomationGroupPosition) then
+  -- Make certain groupPosition is a number that is not zero.
+  if not parthiaToBoolean(groupPosition) then
     pecho('Position number (second argument in the command) can not be 0.')
     return false
-  end  --if not parthiaToBoolean(parthiaAutomationGroupPosition) then
+  end  --if not parthiaToBoolean(groupPosition) then
   
-  -- Due to the regex pattern that captured parthiaAutomationGroupPosition it is impossible for it to be a negative number.
+  -- Due to the regex pattern that captured groupPosition it is impossible for it to be a negative number.
   -- No check for positive numbers only required.
   
   -- if tecSettings.automation[groupName] does not exist create it
@@ -9746,7 +9746,7 @@ function parthiaAutomationUpdate(groupName, parthiaAutomationGroupPosition, auto
   end  -- END if not tecSettings.automation[groupName] then
   
   -- Save the group and settings passed by the user
-  tecSettings.automation[groupName][parthiaAutomationGroupPosition] = { 
+  tecSettings.automation[groupName][groupPosition] = { 
                                         automationCommand = automationCommand,
                                         secondsToWait = secondsToWait,
                                         repeatOnFail = repeatOnFail
@@ -9754,7 +9754,7 @@ function parthiaAutomationUpdate(groupName, parthiaAutomationGroupPosition, auto
 
   -- Show user the changes they made.
   pecho("Automation group "..groupName.." updated.\nYour update is:")
-  pecho("\n\tIn position: "..parthiaAutomationGroupPosition)
+  pecho("\n\tIn position: "..groupPosition)
   pecho("\n\tAutomation Command: "..automationCommand)
   pecho("\n\tSeconds to wait: "..secondsToWait)
   pecho("\n\tRepeat on fail: "..repeatOnFail.."\n")
@@ -9764,7 +9764,7 @@ function parthiaAutomationUpdate(groupName, parthiaAutomationGroupPosition, auto
   
   return true  --function executed without error
   
-end  -- function parthiaAutomationUpdate(groupName, parthiaAutomationGroupPosition, automationCommand, secondsToWait, repeatOnFail])</script>
+end  -- function parthiaAutomationUpdate(groupName, groupPosition, automationCommand, secondsToWait, repeatOnFail])</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
