@@ -9861,10 +9861,12 @@ Scripts\Game Commands\auto\parthiaAutomationStop()
 ]]--
 
 function parthiaAutomationStop()
-  pecho("\nAutomation stopped\n")
+  pecho("\nAutomation stopped.\n")
   
   parthiaAutomationGroupPosition = 1
+  parthiaAutomationIterationCounter = false
   parthiaAutomationRunning = false
+  
 end -- function parthiaAutomationStop()</script>
 						<eventHandlerList />
 					</Script>
