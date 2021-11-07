@@ -9701,7 +9701,11 @@ Scripts\Game Commands\auto\parthiaAutomationUpdate(parthiaCmdString)
     Sets the command in the group
       tecSettings.auto.[group name][position number] = {[command], [seconds or 0], [repeat on fail]}
     Prompts user to save.
-]]--</script>
+]]--
+
+function parthiaAutomationUpdate(groupName, positionNumber, automationCommand, secondsToWait, repeatOnFail])
+
+end  -- function parthiaAutomationUpdate(groupName, positionNumber, automationCommand, secondsToWait, repeatOnFail])</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
