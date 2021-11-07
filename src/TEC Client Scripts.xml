@@ -9791,7 +9791,7 @@ function parthiaAutomationStart(groupName, groupRepeat)
   end -- if not tecSettings.automation[groupName] then
   
   -- Record that automation has started, record the group name and how many times the group should repeat
-  parthiaAutomationRunning = { groupName = groupName, groupRepeat = groupRepeat } 
+  parthiaAutomationRunning = { groupName = groupName, groupRepeat = groupRepeat }
 
   -- Call the function that runs the automation
   parthiaAutomationCall()
@@ -9856,7 +9856,18 @@ Scripts\Game Commands\auto\parthiaAutomationCall()
 
 function parthiaAutomationCall()
 
+  -- If the position or iteration tracker does not exist, create it now.
+  if not parthiaAutomationGroupPosition then
+    parthiaAutomationGroupPosition = 1
+  end  -- if not parthiaAutomationGroupPosition then
+  
+  -- Get required variables for this function.
+  groupName = parthiaAutomationRunning["groupName"]
+  groupRepeat = parthiaAutomationRunning["groupRepeat"]
 
+  --tecSettings.automation.[groupName][parthiaAutomationGroupPosition]
+  
+  pecho("parthiaAutomationCall called")
 
 end -- function parthiaAutomationCall()</script>
 						<eventHandlerList />
