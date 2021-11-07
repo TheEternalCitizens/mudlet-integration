@@ -4050,6 +4050,31 @@ function parthiaSetDiscordID()
 end</script>
 					<eventHandlerList />
 				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaToBoolean(variableToConvert)</name>
+					<packageName></packageName>
+					<script>--converts misc variables to boolean value
+
+--Converts the string "false" and "0" to the boolean value false, also converts 0 to false
+parthiaBooleanConverstionTable = { ["false"]=false,["False"]=false, ["0"]=false, [0]=false}
+                                   
+function parthiaToBoolean(variableToConvert)
+
+  --only convert if the input is in the conversion table.
+  if parthiaBooleanConverstionTable[variableToConvert] ~= nil then
+    variableToConvert = parthiaBooleanConverstionTable[variableToConvert]
+  end --if parthiaBooleanConverstionTable[variableToConvert] ~= nil then
+
+  --return the possibly converted variable.
+  if variableToConvert then
+    pecho(variableToConvert.." is Truthy")
+  else
+    pecho(" is Falsely")
+  end
+
+end --function parthiaToBoolean(variableToConvert)</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>GUI</name>
@@ -9713,6 +9738,7 @@ function parthiaAutomationUpdate(groupName, positionNumber, automationCommand, s
   --Make certain positionNumber is a number that is not zero.
   if positionNumber then
   else
+    pecho('Position number (second argument in the command) can not be 0.')
   end  --if positionNumber
 end  -- function parthiaAutomationUpdate(groupName, positionNumber, automationCommand, secondsToWait, repeatOnFail])</script>
 						<eventHandlerList />
