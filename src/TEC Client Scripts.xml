@@ -9871,7 +9871,9 @@ function parthiaAutomationCall()
   --parthiaAutomationIterationCounter
   --tecSettings.automation.[groupName][parthiaAutomationIterationCounter]
 
-  --tecSettings.automation.[groupName][parthiaAutomationGroupPosition]
+  automationCommand = tecSettings.automation[groupName][parthiaAutomationIterationCounter][automationCommand]
+  secondsToWait = tecSettings.automation[groupName][parthiaAutomationIterationCounter][secondsToWait]
+  repeatOnFail = tecSettings.automation[groupName][parthiaAutomationIterationCounter][repeatOnFail]
   
   -- In case user is sending command that has no success chance reset parthiaLastCommandSuccess
   parthiaLastCommandSuccess = false
