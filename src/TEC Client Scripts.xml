@@ -9776,6 +9776,8 @@ Scripts\Game Commands\auto\parthiaAutomationStart(groupName, groupRepeat)
     End function return False
   sets parthiaAutomationRunning to ([group name], [repeat])
   Call parthiaAutomationCall()
+  
+  Create a help function
 ]]--
 function parthiaAutomationStart(groupName, groupRepeat)
 
@@ -9784,11 +9786,41 @@ function parthiaAutomationStart(groupName, groupRepeat)
   
   -- Make certain this automation group exists.
   if not tecSettings.automation[groupName] then
-    pecho("Automation group.."..groupName.." does not exist.\n")
-    pecho("")
+    pecho("Automation group "..groupName.." does not exist.\n\n")
+    parthiaAutomationStartHelp()
+    return false
   end -- if not tecSettings.automation[groupName] then
 
-end  --parthiaAutomationStart(groupName, groupRepeat)</script>
+  -- return that the function completed successfully
+  return true
+
+end  -- parthiaAutomationStart(groupName, groupRepeat)
+
+function parthiaAutomationStartHelp()
+
+  -- Show this commands help message
+  pecho("The command format to start automation is:\n")
+  pecho("\tparthia automation [group name], [repeat]\n")
+  pecho("parthia automation has a shot name of /auto. It's format is the same.\n")
+  pecho("\t/auto [group name], [repeat]\n")
+  pecho("Where [group name] is a name for an existing automation group. ")
+  pecho("[group name] can contain letters, numbers and spaces. ")
+  pecho("It can not contain special characters. It IS case sensitive. So make certain to match case. ")
+  pecho("The square brackets [] are just there to show where your entry should be. Do not put [ or ] in the command.\n")
+  pecho("\nExample:\n\tparthia automation Attack Rotation, 5\n")
+  pecho("\t/auto Attack Rotation, 5\n")
+  pecho("\tWould both run the automation group Attack Rotation 5 times.\n")
+  pecho("Example:\n\tparthia automation Attack Rotation, 0\n")
+  pecho("\t/auto Attack Rotation, 0\n")
+  pecho("\tWould both run the automation group Attack Rotation an infinite number of times.\n\n")
+  
+  -- Show the automation help messages
+  
+  
+  -- Suggest clicking above and fill in a command to help the user.
+  pecho("\nYou can click on one of the help links above or adjust the command that auto filled in your command box.\n")
+  printCmdLine("parthia automation replace_with_you_group, 0")
+end  -- function parthiaAutomationStartHelp()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
@@ -9842,6 +9874,18 @@ Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
       parthiaAutomationGroupPosition = 1
       Increase parthiaAutomationIterationCounter by 1
 ]]--</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationHelp()</name>
+						<packageName></packageName>
+						<script>-- Display a help message about the automation commands
+function parthiaAutomationHelp()
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk", 
+  [[parthiaTalkHelp()]],
+  "parthia talk help", true)
+  pecho(", list parthia's text to speech commands.\n")
+end  -- function parthiaAutomationHelp()</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
