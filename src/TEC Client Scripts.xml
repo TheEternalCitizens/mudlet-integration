@@ -9698,6 +9698,8 @@ Variables(s) to create---------------------------------------------------------
     This must be set to one on client startup.
   parthiaAutomationIterationCounter: Keeps track of how many times the group of commands has iterated.
     This is automatically handled by: Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
+  parthiaAutomationFirstRun: tracks if this is the first run of this automation task.
+    Is automatically set to true in parthiaAutomationStop and false in parthiaAutomationCall
     
 Trigger(s) to create-----------------------------------------------------------
   Triggers\Game Events\You are no longer busy.
@@ -9854,7 +9856,7 @@ Scripts\Game Commands\auto\parthiaAutomationCall()
   if tecSettings.automation.[group name][position number].[seconds] is 0
     No action needed. No code check for this. Mentioning for comprehension of work flow.
     the trigger Triggers\Game Events\You are no longer busy will handle the rest of the automation.
-  if parthiaAutomationRunning.[repeat] is truthy
+  if parthiaAutomationRunning.repeat is truthy
     if parthiaAutomationIterationCounter is greater than parthiaAutomationRunning.[repeat]
     Call Scripts\Game Commands\auto\parthiaAutomationStop()
 ]]--
@@ -9865,16 +9867,22 @@ function parthiaAutomationCall()
   groupName = parthiaAutomationRunning["groupName"]
   groupRepeat = parthiaAutomationRunning["groupRepeat"]
   
-  -- get the current iteration for this automation,
-  iterationCounter = parthiaAutomationIncreaseGroupIteration()
-  pecho("Current iteration: "..iterationCounter.."\n")
-  --parthiaAutomationIterationCounter
-  --tecSettings.automation.[groupName][parthiaAutomationIterationCounter]
+  --if this is the fist run of this automation task, initialize variables.
+  if parthiaAutomationFirstRun then
+    parthiaAutomationIncreaseGroupIteration()  -- set the iterator
+  end  -- if parthiaAutomationFirstRun then
+  pecho("Current iteration: "..parthiaAutomationIterationCounter.."\n")
 
-  automationCommand = tecSettings.automation[groupName][parthiaAutomationIterationCounter][automationCommand]
-  secondsToWait = tecSettings.automation[groupName][parthiaAutomationIterationCounter][secondsToWait]
-  repeatOnFail = tecSettings.automation[groupName][parthiaAutomationIterationCounter][repeatOnFail]
+  automationCommand = tecSettings.automation[groupName][parthiaAutomationIterationCounter].automationCommand
+  secondsToWait = tecSettings.automation[groupName][parthiaAutomationIterationCounter].secondsToWait
+  repeatOnFail = tecSettings.automation[groupName][parthiaAutomationIterationCounter].repeatOnFail
   
+  pecho("automationCommand: "..automationCommand.." secondsToWait: "..secondsToWait.." repeatOnFail: "..repeatOnFail.."\n")
+  
+  -- if this command should be repeated on failure and it failed last run
+  if parthiaToBoolean(repeatOnFail) and not parthiaLastCommandSuccess then
+  
+  end  -- if parthiaToBoolean(repeatOnFail) then
   -- In case user is sending command that has no success chance reset parthiaLastCommandSuccess
   parthiaLastCommandSuccess = false
   
@@ -9898,6 +9906,7 @@ function parthiaAutomationStop(displayToScreen)
   parthiaAutomationGroupPosition = 1
   parthiaAutomationIterationCounter = false
   parthiaAutomationRunning = false
+  parthiaAutomationFirstRun = true
   
   if displayToScreen then
     pecho("\nAutomation stopped.\n\n")
