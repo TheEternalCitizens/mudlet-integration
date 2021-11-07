@@ -9795,6 +9795,9 @@ function parthiaAutomationStart(groupName, groupRepeat)
   -- Record that automation has started, record the group name and how many times the group should repeat
   parthiaAutomationRunning = { groupName = groupName, groupRepeat = groupRepeat }
 
+  -- inform the user automation has started.
+  pecho("Starting automation group: "..groupName.."\n")
+
   -- Call the function that runs the automation
   parthiaAutomationCall()
 
@@ -9857,15 +9860,16 @@ Scripts\Game Commands\auto\parthiaAutomationCall()
 ]]--
 
 function parthiaAutomationCall()
-
-  -- If the position or iteration tracker does not exist, create it now.
-  if not parthiaAutomationGroupPosition then
-    parthiaAutomationGroupPosition = 1
-  end  -- if not parthiaAutomationGroupPosition then
   
   -- Get required variables for this function.
   groupName = parthiaAutomationRunning["groupName"]
   groupRepeat = parthiaAutomationRunning["groupRepeat"]
+  
+  -- get the current iteration for this automation,
+  iterationCounter = parthiaAutomationIncreaseGroupIteration()
+  pecho("Current iteration: "..iterationCounter.."\n")
+  --parthiaAutomationIterationCounter
+  --tecSettings.automation.[groupName][parthiaAutomationIterationCounter]
 
   --tecSettings.automation.[groupName][parthiaAutomationGroupPosition]
   
@@ -9912,7 +9916,66 @@ Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
     else
       parthiaAutomationGroupPosition = 1
       Increase parthiaAutomationIterationCounter by 1
-]]--</script>
+      
+Keys in the automation group name may not be in order or correctly sequenced.
+    For example they may have keys 1, 2, 3, 5, 9... So on where keys are skipped.
+    Because of this we can no simply iterate.
+    We have to find the next highest possible iterator we can use.
+]]--
+
+function parthiaAutomationIncreaseGroupIteration()
+
+  pecho("parthiaAutomationIncreaseGroupIteration called\n")
+
+  -- Get required variables for this function.
+  groupName = parthiaAutomationRunning["groupName"]
+  groupRepeat = parthiaAutomationRunning["groupRepeat"]
+  
+  --used to collect all keys in this automation group.
+  local automationGroupKeySet = {}
+  
+  -- Gather all the keys for the group and sort them.
+  --tecSettings.automation[groupName]
+  for key, _ in pairs(tecSettings.automation[groupName]) do
+    table.insert(automationGroupKeySet, key)
+  end -- for key, _ in pairs(tecSettings.automation[groupName]) do
+  
+  -- Sort the table 
+  table.sort(automationGroupKeySet)
+  
+  -- if the iterator does not exist this means this is the first run of this automation group.
+  if not parthiaAutomationIterationCounter then
+    -- Returning the lowest element in the  automation group
+    parthiaAutomationIterationCounter = automationGroupKeySet[1]
+    return parthiaAutomationIterationCounter
+  end  -- if not parthiaAutomationIterationCounter then
+  
+  -- find the next highest logical key in the automation group's table
+  for key, value in pairs(automationGroupKeySet) do
+    
+    -- convert the value into a number, where value is one of the keys for this automation group name
+    value = tonumber(value)
+    
+    -- if the value from the automationGroupKeySet is larger than the current command iteration
+    -- This is the next iteration in our automation group.
+    if value &gt; parthiaAutomationIterationCounter then
+      parthiaAutomationIterationCounter = value
+      break  -- stop the loop
+    end  -- if key &gt;= parthiaAutomationIterationCounter then
+    
+    -- Check if we are about to iterate past the automationGroupKeySet
+    -- Set the automations iterator to the first element in this automation groups sequence
+    if key == #automationGroupKeySet then
+      parthiaAutomationIterationCounter = automationGroupKeySet[1]
+    end -- if key == #automationGroupKeySet
+  
+  end  -- for key, value in pairs(automationGroupKeySet) do
+  
+  pecho("parthiaAutomationIncreaseGroupIteration() Next iterator: "..parthiaAutomationIterationCounter.."\n")
+  
+  return parthiaAutomationIterationCounter
+
+end  --function parthiaAutomationIncreaseGroupIteration()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
