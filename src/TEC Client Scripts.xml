@@ -9624,27 +9624,27 @@ Track command success----------------------------------------------------------
       This code has to be OUTSIDE the "if getHelpDevs()" block. Otherwise it would only work if help the devs was enabled.
 
 Function(s) to create----------------------------------------------------------
-  Scripts\Game Commands\automation\parthiaAutomationUpdate(parthiaCmdString)
+  Scripts\TEC Functions\Game Commands\automation\parthiaAutomationUpdate(parthiaCmdString)
     Creates a new automation group if it does not already exist.
       tecSettings.auto.[group name]
     Makes certain the position number is possible, for lua arrays must be 1 or greater.
     Sets the command in the group
       tecSettings.auto.[group name][position number] = {[command], [seconds or 0], [repeat on fail]}
     Prompts user to save.
-  Scripts\Game Commands\automation\parthiaAutomationStart(parthiaCmdString)
+  Scripts\TEC Functions\Game Commands\automation\parthiaAutomationStart(groupName, groupRepeat)
     sets parthiaAutomationRunning to ([group name], [repeat])
     Call parthiaAutomationCall()
-  Scripts\Game Commands\automation\parthiaAutomationCall()
+  Scripts\TEC Functions\Game Commands\automation\parthiaAutomationCall()
     Verifies the [group name] exists.
       if it does not notify the user stop this function.
     Run the command at tecSettings.auto.[group name][parthiaAutomationGroupPosition]  
     if not parthiaAutomationIterationCounter
       set parthiaAutomationIterationCounter to 1
-      Call Scripts\Game Commands\automation\parthiaAutomationIncreaseGroupIteration()
+      Call Scripts\TEC Functions\Game Commands\automation\parthiaAutomationIncreaseGroupIteration()
     elseIf [repeat on fail] is false
-      Call Scripts\Game Commands\automation\parthiaAutomationIncreaseGroupIteration()
+      Call Scripts\TEC Functions\Game Commands\automation\parthiaAutomationIncreaseGroupIteration()
     else [repeat on fail] is True and the command was successful
-      Call Scripts\Game Commands\automation\parthiaAutomationIncreaseGroupIteration()
+      Call Scripts\TEC Functions\Game Commands\automation\parthiaAutomationIncreaseGroupIteration()
     if tecSettings.auto.[group name][position number].[seconds] is Truthy
       Verify [seconds] is a number
       Creates a timer set for [seconds]
@@ -9653,11 +9653,11 @@ Function(s) to create----------------------------------------------------------
       the trigger Triggers\Game Events\You are no longer busy will handle the rest of the automation.
     if parthiaAutomationRunning.[repeat] is truthy
       if parthiaAutomationIterationCounter is greater than parthiaAutomationRunning.[repeat]
-      Call Scripts\Game Commands\automation\parthiaAutomationStop()
-  Scripts\Game Commands\automation\parthiaAutomationStop()
+      Call Scripts\TEC Functions\Game Commands\automation\parthiaAutomationStop()
+  Scripts\TEC Functions\Game Commands\automation\parthiaAutomationStop()
     Set parthiaAutomationGroupPosition to 1
     set parthiaAutomationIterationCounter to False
-  Scripts\Game Commands\automation\parthiaAutomationIncreaseGroupIteration()
+  Scripts\TEC Functions\Game Commands\automation\parthiaAutomationIncreaseGroupIteration()
     if tecSettings.auto.[group name] size is larger than 
       Icrease parthiaAutomationGroupPosition by one
     else
@@ -9679,7 +9679,7 @@ Trigger(s) to create-----------------------------------------------------------
   Triggers\Game Events\You are no longer busy.
     Pattern: "&lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are no longer busy%.&lt;/font&gt;&lt;/font&gt;"
     if parthiaAutomationRunning is truthy
-      Call Scripts\Game Commands\automation\parthiaAutomationCall()
+      Call Scripts\TEC Functions\Game Commands\automation\parthiaAutomationCall()
     
 aliase(s) to create---------------------------------------------------------------
   Aliases\stop: needs to be updated to to parthiaAutomationRunning to False.
@@ -9705,13 +9705,19 @@ Scripts\Game Commands\auto\parthiaAutomationUpdate(parthiaCmdString)
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
-						<name>parthiaAutomationStart(parthiaCmdString)</name>
+						<name>parthiaAutomationStart(groupName, groupRepeat)</name>
 						<packageName></packageName>
 						<script>--[[
-Scripts\Game Commands\auto\parthiaAutomationStart(parthiaCmdString)
-    sets parthiaAutomationRunning to ([group name], [repeat])
-    Call parthiaAutomationCall()
-]]--</script>
+Scripts\Game Commands\auto\parthiaAutomationStart(groupName, groupRepeat)
+  Stops automation if it is already running.
+  sets parthiaAutomationRunning to ([group name], [repeat])
+  Call parthiaAutomationCall()
+]]--
+function parthiaAutomationStart(groupName, groupRepeat)
+  pecho("parthiaAutomationStart\n")
+  pecho("Group Name: "..groupName.."\n")
+  pecho("Repeat: "..groupRepeat)
+end  --parthiaAutomationStart(groupName, groupRepeat)</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
