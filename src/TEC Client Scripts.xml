@@ -9781,13 +9781,13 @@ Scripts\Game Commands\auto\parthiaAutomationStart(groupName, groupRepeat)
 ]]--
 function parthiaAutomationStart(groupName, groupRepeat)
 
-  -- Stop already running automation
-  parthiaAutomationStop()
+  -- Stop already running automation, display message to user
+  parthiaAutomationStop(true)
   
   -- Make certain this automation group exists.
   if not tecSettings.automation[groupName] then
-    pecho("Automation group "..groupName.." does not exist.\n\n")
     parthiaAutomationStartHelp()
+    pecho("\nAutomation group "..groupName.." does not exist. A full help message is above.\n\n")
     return false
   end -- if not tecSettings.automation[groupName] then
 
@@ -9851,7 +9851,7 @@ Scripts\Game Commands\auto\parthiaAutomationCall()
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
-						<name>parthiaAutomationStop()</name>
+						<name>parthiaAutomationStop(displayToScreen)</name>
 						<packageName></packageName>
 						<script>--[[
 Scripts\Game Commands\auto\parthiaAutomationStop()
@@ -9860,12 +9860,17 @@ Scripts\Game Commands\auto\parthiaAutomationStop()
     set parthiaAutomationRunning to false
 ]]--
 
-function parthiaAutomationStop()
-  pecho("\nAutomation stopped.\n")
+function parthiaAutomationStop(displayToScreen)
   
   parthiaAutomationGroupPosition = 1
   parthiaAutomationIterationCounter = false
   parthiaAutomationRunning = false
+  
+  if displayToScreen then
+    pecho("\nAutomation stopped.\n\n")
+  end -- if displayToScreen then
+  
+  return true
   
 end -- function parthiaAutomationStop()</script>
 						<eventHandlerList />
