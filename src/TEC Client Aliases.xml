@@ -1260,7 +1260,7 @@ Aliases\Parthia\parthia auto\parthia automation [group name], [position number] 
 --Here we are unpacking ALL 5 of the captures from the pattern above.
 --Unpack format is unpack(array, element start, element end)
 --Since we are not specifing an element end it unpacks until the end of the array.
---This is just like sending it {groupName, positionNumber, command, seconds, repeatOnFail}
+--This is just like sending it {groupName, parthiaAutomationGroupPosition, command, seconds, repeatOnFail}
 parthiaAutomationUpdate(unpack(matches, 2))</script>
 					<command></command>
 					<packageName></packageName>

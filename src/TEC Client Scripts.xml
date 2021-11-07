@@ -9715,7 +9715,7 @@ aliase(s) to create-------------------------------------------------------------
 ]]--</script>
 					<eventHandlerList />
 					<Script isActive="yes" isFolder="no">
-						<name>parthiaAutomationUpdate(parthiaCmdString)</name>
+						<name>parthiaAutomationUpdate(groupName, positionNumber, command, seconds, repeatOnFail)</name>
 						<packageName></packageName>
 						<script>--[[
 Scripts\Game Commands\auto\parthiaAutomationUpdate(parthiaCmdString)
@@ -9727,15 +9727,15 @@ Scripts\Game Commands\auto\parthiaAutomationUpdate(parthiaCmdString)
   Prompts user to save.
 ]]--
 
-function parthiaAutomationUpdate(groupName, positionNumber, automationCommand, secondsToWait, repeatOnFail)
+function parthiaAutomationUpdate(groupName, parthiaAutomationGroupPosition, automationCommand, secondsToWait, repeatOnFail)
   
-  -- Make certain positionNumber is a number that is not zero.
-  if not parthiaToBoolean(positionNumber) then
+  -- Make certain parthiaAutomationGroupPosition is a number that is not zero.
+  if not parthiaToBoolean(parthiaAutomationGroupPosition) then
     pecho('Position number (second argument in the command) can not be 0.')
     return false
-  end  --if not parthiaToBoolean(positionNumber) then
+  end  --if not parthiaToBoolean(parthiaAutomationGroupPosition) then
   
-  -- Due to the regex pattern that captured PositionNumber it is impossible for it to be a negative number.
+  -- Due to the regex pattern that captured parthiaAutomationGroupPosition it is impossible for it to be a negative number.
   -- No check for positive numbers only required.
   
   -- if tecSettings.automation[groupName] does not exist create it
@@ -9746,7 +9746,7 @@ function parthiaAutomationUpdate(groupName, positionNumber, automationCommand, s
   end  -- END if not tecSettings.automation[groupName] then
   
   -- Save the group and settings passed by the user
-  tecSettings.automation[groupName][positionNumber] = { 
+  tecSettings.automation[groupName][parthiaAutomationGroupPosition] = { 
                                         automationCommand = automationCommand,
                                         secondsToWait = secondsToWait,
                                         repeatOnFail = repeatOnFail
@@ -9754,7 +9754,7 @@ function parthiaAutomationUpdate(groupName, positionNumber, automationCommand, s
 
   -- Show user the changes they made.
   pecho("Automation group "..groupName.." updated.\nYour update is:")
-  pecho("\n\tIn position: "..positionNumber)
+  pecho("\n\tIn position: "..parthiaAutomationGroupPosition)
   pecho("\n\tAutomation Command: "..automationCommand)
   pecho("\n\tSeconds to wait: "..secondsToWait)
   pecho("\n\tRepeat on fail: "..repeatOnFail.."\n")
@@ -9764,7 +9764,7 @@ function parthiaAutomationUpdate(groupName, positionNumber, automationCommand, s
   
   return true  --function executed without error
   
-end  -- function parthiaAutomationUpdate(groupName, positionNumber, automationCommand, secondsToWait, repeatOnFail])</script>
+end  -- function parthiaAutomationUpdate(groupName, parthiaAutomationGroupPosition, automationCommand, secondsToWait, repeatOnFail])</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
