@@ -9774,7 +9774,7 @@ Scripts\Game Commands\auto\parthiaAutomationStart(groupName, groupRepeat)
   Verifies automation group groupName exists.
     Prompt user if it does now.
     End function return False
-  sets parthiaAutomationRunning to ([group name], [repeat])
+  sets parthiaAutomationRunning to {[group name], [repeat]}
   Call parthiaAutomationCall()
   
   Create a help function
@@ -9815,7 +9815,7 @@ function parthiaAutomationStartHelp()
   pecho("\tWould both run the automation group Attack Rotation an infinite number of times.\n\n")
   
   -- Show the automation help messages
-  
+  parthiaAutomationHelp()
   
   -- Suggest clicking above and fill in a command to help the user.
   pecho("\nYou can click on one of the help links above or adjust the command that auto filled in your command box.\n")
@@ -9857,9 +9857,14 @@ Scripts\Game Commands\auto\parthiaAutomationCall()
 Scripts\Game Commands\auto\parthiaAutomationStop()
     Set parthiaAutomationGroupPosition to 1
     set parthiaAutomationIterationCounter to False
+    set parthiaAutomationRunning to false
 ]]--
+
 function parthiaAutomationStop()
-  pecho("\nparthiaAutomationStop() called\n")
+  pecho("\nAutomation stopped\n")
+  
+  parthiaAutomationGroupPosition = 1
+  parthiaAutomationRunning = false
 end -- function parthiaAutomationStop()</script>
 						<eventHandlerList />
 					</Script>
@@ -9881,10 +9886,22 @@ Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
 						<packageName></packageName>
 						<script>-- Display a help message about the automation commands
 function parthiaAutomationHelp()
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk", 
-  [[parthiaTalkHelp()]],
-  "parthia talk help", true)
-  pecho(", list parthia's text to speech commands.\n")
+
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation help", 
+  [[parthiaAutomationHelp()]],
+  "parthia automation help", true)
+  pecho(", show all of the help for the automation system.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation groups", 
+  [[parthiaAutomationShowGroups()]],
+  "parthia automation groups", true)
+  pecho(", shows clickable automation groups you have made.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation start", 
+  [[parthiaAutomationStartHelp()]],
+  "parthia automation start", true)
+  pecho(", how to start an automation task.\n")
+  
 end  -- function parthiaAutomationHelp()</script>
 						<eventHandlerList />
 					</Script>

@@ -1266,6 +1266,14 @@ parthiaAutomationUpdate(unpack(matches, 2))</script>
 					<packageName></packageName>
 					<regex>^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\s+&lt;&gt;]+),\s+(\d+),\s+(\d+)$</regex>
 				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation start</name>
+					<script>-- display help message on how to start automation.
+parthiaAutomationStartHelp()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia automation start$</regex>
+				</Alias>
 			</AliasGroup>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
