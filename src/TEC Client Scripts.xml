@@ -4066,11 +4066,7 @@ function parthiaToBoolean(variableToConvert)
   end --if parthiaBooleanConverstionTable[variableToConvert] ~= nil then
 
   --return the possibly converted variable.
-  if variableToConvert then
-    pecho(variableToConvert.." is Truthy")
-  else
-    pecho(" is Falsely")
-  end
+  return variableToConvert
 
 end --function parthiaToBoolean(variableToConvert)</script>
 					<eventHandlerList />
@@ -9736,7 +9732,7 @@ function parthiaAutomationUpdate(groupName, positionNumber, automationCommand, s
   pecho("repeatOnFail: "..repeatOnFail.."\n")
   
   --Make certain positionNumber is a number that is not zero.
-  if positionNumber then
+  if parthiaToBoolean(positionNumber) then
   else
     pecho('Position number (second argument in the command) can not be 0.')
   end  --if positionNumber

@@ -1265,7 +1265,7 @@ Aliases\Parthia\parthia auto\parthia automation [group name], [position number] 
 parthiaAutomationUpdate(unpack(matches, 2))</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\s+]+),\s+(\d+),\s+(\d+)$</regex>
+					<regex>^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\s+&lt;&gt;]+),\s+(\d+),\s+(\d+)$</regex>
 				</Alias>
 			</AliasGroup>
 		</AliasGroup>
