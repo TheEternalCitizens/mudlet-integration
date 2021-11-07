@@ -509,6 +509,8 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   tecSettings.parthiaMapEnabled = false --tells parthia if it's mapping system should be running.
   
   tecSettings.tipsEnabled = true --tell parthia to show misc tips while exploring game world.
+  
+  tecSettings.automation = {}  --Used to track automation groups.
 
 	if displayToScreen then pecho("Parthia settings set to default.\n") end
 
@@ -9688,6 +9690,7 @@ Function(s) to create----------------------------------------------------------
 Variables(s) to create---------------------------------------------------------
   parthiaLastCommandSuccess: records if the last command the player's character ran was successful.
   tecSettings.automation = {}  # a dictionary to hold automation groups.
+    This is created automatically at every application startup via function Scripts\Variables Data Themese\Variables\tecClientReset()
   tecSettings.automation.[group name][position number] = {[command], [seconds or 0], [repeat on fail]}
     This will automatically get saved since it is in tecSettings.
   parthiaAutomationRunning: If automation is running it is set to ([group name], [repeat]), it is False if automation is not running
@@ -9740,6 +9743,12 @@ function parthiaAutomationUpdate(groupName, positionNumber, automationCommand, s
   --Due to the regex pattern that captured PositionNumber it is impossible for it to be a negative number.
   --No check for positive numbers only required.
   
+  --if tecSettings.automation[groupName] does not exist create it
+  --tecSettings.automation is created automatically when parthia starts.
+  if not tecSettings.automation[groupName] then
+    pecho("Automation group"..groupName.." does not exist. Creating it now.")
+    tecSettings.automation[groupName] = {}  -- Make the group name an empty dictionary
+  end  -- END if not tecSettings.automation[groupName] then
   
   
   return true  --function executed without error
