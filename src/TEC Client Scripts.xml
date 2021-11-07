@@ -9647,10 +9647,10 @@ Track command success----------------------------------------------------------
 Function(s) to create----------------------------------------------------------
   Scripts\TEC Functions\Game Commands\automation\parthiaAutomationUpdate(parthiaCmdString)
     Creates a new automation group if it does not already exist.
-      tecSettings.auto.[group name]
+      tecSettings.automation.[group name]
     Makes certain the position number is possible, for lua arrays must be 1 or greater.
     Sets the command in the group
-      tecSettings.auto.[group name][position number] = {[command], [seconds or 0], [repeat on fail]}
+      tecSettings.automation.[group name][position number] = {[command], [seconds or 0], [repeat on fail]}
     Prompts user to save.
   Scripts\TEC Functions\Game Commands\automation\parthiaAutomationStart(groupName, groupRepeat)
     sets parthiaAutomationRunning to ([group name], [repeat])
@@ -9658,7 +9658,7 @@ Function(s) to create----------------------------------------------------------
   Scripts\TEC Functions\Game Commands\automation\parthiaAutomationCall()
     Verifies the [group name] exists.
       if it does not notify the user stop this function.
-    Run the command at tecSettings.auto.[group name][parthiaAutomationGroupPosition]  
+    Run the command at tecSettings.automation.[group name][parthiaAutomationGroupPosition]  
     if not parthiaAutomationIterationCounter
       set parthiaAutomationIterationCounter to 1
       Call Scripts\TEC Functions\Game Commands\automation\parthiaAutomationIncreaseGroupIteration()
@@ -9666,10 +9666,10 @@ Function(s) to create----------------------------------------------------------
       Call Scripts\TEC Functions\Game Commands\automation\parthiaAutomationIncreaseGroupIteration()
     else [repeat on fail] is True and the command was successful
       Call Scripts\TEC Functions\Game Commands\automation\parthiaAutomationIncreaseGroupIteration()
-    if tecSettings.auto.[group name][position number].[seconds] is Truthy
+    if tecSettings.automation.[group name][position number].[seconds] is Truthy
       Verify [seconds] is a number
       Creates a timer set for [seconds]
-    if tecSettings.auto.[group name][position number].[seconds] is 0
+    if tecSettings.automation.[group name][position number].[seconds] is 0
       No action needed. No code check for this. Mentioning for comprehension of work flow.
       the trigger Triggers\Game Events\You are no longer busy will handle the rest of the automation.
     if parthiaAutomationRunning.[repeat] is truthy
@@ -9679,7 +9679,7 @@ Function(s) to create----------------------------------------------------------
     Set parthiaAutomationGroupPosition to 1
     set parthiaAutomationIterationCounter to False
   Scripts\TEC Functions\Game Commands\automation\parthiaAutomationIncreaseGroupIteration()
-    if tecSettings.auto.[group name] size is larger than 
+    if tecSettings.automation.[group name] size is larger than 
       Icrease parthiaAutomationGroupPosition by one
     else
       parthiaAutomationGroupPosition = 1
@@ -9687,8 +9687,8 @@ Function(s) to create----------------------------------------------------------
     
 Variables(s) to create---------------------------------------------------------
   parthiaLastCommandSuccess: records if the last command the player's character ran was successful.
-  tecSettings.auto = {}  # a dictionary to hold automation groups.
-  tecSettings.auto.[group name][position number] = {[command], [seconds or 0], [repeat on fail]}
+  tecSettings.automation = {}  # a dictionary to hold automation groups.
+  tecSettings.automation.[group name][position number] = {[command], [seconds or 0], [repeat on fail]}
     This will automatically get saved since it is in tecSettings.
   parthiaAutomationRunning: If automation is running it is set to ([group name], [repeat]), it is False if automation is not running
   parthiaAutomationGroupPosition: a number, noting what command in array is going to be run
@@ -9716,12 +9716,12 @@ aliase(s) to create-------------------------------------------------------------
 						<packageName></packageName>
 						<script>--[[
 Scripts\Game Commands\auto\parthiaAutomationUpdate(parthiaCmdString)
-    Creates a new automation group if it does not already exist.
-      tecSettings.auto.[group name]
-    Makes certain the position number is possible, for lua arrays must be 1 or greater.
-    Sets the command in the group
-      tecSettings.auto.[group name][position number] = {[command], [seconds or 0], [repeat on fail]}
-    Prompts user to save.
+  Makes certain the position number is possible, for lua arrays must be 1 or greater.
+  Creates a new automation group if it does not already exist.
+    tecSettings.automation.[group name]
+  Sets the command in the group
+    tecSettings.automation.[group name][position number] = {[command], [seconds or 0], [repeat on fail]}
+  Prompts user to save.
 ]]--
 
 function parthiaAutomationUpdate(groupName, positionNumber, automationCommand, secondsToWait, repeatOnFail)
@@ -9732,10 +9732,18 @@ function parthiaAutomationUpdate(groupName, positionNumber, automationCommand, s
   pecho("repeatOnFail: "..repeatOnFail.."\n")
   
   --Make certain positionNumber is a number that is not zero.
-  if parthiaToBoolean(positionNumber) then
-  else
+  if not parthiaToBoolean(positionNumber) then
     pecho('Position number (second argument in the command) can not be 0.')
-  end  --if positionNumber
+    return false
+  end  --if not parthiaToBoolean(positionNumber) then
+  
+  --Due to the regex pattern that captured PositionNumber it is impossible for it to be a negative number.
+  --No check for positive numbers only required.
+  
+  
+  
+  return true  --function executed without error
+  
 end  -- function parthiaAutomationUpdate(groupName, positionNumber, automationCommand, secondsToWait, repeatOnFail])</script>
 						<eventHandlerList />
 					</Script>
@@ -9762,7 +9770,7 @@ end  --parthiaAutomationStart(groupName, groupRepeat)</script>
 Scripts\Game Commands\auto\parthiaAutomationCall()
     Verifies the [group name] exists.
       if it does not notify the user stop this function.
-    Run the command at tecSettings.auto.[group name][parthiaAutomationGroupPosition]  
+    Run the command at tecSettings.automation.[group name][parthiaAutomationGroupPosition]  
     if not parthiaAutomationIterationCounter
       set parthiaAutomationIterationCounter to 1
       Call Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
@@ -9770,10 +9778,10 @@ Scripts\Game Commands\auto\parthiaAutomationCall()
       Call Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
     else [repeat on fail] is True and the command was successful
       Call Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
-    if tecSettings.auto.[group name][position number].[seconds] is Truthy
+    if tecSettings.automation.[group name][position number].[seconds] is Truthy
       Verify [seconds] is a number
       Creates a timer set for [seconds]
-    if tecSettings.auto.[group name][position number].[seconds] is 0
+    if tecSettings.automation.[group name][position number].[seconds] is 0
       No action needed. No code check for this. Mentioning for comprehension of work flow.
       the trigger Triggers\Game Events\You are no longer busy will handle the rest of the automation.
     if parthiaAutomationRunning.[repeat] is truthy
@@ -9797,7 +9805,7 @@ Scripts\Game Commands\auto\parthiaAutomationStop()
 						<packageName></packageName>
 						<script>--[[
 Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
-    if tecSettings.auto.[group name] size is larger than 
+    if tecSettings.automation.[group name] size is larger than 
       Icrease parthiaAutomationGroupPosition by one
     else
       parthiaAutomationGroupPosition = 1
