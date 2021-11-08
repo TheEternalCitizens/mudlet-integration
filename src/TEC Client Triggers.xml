@@ -2270,7 +2270,21 @@ Triggers\Game Events\You are no longer busy.
     Pattern: "&lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are no longer busy%.&lt;/font&gt;&lt;/font&gt;"
     if parthiaAutomationRunning is truthy
       Call Scripts\Game Commands\automation\parthiaAutomationCall()
-]]--</script>
+      
+      parthiaAutomationRunning = { groupName = groupName, groupRepeat = groupRepeat }
+]]--
+
+pecho("You are no longer busy triggered.")
+
+-- Handle automation tasks.
+-- Check if automation is running
+if parthiaAutomationRunning then
+  -- Check if this automation is called off of a timer or this trigger
+  -- If seconds to wait for this automation group is 0, automation is called by this trigger.
+  if not parthiaToBoolean(tecSettings.automation[groupName][parthiaAutomationIterationCounter].secondsToWait) then
+    parthiaAutomationCall()  -- Call the automation handler
+  end  -- if not parthiaToBoolean(tecSettings.automation[groupName][parthiaAutomationIterationCounter].secondsToWait) then
+end -- if parthiaAutomationRunning then</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>

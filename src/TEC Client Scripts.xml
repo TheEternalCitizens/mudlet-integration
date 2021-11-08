@@ -9897,6 +9897,12 @@ function parthiaAutomationCall()
   -- Set a timer for the next command.
   if parthiaToBoolean(secondsToWait) then
   
+    -- create timer to call this function here
+    
+  -- If we are not waiting for a number of seconds, we are waiting for the "You are no longer busy." event.
+  -- To call the next command in this automation group
+  else
+    
   end  -- if parthiaToBoolean(secondsToWait) then
   
   pecho("parthiaAutomationCall called")
