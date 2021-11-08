@@ -9750,8 +9750,8 @@ function parthiaAutomationUpdate(groupName, groupPosition, automationCommand, se
   -- Save the group and settings passed by the user
   tecSettings.automation[groupName][groupPosition] = { 
                                         automationCommand = automationCommand,
-                                        secondsToWait = secondsToWait,
-                                        repeatOnFail = repeatOnFail
+                                        secondsToWait = tonumber(secondsToWait),
+                                        repeatOnFail = tonumber(repeatOnFail)
                                       }
 
   -- Show user the changes they made.
