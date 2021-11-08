@@ -9842,23 +9842,7 @@ end  -- function parthiaAutomationStartHelp()</script>
 						<packageName></packageName>
 						<script>--[[
 Scripts\Game Commands\auto\parthiaAutomationCall()
-  Run the command at tecSettings.automation.[group name][parthiaAutomationGroupPosition]  
-  if not parthiaAutomationIterationCounter
-    set parthiaAutomationIterationCounter to 1
-    Call Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
-  elseIf [repeat on fail] is false
-    Call Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
-  else [repeat on fail] is True and the command was successful
-    Call Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
-  if tecSettings.automation.[group name][position number].[seconds] is Truthy
-    Verify [seconds] is a number
-    Creates a timer set for [seconds]
-  if tecSettings.automation.[group name][position number].[seconds] is 0
-    No action needed. No code check for this. Mentioning for comprehension of work flow.
-    the trigger Triggers\Game Events\You are no longer busy will handle the rest of the automation.
-  if parthiaAutomationRunning.repeat is truthy
-    if parthiaAutomationIterationCounter is greater than parthiaAutomationRunning.[repeat]
-    Call Scripts\Game Commands\auto\parthiaAutomationStop()
+  pseudo notes were no longer valid.
 ]]--
 
 function parthiaAutomationCall()
@@ -9899,11 +9883,10 @@ function parthiaAutomationCall()
   
     -- create timer to call this function here
     
-  -- If we are not waiting for a number of seconds, we are waiting for the "You are no longer busy." event.
-  -- To call the next command in this automation group
-  else
-    
   end  -- if parthiaToBoolean(secondsToWait) then
+  
+  --send the command
+  send(automationCommand)
   
   pecho("parthiaAutomationCall called")
   
