@@ -9882,8 +9882,8 @@ function parthiaAutomationCall()
   
   -- Iterate to the next command if it is required.
   
-  -- Always iterate to the next command if repeatOnFail is false
-  if not parthiaToBoolean(repeatOnFail) then  
+  -- Always iterate to the next command if repeatOnFail is false, and this is NOT the first run out this automation group
+  if not parthiaToBoolean(repeatOnFail) and not parthiaAutomationFirstRun then  
     parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
   -- It repeatOnFail is true and the last command was successfull iterate
   elseif parthiaToBoolean(repeatOnFail) and parthiaLastCommandSuccess then
@@ -9893,9 +9893,16 @@ function parthiaAutomationCall()
   -- In case user is sending command that has no success chance reset parthiaLastCommandSuccess
   parthiaLastCommandSuccess = false
   
+  -- If the user specified seconds to wait before conducting the next command
+  -- Set a timer for the next command.
+  if parthiaToBoolean(secondsToWait) then
   
+  end  -- if parthiaToBoolean(secondsToWait) then
   
   pecho("parthiaAutomationCall called")
+  
+  -- record that the first run of this automation group has completed.
+  parthiaAutomationFirstRun = false
 
 end -- function parthiaAutomationCall()</script>
 						<eventHandlerList />
