@@ -2266,6 +2266,8 @@ end --if parthiaMap.getEnabled()
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>You are no longer busy.</name>
 				<script>--[[
+Patter example: &lt;/font&gt;&lt;font color="#ff9b00"&gt;You are no longer busy.&lt;/font&gt;&lt;/font&gt;
+
 Triggers\Game Events\You are no longer busy.
     Pattern: "&lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are no longer busy%.&lt;/font&gt;&lt;/font&gt;"
     if parthiaAutomationRunning is truthy
@@ -2274,14 +2276,13 @@ Triggers\Game Events\You are no longer busy.
       parthiaAutomationRunning = { groupName = groupName, groupRepeat = groupRepeat }
 ]]--
 
-pecho("You are no longer busy triggered.")
-
 -- Handle automation tasks.
 -- Check if automation is running
 if parthiaAutomationRunning then
   -- Check if this automation is called off of a timer or this trigger
   -- If seconds to wait for this automation group is 0, automation is called by this trigger.
   if not parthiaToBoolean(tecSettings.automation[groupName][parthiaAutomationIterationCounter].secondsToWait) then
+    pecho("Parthia automation calling parthiaAutomationCall")
     parthiaAutomationCall()  -- Call the automation handler
   end  -- if not parthiaToBoolean(tecSettings.automation[groupName][parthiaAutomationIterationCounter].secondsToWait) then
 end -- if parthiaAutomationRunning then</script>
@@ -2296,7 +2297,7 @@ end -- if parthiaAutomationRunning then</script>
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>&lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are no longer busy%.&lt;/font&gt;&lt;/font&gt;</string>
+					<string>^&lt;\/font&gt;&lt;font color="#[A-Fa-f0-9]+"&gt;You are no longer busy\.&lt;\/font&gt;&lt;\/font&gt;$</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>1</integer>
