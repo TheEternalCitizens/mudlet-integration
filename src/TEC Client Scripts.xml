@@ -9870,6 +9870,7 @@ function parthiaAutomationCall()
   --if this is the fist run of this automation task, initialize variables.
   if parthiaAutomationFirstRun then
     parthiaAutomationIncreaseGroupIteration()  -- set the iterator
+    parthiaLastCommandSuccess = false  -- There was no last command so set this to false
   end  -- if parthiaAutomationFirstRun then
   pecho("Current iteration: "..parthiaAutomationIterationCounter.."\n")
 
@@ -9879,12 +9880,20 @@ function parthiaAutomationCall()
   
   pecho("automationCommand: "..automationCommand.." secondsToWait: "..secondsToWait.." repeatOnFail: "..repeatOnFail.."\n")
   
-  -- if this command should be repeated on failure and it failed last run
-  if parthiaToBoolean(repeatOnFail) and not parthiaLastCommandSuccess then
+  -- Iterate to the next command if it is required.
   
-  end  -- if parthiaToBoolean(repeatOnFail) then
+  -- Always iterate to the next command if repeatOnFail is false
+  if not parthiaToBoolean(repeatOnFail) then  
+    parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
+  -- It repeatOnFail is true and the last command was successfull iterate
+  elseif parthiaToBoolean(repeatOnFail) and parthiaLastCommandSuccess then
+    parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
+  end  -- if not parthiaToBoolean(repeatOnFail) then
+  
   -- In case user is sending command that has no success chance reset parthiaLastCommandSuccess
   parthiaLastCommandSuccess = false
+  
+  
   
   pecho("parthiaAutomationCall called")
 
