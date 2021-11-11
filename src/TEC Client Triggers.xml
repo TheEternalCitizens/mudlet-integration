@@ -2279,10 +2279,12 @@ Triggers\Game Events\You are no longer busy.
 -- Handle automation tasks.
 -- Check if automation is running
 if parthiaAutomationRunning then
+  pecho("pathiaAutomation trigger parthiaAutomationIterationCounter: "..parthiaAutomationIterationCounter.."\n")
+  groupName = parthiaAutomationRunning["groupName"]
   -- Check if this automation is called off of a timer or this trigger
   -- If seconds to wait for this automation group is 0, automation is called by this trigger.
   if not parthiaToBoolean(tecSettings.automation[groupName][parthiaAutomationIterationCounter].secondsToWait) then
-    pecho("Parthia automation calling parthiaAutomationCall")
+    pecho("Parthia automation calling parthiaAutomationCall\n")
     parthiaAutomationCall()  -- Call the automation handler
   end  -- if not parthiaToBoolean(tecSettings.automation[groupName][parthiaAutomationIterationCounter].secondsToWait) then
 end -- if parthiaAutomationRunning then</script>

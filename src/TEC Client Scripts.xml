@@ -9856,7 +9856,6 @@ function parthiaAutomationCall()
     parthiaAutomationIncreaseGroupIteration()  -- set the iterator
     parthiaLastCommandSuccess = false  -- There was no last command so set this to false
   end  -- if parthiaAutomationFirstRun then
-  pecho("Current iteration: "..parthiaAutomationIterationCounter.."\n")
 
   automationCommand = tecSettings.automation[groupName][parthiaAutomationIterationCounter].automationCommand
   secondsToWait = tecSettings.automation[groupName][parthiaAutomationIterationCounter].secondsToWait
@@ -9971,6 +9970,7 @@ function parthiaAutomationIncreaseGroupIteration()
     
     -- convert the value into a number, where value is one of the keys for this automation group name
     value = tonumber(value)
+    parthiaAutomationIterationCounter = tonumber(parthiaAutomationIterationCounter)
     
     -- if the value from the automationGroupKeySet is larger than the current command iteration
     -- This is the next iteration in our automation group.
@@ -9978,7 +9978,6 @@ function parthiaAutomationIncreaseGroupIteration()
       parthiaAutomationIterationCounter = value
       break  -- stop the loop
     end  -- if key &gt;= parthiaAutomationIterationCounter then
-    
     -- Check if we are about to iterate past the automationGroupKeySet
     -- Set the automations iterator to the first element in this automation groups sequence
     if key == #automationGroupKeySet then
