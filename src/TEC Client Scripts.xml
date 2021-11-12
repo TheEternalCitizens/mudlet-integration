@@ -9861,8 +9861,6 @@ function parthiaAutomationCall()
     parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
   end  -- if parthiaAutomationFirstRun
   
-  parthiaAutomationIterationCounter = tostring(parthiaAutomationIterationCounter)
-  
   automationCommand = tecSettings.automation[groupName][parthiaAutomationIterationCounter].automationCommand
   secondsToWait = tecSettings.automation[groupName][parthiaAutomationIterationCounter].secondsToWait
   repeatOnFail = tecSettings.automation[groupName][parthiaAutomationIterationCounter].repeatOnFail
@@ -9965,13 +9963,9 @@ function parthiaAutomationIncreaseGroupIteration()
   -- find the next highest logical key in the automation group's table
   for key, value in pairs(automationGroupKeySet) do
     
-    -- convert the value into a number, where value is one of the keys for this automation group name
-    value = tonumber(value)
-    parthiaAutomationIterationCounter = tonumber(parthiaAutomationIterationCounter)
-    
     -- if the value from the automationGroupKeySet is larger than the current command iteration
     -- This is the next iteration in our automation group.
-    if value &gt; parthiaAutomationIterationCounter then
+    if tonumber(value) &gt; tonumber(parthiaAutomationIterationCounter) then
       parthiaAutomationIterationCounter = value
       break  -- stop the loop
     end  -- if key &gt;= parthiaAutomationIterationCounter then

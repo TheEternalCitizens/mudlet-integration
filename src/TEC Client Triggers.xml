@@ -2279,7 +2279,6 @@ Triggers\Game Events\You are no longer busy.
 -- Handle automation tasks.
 -- Check if automation is running
 if parthiaAutomationRunning then
-  parthiaAutomationIterationCounter = tostring(parthiaAutomationIterationCounter)
   pecho("pathiaAutomation trigger parthiaAutomationIterationCounter: "..parthiaAutomationIterationCounter.."\n")
   groupName = parthiaAutomationRunning["groupName"]
   pecho("groupName: "..groupName.."\n")
