@@ -9657,26 +9657,15 @@ Function(s) to create----------------------------------------------------------
   Scripts\TEC Functions\Game Commands\automation\parthiaAutomationStart(groupName, groupRepeat)
     sets parthiaAutomationRunning to ([group name], [repeat])
     Call parthiaAutomationCall()
-  Scripts\TEC Functions\Game Commands\automation\parthiaAutomationCall()
-    Verifies the [group name] exists.
-      if it does not notify the user stop this function.
-    Run the command at tecSettings.automation.[group name][parthiaAutomationGroupPosition]  
-    if not parthiaAutomationIterationCounter
-      set parthiaAutomationIterationCounter to 1
-      Call Scripts\TEC Functions\Game Commands\automation\parthiaAutomationIncreaseGroupIteration()
-    elseIf [repeat on fail] is false
-      Call Scripts\TEC Functions\Game Commands\automation\parthiaAutomationIncreaseGroupIteration()
-    else [repeat on fail] is True and the command was successful
-      Call Scripts\TEC Functions\Game Commands\automation\parthiaAutomationIncreaseGroupIteration()
-    if tecSettings.automation.[group name][position number].[seconds] is Truthy
-      Verify [seconds] is a number
-      Creates a timer set for [seconds]
-    if tecSettings.automation.[group name][position number].[seconds] is 0
-      No action needed. No code check for this. Mentioning for comprehension of work flow.
-      the trigger Triggers\Game Events\You are no longer busy will handle the rest of the automation.
-    if parthiaAutomationRunning.[repeat] is truthy
-      if parthiaAutomationIterationCounter is greater than parthiaAutomationRunning.[repeat]
-      Call Scripts\TEC Functions\Game Commands\automation\parthiaAutomationStop()
+  Scripts\Game Commands\auto\parthiaAutomationCall()
+    Collects groupName from parthiaAutomationRunning
+    Iterate the automation group iterator if needed.
+    Get the automationCommand, secondsToWait and repeatOnFail from the correct automation group and group iteration key
+    Set parthiaLastCommandSuccess to false, in case this is a command that has no success chance to reset it itself.
+    If this is a command that waits for seconds and not for a ready prompt, create a timer to call this function.
+    Send the command
+    set parthiaAutomationFirstRun to false.
+    return true
   Scripts\TEC Functions\Game Commands\automation\parthiaAutomationStop()
     Set parthiaAutomationGroupPosition to 1
     set parthiaAutomationIterationCounter to False
@@ -9842,7 +9831,14 @@ end  -- function parthiaAutomationStartHelp()</script>
 						<packageName></packageName>
 						<script>--[[
 Scripts\Game Commands\auto\parthiaAutomationCall()
-  pseudo notes were no longer valid.
+  Collects groupName from parthiaAutomationRunning
+  Iterate the automation group iterator if needed.
+  Get the automationCommand, secondsToWait and repeatOnFail from the correct automation group and group iteration key
+  Set parthiaLastCommandSuccess to false, in case this is a command that has no success chance to reset it itself.
+  If this is a command that waits for seconds and not for a ready prompt, create a timer to call this function.
+  Send the command
+  set parthiaAutomationFirstRun to false.
+  return true
 ]]--
 
 function parthiaAutomationCall()
@@ -9851,27 +9847,25 @@ function parthiaAutomationCall()
   groupName = parthiaAutomationRunning["groupName"]
   groupRepeat = parthiaAutomationRunning["groupRepeat"]
   
+  
+  -- Iterate to the next command if it is required.
   --if this is the fist run of this automation task, initialize variables.
   if parthiaAutomationFirstRun then
     parthiaAutomationIncreaseGroupIteration()  -- set the iterator
     parthiaLastCommandSuccess = false  -- There was no last command so set this to false
-  end  -- if parthiaAutomationFirstRun then
-
-  automationCommand = tecSettings.automation[groupName][parthiaAutomationIterationCounter].automationCommand
-  secondsToWait = tecSettings.automation[groupName][parthiaAutomationIterationCounter].secondsToWait
-  repeatOnFail = tecSettings.automation[groupName][parthiaAutomationIterationCounter].repeatOnFail
-  
-  pecho("automationCommand: "..automationCommand.." secondsToWait: "..secondsToWait.." repeatOnFail: "..repeatOnFail.."\n")
-  
-  -- Iterate to the next command if it is required.
-  
   -- Always iterate to the next command if repeatOnFail is false, and this is NOT the first run out this automation group
-  if not parthiaToBoolean(repeatOnFail) and not parthiaAutomationFirstRun then  
+  elseif not parthiaToBoolean(repeatOnFail) and not parthiaAutomationFirstRun then  
     parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
   -- It repeatOnFail is true and the last command was successfull iterate
   elseif parthiaToBoolean(repeatOnFail) and parthiaLastCommandSuccess then
     parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
-  end  -- if not parthiaToBoolean(repeatOnFail) then
+  end  -- if parthiaAutomationFirstRun
+  
+  parthiaAutomationIterationCounter = tostring(parthiaAutomationIterationCounter)
+  
+  automationCommand = tecSettings.automation[groupName][parthiaAutomationIterationCounter].automationCommand
+  secondsToWait = tecSettings.automation[groupName][parthiaAutomationIterationCounter].secondsToWait
+  repeatOnFail = tecSettings.automation[groupName][parthiaAutomationIterationCounter].repeatOnFail
   
   -- In case user is sending command that has no success chance reset parthiaLastCommandSuccess
   parthiaLastCommandSuccess = false
@@ -9891,6 +9885,8 @@ function parthiaAutomationCall()
   
   -- record that the first run of this automation group has completed.
   parthiaAutomationFirstRun = false
+  
+  return true
 
 end -- function parthiaAutomationCall()</script>
 						<eventHandlerList />
@@ -9911,6 +9907,7 @@ function parthiaAutomationStop(displayToScreen)
   parthiaAutomationIterationCounter = false
   parthiaAutomationRunning = false
   parthiaAutomationFirstRun = true
+  parthiaLastCommandSuccess = false
   
   if displayToScreen then
     pecho("\nAutomation stopped.\n\n")
