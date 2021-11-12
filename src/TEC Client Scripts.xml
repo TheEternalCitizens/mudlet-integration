@@ -9850,7 +9850,6 @@ function parthiaAutomationCall()
   -- Will be used to record what position in the automation group should be called.
   local groupPosition = false
   
-  
   -- Iterate to the next command if it is required.
   --if this is the fist run of this automation task, initialize variables.
   if parthiaAutomationFirstRun then
@@ -9863,6 +9862,13 @@ function parthiaAutomationCall()
   elseif parthiaToBoolean(repeatOnFail) and parthiaLastCommandSuccess then
     groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
   end  -- if parthiaAutomationFirstRun
+  
+  -- stop this automation loop if user specified a group repeat and it has been reached.
+  if parthiaToBoolean(groupRepeat) then  -- Only check if a group repeat was specified.
+    if parthiaAutomationIterationCounter &gt;= tonumber(groupRepeat) then  -- this has iterated more than group repeat specified
+      parthiaAutomationStop()  -- Stop automation.
+    end  -- if parthiaAutomationIterationCounter &gt; tonumber(groupRepeat) then
+  end -- if parthiaToBoolean(groupRepeat) then
   
   local automationCommand = tecSettings.automation[groupName][groupPosition].automationCommand
   local secondsToWait = tecSettings.automation[groupName][groupPosition].secondsToWait
@@ -9879,7 +9885,7 @@ function parthiaAutomationCall()
     
   end  -- if parthiaToBoolean(secondsToWait) then
   
-  --send the command
+  -- send the command
   send(automationCommand)
   
   pecho("parthiaAutomationCall called")
@@ -9905,7 +9911,7 @@ Scripts\Game Commands\auto\parthiaAutomationStop()
 function parthiaAutomationStop(displayToScreen)
   
   parthiaAutomationGroupPosition = 1
-  parthiaAutomationIterationCounter = false
+  parthiaAutomationIterationCounter = 0
   parthiaAutomationRunning = false
   parthiaAutomationFirstRun = true
   parthiaLastCommandSuccess = false
