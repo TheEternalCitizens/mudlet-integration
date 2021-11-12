@@ -1274,6 +1274,30 @@ parthiaAutomationStartHelp()</script>
 					<packageName></packageName>
 					<regex>^parthia automation start$</regex>
 				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation</name>
+					<script>-- parthia automation, calls the automation help function
+parthiaAutomationHelp()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia automation$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation update</name>
+					<script>-- Show the help messages on how to update parthia's automation system.
+parthiaAutomationUpdateHelp()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia automation update$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation create</name>
+					<script>-- Show the help messages on how to update parthia's automation system.
+parthiaAutomationUpdateHelp()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia automation create$</regex>
+				</Alias>
 			</AliasGroup>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
