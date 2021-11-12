@@ -9844,8 +9844,8 @@ Scripts\Game Commands\auto\parthiaAutomationCall()
 function parthiaAutomationCall()
   
   -- Get required variables for this function.
-  groupName = parthiaAutomationRunning["groupName"]
-  groupRepeat = parthiaAutomationRunning["groupRepeat"]
+  local groupName = parthiaAutomationRunning["groupName"]
+  local groupRepeat = parthiaAutomationRunning["groupRepeat"]
   
   
   -- Iterate to the next command if it is required.
@@ -9861,9 +9861,9 @@ function parthiaAutomationCall()
     parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
   end  -- if parthiaAutomationFirstRun
   
-  automationCommand = tecSettings.automation[groupName][parthiaAutomationIterationCounter].automationCommand
-  secondsToWait = tecSettings.automation[groupName][parthiaAutomationIterationCounter].secondsToWait
-  repeatOnFail = tecSettings.automation[groupName][parthiaAutomationIterationCounter].repeatOnFail
+  local automationCommand = tecSettings.automation[groupName][parthiaAutomationIterationCounter].automationCommand
+  local secondsToWait = tecSettings.automation[groupName][parthiaAutomationIterationCounter].secondsToWait
+  local repeatOnFail = tecSettings.automation[groupName][parthiaAutomationIterationCounter].repeatOnFail
   
   -- In case user is sending command that has no success chance reset parthiaLastCommandSuccess
   parthiaLastCommandSuccess = false
