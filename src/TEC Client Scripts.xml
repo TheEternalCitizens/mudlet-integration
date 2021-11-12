@@ -9972,10 +9972,14 @@ function parthiaAutomationIncreaseGroupIteration()
       parthiaAutomationGroupPosition = value
       break  -- stop the loop
     end  -- if key &gt;= parthiaAutomationGroupPosition then
+    
     -- Check if we are about to iterate past the automationGroupKeySet
     -- Set the automations iterator to the first element in this automation groups sequence
     if key == #automationGroupKeySet then
+      -- set the group iterator to the first element in the groups command table
       parthiaAutomationGroupPosition = automationGroupKeySet[1]
+      -- Increase the automation rotation iterator by 1.
+      parthiaAutomationIterationCounter = parthiaAutomationIterationCounter + 1
     end -- if key == #automationGroupKeySet
   
   end  -- for key, value in pairs(automationGroupKeySet) do
