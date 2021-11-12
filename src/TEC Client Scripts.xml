@@ -9847,23 +9847,26 @@ function parthiaAutomationCall()
   local groupName = parthiaAutomationRunning["groupName"]
   local groupRepeat = parthiaAutomationRunning["groupRepeat"]
   
+  -- Will be used to record what position in the automation group should be called.
+  local groupPosition = false
+  
   
   -- Iterate to the next command if it is required.
   --if this is the fist run of this automation task, initialize variables.
   if parthiaAutomationFirstRun then
-    parthiaAutomationIncreaseGroupIteration()  -- set the iterator
+    groupPosition = parthiaAutomationIncreaseGroupIteration()  -- set the iterator
     parthiaLastCommandSuccess = false  -- There was no last command so set this to false
   -- Always iterate to the next command if repeatOnFail is false, and this is NOT the first run out this automation group
   elseif not parthiaToBoolean(repeatOnFail) and not parthiaAutomationFirstRun then  
-    parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
+    groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
   -- It repeatOnFail is true and the last command was successfull iterate
   elseif parthiaToBoolean(repeatOnFail) and parthiaLastCommandSuccess then
-    parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
+    groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
   end  -- if parthiaAutomationFirstRun
   
-  local automationCommand = tecSettings.automation[groupName][parthiaAutomationIterationCounter].automationCommand
-  local secondsToWait = tecSettings.automation[groupName][parthiaAutomationIterationCounter].secondsToWait
-  local repeatOnFail = tecSettings.automation[groupName][parthiaAutomationIterationCounter].repeatOnFail
+  local automationCommand = tecSettings.automation[groupName][groupPosition].automationCommand
+  local secondsToWait = tecSettings.automation[groupName][groupPosition].secondsToWait
+  local repeatOnFail = tecSettings.automation[groupName][groupPosition].repeatOnFail
   
   -- In case user is sending command that has no success chance reset parthiaLastCommandSuccess
   parthiaLastCommandSuccess = false
