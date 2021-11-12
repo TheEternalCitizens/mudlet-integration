@@ -9689,6 +9689,8 @@ Variables(s) to create---------------------------------------------------------
     This is automatically handled by: Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
   parthiaAutomationFirstRun: tracks if this is the first run of this automation task.
     Is automatically set to true in parthiaAutomationStop and false in parthiaAutomationCall
+  parthiaAutomationTimerID: The ID for any time created if the user specified a seconds variable on automation group entry creation.
+    Collected in parthiaAutomationCall, and is set to false at the start of that method also.
     
 Trigger(s) to create-----------------------------------------------------------
   Triggers\Game Events\You are no longer busy.
@@ -9849,6 +9851,8 @@ function parthiaAutomationCall()
   
   -- Will be used to record what position in the automation group should be called.
   local groupPosition = false
+  -- Blank out the timer ID it is no longer needed
+  parthiaAutomationTimerID = false
   
   -- Iterate to the next command if it is required.
   --if this is the fist run of this automation task, initialize variables.
@@ -9882,6 +9886,7 @@ function parthiaAutomationCall()
   if parthiaToBoolean(secondsToWait) then
   
     -- create timer to call this function here
+    parthiaAutomationTimerID = tempTimer(secondsToWait, [[parthiaAutomationCall()]])
     
   end  -- if parthiaToBoolean(secondsToWait) then
   
@@ -9915,6 +9920,12 @@ function parthiaAutomationStop(displayToScreen)
   parthiaAutomationRunning = false
   parthiaAutomationFirstRun = true
   parthiaLastCommandSuccess = false
+  
+  --If a timer exists and is waiting to fire. End it now.
+  if parthiaAutomationTimerID then
+    killTimer(parthiaAutomationTimerID)
+    parthiaAutomationTimerID = false  -- Set the timer ID to false it is no longer needed.
+  end  -- if parthiaAutomationTimerID then
   
   if displayToScreen then
     pecho("\nAutomation stopped.\n\n")
