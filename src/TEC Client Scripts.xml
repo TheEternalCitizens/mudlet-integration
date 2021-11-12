@@ -9928,7 +9928,7 @@ Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
       Icrease parthiaAutomationGroupPosition by one
     else
       parthiaAutomationGroupPosition = 1
-      Increase parthiaAutomationIterationCounter by 1
+      Increase groupPosition by 1
       
 Keys in the automation group name may not be in order or correctly sequenced.
     For example they may have keys 1, 2, 3, 5, 9... So on where keys are skipped.
@@ -9957,32 +9957,32 @@ function parthiaAutomationIncreaseGroupIteration()
   table.sort(automationGroupKeySet)
   
   -- if the iterator does not exist this means this is the first run of this automation group.
-  if not parthiaAutomationIterationCounter then
+  if not parthiaAutomationGroupPosition then
     -- Returning the lowest element in the  automation group
-    parthiaAutomationIterationCounter = automationGroupKeySet[1]
-    return parthiaAutomationIterationCounter
-  end  -- if not parthiaAutomationIterationCounter then
+    parthiaAutomationGroupPosition = automationGroupKeySet[1]
+    return parthiaAutomationGroupPosition
+  end  -- if not parthiaAutomationGroupPosition then
   
   -- find the next highest logical key in the automation group's table
   for key, value in pairs(automationGroupKeySet) do
     
     -- if the value from the automationGroupKeySet is larger than the current command iteration
     -- This is the next iteration in our automation group.
-    if tonumber(value) &gt; tonumber(parthiaAutomationIterationCounter) then
-      parthiaAutomationIterationCounter = value
+    if tonumber(value) &gt; tonumber(parthiaAutomationGroupPosition) then
+      parthiaAutomationGroupPosition = value
       break  -- stop the loop
-    end  -- if key &gt;= parthiaAutomationIterationCounter then
+    end  -- if key &gt;= parthiaAutomationGroupPosition then
     -- Check if we are about to iterate past the automationGroupKeySet
     -- Set the automations iterator to the first element in this automation groups sequence
     if key == #automationGroupKeySet then
-      parthiaAutomationIterationCounter = automationGroupKeySet[1]
+      parthiaAutomationGroupPosition = automationGroupKeySet[1]
     end -- if key == #automationGroupKeySet
   
   end  -- for key, value in pairs(automationGroupKeySet) do
   
-  pecho("parthiaAutomationIncreaseGroupIteration() Next iterator: "..parthiaAutomationIterationCounter.."\n")
+  pecho("parthiaAutomationIncreaseGroupIteration() Next iterator: "..parthiaAutomationGroupPosition.."\n")
   
-  return parthiaAutomationIterationCounter
+  return parthiaAutomationGroupPosition
 
 end  --function parthiaAutomationIncreaseGroupIteration()</script>
 						<eventHandlerList />
