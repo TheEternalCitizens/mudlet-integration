@@ -9673,7 +9673,7 @@ Function(s) to create----------------------------------------------------------
     if tecSettings.automation.[group name] size is larger than 
       Icrease parthiaAutomationGroupPosition by one
     else
-      parthiaAutomationGroupPosition = 1
+      parthiaAutomationGroupPosition = false
       Increase parthiaAutomationIterationCounter by 1
     
 Variables(s) to create---------------------------------------------------------
@@ -9915,7 +9915,7 @@ Scripts\Game Commands\auto\parthiaAutomationStop()
 
 function parthiaAutomationStop(displayToScreen)
   
-  parthiaAutomationGroupPosition = 1
+  parthiaAutomationGroupPosition = false
   parthiaAutomationIterationCounter = 0
   parthiaAutomationRunning = false
   parthiaAutomationFirstRun = true
@@ -9944,7 +9944,7 @@ Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
     if tecSettings.automation.[group name] size is larger than 
       Icrease parthiaAutomationGroupPosition by one
     else
-      parthiaAutomationGroupPosition = 1
+      parthiaAutomationGroupPosition = false
       Increase groupPosition by 1
       
 Keys in the automation group name may not be in order or correctly sequenced.
