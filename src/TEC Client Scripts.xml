@@ -10106,25 +10106,33 @@ end  --function parthiaAutomationIncreaseGroupIteration()</script>
 						<script>-- Display a help message about the automation commands
 function parthiaAutomationHelp()
 
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation help", 
-  [[parthiaAutomationHelp()]],
-  "parthia automation help", true)
-  pecho(", help for the automation system.\n")
+  pecho("\nAutomation while you are away from your computer is not allowed in TEC.\n")
+  pecho("It is HIGHLY recommended you remain infront of your computer while you are using automation.\n")
+  pecho("Failure to do so can result in getting your account suspended or in repeat offenses permanently banned.\n")
+  pecho("As a result automation in parthia is intended to remove the frustration of tasks with repatative commands. ")
+  pecho("This automation can be dramatically helpful for someone who is not able to type rapidly.\n")
   
+  pecho("\nAutomation in parthia is done by creating groups of commands. Than starting those groups. ")
+  pecho("You can click or type in the commands below to learn more about creating, managing and starting automation groups.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation update", 
   [[parthiaAutomationUpdateHelp()]],
   "parthia automation update", true)
   pecho(", how to create or update automation groups.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation groups", 
-  [[parthiaAutomationShowGroups()]],
-  "parthia automation groups", true)
-  pecho(", shows clickable automation groups you have made.\n")
-  
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation start", 
   [[parthiaAutomationStartHelp()]],
   "parthia automation start", true)
   pecho(", how to start an automation task.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation groups", 
+  [[parthiaAutomationShowGroups()]],
+  "parthia automation groups", true)
+  pecho(", shows automation groups you have made.\n")
+  
+  pecho("\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation help", 
+  [[parthiaAutomationHelp()]],
+  "parthia automation help", true)
+  pecho(", help for the automation system.\n")
   
   pecho("\n")
   
