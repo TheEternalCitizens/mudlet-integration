@@ -10211,34 +10211,45 @@ function parthiaAutomationShowGroups(groupName, removeElement, groupPosition)
     
       pecho("Automation group: "..groupName.."\n")
       
-      -- sort the automation group
-      --local sortedGroupNameTable = {}
+      -- Create a temp table to show the human logical sorted version of this automation group.
+      local sortedGroupNameTable = {}
+      for key, _ in pairs(tecSettings.automation[groupName]) do
+        table.insert(sortedGroupNameTable, key)
+      end -- for _, value in pairs(tecSettings.automation[groupName]) do
+      table.sort(sortedGroupNameTable)
       
-      --for _, value in pairs(tecSettings.automation[groupName]) do
-      --  table.insert(sortedGroupNameTable, value)
-      --end -- for _, value in pairs(tecSettings.automation[groupName]) do
-  
-      -- Sort the table 
-      --table.sort(sortedGroupNameTable)
-      
-      for groupPosition, automationGroup in pairs(tecSettings.automation[groupName]) do
+      -- Loop through the sorted group.
+      -- Notice that groupPosition is getting taken from the SORTED group.
+      -- This is what allows the function to show this group in a numerical order. Not the order it was created in.
+      for _, groupPosition in pairs(sortedGroupNameTable) do
+        
+        -- Show the group position
         pecho("\tGroup Position: "..groupPosition..", ")
+        -- Provide an easy method to remove this group.
         pechoLink("\t&lt;:maroon&gt;Remove "..groupName.." position "..groupPosition, 
         [[expandAlias("parthia automation groups ]]..groupName..[[, delete ]]..groupPosition..[[")]],
         "parthia automation groups "..groupName..", delete "..groupPosition, true)
-        pecho("\n\t\tCommand called: "..automationGroup.automationCommand.."\n")
-        if parthiaToBoolean(automationGroup.secondsToWait) then
-          pecho("\t\tSeconds to wait before calling next command: "..automationGroup.secondsToWait.."\n")
+        
+        -- Collect variables from this automation group, at the correct position.
+        local automationCommand = tecSettings.automation[groupName][groupPosition].automationCommand
+        local secondsToWait = tecSettings.automation[groupName][groupPosition].secondsToWait
+        local repeatOnFail = tecSettings.automation[groupName][groupPosition].repeatOnFail
+        
+        pecho("\n\t\tCommand called: "..automationCommand.."\n")
+        if parthiaToBoolean(secondsToWait) then
+          pecho("\t\tSeconds to wait before calling next command: "..secondsToWait.."\n")
         else
           pecho("\t\tNext command called when you see 'You are no longer busy.'.\n")
         end  -- if parthiaToBoolean(automationGroup.secondsToWait) then
-        pecho("\t\tRepeat this command if it fails: "..tostring(parthiaToBoolean(automationGroup.repeatOnFail)).."\n")
+        pecho("\t\tRepeat this command if it fails: "..tostring(parthiaToBoolean(repeatOnFail)).."\n")
       end  -- for groupPosition, automationGroup in pairs(tecSettings.automation[groupName]) do
+      
+    -- The automation group passed does not exist.
     else
       pecho("Automation group named ["..groupName.."] does not exist\n")
     end  -- if tecSettings.automation[groupName] then
   
-  -- No group name was provided
+  -- No group name was provided show all the groups, but no details of each group until the link is clicked.
   else
     
     pecho("You can click a blue link below to show that groups information. You can click a red link to remove that group.\n")
