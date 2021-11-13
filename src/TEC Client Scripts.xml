@@ -4066,6 +4066,12 @@ function parthiaToBoolean(variableToConvert)
   if parthiaBooleanConverstionTable[variableToConvert] ~= nil then
     variableToConvert = parthiaBooleanConverstionTable[variableToConvert]
   end --if parthiaBooleanConverstionTable[variableToConvert] ~= nil then
+  
+  if variableToConvert then
+    variableToConvert = true
+  else
+    variableToConvert = false
+  end
 
   --return the possibly converted variable.
   return variableToConvert
@@ -10123,6 +10129,76 @@ function parthiaAutomationHelp()
   pecho("\n")
   
 end  -- function parthiaAutomationHelp()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationShowGroups()</name>
+						<packageName></packageName>
+						<script>--[[
+Example of group creation:
+  tecSettings.automation[groupName][groupPosition] = { 
+                                        automationCommand = automationCommand,
+                                        secondsToWait = tonumber(secondsToWait),
+                                        repeatOnFail = tonumber(repeatOnFail)
+                                      }
+]]--
+
+
+function parthiaTableKeysToStr(tbl)
+  pecho("parthiaTableKeysToStr")
+  if type(tbl) == 'table' then
+  
+    pecho("Type table")
+    
+    local str = ''
+    
+    for key,_ in pairs(tbl) do
+       str = str..tostring(key).."\n"
+    end
+    
+    return str..'\n'
+    
+  else
+    return tostring(tbl)
+  end
+end
+
+function parthiaAutomationShowGroups(groupName)
+  
+  --show information on the group name provided.
+  if groupName then
+    if tecSettings.automation[groupName] then
+      pecho("Automation group: "..groupName.."\n")
+      for groupPosition, automationGroup in pairs(tecSettings.automation[groupName]) do
+        pecho("\tGroup Position: "..groupPosition.."\n")
+        pecho("\t\tCommand called: "..automationGroup.automationCommand.."\n")
+        if parthiaToBoolean(automationGroup.secondsToWait) then
+          pecho("\t\tSeconds to wait before calling next command: "..automationGroup.secondsToWait.."\n")
+        else
+          pecho("\t\tNext command called when you see 'You are no longer busy.'.\n")
+        end  -- if parthiaToBoolean(automationGroup.secondsToWait) then
+        pecho("\t\tRepeat this command if it fails: "..tostring(parthiaToBoolean(automationGroup.repeatOnFail)).."\n")
+      end  -- for groupPosition, automationGroup in pairs(tecSettings.automation[groupName]) do
+    else
+      pecho("Automation group named ["..groupName.."] does not exist\n")
+    end  -- if tecSettings.automation[groupName] then
+  
+  -- No group name was provided
+  else
+    
+    pecho("You can click a group name below to show that groups information.\n")
+    
+    for groupName, _ in pairs(tecSettings.automation) do
+      pecho("\t")
+      pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;"..groupName.."", 
+      [[expandAlias("parthia automation groups ]]..groupName..[[")]],
+      "parthia automation groups "..groupName, true)
+      pecho("\n")
+    end  -- for groupName tecSettings.automation do
+    
+  end  -- if groupName then
+  
+end  -- function parthiaAutomationShowGroups()</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>

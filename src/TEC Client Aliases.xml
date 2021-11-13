@@ -1298,6 +1298,20 @@ parthiaAutomationUpdateHelp()</script>
 					<packageName></packageName>
 					<regex>^parthia automation create$</regex>
 				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation groups</name>
+					<script>parthiaAutomationShowGroups(false)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia automation groups$</regex>
+					<Alias isActive="yes" isFolder="no">
+						<name>parthia automation groups [name]</name>
+						<script>parthiaAutomationShowGroups(matches[2])</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^parthia automation groups\s+([a-zA-Z0-9\s+]+)$</regex>
+					</Alias>
+				</Alias>
 			</AliasGroup>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
