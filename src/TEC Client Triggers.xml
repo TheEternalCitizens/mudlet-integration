@@ -2101,7 +2101,8 @@ triggers when the player is involved in combat. Either attacking or beind attack
 text to trigger on &lt;/font&gt;&lt;font color="#00CD20"&gt;[Success: 5, Roll: 73] You punch at a practice dummy, and hit! It suffers a minor hit to its face.&lt;/font&gt;&lt;/font&gt;
 ]]--
 
-if getHelpDevs() then --if player has help devs
+--if player has help devs or they are running the automation system.
+if getHelpDevs() or parthiaAutomationRunning then
   sortActions() --sort and collects actions into Help The Devs tables
 end --if getHelpDevs()</script>
 				<triggerType>0</triggerType>

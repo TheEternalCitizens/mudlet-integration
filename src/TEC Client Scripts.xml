@@ -9552,7 +9552,8 @@ function sortCombatActions(stringToCheck)
     tecErrorNotification("function collectCombatActions, passed a non string variable. Received: "..tostring(stringToCheck).." expected a string.")
   end --if type(stringToCheck) ~= "string"
 
-  if  stringToCheck:match("at you") or --if the attack is directed at the player.
+  --if the attack is directed at the player.
+  if  stringToCheck:match("at you") or
       stringToCheck:match("misses you") or
       stringToCheck:match("towards you") or 
       stringToCheck:match("slap you,") or
@@ -9566,15 +9567,23 @@ function sortCombatActions(stringToCheck)
         HelpDevsData.Combat.AgainstPlayer[stringToCheck] = "" --collect attack to table.
       end --if not table.contains(HelpDevsData.Combat.AgainstPlayer, stringTocheck)
     end --if getHelpDevs()
-  elseif  stringToCheck:match("%] You") or --if the attack is one the player is using
+    
+  --if the attack is one the player is using
+  elseif  stringToCheck:match("%] You") or 
           stringToCheck:match(", you") then
+          
+    -- record if this command was successful or not.
+    parthiaLastCommandSuccess = commandSuccessful(stringToCheck)
+          
     if getHelpDevs() then --if Help Developers is enabled
       if not table.contains(HelpDevsData.Combat.PlayerAttacks, stringToCheck) then --if stringToCheck is not in the HelpDevsData.Combat.PlayerAttacks table
         debugToDisplay("function collectCombatActions, adding "..stringToCheck.." to HelpDevsData.Combat.PlayerAttacks table.")
         HelpDevsData.Combat.PlayerAttacks[stringToCheck] = "" --collect attack to table.
       end --if not table.contains(HelpDevsData.Combat.PlayerAttacks, stringTocheck)
     end --getHelpDevs()
-  else --we do not know where this attack belongs
+  
+  --we do not know where this attack belongs
+  else
     if getHelpDevs() then --if Help Developers is enabled
       if not table.contains(HelpDevsData.Combat.Unsorted, stringToCheck) then --if stringToCheck is not in the HelpDevsData.Combat.Unsorted table
         debugToDisplay("function collectCombatActions, adding "..stringToCheck.." to HelpDevsData.Combat.Unsorted table.")
@@ -9594,6 +9603,9 @@ end --function sortCombatActions(stringToCheck)</script>
   if type(stringToCheck) ~= "string" then --make certain a string was passed
     tecErrorNotification("function sortNonCombatActions, passed a non string variable. Received: "..tostring(stringToCheck).." expected a string.")
   end --if type(stringToCheck) ~= "string"
+  
+  -- record if this command was successful or not.
+  parthiaLastCommandSuccess = commandSuccessful(stringToCheck)
 
   if getHelpDevs() then --if Help Developers is enabled
     if not table.contains(HelpDevsData.NonCombatActions.Unsorted, stringToCheck) then --if stringToCheck is not in the unsorted table
@@ -9909,9 +9921,9 @@ Scripts\Game Commands\auto\parthiaAutomationCall()
 
 function parthiaAutomationCall()
   
-  -- Get required variables for this function.
-  local groupName = parthiaAutomationRunning["groupName"]
-  local groupRepeat = parthiaAutomationRunning["groupRepeat"]
+  -- Get required variables for this function.  
+  local groupName = parthiaAutomationRunning["groupName"]  -- the name of this automation group
+  local groupRepeat = parthiaAutomationRunning["groupRepeat"]  -- How many times this group automation should repeat
   
   -- Will be used to record what position in the automation group should be called.
   local groupPosition = false
@@ -9924,23 +9936,34 @@ function parthiaAutomationCall()
     groupPosition = parthiaAutomationIncreaseGroupIteration()  -- set the iterator
     parthiaLastCommandSuccess = false  -- There was no last command so set this to false
   -- Always iterate to the next command if repeatOnFail is false, and this is NOT the first run out this automation group
-  elseif not parthiaToBoolean(repeatOnFail) and not parthiaAutomationFirstRun then  
+  elseif not parthiaAutomationRepeatCmdOnFailure then  
     groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
   -- It repeatOnFail is true and the last command was successfull iterate
-  elseif parthiaToBoolean(repeatOnFail) and parthiaLastCommandSuccess then
+  elseif parthiaAutomationRepeatCmdOnFailure and parthiaLastCommandSuccess then
     groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
+  -- The group position should not change
+  else
+    groupPosition = parthiaAutomationGroupPosition
   end  -- if parthiaAutomationFirstRun
   
   -- stop this automation loop if user specified a group repeat and it has been reached.
   if parthiaToBoolean(groupRepeat) then  -- Only check if a group repeat was specified.
     if parthiaAutomationIterationCounter &gt;= tonumber(groupRepeat) then  -- this has iterated more than group repeat specified
       parthiaAutomationStop()  -- Stop automation.
+      return true  -- stop current automation call also.
     end  -- if parthiaAutomationIterationCounter &gt; tonumber(groupRepeat) then
   end -- if parthiaToBoolean(groupRepeat) then
   
+  -- collect additional data this function will need
+  -- The command to run
   local automationCommand = tecSettings.automation[groupName][groupPosition].automationCommand
+  -- How many seconds to run before the next command
   local secondsToWait = tecSettings.automation[groupName][groupPosition].secondsToWait
+  -- If this command should repeat on failure
   local repeatOnFail = tecSettings.automation[groupName][groupPosition].repeatOnFail
+  
+  -- This will be used in the if statement above that determins if automation should continue to the next command
+  parthiaAutomationRepeatCmdOnFailure = parthiaToBoolean(repeatOnFail)
   
   -- In case user is sending command that has no success chance reset parthiaLastCommandSuccess
   parthiaLastCommandSuccess = false
@@ -9984,6 +10007,7 @@ function parthiaAutomationStop(displayToScreen)
   parthiaAutomationRunning = false
   parthiaAutomationFirstRun = true
   parthiaLastCommandSuccess = false
+  parthiaAutomationRepeatCmdOnFailure = false
   
   --If a timer exists and is waiting to fire. End it now.
   if parthiaAutomationTimerID then
