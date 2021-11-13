@@ -10251,14 +10251,34 @@ function parthiaAutomationShowGroups(groupName, removeElement, groupPosition)
   
   -- No group name was provided show all the groups, but no details of each group until the link is clicked.
   else
+  
+    -- Will hold how long the longest group name is.
+    local longestGroupNameSize = 0
+    -- Collect the longest group name
+    for groupName, _ in pairs(tecSettings.automation) do
+      if #groupName &gt; longestGroupNameSize then
+        longestGroupNameSize = #groupName
+      end  --if #groupName &gt; longestGroupNameSize then
+    end  -- for groupName, _ in pairs(tecSettings.automation) do
     
-    pecho("You can click a blue link below to show that groups information. You can click a red link to remove that group.\n")
+    pecho("You can click a blue link below to start or show that group's information. You can click a red link to remove that group.\n")
     
     for groupName, _ in pairs(tecSettings.automation) do
-      pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Show: "..groupName.."", 
+    
+      --create spacing so ann the columns are spaced evenly.
+      local namePaddingSize = longestGroupNameSize - #groupName
+      local namePadding = ''
+      for i=1, namePaddingSize, 1 do
+        namePadding = namePadding.." "
+      end  -- for i=1, namePaddingSize, 1 do
+      
+      pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Start: "..groupName..namePadding, 
+      [[expandAlias("parthia automation start ]]..groupName..[[, 1")]],
+      "parthia automation start "..groupName..", 0", true)
+      pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Show: "..groupName..namePadding, 
       [[expandAlias("parthia automation groups ]]..groupName..[[")]],
       "parthia automation groups "..groupName, true)
-      pechoLink("\t\t&lt;:maroon&gt;Remove: "..groupName.."", 
+      pechoLink("\t&lt;:maroon&gt;Remove: "..groupName.."\n", 
       [[expandAlias("parthia automation groups ]]..groupName..[[, delete")]],
       "parthia automation groups "..groupName..", delete", true)
       pecho("\n")
