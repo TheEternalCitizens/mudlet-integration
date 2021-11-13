@@ -1311,6 +1311,22 @@ parthiaAutomationUpdateHelp()</script>
 						<packageName></packageName>
 						<regex>^parthia automation groups\s+([a-zA-Z0-9\s+]+)$</regex>
 					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>parthia automation [name], delete [group position]</name>
+						<script>--delete the automation group passed.
+parthiaAutomationShowGroups(matches[2], true, matches[3])</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^parthia automation groups\s+([a-zA-Z0-9\s+]+),\s+delete\s+(\d+)$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>parthia automation [name], delete</name>
+						<script>--delete the automation group passed.
+parthiaAutomationShowGroups(matches[2], true)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^parthia automation groups\s+([a-zA-Z0-9\s+]+),\s+delete$</regex>
+					</Alias>
 				</Alias>
 			</AliasGroup>
 		</AliasGroup>

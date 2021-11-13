@@ -10125,7 +10125,7 @@ function parthiaAutomationHelp()
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation groups", 
   [[parthiaAutomationShowGroups()]],
   "parthia automation groups", true)
-  pecho(", shows automation groups you have made.\n")
+  pecho(", view and manage automation groups you have made.\n")
   
   pecho("\n")
   
@@ -10151,35 +10151,82 @@ Example of group creation:
                                       }
 ]]--
 
-
-function parthiaTableKeysToStr(tbl)
-  pecho("parthiaTableKeysToStr")
-  if type(tbl) == 'table' then
-  
-    pecho("Type table")
-    
-    local str = ''
-    
-    for key,_ in pairs(tbl) do
-       str = str..tostring(key).."\n"
-    end
-    
-    return str..'\n'
-    
-  else
-    return tostring(tbl)
-  end
-end
-
-function parthiaAutomationShowGroups(groupName)
+function parthiaAutomationShowGroups(groupName, removeElement, groupPosition)
   
   --show information on the group name provided.
   if groupName then
+  
+    -- removeGroup is false, show the group.
     if tecSettings.automation[groupName] then
+  
+      -- an element needs to be removed from an automation table.
+      if removeElement then
+        
+        -- a specific group position needs to be removed, no an entire group.
+        if groupPosition then
+          
+          -- Verify this group position exists.
+          if tecSettings.automation[groupName][groupPosition] then
+            
+            tecSettings.automation[groupName][groupPosition] = nil
+            pecho("Postion "..groupPosition.." was removed from group "..groupName.."\n")
+            pecho("If this was an accidental delition you can restore the position with:\n")
+            pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia load", 
+            [[tecFileLoadSettings(true)]],
+            "Load client settings from file", true)
+            pecho(", Loads client settings from file. \n")
+            pecho("Doing so will undo ALL changes since you last saved.")
+            
+            --remind the user to save
+            dontForgetToSave()
+            
+          -- the group position does not exist.
+          else
+            
+            pecho("Position: "..groupPosition.." does not exist in group: "..groupName.."\n")
+          
+          end  -- if tecSettings.automation[groupName][groupPosition] then
+        
+        -- a group position was not specified, remove the entire group.
+        else  
+          
+          tecSettings.automation[groupName] = nil
+          pecho("Group "..groupName.." deleted.\n")
+          pecho("If this was an accidental delition you can restore the group with:\n")
+          pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia load", 
+          [[tecFileLoadSettings(true)]],
+          "Load client settings from file", true)
+          pecho(", Loads client settings from file. \n")
+          pecho("Doing so will undo ALL changes since you last saved.")
+          
+          --remind the user to save
+          dontForgetToSave()
+          
+        end  -- if groupPosition
+        
+        return true  -- make certain this function stops.
+        
+      end  -- if removeGroup then
+  
+    
       pecho("Automation group: "..groupName.."\n")
+      
+      -- sort the automation group
+      --local sortedGroupNameTable = {}
+      
+      --for _, value in pairs(tecSettings.automation[groupName]) do
+      --  table.insert(sortedGroupNameTable, value)
+      --end -- for _, value in pairs(tecSettings.automation[groupName]) do
+  
+      -- Sort the table 
+      --table.sort(sortedGroupNameTable)
+      
       for groupPosition, automationGroup in pairs(tecSettings.automation[groupName]) do
-        pecho("\tGroup Position: "..groupPosition.."\n")
-        pecho("\t\tCommand called: "..automationGroup.automationCommand.."\n")
+        pecho("\tGroup Position: "..groupPosition..", ")
+        pechoLink("\t&lt;:maroon&gt;Remove "..groupName.." position "..groupPosition, 
+        [[expandAlias("parthia automation groups ]]..groupName..[[, delete ]]..groupPosition..[[")]],
+        "parthia automation groups "..groupName..", delete "..groupPosition, true)
+        pecho("\n\t\tCommand called: "..automationGroup.automationCommand.."\n")
         if parthiaToBoolean(automationGroup.secondsToWait) then
           pecho("\t\tSeconds to wait before calling next command: "..automationGroup.secondsToWait.."\n")
         else
@@ -10194,13 +10241,15 @@ function parthiaAutomationShowGroups(groupName)
   -- No group name was provided
   else
     
-    pecho("You can click a group name below to show that groups information.\n")
+    pecho("You can click a blue link below to show that groups information. You can click a red link to remove that group.\n")
     
     for groupName, _ in pairs(tecSettings.automation) do
-      pecho("\t")
-      pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;"..groupName.."", 
+      pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Show: "..groupName.."", 
       [[expandAlias("parthia automation groups ]]..groupName..[[")]],
       "parthia automation groups "..groupName, true)
+      pechoLink("\t\t&lt;:maroon&gt;Remove: "..groupName.."", 
+      [[expandAlias("parthia automation groups ]]..groupName..[[, delete")]],
+      "parthia automation groups "..groupName..", delete", true)
       pecho("\n")
     end  -- for groupName tecSettings.automation do
     
