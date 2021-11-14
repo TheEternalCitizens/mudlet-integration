@@ -9826,9 +9826,6 @@ function parthiaAutomationUpdateHelp()
   [[parthiaAutomationHelp()]],
   "parthia automation", true)
   pecho(", help for the automation system.\n")
-  
-  -- Suggest clicking above and fill in a command to help the user.
-  pecho("\n\nYou can click on one of the help links above or adjust the command that auto filled in your command box.\n\n")
   printCmdLine("parthia automation replace_with_your_group, 1 = replace_with_your_command, 0, 0")
 
 end -- function parthiaAutomationUpdateHelp()</script>
@@ -9902,9 +9899,6 @@ function parthiaAutomationStartHelp()
   [[parthiaAutomationHelp()]],
   "parthia automation", true)
   pecho(", help for the automation system.\n")
-  
-  -- Suggest clicking above and fill in a command to help the user.
-  pecho("\nYou can click on one of the help links above or adjust the command that auto filled in your command box.\n\n")
   printCmdLine("parthia automation replace_with_you_group, 0")
 
 end  -- function parthiaAutomationStartHelp()</script>
