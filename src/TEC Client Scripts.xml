@@ -9081,12 +9081,84 @@ end --parthiaTalkSetvolume(volume, displayToScreen)
 				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>automation</name>
 					<packageName></packageName>
-					<script></script>
+					<script>--[[
+Codeless scripting.
+This is done by running a command to register you action in a script group.
+  /auto [group name], [position number] = [command], [seconds to wait or 0 for no longer busy, [repeat on fail]
+Example /auto Attack Rotation, 1 = slash &amp;lt;target&amp;gt;, 0, False /auto Attack Rotation, 2 = chop &amp;lt;target&amp;gt;, 0, False /auto Attack Rotation, 3 = jab &amp;lt;target&amp;gt;, 0, False
+  Would create a three attack rotation where you character would slash, chop than jab the target. Where if you failed at the attack you continue to the next action.
+Example /auto Heal Rotation, 1 = diagnose &amp;lt;target&amp;gt;, 0, True /auto Heal Rotation, 2 = bandage &amp;lt;target&amp;gt; with bandage, 0, True /auto Heal Rotation, 3 = cut bandage from &amp;lt;target&amp;gt;, 0, True
+  Would create a three healing rotation where you would diagnose, bandage and unbandage the targeted body part. Where if you fail at an action you continue to attempt it until you succeed.
+Than to run to rotation /auto [group name], [number of times, leave out for infinite]
+  Example /auto Heal Rotation to run the healing rotation an infinit  e number of times.
+  auto Heal Rotation, 10 to run the healing rotation group 10 times.
+Where the stop command stops you script.
+
+Track command success----------------------------------------------------------
+  Triggers\Game Events\player involved in an action
+    Triggers when player is involved in an action
+    calls Scripts\Actions\sortActions()
+  Scripts\Actions\sortActions() 
+      Determins if the action is combat or non combat than calls
+      If it is a combat action: Scripts\Actions\sortCombatActions() is called
+      if it is a non combat action: Scripts\Actions\sortNonCombatActions is called.
+  Scripts\data collection\Actions\sortCombatActions()
+    If the attack is one the character made. Currently lines 26 to 34.
+    This code has to be OUTSIDE the "if getHelpDevs()" block. Otherwise it would only work if help the devs was enabled.
+    Calls Scripts\misc\commandSuccessful(stringToCheck)
+      Records results to parthiaLastCommandSuccess
+  Scripts\data collection\Actions\sortNonCombatActions(stringToCheck)
+    Calls Scripts\misc\commandSuccessful(stringToCheck)
+      This code has to be OUTSIDE the "if getHelpDevs()" block. Otherwise it would only work if help the devs was enabled.
+      
+Functions---------------------------------------------------------
+  parthiaAutomationUpdate, handles updating or creating parthia automation groups. In the tecSettings.automation table.
+  parthiaAutomationStart, starts an automation task.
+  parthiaAutomationCall, calls an automation group position or command. Handles iteration to next command.
+    Handles stopping automation if a repeat count was specified.
+  parthiaAutomationStop, stops automation, clears out global automation variables and messages to user.
+  parthiaAutomationIncreaseGroupIteration, increases the global groupPosition iterator to iterate to the next command in the
+    automation group.
+  parthiaAutomationHelp, a general help message for the automation system.
+  parthiaAutomationManageGroups, allows a dynamic method to manage groups in the tecSettings.automation tables.
+      
+Variables---------------------------------------------------------
+  parthiaLastCommandSuccess: records if the last command the player's character ran was successful.
+  tecSettings.automation = {}  # a dictionary to hold automation groups.
+    This is created automatically at every application startup via function Scripts\Variables Data Themese\Variables\tecClientReset()
+  tecSettings.automation.[group name][position number] = {[command], [seconds or 0], [repeat on fail]}
+    This will automatically get saved since it is in tecSettings.
+  parthiaAutomationRunning: If automation is running it is set to ([group name], [repeat]), it is False if automation is not running
+  parthiaAutomationGroupPosition: a number, noting what command in array is going to be run
+    This must be set to one on client startup.
+  parthiaAutomationIterationCounter: Keeps track of how many times the group of commands has iterated.
+    This is automatically handled by: Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
+  parthiaAutomationFirstRun: tracks if this is the first run of this automation task.
+    Is automatically set to true in parthiaAutomationStop and false in parthiaAutomationCall
+  parthiaAutomationTimerID: The ID for any time created if the user specified a seconds variable on automation group entry creation.
+    Collected in parthiaAutomationCall, and is set to false at the start of that method also.
+  parthiaAutomationRepeatCmdOnFailure, records if the last command run requires repeating on failure.
+    
+Triggers-----------------------------------------------------------
+  Triggers\Game Events\You are no longer busy.
+    Triggers when the "You are no longer busy." message appears.
+    It handles calling parthiaAutomationCall automatically when this message appears.
+      
+aliases---------------------------------------------------------------
+  Aliases\stop: updated to be updated to to parthiaAutomationRunning to False.
+  Aliases\Parthia\parthia automation holds all of the alliases for automation, I will not bother listing them here.
+]]--</script>
 					<eventHandlerList />
 					<Script isActive="yes" isFolder="no">
 						<name>parthiaAutomationUpdate(groupName, positionNumber, command, seconds, repeatOnFail)</name>
 						<packageName></packageName>
 						<script>--[[
+Allows the user to update or create automation groups and group positions within.
+  It makes certain the groupPosition passed is not a 0.
+  If the groupName passed does not exist in the tecSettings.automation table, it is added.
+  The command, seconds to wait and repeat on failure are added to that group.
+  A message is presented to the user, and they are reminded to save.
+
 Scripts\Game Commands\auto\parthiaAutomationUpdate(parthiaCmdString)
   Makes certain the position number is possible, for lua arrays must be 1 or greater.
   Creates a new automation group if it does not already exist.
@@ -9262,14 +9334,21 @@ end  -- function parthiaAutomationStartHelp()</script>
 						<packageName></packageName>
 						<script>--[[
 Scripts\Game Commands\auto\parthiaAutomationCall()
-  Collects groupName from parthiaAutomationRunning
-  Iterate the automation group iterator if needed.
-  Get the automationCommand, secondsToWait and repeatOnFail from the correct automation group and group iteration key
-  Set parthiaLastCommandSuccess to false, in case this is a command that has no success chance to reset it itself.
-  If this is a command that waits for seconds and not for a ready prompt, create a timer to call this function.
-  Send the command
-  set parthiaAutomationFirstRun to false.
-  return true
+  collects groupName and groupRepeat from global variable parthiaAutomation
+  It than creates a local groupPosition set to false
+  parthiaAutomationTimerID is set to false
+  Group position iteration is than handled through a series of i elseif staments where parthiaAutomationIncreaseGroupIteration
+    is called if iteration is needed. The groupPosition is set by parthiaAutomationIncreaseGroupIteration or just stays at false
+    If iteration is not needed groupPosition is set to parthiaAutomationGroupPosition
+  Automation is than stopped if groupRepeat is set and is greater than parthiaAutomationIterationCounter
+  automationCommand, secondsToWait and repeatOnFail is collected from the proper group and group position for this automation command
+  parthiaAutomationRepeatCmdOnFailure is set to parthiaToBoolean(repeatOnFail)
+  parthiaLastCommandSuccess is set to false, incase the command about to be run has no success chance message.
+  if secondsToWait is not 0, than a timer is set to call the next command.
+  The automation command is sent to the server
+  parthiaAutomationFirstRun is set to false
+  debug message is sent to debug
+  returns true
 ]]--
 
 function parthiaAutomationCall()
@@ -9302,6 +9381,7 @@ function parthiaAutomationCall()
   -- stop this automation loop if user specified a group repeat and it has been reached.
   if parthiaToBoolean(groupRepeat) then  -- Only check if a group repeat was specified.
     if parthiaAutomationIterationCounter &gt;= tonumber(groupRepeat) then  -- this has iterated more than group repeat specified
+      pecho("Automation task complete.")
       parthiaAutomationStop()  -- Stop automation.
       return true  -- stop current automation call also.
     end  -- if parthiaAutomationIterationCounter &gt; tonumber(groupRepeat) then
@@ -9348,9 +9428,10 @@ end -- function parthiaAutomationCall()</script>
 						<packageName></packageName>
 						<script>--[[
 Scripts\Game Commands\auto\parthiaAutomationStop()
-    Set parthiaAutomationGroupPosition to 1
-    set parthiaAutomationIterationCounter to False
-    set parthiaAutomationRunning to false
+    Sets a number of global variables to default.
+    Stop any automation timer if one exists.
+    Displays message to user if specified to.
+    Returns true
 ]]--
 
 function parthiaAutomationStop(displayToScreen)
@@ -9490,6 +9571,8 @@ end  -- function parthiaAutomationHelp()</script>
 						<name>parthiaAutomationShowGroups()</name>
 						<packageName></packageName>
 						<script>--[[
+Allows dynamic management of the tecSettings.automation group tables.
+
 Example of group creation:
   tecSettings.automation[groupName][groupPosition] = { 
                                         automationCommand = automationCommand,
