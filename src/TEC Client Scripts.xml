@@ -509,6 +509,8 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   tecSettings.parthiaMapEnabled = false --tells parthia if it's mapping system should be running.
   
   tecSettings.tipsEnabled = true --tell parthia to show misc tips while exploring game world.
+  
+  tecSettings.automation = {}  --Used to track automation groups.
 
 	if displayToScreen then pecho("Parthia settings set to default.\n") end
 
@@ -4050,6 +4052,33 @@ function parthiaSetDiscordID()
 end</script>
 					<eventHandlerList />
 				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaToBoolean(variableToConvert)</name>
+					<packageName></packageName>
+					<script>--converts misc variables to boolean value
+
+--Converts the string "false" and "0" to the boolean value false, also converts 0 to false
+parthiaBooleanConverstionTable = { ["false"]=false,["False"]=false, ["0"]=false, [0]=false}
+                                   
+function parthiaToBoolean(variableToConvert)
+
+  --only convert if the input is in the conversion table.
+  if parthiaBooleanConverstionTable[variableToConvert] ~= nil then
+    variableToConvert = parthiaBooleanConverstionTable[variableToConvert]
+  end --if parthiaBooleanConverstionTable[variableToConvert] ~= nil then
+  
+  if variableToConvert then
+    variableToConvert = true
+  else
+    variableToConvert = false
+  end
+
+  --return the possibly converted variable.
+  return variableToConvert
+
+end --function parthiaToBoolean(variableToConvert)</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>GUI</name>
@@ -6216,6 +6245,7 @@ end --function parthiaStatusClick(clickType)
 					<packageName></packageName>
 					<script>--Resets all the status bars to default.
 --This is here to help resolve an issue where qt no longer supports svg images on gauges.
+--Initially created with release 0.1.52
 function resetStatusImages()
   tecSettings.images.healthBackground = {
     folder = getMudletHomeDir()..[[/imgs/status/]], 
@@ -6506,6 +6536,11 @@ end --end function tecDebugHelp</script>
   [[expandAlias("parthia display")]],
   "List Parthia's display commands", true)
   pecho(", list commands to customize display layout, images and scrollbars in Parthia.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation", 
+  [[parthiaAutomationHelp()]],
+  "parthia automation", true)
+  pecho(", help for the automation system.\n")
  
   pecho("Click a command above or type it into the command line.\n")
 
@@ -8052,7 +8087,7 @@ function GitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if GitUpdate.localRespitory not exist
   GitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  GitUpdate.localVersion = "0.1.52" --Must match the tag in your github release
+  GitUpdate.localVersion = "0.1.53" --Must match the tag in your github release
   GitUpdate.aliasName = "parthia update" --Name of alias user runs to process update
   --Name of the alias to check if an update is available.
   GitUpdate.updateCheckAlias = "parthia update check" 
@@ -9043,6 +9078,648 @@ end --parthiaTalkSetvolume(volume, displayToScreen)
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>automation</name>
+					<packageName></packageName>
+					<script>--[[
+Codeless scripting.
+This is done by running a command to register you action in a script group.
+  /auto [group name], [position number] = [command], [seconds to wait or 0 for no longer busy, [repeat on fail]
+Example /auto Attack Rotation, 1 = slash &amp;lt;target&amp;gt;, 0, False /auto Attack Rotation, 2 = chop &amp;lt;target&amp;gt;, 0, False /auto Attack Rotation, 3 = jab &amp;lt;target&amp;gt;, 0, False
+  Would create a three attack rotation where you character would slash, chop than jab the target. Where if you failed at the attack you continue to the next action.
+Example /auto Heal Rotation, 1 = diagnose &amp;lt;target&amp;gt;, 0, True /auto Heal Rotation, 2 = bandage &amp;lt;target&amp;gt; with bandage, 0, True /auto Heal Rotation, 3 = cut bandage from &amp;lt;target&amp;gt;, 0, True
+  Would create a three healing rotation where you would diagnose, bandage and unbandage the targeted body part. Where if you fail at an action you continue to attempt it until you succeed.
+Than to run to rotation /auto [group name], [number of times, leave out for infinite]
+  Example /auto Heal Rotation to run the healing rotation an infinit  e number of times.
+  auto Heal Rotation, 10 to run the healing rotation group 10 times.
+Where the stop command stops you script.
+
+Track command success----------------------------------------------------------
+  Triggers\Game Events\player involved in an action
+    Triggers when player is involved in an action
+    calls Scripts\Actions\sortActions()
+  Scripts\Actions\sortActions() 
+      Determins if the action is combat or non combat than calls
+      If it is a combat action: Scripts\Actions\sortCombatActions() is called
+      if it is a non combat action: Scripts\Actions\sortNonCombatActions is called.
+  Scripts\data collection\Actions\sortCombatActions()
+    If the attack is one the character made. Currently lines 26 to 34.
+    This code has to be OUTSIDE the "if getHelpDevs()" block. Otherwise it would only work if help the devs was enabled.
+    Calls Scripts\misc\commandSuccessful(stringToCheck)
+      Records results to parthiaLastCommandSuccess
+  Scripts\data collection\Actions\sortNonCombatActions(stringToCheck)
+    Calls Scripts\misc\commandSuccessful(stringToCheck)
+      This code has to be OUTSIDE the "if getHelpDevs()" block. Otherwise it would only work if help the devs was enabled.
+      
+Functions---------------------------------------------------------
+  parthiaAutomationUpdate, handles updating or creating parthia automation groups. In the tecSettings.automation table.
+  parthiaAutomationStart, starts an automation task.
+  parthiaAutomationCall, calls an automation group position or command. Handles iteration to next command.
+    Handles stopping automation if a repeat count was specified.
+  parthiaAutomationStop, stops automation, clears out global automation variables and messages to user.
+  parthiaAutomationIncreaseGroupIteration, increases the global groupPosition iterator to iterate to the next command in the
+    automation group.
+  parthiaAutomationHelp, a general help message for the automation system.
+  parthiaAutomationManageGroups, allows a dynamic method to manage groups in the tecSettings.automation tables.
+      
+Variables---------------------------------------------------------
+  parthiaLastCommandSuccess: records if the last command the player's character ran was successful.
+  tecSettings.automation = {}  # a dictionary to hold automation groups.
+    This is created automatically at every application startup via function Scripts\Variables Data Themese\Variables\tecClientReset()
+  tecSettings.automation.[group name][position number] = {[command], [seconds or 0], [repeat on fail]}
+    This will automatically get saved since it is in tecSettings.
+  parthiaAutomationRunning: If automation is running it is set to ([group name], [repeat]), it is False if automation is not running
+  parthiaAutomationGroupPosition: a number, noting what command in array is going to be run
+    This must be set to one on client startup.
+  parthiaAutomationIterationCounter: Keeps track of how many times the group of commands has iterated.
+    This is automatically handled by: Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
+  parthiaAutomationFirstRun: tracks if this is the first run of this automation task.
+    Is automatically set to true in parthiaAutomationStop and false in parthiaAutomationCall
+  parthiaAutomationTimerID: The ID for any time created if the user specified a seconds variable on automation group entry creation.
+    Collected in parthiaAutomationCall, and is set to false at the start of that method also.
+  parthiaAutomationRepeatCmdOnFailure, records if the last command run requires repeating on failure.
+    
+Triggers-----------------------------------------------------------
+  Triggers\Game Events\You are no longer busy.
+    Triggers when the "You are no longer busy." message appears.
+    It handles calling parthiaAutomationCall automatically when this message appears.
+      
+aliases---------------------------------------------------------------
+  Aliases\stop: updated to be updated to to parthiaAutomationRunning to False.
+  Aliases\Parthia\parthia automation holds all of the alliases for automation, I will not bother listing them here.
+]]--</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationUpdate(groupName, positionNumber, command, seconds, repeatOnFail)</name>
+						<packageName></packageName>
+						<script>--[[
+Allows the user to update or create automation groups and group positions within.
+  It makes certain the groupPosition passed is not a 0.
+  If the groupName passed does not exist in the tecSettings.automation table, it is added.
+  The command, seconds to wait and repeat on failure are added to that group.
+  A message is presented to the user, and they are reminded to save.
+
+Scripts\Game Commands\auto\parthiaAutomationUpdate(parthiaCmdString)
+  Makes certain the position number is possible, for lua arrays must be 1 or greater.
+  Creates a new automation group if it does not already exist.
+    tecSettings.automation.[group name]
+  Sets the command in the group
+    tecSettings.automation.[group name][position number] = {[command], [seconds or 0], [repeat on fail]}
+  Prompts user to save.
+]]--
+
+function parthiaAutomationUpdate(groupName, groupPosition, automationCommand, secondsToWait, repeatOnFail)
+  
+  -- Make certain groupPosition is a number that is not zero.
+  if not parthiaToBoolean(groupPosition) then
+    pecho('Position number (second argument in the command) can not be 0.')
+    return false
+  end  --if not parthiaToBoolean(groupPosition) then
+  
+  -- Due to the regex pattern that captured groupPosition it is impossible for it to be a negative number.
+  -- No check for positive numbers only required.
+  
+  -- if tecSettings.automation[groupName] does not exist create it
+  -- tecSettings.automation is created automatically when parthia starts.
+  if not tecSettings.automation[groupName] then
+    pecho("Automation group "..groupName.." does not exist. Creating it now.\n")
+    tecSettings.automation[groupName] = {}  -- Make the group name an empty dictionary
+  end  -- END if not tecSettings.automation[groupName] then
+  
+  -- Save the group and settings passed by the user
+  tecSettings.automation[groupName][groupPosition] = { 
+                                        automationCommand = automationCommand,
+                                        secondsToWait = tonumber(secondsToWait),
+                                        repeatOnFail = tonumber(repeatOnFail)
+                                      }
+
+  -- Show user the changes they made.
+  pecho("Automation group "..groupName.." updated.\nYour update is:")
+  pecho("\n\tIn position: "..groupPosition)
+  pecho("\n\tAutomation Command: "..automationCommand)
+  pecho("\n\tSeconds to wait: "..secondsToWait)
+  pecho("\n\tRepeat on fail: "..repeatOnFail.."\n")
+                                        
+  -- Remind the user to save their chages
+  dontForgetToSave()
+  
+  return true  --function executed without error
+  
+end  -- function parthiaAutomationUpdate(groupName, groupPosition, automationCommand, secondsToWait, repeatOnFail])
+
+-- create a help message on how to update parthia automation
+function parthiaAutomationUpdateHelp()
+
+  -- parthia automation [group name], [position number] = [command], [seconds or 0], [repeat on fail]
+
+  -- Show this commands help message
+  pecho("The command format to create or update an automation group is:\n")
+  pecho("\tparthia automation [group name], [position number] = [command], [seconds], [repeat on fail]\n")
+  pecho("parthia automation has a short name of /auto. It's format is the same.\n")
+  pecho("\t/auto [group name], [position number] = [command], [seconds or 0], [repeat on fail]\n\n")
+  pecho("[group name] is a name for an automation group.\n")
+  pecho("\tIt can be a new or existing group name.\n")
+  pecho("\t[group name] can contain letters, numbers and spaces.\n")
+  pecho("\tIt can not contain special characters. It IS case sensitive.\n")
+  pecho("[position number], is the command's position in the automation group.\n")
+  pecho("\tOnly numbers are supported as position number.\n")
+  pecho("[command] is the command you would like to be run. A command can contain letters numbers and &lt; &gt;.\n")
+  pecho("[seconds] is the delay in seconds before attempting the next command.\n")
+  pecho("\tIf seconds is 0, the next command will occur just after the 'You are no longer busy.' message appears.\n")
+  pecho("[repeat on fail], can be 1 or 0.\n")
+  pecho("\tIf repeat on fail is 1, this command will repeat until it succeeds.\n")
+  pecho("\tIf repeat on fails is 0, the automation system will always continue to the next command in your automation group.\n\n")
+  
+  pecho("The square brackets [] are just there to show where your entry should be. Do not put [ or ] in the command.\n")
+  pecho("\nExample:\n\tparthia automation Attack Rotation, 1 = attack &lt;target&gt;, 0, 0\n")
+  pecho("\t/auto Attack Rotation, 1 = attack &lt;target&gt;, 0, 0\n")
+  pecho("\t\tWould both update or create your 'Attack Rotation' automation group position 1.\n")
+  pecho("\t\tWith command 'attack &lt;target&gt;'.\n")
+  pecho("\t\tThe next command will occur when you receive the 'You are no longer busy' message.\n")
+  pecho("\t\tWether this command succeeds or fails automation will continue to the next command in this automation group.\n")
+  pecho("\n\tparthia automation Attack Rotation, 2 = slash &lt;target&gt;, 0, 0\n")
+  pecho("\t/auto Attack Rotation, 2 = slash &lt;target&gt;, 0, 0\n")
+  pecho("\t\tWould both update or create your 'Attack Rotation' automation group position 2.\n")
+  pecho("\t\tWith command 'flash &lt;target&gt;'.\n")
+  pecho("\t\tThe next command will occur when you receive the 'You are no longer busy' message.\n")
+  pecho("\t\tWether this command succeeds or fails automation will continue to the next command in this automation group.\n")
+  pecho("\nIf you were to run the two commands above. You now have an attack rotation that will attack than slash a target automatically.\n")
+  pecho("There is no limit on the number of commands that can be in an automation group.\n")
+  pecho("When creating an automation group, remeber that when you call it you can have the entire group repeat a number of times or infinitely.\n\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation", 
+  [[parthiaAutomationHelp()]],
+  "parthia automation", true)
+  pecho(", help for the automation system.\n")
+  printCmdLine("parthia automation replace_with_your_group, 1 = replace_with_your_command, 0, 0")
+
+end -- function parthiaAutomationUpdateHelp()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationStart(groupName, groupRepeat)</name>
+						<packageName></packageName>
+						<script>--[[
+Scripts\Game Commands\auto\parthiaAutomationStart(groupName, groupRepeat)
+  Stops automation if it is already running.
+  Verifies automation group groupName exists.
+    Prompt user if it does now.
+    End function return False
+  sets parthiaAutomationRunning to {[group name], [repeat]}
+  Call parthiaAutomationCall()
+  Create a help function
+]]--
+function parthiaAutomationStart(groupName, groupRepeat)
+
+  -- Stop already running automation, display message to user
+  if parthiaAutomationRunning then
+    parthiaAutomationStop(true)
+  end -- if parthiaAutomationRunning then
+  
+  -- Make certain this automation group exists.
+  if not tecSettings.automation[groupName] then
+    parthiaAutomationStartHelp()
+    pecho("\nAutomation group "..groupName.." does not exist. A full help message is above.\n\n")
+    return false
+  end -- if not tecSettings.automation[groupName] then
+  
+  -- Record that automation has started, record the group name and how many times the group should repeat
+  parthiaAutomationRunning = { groupName = groupName, groupRepeat = groupRepeat }
+
+  -- inform the user automation has started.
+  pecho("Starting automation group: "..groupName.."\n")
+
+  -- Call the function that runs the automation
+  parthiaAutomationCall()
+
+  -- return that the function completed successfully
+  return true
+
+end  -- parthiaAutomationStart(groupName, groupRepeat)
+
+--This function will display a help message on how to start automation
+function parthiaAutomationStartHelp()
+
+  -- Show this commands help message
+  pecho("The command format to start an automation group or rotation is:\n")
+  pecho("\tparthia automation [group name], [repeat]\n")
+  pecho("parthia automation has a shot name of /auto. It's format is the same.\n")
+  pecho("\t/auto [group name], [repeat]\n")
+  pecho("\n[group name] is a name of an existing automation group.\n")
+  pecho("\t[group name] can contain letters, numbers and spaces.\n")
+  pecho("\tIt can not contain special characters. It IS case sensitive. So make certain to match case.\n")
+  pecho("[repeat] is how many times this automation group should repeat before stopping.\n")
+  pecho("\tIf repeat is 0 the automation group will repeat infinitely.\n")
+  
+  pecho("\nThe square brackets [] are just there to show where your entry should be. Do not put [ or ] in the command.\n")
+  pecho("\nExamples:\n\tparthia automation Attack Rotation, 5\n")
+  pecho("\t/auto Attack Rotation, 5\n")
+  pecho("\tWould both run the automation group Attack Rotation 5 times.\n")
+  pecho("\n\tparthia automation Attack Rotation, 0\n")
+  pecho("\t/auto Attack Rotation, 0\n")
+  pecho("\tWould both run the automation group Attack Rotation an infinite number of times.\n\n")
+  
+  -- Show the automation help messages
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation", 
+  [[parthiaAutomationHelp()]],
+  "parthia automation", true)
+  pecho(", help for the automation system.\n")
+  printCmdLine("parthia automation replace_with_you_group, 0")
+
+end  -- function parthiaAutomationStartHelp()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationCall()</name>
+						<packageName></packageName>
+						<script>--[[
+Scripts\Game Commands\auto\parthiaAutomationCall()
+  collects groupName and groupRepeat from global variable parthiaAutomation
+  It than creates a local groupPosition set to false
+  parthiaAutomationTimerID is set to false
+  Group position iteration is than handled through a series of i elseif staments where parthiaAutomationIncreaseGroupIteration
+    is called if iteration is needed. The groupPosition is set by parthiaAutomationIncreaseGroupIteration or just stays at false
+    If iteration is not needed groupPosition is set to parthiaAutomationGroupPosition
+  Automation is than stopped if groupRepeat is set and is greater than parthiaAutomationIterationCounter
+  automationCommand, secondsToWait and repeatOnFail is collected from the proper group and group position for this automation command
+  parthiaAutomationRepeatCmdOnFailure is set to parthiaToBoolean(repeatOnFail)
+  parthiaLastCommandSuccess is set to false, incase the command about to be run has no success chance message.
+  if secondsToWait is not 0, than a timer is set to call the next command.
+  The automation command is sent to the server
+  parthiaAutomationFirstRun is set to false
+  debug message is sent to debug
+  returns true
+]]--
+
+function parthiaAutomationCall()
+  
+  -- Get required variables for this function.  
+  local groupName = parthiaAutomationRunning["groupName"]  -- the name of this automation group
+  local groupRepeat = parthiaAutomationRunning["groupRepeat"]  -- How many times this group automation should repeat
+  
+  -- Will be used to record what position in the automation group should be called.
+  local groupPosition = false
+  -- Blank out the timer ID it is no longer needed
+  parthiaAutomationTimerID = false
+  
+  -- Iterate to the next command if it is required.
+  --if this is the fist run of this automation task, initialize variables.
+  if parthiaAutomationFirstRun then
+    groupPosition = parthiaAutomationIncreaseGroupIteration()  -- set the iterator
+    parthiaLastCommandSuccess = false  -- There was no last command so set this to false
+  -- Always iterate to the next command if repeatOnFail is false, and this is NOT the first run out this automation group
+  elseif not parthiaAutomationRepeatCmdOnFailure then  
+    groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
+  -- It repeatOnFail is true and the last command was successfull iterate
+  elseif parthiaAutomationRepeatCmdOnFailure and parthiaLastCommandSuccess then
+    groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
+  -- The group position should not change
+  else
+    groupPosition = parthiaAutomationGroupPosition
+  end  -- if parthiaAutomationFirstRun
+  
+  -- stop this automation loop if user specified a group repeat and it has been reached.
+  if parthiaToBoolean(groupRepeat) then  -- Only check if a group repeat was specified.
+    if parthiaAutomationIterationCounter &gt;= tonumber(groupRepeat) then  -- this has iterated more than group repeat specified
+      pecho("Automation task complete.")
+      parthiaAutomationStop()  -- Stop automation.
+      return true  -- stop current automation call also.
+    end  -- if parthiaAutomationIterationCounter &gt; tonumber(groupRepeat) then
+  end -- if parthiaToBoolean(groupRepeat) then
+  
+  -- collect additional data this function will need
+  -- The command to run
+  local automationCommand = tecSettings.automation[groupName][groupPosition].automationCommand
+  -- How many seconds to run before the next command
+  local secondsToWait = tecSettings.automation[groupName][groupPosition].secondsToWait
+  -- If this command should repeat on failure
+  local repeatOnFail = tecSettings.automation[groupName][groupPosition].repeatOnFail
+  
+  -- This will be used in the if statement above that determins if automation should continue to the next command
+  parthiaAutomationRepeatCmdOnFailure = parthiaToBoolean(repeatOnFail)
+  
+  -- In case user is sending command that has no success chance reset parthiaLastCommandSuccess
+  parthiaLastCommandSuccess = false
+  
+  -- If the user specified seconds to wait before conducting the next command
+  -- Set a timer for the next command.
+  if parthiaToBoolean(secondsToWait) then
+  
+    -- create timer to call this function here
+    parthiaAutomationTimerID = tempTimer(secondsToWait, [[parthiaAutomationCall()]])
+    
+  end  -- if parthiaToBoolean(secondsToWait) then
+  
+  -- send the command
+  send(automationCommand)
+  
+  -- record that the first run of this automation group has completed.
+  parthiaAutomationFirstRun = false
+  
+  debugToDisplay("parthiaAutomationCall completed successfully.")
+  
+  return true
+
+end -- function parthiaAutomationCall()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationStop(displayToScreen)</name>
+						<packageName></packageName>
+						<script>--[[
+Scripts\Game Commands\auto\parthiaAutomationStop()
+    Sets a number of global variables to default.
+    Stop any automation timer if one exists.
+    Displays message to user if specified to.
+    Returns true
+]]--
+
+function parthiaAutomationStop(displayToScreen)
+  
+  parthiaAutomationGroupPosition = false
+  parthiaAutomationIterationCounter = 0
+  parthiaAutomationRunning = false
+  parthiaAutomationFirstRun = true
+  parthiaLastCommandSuccess = false
+  parthiaAutomationRepeatCmdOnFailure = false
+  
+  --If a timer exists and is waiting to fire. End it now.
+  if parthiaAutomationTimerID then
+    killTimer(parthiaAutomationTimerID)
+    parthiaAutomationTimerID = false  -- Set the timer ID to false it is no longer needed.
+  end  -- if parthiaAutomationTimerID then
+  
+  if displayToScreen then
+    pecho("\nAutomation stopped.\n\n")
+  end -- if displayToScreen then
+  
+  return true
+  
+end -- function parthiaAutomationStop()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationIncreaseGroupIteration()</name>
+						<packageName></packageName>
+						<script>--[[
+Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
+    if tecSettings.automation.[group name] size is larger than 
+      Icrease parthiaAutomationGroupPosition by one
+    else
+      parthiaAutomationGroupPosition = false
+      Increase groupPosition by 1
+      
+Keys in the automation group name may not be in order or correctly sequenced.
+    For example they may have keys 1, 2, 3, 5, 9... So on where keys are skipped.
+    Because of this we can no simply iterate.
+    We have to find the next highest possible iterator we can use.
+]]--
+
+function parthiaAutomationIncreaseGroupIteration()
+
+  -- Get required variables for this function.
+  groupName = parthiaAutomationRunning["groupName"]
+  groupRepeat = parthiaAutomationRunning["groupRepeat"]
+  
+  --used to collect all keys in this automation group.
+  local automationGroupKeySet = {}
+  
+  -- Gather all the keys for the group and sort them.
+  --tecSettings.automation[groupName]
+  for key, _ in pairs(tecSettings.automation[groupName]) do
+    table.insert(automationGroupKeySet, key)
+  end -- for key, _ in pairs(tecSettings.automation[groupName]) do
+  
+  -- Sort the table 
+  table.sort(automationGroupKeySet)
+  
+  -- if the iterator does not exist this means this is the first run of this automation group.
+  if not parthiaAutomationGroupPosition then
+    -- Returning the lowest element in the  automation group
+    parthiaAutomationGroupPosition = automationGroupKeySet[1]
+    return parthiaAutomationGroupPosition
+  end  -- if not parthiaAutomationGroupPosition then
+  
+  -- find the next highest logical key in the automation group's table
+  for key, value in pairs(automationGroupKeySet) do
+    
+    -- if the value from the automationGroupKeySet is larger than the current command iteration
+    -- This is the next iteration in our automation group.
+    if tonumber(value) &gt; tonumber(parthiaAutomationGroupPosition) then
+      parthiaAutomationGroupPosition = value
+      break  -- stop the loop
+    end  -- if key &gt;= parthiaAutomationGroupPosition then
+    
+    -- Check if we are about to iterate past the automationGroupKeySet
+    -- Set the automations iterator to the first element in this automation groups sequence
+    if key == #automationGroupKeySet then
+      -- set the group iterator to the first element in the groups command table
+      parthiaAutomationGroupPosition = automationGroupKeySet[1]
+      -- Increase the automation rotation iterator by 1.
+      parthiaAutomationIterationCounter = parthiaAutomationIterationCounter + 1
+    end -- if key == #automationGroupKeySet
+  
+  end  -- for key, value in pairs(automationGroupKeySet) do
+  
+  debugToDisplay("parthiaAutomationIncreaseGroupIteration() Next iterator: "..parthiaAutomationGroupPosition)
+  
+  return parthiaAutomationGroupPosition
+
+end  --function parthiaAutomationIncreaseGroupIteration()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationHelp()</name>
+						<packageName></packageName>
+						<script>-- Display a help message about the automation commands
+function parthiaAutomationHelp()
+
+  pecho("\nAutomation while you are away from your computer is not allowed in TEC.\n")
+  pecho("It is HIGHLY recommended you remain infront of your computer while you are using automation.\n")
+  pecho("Failure to do so can result in getting your account suspended or in repeat offenses permanently banned.\n")
+  pecho("As a result automation in parthia is intended to remove the frustration of tasks with repatative commands. ")
+  pecho("This automation can be dramatically helpful for someone who is not able to type rapidly.\n")
+  
+  pecho("\nAutomation in parthia is done by creating groups of commands. Than starting those groups. ")
+  pecho("You can click or type in the commands below to learn more about creating, managing and starting automation groups.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation update", 
+  [[parthiaAutomationUpdateHelp()]],
+  "parthia automation update", true)
+  pecho(", how to create or update automation groups.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation start", 
+  [[parthiaAutomationStartHelp()]],
+  "parthia automation start", true)
+  pecho(", how to start an automation task.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation groups", 
+  [[parthiaAutomationShowGroups()]],
+  "parthia automation groups", true)
+  pecho(", view and manage automation groups you have made.\n")
+  
+  pecho("\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Parthia automation tutorial video.", 
+  [[openUrl("https://youtu.be/snweHw9XI68")]], 
+  "youtube parthia automation tutorial", true)
+  pecho(", view a youtube tutorial video on parthia's automation system..\n")
+  
+  pecho("\n")
+  
+end  -- function parthiaAutomationHelp()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationShowGroups()</name>
+						<packageName></packageName>
+						<script>--[[
+Allows dynamic management of the tecSettings.automation group tables.
+
+Example of group creation:
+  tecSettings.automation[groupName][groupPosition] = { 
+                                        automationCommand = automationCommand,
+                                        secondsToWait = tonumber(secondsToWait),
+                                        repeatOnFail = tonumber(repeatOnFail)
+                                      }
+]]--
+
+function parthiaAutomationShowGroups(groupName, removeElement, groupPosition)
+  
+  --show information on the group name provided.
+  if groupName then
+  
+    -- removeGroup is false, show the group.
+    if tecSettings.automation[groupName] then
+  
+      -- an element needs to be removed from an automation table.
+      if removeElement then
+        
+        -- a specific group position needs to be removed, no an entire group.
+        if groupPosition then
+          
+          -- Verify this group position exists.
+          if tecSettings.automation[groupName][groupPosition] then
+            
+            tecSettings.automation[groupName][groupPosition] = nil
+            pecho("Postion "..groupPosition.." was removed from group "..groupName.."\n")
+            pecho("If this was an accidental delition you can restore the position with:\n")
+            pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia load", 
+            [[tecFileLoadSettings(true)]],
+            "Load client settings from file", true)
+            pecho(", Loads client settings from file. \n")
+            pecho("Doing so will undo ALL changes since you last saved.\n")
+            
+            --remind the user to save
+            dontForgetToSave()
+            
+          -- the group position does not exist.
+          else
+            
+            pecho("Position: "..groupPosition.." does not exist in group: "..groupName.."\n")
+          
+          end  -- if tecSettings.automation[groupName][groupPosition] then
+        
+        -- a group position was not specified, remove the entire group.
+        else  
+          
+          tecSettings.automation[groupName] = nil
+          pecho("Group "..groupName.." deleted.\n")
+          pecho("If this was an accidental delition you can restore the group with:\n")
+          pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia load", 
+          [[tecFileLoadSettings(true)]],
+          "Load client settings from file", true)
+          pecho(", Loads client settings from file. \n")
+          pecho("Doing so will undo ALL changes since you last saved.\n")
+          
+          --remind the user to save
+          dontForgetToSave()
+          
+        end  -- if groupPosition
+        
+        return true  -- make certain this function stops.
+        
+      end  -- if removeGroup then
+  
+    
+      pecho("Automation group: "..groupName.."\n")
+      
+      -- Create a temp table to show the human logical sorted version of this automation group.
+      local sortedGroupNameTable = {}
+      for key, _ in pairs(tecSettings.automation[groupName]) do
+        table.insert(sortedGroupNameTable, key)
+      end -- for _, value in pairs(tecSettings.automation[groupName]) do
+      table.sort(sortedGroupNameTable)
+      
+      -- Loop through the sorted group.
+      -- Notice that groupPosition is getting taken from the SORTED group.
+      -- This is what allows the function to show this group in a numerical order. Not the order it was created in.
+      for _, groupPosition in pairs(sortedGroupNameTable) do
+        
+        -- Show the group position
+        pecho("\tGroup Position: "..groupPosition..", ")
+        -- Provide an easy method to remove this group.
+        pechoLink("\t&lt;:maroon&gt;Remove "..groupName.." position "..groupPosition, 
+        [[expandAlias("parthia automation groups ]]..groupName..[[, delete ]]..groupPosition..[[")]],
+        "parthia automation groups "..groupName..", delete "..groupPosition, true)
+        
+        -- Collect variables from this automation group, at the correct position.
+        local automationCommand = tecSettings.automation[groupName][groupPosition].automationCommand
+        local secondsToWait = tecSettings.automation[groupName][groupPosition].secondsToWait
+        local repeatOnFail = tecSettings.automation[groupName][groupPosition].repeatOnFail
+        
+        pecho("\n\t\tCommand called: "..automationCommand.."\n")
+        if parthiaToBoolean(secondsToWait) then
+          pecho("\t\tSeconds to wait before calling next command: "..secondsToWait.."\n")
+        else
+          pecho("\t\tNext command called when you see 'You are no longer busy.'.\n")
+        end  -- if parthiaToBoolean(automationGroup.secondsToWait) then
+        pecho("\t\tRepeat this command if it fails: "..tostring(parthiaToBoolean(repeatOnFail)).."\n")
+      end  -- for groupPosition, automationGroup in pairs(tecSettings.automation[groupName]) do
+      
+    -- The automation group passed does not exist.
+    else
+      pecho("Automation group named ["..groupName.."] does not exist\n")
+    end  -- if tecSettings.automation[groupName] then
+  
+  -- No group name was provided show all the groups, but no details of each group until the link is clicked.
+  else
+  
+    -- Will hold how long the longest group name is.
+    local longestGroupNameSize = 0
+    -- Collect the longest group name
+    for groupName, _ in pairs(tecSettings.automation) do
+      if #groupName &gt; longestGroupNameSize then
+        longestGroupNameSize = #groupName
+      end  --if #groupName &gt; longestGroupNameSize then
+    end  -- for groupName, _ in pairs(tecSettings.automation) do
+    
+    pecho("You can click a blue link below to start or show that group's information. You can click a red link to remove that group.\n")
+    
+    for groupName, _ in pairs(tecSettings.automation) do
+    
+      --create spacing so ann the columns are spaced evenly.
+      local namePaddingSize = longestGroupNameSize - #groupName
+      local namePadding = ''
+      for i=1, namePaddingSize, 1 do
+        namePadding = namePadding.." "
+      end  -- for i=1, namePaddingSize, 1 do
+      
+      pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Start: "..groupName..namePadding, 
+      [[expandAlias("parthia automation ]]..groupName..[[, 0")]],
+      "parthia automation "..groupName..", 0", true)
+      pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Show: "..groupName..namePadding, 
+      [[expandAlias("parthia automation groups ]]..groupName..[[")]],
+      "parthia automation groups "..groupName, true)
+      pechoLink("\t&lt;:maroon&gt;Remove: "..groupName.."\n", 
+      [[expandAlias("parthia automation groups ]]..groupName..[[, delete")]],
+      "parthia automation groups "..groupName..", delete", true)
+      pecho("\n")
+    end  -- for groupName tecSettings.automation do
+    
+  end  -- if groupName then
+  
+end  -- function parthiaAutomationShowGroups()</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>data collection</name>
@@ -9523,7 +10200,8 @@ function sortCombatActions(stringToCheck)
     tecErrorNotification("function collectCombatActions, passed a non string variable. Received: "..tostring(stringToCheck).." expected a string.")
   end --if type(stringToCheck) ~= "string"
 
-  if  stringToCheck:match("at you") or --if the attack is directed at the player.
+  --if the attack is directed at the player.
+  if  stringToCheck:match("at you") or
       stringToCheck:match("misses you") or
       stringToCheck:match("towards you") or 
       stringToCheck:match("slap you,") or
@@ -9537,15 +10215,23 @@ function sortCombatActions(stringToCheck)
         HelpDevsData.Combat.AgainstPlayer[stringToCheck] = "" --collect attack to table.
       end --if not table.contains(HelpDevsData.Combat.AgainstPlayer, stringTocheck)
     end --if getHelpDevs()
-  elseif  stringToCheck:match("%] You") or --if the attack is one the player is using
+    
+  --if the attack is one the player is using
+  elseif  stringToCheck:match("%] You") or 
           stringToCheck:match(", you") then
+          
+    -- record if this command was successful or not.
+    parthiaLastCommandSuccess = commandSuccessful(stringToCheck)
+          
     if getHelpDevs() then --if Help Developers is enabled
       if not table.contains(HelpDevsData.Combat.PlayerAttacks, stringToCheck) then --if stringToCheck is not in the HelpDevsData.Combat.PlayerAttacks table
         debugToDisplay("function collectCombatActions, adding "..stringToCheck.." to HelpDevsData.Combat.PlayerAttacks table.")
         HelpDevsData.Combat.PlayerAttacks[stringToCheck] = "" --collect attack to table.
       end --if not table.contains(HelpDevsData.Combat.PlayerAttacks, stringTocheck)
     end --getHelpDevs()
-  else --we do not know where this attack belongs
+  
+  --we do not know where this attack belongs
+  else
     if getHelpDevs() then --if Help Developers is enabled
       if not table.contains(HelpDevsData.Combat.Unsorted, stringToCheck) then --if stringToCheck is not in the HelpDevsData.Combat.Unsorted table
         debugToDisplay("function collectCombatActions, adding "..stringToCheck.." to HelpDevsData.Combat.Unsorted table.")
@@ -9565,6 +10251,9 @@ end --function sortCombatActions(stringToCheck)</script>
   if type(stringToCheck) ~= "string" then --make certain a string was passed
     tecErrorNotification("function sortNonCombatActions, passed a non string variable. Received: "..tostring(stringToCheck).." expected a string.")
   end --if type(stringToCheck) ~= "string"
+  
+  -- record if this command was successful or not.
+  parthiaLastCommandSuccess = commandSuccessful(stringToCheck)
 
   if getHelpDevs() then --if Help Developers is enabled
     if not table.contains(HelpDevsData.NonCombatActions.Unsorted, stringToCheck) then --if stringToCheck is not in the unsorted table
@@ -9724,6 +10413,11 @@ function parthiaStopScripts(displayToScreen)
 
   if courses.running then courses.disable(displayToScreen) end --If running, disable courses scripts
   if parthiaGetWaitForDrover() then parthiaSetWaitForDrover(false, displayToScreen) end --if running, disable waiting for drover script
+  
+  -- stop automation scripts
+  if parthiaAutomationRunning then
+    parthiaAutomationStop(displayToScreen)
+  end -- if parthiaAutomationRunning then
 
 end --function parthiaStopScripts(displayToScreen)</script>
 						<eventHandlerList />

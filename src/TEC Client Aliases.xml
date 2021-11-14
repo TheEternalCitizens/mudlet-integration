@@ -1217,6 +1217,127 @@ end --if cmd</script>
 				<packageName></packageName>
 				<regex>^parthia tips(\s?.*)$</regex>
 			</Alias>
+			<AliasGroup isActive="yes" isFolder="yes">
+				<name>parthia automation</name>
+				<script>--[[
+Commands that work with automation
+For full details refer to Scripts\TEC Functions\Game Commands\automation
+]]--</script>
+				<command></command>
+				<packageName></packageName>
+				<regex></regex>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation [group name], [repeat]</name>
+					<script>--[[
+Aliases\Parthia\parthia automation\parthia auto [group name], [repeat]
+  Example:
+    parthia automation slash &lt;target&gt;, 10
+    Calls, Scripts\Game Commands\auto\parthiaAutomationStart(groupName, groupRepeat)
+    ^parthia\s+automation\s+(.+),\s+(\d+)$
+
+parthiaAutomationStart
+  is located in Scripts\TEC Functions\Game Commands\automation\parthiaAutomationStart
+    
+matches[1], Entire line captured
+matches[2], First item captured in a capture group ()
+matches[3], second item captured in a capture group ()
+]]--
+
+-- matches[2] is the first item captured in the pattern, or the automation group name
+-- matches [3] is the second item captured in the pattern, or how many times this automation group should repeat.
+parthiaAutomationStart(matches[2], matches[3])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation [group name], [position number] = [command], [seconds or 0], [repeat on fail]</name>
+					<script>--[[
+Aliases\Parthia\parthia auto\parthia automation [group name], [position number] = [command], [seconds or 0], [repeat on fail]
+    Calls, Scripts\Game Commands\auto\parthiaAutomationUpdate(parthiaCmdString)
+]]--
+
+--Here we are unpacking ALL 5 of the captures from the pattern above.
+--Unpack format is unpack(array, element start, element end)
+--Since we are not specifing an element end it unpacks until the end of the array.
+--This is just like sending it {groupName, parthiaAutomationGroupPosition, command, seconds, repeatOnFail}
+parthiaAutomationUpdate(unpack(matches, 2))</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\s+&lt;&gt;]+),\s+(\d+),\s+(\d+)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation start</name>
+					<script>-- display help message on how to start automation.
+parthiaAutomationStartHelp()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia automation start$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation</name>
+					<script>-- parthia automation, calls the automation help function
+parthiaAutomationHelp()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia automation$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation update</name>
+					<script>-- Show the help messages on how to update parthia's automation system.
+parthiaAutomationUpdateHelp()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia automation update$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation create</name>
+					<script>-- Show the help messages on how to update parthia's automation system.
+parthiaAutomationUpdateHelp()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia automation create$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation groups</name>
+					<script>parthiaAutomationShowGroups(false)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia automation groups$</regex>
+					<Alias isActive="yes" isFolder="no">
+						<name>parthia automation groups [name]</name>
+						<script>parthiaAutomationShowGroups(matches[2])</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^parthia automation groups\s+([a-zA-Z0-9\s+]+)$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>parthia automation [name], delete [group position]</name>
+						<script>--delete the automation group passed.
+parthiaAutomationShowGroups(matches[2], true, matches[3])</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^parthia automation groups\s+([a-zA-Z0-9\s+]+),\s+delete\s+(\d+)$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>parthia automation [name], delete</name>
+						<script>--delete the automation group passed.
+parthiaAutomationShowGroups(matches[2], true)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^parthia automation groups\s+([a-zA-Z0-9\s+]+),\s+delete$</regex>
+					</Alias>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>/auto [command]</name>
+					<script>--create shorter version of parthia talk command
+expandAlias("parthia automation "..tostring(matches[2]))
+</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^/auto (.*)$</regex>
+				</Alias>
+			</AliasGroup>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Debug</name>

@@ -2101,7 +2101,8 @@ triggers when the player is involved in combat. Either attacking or beind attack
 text to trigger on &lt;/font&gt;&lt;font color="#00CD20"&gt;[Success: 5, Roll: 73] You punch at a practice dummy, and hit! It suffers a minor hit to its face.&lt;/font&gt;&lt;/font&gt;
 ]]--
 
-if getHelpDevs() then --if player has help devs
+--if player has help devs or they are running the automation system.
+if getHelpDevs() or parthiaAutomationRunning then
   sortActions() --sort and collects actions into Help The Devs tables
 end --if getHelpDevs()</script>
 				<triggerType>0</triggerType>
@@ -2260,6 +2261,47 @@ end --if parthiaMap.getEnabled()
 					<integer>1</integer>
 					<integer>1</integer>
 					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>You are no longer busy.</name>
+				<script>--[[
+Patter example: &lt;/font&gt;&lt;font color="#ff9b00"&gt;You are no longer busy.&lt;/font&gt;&lt;/font&gt;
+
+Triggers\Game Events\You are no longer busy.
+    Pattern: "&lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are no longer busy%.&lt;/font&gt;&lt;/font&gt;"
+    if parthiaAutomationRunning is truthy
+      Call Scripts\Game Commands\automation\parthiaAutomationCall()
+      
+      parthiaAutomationRunning = { groupName = groupName, groupRepeat = groupRepeat }
+]]--
+
+-- Handle automation tasks.
+-- Check if automation is running
+if parthiaAutomationRunning then
+  debugToDisplay("pathiaAutomation trigger You are no longer busy called.")
+  groupName = parthiaAutomationRunning["groupName"]
+  -- Check if this automation is called off of a timer or this trigger
+  -- If seconds to wait for this automation group is 0, automation is called by this trigger.
+  if not parthiaToBoolean(tecSettings.automation[groupName][parthiaAutomationGroupPosition].secondsToWait) then
+    parthiaAutomationCall()  -- Call the automation handler
+  end  -- if not parthiaToBoolean(tecSettings.automation[groupName][parthiaAutomationGroupPosition].secondsToWait) then
+end -- if parthiaAutomationRunning then</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^&lt;\/font&gt;&lt;font color="#[A-Fa-f0-9]+"&gt;You are no longer busy\.&lt;\/font&gt;&lt;\/font&gt;$</string>
+				</regexCodeList>
+				<regexCodePropertyList>
 					<integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
