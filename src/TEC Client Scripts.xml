@@ -9476,10 +9476,10 @@ function parthiaAutomationHelp()
   
   pecho("\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation help", 
-  [[parthiaAutomationHelp()]],
-  "parthia automation help", true)
-  pecho(", help for the automation system.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Parthia automation tutorial video.", 
+  [[openUrl("https://youtu.be/snweHw9XI68")]], 
+  "youtube parthia automation tutorial", true)
+  pecho(", view a youtube tutorial video on parthia's automation system..\n")
   
   pecho("\n")
   
