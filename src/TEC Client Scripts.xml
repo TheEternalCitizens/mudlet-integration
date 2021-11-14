@@ -9522,7 +9522,7 @@ function parthiaAutomationShowGroups(groupName, removeElement, groupPosition)
             [[tecFileLoadSettings(true)]],
             "Load client settings from file", true)
             pecho(", Loads client settings from file. \n")
-            pecho("Doing so will undo ALL changes since you last saved.")
+            pecho("Doing so will undo ALL changes since you last saved.\n")
             
             --remind the user to save
             dontForgetToSave()
@@ -9544,7 +9544,7 @@ function parthiaAutomationShowGroups(groupName, removeElement, groupPosition)
           [[tecFileLoadSettings(true)]],
           "Load client settings from file", true)
           pecho(", Loads client settings from file. \n")
-          pecho("Doing so will undo ALL changes since you last saved.")
+          pecho("Doing so will undo ALL changes since you last saved.\n")
           
           --remind the user to save
           dontForgetToSave()
