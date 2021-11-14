@@ -1328,6 +1328,15 @@ parthiaAutomationShowGroups(matches[2], true)</script>
 						<regex>^parthia automation groups\s+([a-zA-Z0-9\s+]+),\s+delete$</regex>
 					</Alias>
 				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>/auto [command]</name>
+					<script>--create shorter version of parthia talk command
+expandAlias("parthia automation "..tostring(matches[2]))
+</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^/auto (.*)$</regex>
+				</Alias>
 			</AliasGroup>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
