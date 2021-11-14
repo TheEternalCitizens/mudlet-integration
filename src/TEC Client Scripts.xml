@@ -9078,562 +9078,6 @@ end --parthiaTalkSetvolume(volume, displayToScreen)
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
-			</ScriptGroup>
-			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>data collection</name>
-				<packageName></packageName>
-				<script>--[[
-filters to collect data from in game commands.
-like using ac . to populate room characters window.
-]]--</script>
-				<eventHandlerList />
-				<ScriptGroup isActive="yes" isFolder="yes">
-					<name>Room Characters ac .</name>
-					<packageName></packageName>
-					<script>--[[
-Scripts for working with filtering the approach check command 
-]]--</script>
-					<eventHandlerList />
-					<Script isActive="yes" isFolder="no">
-						<name>getTECRoomCheckActive()</name>
-						<packageName></packageName>
-						<script>function getTECRoomCheckActive()
-	return tecRoomObjects.checkActive
-end --end function getRoomCharactersActive</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>setTECRoomCheckActive(tecRoomCheckActive, displayToScreen)</name>
-						<packageName></packageName>
-						<script>function setTECRoomCheckActive(tecRoomCheckActive, displayToScreen)
-  displayToScreen = fuzzyBoolean(displayToScreen) --verify good boolean sent
-  tecRoomCheckActive = fuzzyBoolean(tecRoomCheckActive) --verify good boolean sent
-	tecRoomObjects.checkActive = tecRoomCheckActive --tell triggers to expect a room check
-  tecRoomObjects.displayToScreen = displayToScreen --will ac . display to main?
-end --end function setRoomCharactersActive</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="no" isFolder="no">
-						<name>clearTECRoomObjects()</name>
-						<packageName></packageName>
-						<script>--Moved to variables Data Themese - Variables script</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>runTECRoomObjectCheck(displayToScreen)</name>
-						<packageName></packageName>
-						<script>--used for functions that track objects in the current room.
-function runTECRoomObjectCheck(displayToScreen)
-
-  displayToScreen = displayToScreen or false --if not declared default is false
-
-	clearTECRoomObjects() --clear room data before running check
-
-	clearRoomCharacterWindow() --clear all roomCharacter windows
-	
-	setTECRoomCheckActive(true,displayToScreen)--set a room check to true.
-
-  send("ac .", false) --send an ac . command to list characters in the room.
-
-end --function runRoomCharacterCheck()</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>echoLeftRoomCharacterWindows(message)</name>
-						<packageName></packageName>
-						<script>--display text to left side of all Room Character Windows
-function echoLeftRoomCharacterWindows(message)
-  if type(message) ~= "string" then --if the type is incorrect
-    tecErrorNotification("function echoLeftRoomCharacterWindows, sent a none string variable.")
-  end --if type(message) ~= "string"
-  --display messages to side of the screen
-  hecho(roomCharacters.console.name,message) --send message or standard room character window
-  hecho(MultiWindow.roomCharacters.console.name,message) --send message to room character multi window
-  displayDebug("function echoLeftRoomCharacterWindows, message: "..message)
-end --function echoLeftRoomCharacterWindows()</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>echoRightRoomCharacterWindows(message)</name>
-						<packageName></packageName>
-						<script>function echoRightRoomCharacterWindows(message)
-  if type(message) ~= "string" then --if the type is incorrect
-    tecErrorNotification("function echoRightRoomCharacterWindows, sent a none string variable.")
-  end --if type(message) ~= "string"
-  --display messages to side of the screen
-  hecho(roomCharacters.rightConsole.name,message) --send message or standard room character window
-  hecho(MultiWindow.roomCharacters.rightConsole.name,message) --send message to room character multi window
-  displayDebug("function echoRightRoomCharacterWindows, message: "..message)
-end --function echoLeftRoomCharacterWindows()</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>clearRoomCharacterWindow()</name>
-						<packageName></packageName>
-						<script>function clearRoomCharacterWindow()
-	clearWindow(roomCharacters.console.name) --clear left side standard room characters window
-  clearWindow(MultiWindow.roomCharacters.console.name) --clear left side of the MultiWindow room characters console
-  clearWindow(MultiWindow.roomCharacters.rightConsole.name) --clear right side of standard room character window
-  clearWindow(roomCharacters.rightConsole.name) --clear the right side of the multi window room characters console
-  tecRoomObjects.refreshMessageDisplayed = false --tell Parthia refresh message has not been shown
-end --clearRoomCharacterWindow</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>tecRoomCharRefreshNotification()</name>
-						<packageName></packageName>
-						<script>--Show notification to the player than something has changed and a room check is needed
-local function tecRoomCharRefreshMessage()
-  --displaying to right panel, because it will have very little text in it
-  echoRightRoomCharacterWindows("Refresh Recommended ")
-    cechoLink(roomCharacters.rightConsole.name,"&lt;:maroon&gt;room check", 
-    [[runTECRoomObjectCheck()]],
-    "Populate Room Character window.", true)
-  cechoLink(MultiWindow.roomCharacters.rightConsole.name,"&lt;:maroon&gt;room check", 
-    [[runTECRoomObjectCheck()]],
-    "Populate Room Character window.", true)
-  echoRightRoomCharacterWindows(" or press ctrl+r.\n")
-end --function tecRoomCharRefreshMessage()
-
-function tecRoomCharRefreshNotification()
-
-  if not tecRoomObjects.refreshMessageDisplayed then
-    tecRoomCharRefreshMessage()
-    tecRoomObjects.refreshMessageDisplayed = true --tell client no further refreshes needed
-  end --if tecRefreshNotification is needed
-  
-end --function recRoomCharRefreshNotification()</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>tecResetRoomCharacterWindow()</name>
-						<packageName></packageName>
-						<script>--clear out the room character windows and tell player how to refresh
-function tecResetRoomCharacterWindow()
-  clearRoomCharacterWindow() --Room characters window no longer accurate, clear it.
-  echoLeftRoomCharacterWindows("Populate this space with characters in this room by:")
-  echoRightRoomCharacterWindows("running command ")
-  cechoLink(roomCharacters.rightConsole.name,"&lt;:maroon&gt;room check", 
-    [[runTECRoomObjectCheck()]],
-    "Populate Room Character window.", true)
-  cechoLink(MultiWindow.roomCharacters.rightConsole.name,"&lt;:maroon&gt;room check", 
-    [[runTECRoomObjectCheck()]],
-    "Populate Room Character window.", true)
-  echoRightRoomCharacterWindows(" or pressing ctrl+r.\n")
-  tecRoomObjects.refreshMessageDisplayed = true --tell client no further refreshes needed
-end --function tecResetRoomCharacterWindow</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>createCharacterCmdTable(stringToAdd)</name>
-						<packageName></packageName>
-						<script>--[[
-returns a table that can be used with popup functions
-]]--
-function createCharacterCmdTable(stringToAdd)
-  local characterCmdList = {}
-  for i,v in ipairs(tecSettings.commandList) do
-    table.insert(characterCmdList, v..stringToAdd..[["]])
-  end
-  
-  return characterCmdList, tecSettings.commandHelp
-end --function createCharacterCmdTable</script>
-						<eventHandlerList />
-					</Script>
-				</ScriptGroup>
-				<ScriptGroup isActive="yes" isFolder="yes">
-					<name>stats</name>
-					<packageName></packageName>
-					<script>--[[
-collect data from the stats command
-
-]]--</script>
-					<eventHandlerList />
-					<Script isActive="yes" isFolder="no">
-						<name>getStatsCheckActive()</name>
-						<packageName></packageName>
-						<script>function getStatsCheckActive()
-  return statsFilter.checkActive
-end --function getStatsCheckState()</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>setStatsCheckActive(mode)</name>
-						<packageName></packageName>
-						<script>function setStatsCheckActive(mode)
-  mode = fuzzyBoolean(mode)
-  statsFilter.checkActive = mode --a stats check is active
-  if not statsFilter.checkActive then --if disabeling
-    debugToDisplay("function setStatsCheckActive, settings statsFilter.checkActive to false.")
-    statsFilter.displayToScreen = true --if the check is done make certain displayToScreen is true
-    for variableName, variable in pairs(parthiaPlayer.CurrentCharacter) do
-      if type(variable) == "string" then --if the variable is a string
-        variable = replaceDoubleSpaces(variable) --replace double blanks spaces with 1 space
-        variable = removeEndSpace(variable) --remove blank spaces at the end of a variable
-        parthiaPlayer.CurrentCharacter[variableName] = variable
-        debugToDisplay("function setStatsCheckActive, CurrentCharacter."..variableName.." adjusted to ".."\""..parthiaPlayer.CurrentCharacter[variableName].."\"") 
-      end --if type(variable) == "string"
-    end --for pairs(parthiaPlayer.CurrentCharacter)
-    parthiaMap.checkCharacter() --check where the character is. For when login occurs. It uses the character name, that is why it is here
-  end --if not mode
-end --function setStatsCheckActive(mode)</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>runStatsCollection(displayToScreen)</name>
-						<packageName></packageName>
-						<script>function runStatsCollection(displayToScreen)
-  displayToScreen = fuzzyBoolean(displayToScreen) 
-  setStatsCheckActive(true) --tell Parthia we will be collecting stats data
-  send("stats",displayToScreen) --send command do not echo
-  statsFilter.displayToScreen = displayToScreen --tell stats filter not to display command to pecho
-  statsFilter.lineCount = 0 --counts lines shown, to stop infinite runs on error
-end --function runStatsCollection()</script>
-						<eventHandlerList />
-					</Script>
-				</ScriptGroup>
-				<ScriptGroup isActive="yes" isFolder="yes">
-					<name>skills</name>
-					<packageName></packageName>
-					<script>--[[
-collect data from the skills command
-]]--</script>
-					<eventHandlerList />
-					<Script isActive="yes" isFolder="no">
-						<name>getSkillsCheckActive()</name>
-						<packageName></packageName>
-						<script>function getSkillsCheckActive()
-  return skillsFilter.checkActive
-end --function getSkillsCheckState()</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>setSkillsCheckActive(mode)</name>
-						<packageName></packageName>
-						<script>function setSkillsCheckActive(mode)
-  mode = fuzzyBoolean(mode)
-  skillsFilter.checkActive = mode --a stats check is active
-  if skillsFilter.checkActive then --if disabeling
-    enableTrigger("skills") --enable trigger for skills collection
-    skillsFilter.hrFound = false --needed for finding the end of the skills command
-    debugToDisplay("function setSkillsCheckActive, enabled skills check")
-    tempTimer(2, [[setSkillsCheckActive(false)]]) --disable this data collection after 2 seconds incase it does not disable in the trigger
-  else
-    disableTrigger("skills") --disable the trigger for skills collections
-    debugToDisplay("function setSkillsCheckActive, disabled skills check")
-    skillsFilter.displayToScreen = true --if the check is done make certain displayToScreen is true
-  end --if not mode
-end --function setStatsCheckActive(mode)</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>runSkillsCollection(displayToScreen)</name>
-						<packageName></packageName>
-						<script>function runSkillsCollection(displayToScreen)
-  displayToScreen = fuzzyBoolean(displayToScreen) 
-  setSkillsCheckActive(true) --tell Parthia we will be collecting stats data
-  send("skills",displayToScreen) --send command, do not echo
-  skillsFilter.displayToScreen = displayToScreen --tell stats filter not to display command to pecho
-end --function runStatsCollection()</script>
-						<eventHandlerList />
-					</Script>
-				</ScriptGroup>
-				<ScriptGroup isActive="yes" isFolder="yes">
-					<name>condition</name>
-					<packageName></packageName>
-					<script>-------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external scripts --
--------------------------------------------------
-</script>
-					<eventHandlerList />
-					<Script isActive="yes" isFolder="no">
-						<name>getConditionCheckActive()</name>
-						<packageName></packageName>
-						<script>function getConditionCheckActive()
-  return conditionFilter.checkActive
-end --function getStatsCheckState()</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>setConditionCheckActive(mode)</name>
-						<packageName></packageName>
-						<script>function setConditionCheckActive(mode)
-  mode = fuzzyBoolean(mode)
-  conditionFilter.checkActive = mode --a stats check is active
-  if not mode then conditionFilter.displayToScreen = true end --if the check is done make certain displayToScreen is true
-end --function setConditionCheckActive(mode)</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>runConditionCollection(displayToScreen)</name>
-						<packageName></packageName>
-						<script>function runConditionCollection(displayToScreen)
-  displayToScreen = fuzzyBoolean(displayToScreen) 
-  setConditionCheckActive(true) --tell Parthia we will be collecting stats data
-  send("condition",displayToScreen) --send command do not echo
-  conditionFilter.displayToScreen = displayToScreen --tell stats filter not to display command to pecho
-  conditionFilter.lineCount = 0 --counts lines shown, to stop infinite runs on error
-end --function runConditionCollection(displayToScreen)</script>
-						<eventHandlerList />
-					</Script>
-				</ScriptGroup>
-				<ScriptGroup isActive="yes" isFolder="yes">
-					<name>HelpTheDevelopers</name>
-					<packageName></packageName>
-					<script>--[[
-Functions to collect information from data for future features
-]]--</script>
-					<eventHandlerList />
-					<Script isActive="yes" isFolder="no">
-						<name>getHelpDevs()</name>
-						<packageName></packageName>
-						<script>--get enabled or disabled state of Help Developers
-function getHelpDevs()
-  return tecSettings.helpDevelopers
-end --function getHelpDevs()</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>setHelpDevs(mode)</name>
-						<packageName></packageName>
-						<script>--set enabled or disabled state of Help Developers
-function setHelpDevs(mode)
-  tecSettings.helpDevelopers = fuzzyBoolean(mode)
-end --function setHelpDevs(mode)</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>saveHelpDevs(displayToScreen)</name>
-						<packageName></packageName>
-						<script>--[[
-save help developers table to file.
-If the command was run by the player prompt to open the save folder and send data to a developer
-]]--
-function saveHelpDevs(displayToScreen)
-  displayToScreen = fuzzyBoolean(displayToScreen)
-  
-  local helpDevFolderExist = lfs.chdir(helpDevDataFolder) --check if the help developers folder already exists
-  if not helpDevFolderExist then --if the help developers folder does not exist
-    local profileFolderExists = lfs.chdir(getMudletHomeDir()) --make certain the mudlet profile exists and change to that directory
-    if profileFolderExists then --The mudlet folder exists
-      lfs.mkdir(helpDevDataFolder) --make the help developers folder
-    end --if profileFolderExists
-  end --if not helpDevFolderExist
-
-  if getHelpDevs() then --if Help Devs is enabled save the data
-    --Save the table to file.
-    table.save(helpDevDataFile, HelpDevsData)
-  	if displayToScreen then --if player ran command
-      pecho("Help developers data saved.\n")
-      sendHelpDevs() --display message to help players submit Help Developers data
-    end --if displayToScreen
-  else --help the devs is not enabled.
-    if displayToScreen then
-      pecho("Help Developers is not enabled. Enable it with ")
-      pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers", 
-      [[expandAlias("parthia help developers")]],
-      "Toggle state of Help Developers", true)
-      pecho("\n")
-    end --if displayToScreen
-  end
-
-end --function saveHelpDevs()</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>loadHelpDevs(displayToScreen)</name>
-						<packageName></packageName>
-						<script>function loadHelpDevs(displayToScreen)
-  displayToScreen = fuzzyBoolean(displayToScreen)
-  local tmpTable = {} --tmp table to hold data.	
-	local path = helpDevDataFile --name and folder of file
-	
-  if not io.exists(path) then --If the file does not exist let the user know.
-		tecWarningNotification("function loadHelpDevs, file "..path.." not found.")
-		if displayToScreen then
-      pecho("[  info  ]  - Help The Developers save file not found.\n")
-    end --if displayToScreen
-    return --kill the function before real errors occur
-	else --file was found
-    table.load(path, tmpTable) --Load the data in from file
-    HelpDevsData = table.update(HelpDevsData, tmpTable) --update the existing HelpDevsData table incase load is run after startup
-    if displayToScreen then 
-      pecho("[  OK  ]  - Help The Developers data successfully loaded from file.\n") 
-    end --if displayToScreen
-	end --end if file exists else
-  
-end --function loadHelpDevs(displayToScreen)
-</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>sendHelpDevs()</name>
-						<packageName></packageName>
-						<script>--displays a message to help players submit data collected by Help Developers
-function sendHelpDevs()
-  pecho("To submit Help Developers data open the folder containing it by running or clicking command ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers open", 
-    [[tecOpenDirectory(helpDevDataFolder)]], 
-    "Open help developers folder", true)
-  pecho("\n"..[[Please attach the file named Help The Developers Data.txt to:]])
-  pecho("\nAn issues report at Parthia's ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Github Issue Page", 
-    [[openUrl("https://github.com/TheEternalCitizens/mudlet-integration/issues")]], 
-    "Goto issues page", true)
-  pecho("\nA message on the Devs channel of ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Parthia's discord server", 
-    [[openUrl("https://discord.gg/SQtNmq9")]], 
-    "Goto issues page", true)
-  pecho("\nTo view data collected by Help Developers run:\n")
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia room data", 
-  [[expandAlias("parthia room data")]],
-  "Display Help Developers room data", true)
-  echo(", Display Help Developers collected room data.\n")
-  
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia character data", 
-  [[expandAlias("parthia character data")]],
-  "Display Help Developers character data", true)
-  echo(", Display Help Developers collected character data.\n")
-  
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia player combat data", 
-  [[expandAlias("parthia player combat data")]],
-  "Display Help Developers player combat data", true)
-  echo(", Display Help Developers collected player combat data.\n")
-  
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia player noncombat data", 
-  [[expandAlias("parthia player noncombat data")]],
-  "Display Help Developers player noncombat data", true)
-  echo(", Display Help Developers collected player noncombat data.\n")
-  
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia object data", 
-  [[expandAlias("parthia object data")]],
-  "Display Help Developers object data", true)
-  echo(", Display Help Developers collected object data.\n")
-  
-end --sendHelpDevs()</script>
-						<eventHandlerList />
-					</Script>
-				</ScriptGroup>
-				<ScriptGroup isActive="yes" isFolder="yes">
-					<name>Actions</name>
-					<packageName></packageName>
-					<script></script>
-					<eventHandlerList />
-					<Script isActive="yes" isFolder="no">
-						<name>sortActions(stringToCheck)</name>
-						<packageName></packageName>
-						<script>--[[
-Detects if actions player is involved in are combat or non combat actions.
-If no string is passed it looks for the action in the global line variable
-]]--
-function sortActions(stringToCheck)
-  stringToCheck = stringToCheck or line
-  if type(stringToCheck) ~= "string" then --make certain a string was passed
-    tecErrorNotification("function sortActions, passed a non string variable. Received: "..tostring(stringToCheck).." expected a string.")
-  end --if type(stringToCheck) ~= "string"
-  
-  if stringToCheck:match("^%[Success: %d+, Roll: %d+%]") then --if match is true this is a non combat action
-    debugToDisplay("function, sortActions non-combat action found.")
-    sortNonCombatActions() --sort and collect data from last action that appeared on screen
-  else --this is a combat action
-    debugToDisplay("function, sortActions combat action found.") 
-    sortCombatActions() --sort and collect data from last action that appeared on screen
-  end --if then  stringToCheck:match("(Success: %d+, Roll: %d+)")
-end --function sortActions</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>sortCombatActions(stringToCheck)</name>
-						<packageName></packageName>
-						<script>--[[
-Detects if combat action is against the player or if the player is running the action
-saves the action to the Help Developers table if the player has Help Developers enabled
-If a string is not passed 
-]]--
-function sortCombatActions(stringToCheck)
-  stringToCheck = stringTocheck or line --if user did not pass a string, check global line
-  if type(stringToCheck) ~= "string" then --make certain a string was passed
-    tecErrorNotification("function collectCombatActions, passed a non string variable. Received: "..tostring(stringToCheck).." expected a string.")
-  end --if type(stringToCheck) ~= "string"
-
-  --if the attack is directed at the player.
-  if  stringToCheck:match("at you") or
-      stringToCheck:match("misses you") or
-      stringToCheck:match("towards you") or 
-      stringToCheck:match("slap you,") or
-      stringToCheck:match("head butt you") or 
-      stringToCheck:match("tries to distract you") or
-      stringToCheck:match("a knee into you") or 
-      stringToCheck:match("parthia playercombatdata") then
-    if getHelpDevs() then --if Help Developers is enabled
-      if not table.contains(HelpDevsData.Combat.AgainstPlayer, stringToCheck) then --if stringToCheck is not in the AgainstPlayer table
-        debugToDisplay("function collectCombatActions, adding "..stringToCheck.." to HelpDevsData.Combat.AgainstPlayer table.")
-        HelpDevsData.Combat.AgainstPlayer[stringToCheck] = "" --collect attack to table.
-      end --if not table.contains(HelpDevsData.Combat.AgainstPlayer, stringTocheck)
-    end --if getHelpDevs()
-    
-  --if the attack is one the player is using
-  elseif  stringToCheck:match("%] You") or 
-          stringToCheck:match(", you") then
-          
-    -- record if this command was successful or not.
-    parthiaLastCommandSuccess = commandSuccessful(stringToCheck)
-          
-    if getHelpDevs() then --if Help Developers is enabled
-      if not table.contains(HelpDevsData.Combat.PlayerAttacks, stringToCheck) then --if stringToCheck is not in the HelpDevsData.Combat.PlayerAttacks table
-        debugToDisplay("function collectCombatActions, adding "..stringToCheck.." to HelpDevsData.Combat.PlayerAttacks table.")
-        HelpDevsData.Combat.PlayerAttacks[stringToCheck] = "" --collect attack to table.
-      end --if not table.contains(HelpDevsData.Combat.PlayerAttacks, stringTocheck)
-    end --getHelpDevs()
-  
-  --we do not know where this attack belongs
-  else
-    if getHelpDevs() then --if Help Developers is enabled
-      if not table.contains(HelpDevsData.Combat.Unsorted, stringToCheck) then --if stringToCheck is not in the HelpDevsData.Combat.Unsorted table
-        debugToDisplay("function collectCombatActions, adding "..stringToCheck.." to HelpDevsData.Combat.Unsorted table.")
-        HelpDevsData.Combat.Unsorted[stringToCheck] = "" --collect attack to table.
-      end --if not table.contains(HelpDevsData.Combat.Unsorted, stringTocheck)
-    end --if getHelpDevs() then
-  end --if stringToCheck:match sort combat types if elseif series
-  
-end --function sortCombatActions(stringToCheck)</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>sortNonCombatActions(stringToCheck)</name>
-						<packageName></packageName>
-						<script>function sortNonCombatActions(stringToCheck)
-  stringToCheck = stringTocheck or line --if user did not pass a string, check global line
-  if type(stringToCheck) ~= "string" then --make certain a string was passed
-    tecErrorNotification("function sortNonCombatActions, passed a non string variable. Received: "..tostring(stringToCheck).." expected a string.")
-  end --if type(stringToCheck) ~= "string"
-  
-  -- record if this command was successful or not.
-  parthiaLastCommandSuccess = commandSuccessful(stringToCheck)
-
-  if getHelpDevs() then --if Help Developers is enabled
-    if not table.contains(HelpDevsData.NonCombatActions.Unsorted, stringToCheck) then --if stringToCheck is not in the unsorted table
-      debugToDisplay("function sortNonCombatAction, adding "..stringToCheck.." to HelpDevsData.NonCombatActions.Unsorted table.")
-      HelpDevsData.NonCombatActions.Unsorted[stringToCheck] = "" --collect attack to table.
-    end --if not table.contains(HelpDevsData.Combat.AgainstPlayer, stringTocheck)
-  end --if getHelpDevs()
-
-end --function sortNonCombatActions</script>
-						<eventHandlerList />
-					</Script>
-				</ScriptGroup>
-			</ScriptGroup>
-			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>Game commands</name>
-				<packageName></packageName>
-				<script>--[[
-Commands used to interact with the game itself.
-
-IE: `wait for drover`
-]]--</script>
-				<eventHandlerList />
 				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>automation</name>
 					<packageName></packageName>
@@ -10284,6 +9728,562 @@ end  -- function parthiaAutomationShowGroups()</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
+			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>data collection</name>
+				<packageName></packageName>
+				<script>--[[
+filters to collect data from in game commands.
+like using ac . to populate room characters window.
+]]--</script>
+				<eventHandlerList />
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>Room Characters ac .</name>
+					<packageName></packageName>
+					<script>--[[
+Scripts for working with filtering the approach check command 
+]]--</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>getTECRoomCheckActive()</name>
+						<packageName></packageName>
+						<script>function getTECRoomCheckActive()
+	return tecRoomObjects.checkActive
+end --end function getRoomCharactersActive</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>setTECRoomCheckActive(tecRoomCheckActive, displayToScreen)</name>
+						<packageName></packageName>
+						<script>function setTECRoomCheckActive(tecRoomCheckActive, displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen) --verify good boolean sent
+  tecRoomCheckActive = fuzzyBoolean(tecRoomCheckActive) --verify good boolean sent
+	tecRoomObjects.checkActive = tecRoomCheckActive --tell triggers to expect a room check
+  tecRoomObjects.displayToScreen = displayToScreen --will ac . display to main?
+end --end function setRoomCharactersActive</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="no" isFolder="no">
+						<name>clearTECRoomObjects()</name>
+						<packageName></packageName>
+						<script>--Moved to variables Data Themese - Variables script</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>runTECRoomObjectCheck(displayToScreen)</name>
+						<packageName></packageName>
+						<script>--used for functions that track objects in the current room.
+function runTECRoomObjectCheck(displayToScreen)
+
+  displayToScreen = displayToScreen or false --if not declared default is false
+
+	clearTECRoomObjects() --clear room data before running check
+
+	clearRoomCharacterWindow() --clear all roomCharacter windows
+	
+	setTECRoomCheckActive(true,displayToScreen)--set a room check to true.
+
+  send("ac .", false) --send an ac . command to list characters in the room.
+
+end --function runRoomCharacterCheck()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>echoLeftRoomCharacterWindows(message)</name>
+						<packageName></packageName>
+						<script>--display text to left side of all Room Character Windows
+function echoLeftRoomCharacterWindows(message)
+  if type(message) ~= "string" then --if the type is incorrect
+    tecErrorNotification("function echoLeftRoomCharacterWindows, sent a none string variable.")
+  end --if type(message) ~= "string"
+  --display messages to side of the screen
+  hecho(roomCharacters.console.name,message) --send message or standard room character window
+  hecho(MultiWindow.roomCharacters.console.name,message) --send message to room character multi window
+  displayDebug("function echoLeftRoomCharacterWindows, message: "..message)
+end --function echoLeftRoomCharacterWindows()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>echoRightRoomCharacterWindows(message)</name>
+						<packageName></packageName>
+						<script>function echoRightRoomCharacterWindows(message)
+  if type(message) ~= "string" then --if the type is incorrect
+    tecErrorNotification("function echoRightRoomCharacterWindows, sent a none string variable.")
+  end --if type(message) ~= "string"
+  --display messages to side of the screen
+  hecho(roomCharacters.rightConsole.name,message) --send message or standard room character window
+  hecho(MultiWindow.roomCharacters.rightConsole.name,message) --send message to room character multi window
+  displayDebug("function echoRightRoomCharacterWindows, message: "..message)
+end --function echoLeftRoomCharacterWindows()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>clearRoomCharacterWindow()</name>
+						<packageName></packageName>
+						<script>function clearRoomCharacterWindow()
+	clearWindow(roomCharacters.console.name) --clear left side standard room characters window
+  clearWindow(MultiWindow.roomCharacters.console.name) --clear left side of the MultiWindow room characters console
+  clearWindow(MultiWindow.roomCharacters.rightConsole.name) --clear right side of standard room character window
+  clearWindow(roomCharacters.rightConsole.name) --clear the right side of the multi window room characters console
+  tecRoomObjects.refreshMessageDisplayed = false --tell Parthia refresh message has not been shown
+end --clearRoomCharacterWindow</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>tecRoomCharRefreshNotification()</name>
+						<packageName></packageName>
+						<script>--Show notification to the player than something has changed and a room check is needed
+local function tecRoomCharRefreshMessage()
+  --displaying to right panel, because it will have very little text in it
+  echoRightRoomCharacterWindows("Refresh Recommended ")
+    cechoLink(roomCharacters.rightConsole.name,"&lt;:maroon&gt;room check", 
+    [[runTECRoomObjectCheck()]],
+    "Populate Room Character window.", true)
+  cechoLink(MultiWindow.roomCharacters.rightConsole.name,"&lt;:maroon&gt;room check", 
+    [[runTECRoomObjectCheck()]],
+    "Populate Room Character window.", true)
+  echoRightRoomCharacterWindows(" or press ctrl+r.\n")
+end --function tecRoomCharRefreshMessage()
+
+function tecRoomCharRefreshNotification()
+
+  if not tecRoomObjects.refreshMessageDisplayed then
+    tecRoomCharRefreshMessage()
+    tecRoomObjects.refreshMessageDisplayed = true --tell client no further refreshes needed
+  end --if tecRefreshNotification is needed
+  
+end --function recRoomCharRefreshNotification()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>tecResetRoomCharacterWindow()</name>
+						<packageName></packageName>
+						<script>--clear out the room character windows and tell player how to refresh
+function tecResetRoomCharacterWindow()
+  clearRoomCharacterWindow() --Room characters window no longer accurate, clear it.
+  echoLeftRoomCharacterWindows("Populate this space with characters in this room by:")
+  echoRightRoomCharacterWindows("running command ")
+  cechoLink(roomCharacters.rightConsole.name,"&lt;:maroon&gt;room check", 
+    [[runTECRoomObjectCheck()]],
+    "Populate Room Character window.", true)
+  cechoLink(MultiWindow.roomCharacters.rightConsole.name,"&lt;:maroon&gt;room check", 
+    [[runTECRoomObjectCheck()]],
+    "Populate Room Character window.", true)
+  echoRightRoomCharacterWindows(" or pressing ctrl+r.\n")
+  tecRoomObjects.refreshMessageDisplayed = true --tell client no further refreshes needed
+end --function tecResetRoomCharacterWindow</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>createCharacterCmdTable(stringToAdd)</name>
+						<packageName></packageName>
+						<script>--[[
+returns a table that can be used with popup functions
+]]--
+function createCharacterCmdTable(stringToAdd)
+  local characterCmdList = {}
+  for i,v in ipairs(tecSettings.commandList) do
+    table.insert(characterCmdList, v..stringToAdd..[["]])
+  end
+  
+  return characterCmdList, tecSettings.commandHelp
+end --function createCharacterCmdTable</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>stats</name>
+					<packageName></packageName>
+					<script>--[[
+collect data from the stats command
+
+]]--</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>getStatsCheckActive()</name>
+						<packageName></packageName>
+						<script>function getStatsCheckActive()
+  return statsFilter.checkActive
+end --function getStatsCheckState()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>setStatsCheckActive(mode)</name>
+						<packageName></packageName>
+						<script>function setStatsCheckActive(mode)
+  mode = fuzzyBoolean(mode)
+  statsFilter.checkActive = mode --a stats check is active
+  if not statsFilter.checkActive then --if disabeling
+    debugToDisplay("function setStatsCheckActive, settings statsFilter.checkActive to false.")
+    statsFilter.displayToScreen = true --if the check is done make certain displayToScreen is true
+    for variableName, variable in pairs(parthiaPlayer.CurrentCharacter) do
+      if type(variable) == "string" then --if the variable is a string
+        variable = replaceDoubleSpaces(variable) --replace double blanks spaces with 1 space
+        variable = removeEndSpace(variable) --remove blank spaces at the end of a variable
+        parthiaPlayer.CurrentCharacter[variableName] = variable
+        debugToDisplay("function setStatsCheckActive, CurrentCharacter."..variableName.." adjusted to ".."\""..parthiaPlayer.CurrentCharacter[variableName].."\"") 
+      end --if type(variable) == "string"
+    end --for pairs(parthiaPlayer.CurrentCharacter)
+    parthiaMap.checkCharacter() --check where the character is. For when login occurs. It uses the character name, that is why it is here
+  end --if not mode
+end --function setStatsCheckActive(mode)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>runStatsCollection(displayToScreen)</name>
+						<packageName></packageName>
+						<script>function runStatsCollection(displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen) 
+  setStatsCheckActive(true) --tell Parthia we will be collecting stats data
+  send("stats",displayToScreen) --send command do not echo
+  statsFilter.displayToScreen = displayToScreen --tell stats filter not to display command to pecho
+  statsFilter.lineCount = 0 --counts lines shown, to stop infinite runs on error
+end --function runStatsCollection()</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>skills</name>
+					<packageName></packageName>
+					<script>--[[
+collect data from the skills command
+]]--</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>getSkillsCheckActive()</name>
+						<packageName></packageName>
+						<script>function getSkillsCheckActive()
+  return skillsFilter.checkActive
+end --function getSkillsCheckState()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>setSkillsCheckActive(mode)</name>
+						<packageName></packageName>
+						<script>function setSkillsCheckActive(mode)
+  mode = fuzzyBoolean(mode)
+  skillsFilter.checkActive = mode --a stats check is active
+  if skillsFilter.checkActive then --if disabeling
+    enableTrigger("skills") --enable trigger for skills collection
+    skillsFilter.hrFound = false --needed for finding the end of the skills command
+    debugToDisplay("function setSkillsCheckActive, enabled skills check")
+    tempTimer(2, [[setSkillsCheckActive(false)]]) --disable this data collection after 2 seconds incase it does not disable in the trigger
+  else
+    disableTrigger("skills") --disable the trigger for skills collections
+    debugToDisplay("function setSkillsCheckActive, disabled skills check")
+    skillsFilter.displayToScreen = true --if the check is done make certain displayToScreen is true
+  end --if not mode
+end --function setStatsCheckActive(mode)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>runSkillsCollection(displayToScreen)</name>
+						<packageName></packageName>
+						<script>function runSkillsCollection(displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen) 
+  setSkillsCheckActive(true) --tell Parthia we will be collecting stats data
+  send("skills",displayToScreen) --send command, do not echo
+  skillsFilter.displayToScreen = displayToScreen --tell stats filter not to display command to pecho
+end --function runStatsCollection()</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>condition</name>
+					<packageName></packageName>
+					<script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external scripts --
+-------------------------------------------------
+</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>getConditionCheckActive()</name>
+						<packageName></packageName>
+						<script>function getConditionCheckActive()
+  return conditionFilter.checkActive
+end --function getStatsCheckState()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>setConditionCheckActive(mode)</name>
+						<packageName></packageName>
+						<script>function setConditionCheckActive(mode)
+  mode = fuzzyBoolean(mode)
+  conditionFilter.checkActive = mode --a stats check is active
+  if not mode then conditionFilter.displayToScreen = true end --if the check is done make certain displayToScreen is true
+end --function setConditionCheckActive(mode)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>runConditionCollection(displayToScreen)</name>
+						<packageName></packageName>
+						<script>function runConditionCollection(displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen) 
+  setConditionCheckActive(true) --tell Parthia we will be collecting stats data
+  send("condition",displayToScreen) --send command do not echo
+  conditionFilter.displayToScreen = displayToScreen --tell stats filter not to display command to pecho
+  conditionFilter.lineCount = 0 --counts lines shown, to stop infinite runs on error
+end --function runConditionCollection(displayToScreen)</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>HelpTheDevelopers</name>
+					<packageName></packageName>
+					<script>--[[
+Functions to collect information from data for future features
+]]--</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>getHelpDevs()</name>
+						<packageName></packageName>
+						<script>--get enabled or disabled state of Help Developers
+function getHelpDevs()
+  return tecSettings.helpDevelopers
+end --function getHelpDevs()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>setHelpDevs(mode)</name>
+						<packageName></packageName>
+						<script>--set enabled or disabled state of Help Developers
+function setHelpDevs(mode)
+  tecSettings.helpDevelopers = fuzzyBoolean(mode)
+end --function setHelpDevs(mode)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>saveHelpDevs(displayToScreen)</name>
+						<packageName></packageName>
+						<script>--[[
+save help developers table to file.
+If the command was run by the player prompt to open the save folder and send data to a developer
+]]--
+function saveHelpDevs(displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  
+  local helpDevFolderExist = lfs.chdir(helpDevDataFolder) --check if the help developers folder already exists
+  if not helpDevFolderExist then --if the help developers folder does not exist
+    local profileFolderExists = lfs.chdir(getMudletHomeDir()) --make certain the mudlet profile exists and change to that directory
+    if profileFolderExists then --The mudlet folder exists
+      lfs.mkdir(helpDevDataFolder) --make the help developers folder
+    end --if profileFolderExists
+  end --if not helpDevFolderExist
+
+  if getHelpDevs() then --if Help Devs is enabled save the data
+    --Save the table to file.
+    table.save(helpDevDataFile, HelpDevsData)
+  	if displayToScreen then --if player ran command
+      pecho("Help developers data saved.\n")
+      sendHelpDevs() --display message to help players submit Help Developers data
+    end --if displayToScreen
+  else --help the devs is not enabled.
+    if displayToScreen then
+      pecho("Help Developers is not enabled. Enable it with ")
+      pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers", 
+      [[expandAlias("parthia help developers")]],
+      "Toggle state of Help Developers", true)
+      pecho("\n")
+    end --if displayToScreen
+  end
+
+end --function saveHelpDevs()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>loadHelpDevs(displayToScreen)</name>
+						<packageName></packageName>
+						<script>function loadHelpDevs(displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  local tmpTable = {} --tmp table to hold data.	
+	local path = helpDevDataFile --name and folder of file
+	
+  if not io.exists(path) then --If the file does not exist let the user know.
+		tecWarningNotification("function loadHelpDevs, file "..path.." not found.")
+		if displayToScreen then
+      pecho("[  info  ]  - Help The Developers save file not found.\n")
+    end --if displayToScreen
+    return --kill the function before real errors occur
+	else --file was found
+    table.load(path, tmpTable) --Load the data in from file
+    HelpDevsData = table.update(HelpDevsData, tmpTable) --update the existing HelpDevsData table incase load is run after startup
+    if displayToScreen then 
+      pecho("[  OK  ]  - Help The Developers data successfully loaded from file.\n") 
+    end --if displayToScreen
+	end --end if file exists else
+  
+end --function loadHelpDevs(displayToScreen)
+</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>sendHelpDevs()</name>
+						<packageName></packageName>
+						<script>--displays a message to help players submit data collected by Help Developers
+function sendHelpDevs()
+  pecho("To submit Help Developers data open the folder containing it by running or clicking command ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers open", 
+    [[tecOpenDirectory(helpDevDataFolder)]], 
+    "Open help developers folder", true)
+  pecho("\n"..[[Please attach the file named Help The Developers Data.txt to:]])
+  pecho("\nAn issues report at Parthia's ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Github Issue Page", 
+    [[openUrl("https://github.com/TheEternalCitizens/mudlet-integration/issues")]], 
+    "Goto issues page", true)
+  pecho("\nA message on the Devs channel of ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Parthia's discord server", 
+    [[openUrl("https://discord.gg/SQtNmq9")]], 
+    "Goto issues page", true)
+  pecho("\nTo view data collected by Help Developers run:\n")
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia room data", 
+  [[expandAlias("parthia room data")]],
+  "Display Help Developers room data", true)
+  echo(", Display Help Developers collected room data.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia character data", 
+  [[expandAlias("parthia character data")]],
+  "Display Help Developers character data", true)
+  echo(", Display Help Developers collected character data.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia player combat data", 
+  [[expandAlias("parthia player combat data")]],
+  "Display Help Developers player combat data", true)
+  echo(", Display Help Developers collected player combat data.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia player noncombat data", 
+  [[expandAlias("parthia player noncombat data")]],
+  "Display Help Developers player noncombat data", true)
+  echo(", Display Help Developers collected player noncombat data.\n")
+  
+  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia object data", 
+  [[expandAlias("parthia object data")]],
+  "Display Help Developers object data", true)
+  echo(", Display Help Developers collected object data.\n")
+  
+end --sendHelpDevs()</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>Actions</name>
+					<packageName></packageName>
+					<script></script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>sortActions(stringToCheck)</name>
+						<packageName></packageName>
+						<script>--[[
+Detects if actions player is involved in are combat or non combat actions.
+If no string is passed it looks for the action in the global line variable
+]]--
+function sortActions(stringToCheck)
+  stringToCheck = stringToCheck or line
+  if type(stringToCheck) ~= "string" then --make certain a string was passed
+    tecErrorNotification("function sortActions, passed a non string variable. Received: "..tostring(stringToCheck).." expected a string.")
+  end --if type(stringToCheck) ~= "string"
+  
+  if stringToCheck:match("^%[Success: %d+, Roll: %d+%]") then --if match is true this is a non combat action
+    debugToDisplay("function, sortActions non-combat action found.")
+    sortNonCombatActions() --sort and collect data from last action that appeared on screen
+  else --this is a combat action
+    debugToDisplay("function, sortActions combat action found.") 
+    sortCombatActions() --sort and collect data from last action that appeared on screen
+  end --if then  stringToCheck:match("(Success: %d+, Roll: %d+)")
+end --function sortActions</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>sortCombatActions(stringToCheck)</name>
+						<packageName></packageName>
+						<script>--[[
+Detects if combat action is against the player or if the player is running the action
+saves the action to the Help Developers table if the player has Help Developers enabled
+If a string is not passed 
+]]--
+function sortCombatActions(stringToCheck)
+  stringToCheck = stringTocheck or line --if user did not pass a string, check global line
+  if type(stringToCheck) ~= "string" then --make certain a string was passed
+    tecErrorNotification("function collectCombatActions, passed a non string variable. Received: "..tostring(stringToCheck).." expected a string.")
+  end --if type(stringToCheck) ~= "string"
+
+  --if the attack is directed at the player.
+  if  stringToCheck:match("at you") or
+      stringToCheck:match("misses you") or
+      stringToCheck:match("towards you") or 
+      stringToCheck:match("slap you,") or
+      stringToCheck:match("head butt you") or 
+      stringToCheck:match("tries to distract you") or
+      stringToCheck:match("a knee into you") or 
+      stringToCheck:match("parthia playercombatdata") then
+    if getHelpDevs() then --if Help Developers is enabled
+      if not table.contains(HelpDevsData.Combat.AgainstPlayer, stringToCheck) then --if stringToCheck is not in the AgainstPlayer table
+        debugToDisplay("function collectCombatActions, adding "..stringToCheck.." to HelpDevsData.Combat.AgainstPlayer table.")
+        HelpDevsData.Combat.AgainstPlayer[stringToCheck] = "" --collect attack to table.
+      end --if not table.contains(HelpDevsData.Combat.AgainstPlayer, stringTocheck)
+    end --if getHelpDevs()
+    
+  --if the attack is one the player is using
+  elseif  stringToCheck:match("%] You") or 
+          stringToCheck:match(", you") then
+          
+    -- record if this command was successful or not.
+    parthiaLastCommandSuccess = commandSuccessful(stringToCheck)
+          
+    if getHelpDevs() then --if Help Developers is enabled
+      if not table.contains(HelpDevsData.Combat.PlayerAttacks, stringToCheck) then --if stringToCheck is not in the HelpDevsData.Combat.PlayerAttacks table
+        debugToDisplay("function collectCombatActions, adding "..stringToCheck.." to HelpDevsData.Combat.PlayerAttacks table.")
+        HelpDevsData.Combat.PlayerAttacks[stringToCheck] = "" --collect attack to table.
+      end --if not table.contains(HelpDevsData.Combat.PlayerAttacks, stringTocheck)
+    end --getHelpDevs()
+  
+  --we do not know where this attack belongs
+  else
+    if getHelpDevs() then --if Help Developers is enabled
+      if not table.contains(HelpDevsData.Combat.Unsorted, stringToCheck) then --if stringToCheck is not in the HelpDevsData.Combat.Unsorted table
+        debugToDisplay("function collectCombatActions, adding "..stringToCheck.." to HelpDevsData.Combat.Unsorted table.")
+        HelpDevsData.Combat.Unsorted[stringToCheck] = "" --collect attack to table.
+      end --if not table.contains(HelpDevsData.Combat.Unsorted, stringTocheck)
+    end --if getHelpDevs() then
+  end --if stringToCheck:match sort combat types if elseif series
+  
+end --function sortCombatActions(stringToCheck)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>sortNonCombatActions(stringToCheck)</name>
+						<packageName></packageName>
+						<script>function sortNonCombatActions(stringToCheck)
+  stringToCheck = stringTocheck or line --if user did not pass a string, check global line
+  if type(stringToCheck) ~= "string" then --make certain a string was passed
+    tecErrorNotification("function sortNonCombatActions, passed a non string variable. Received: "..tostring(stringToCheck).." expected a string.")
+  end --if type(stringToCheck) ~= "string"
+  
+  -- record if this command was successful or not.
+  parthiaLastCommandSuccess = commandSuccessful(stringToCheck)
+
+  if getHelpDevs() then --if Help Developers is enabled
+    if not table.contains(HelpDevsData.NonCombatActions.Unsorted, stringToCheck) then --if stringToCheck is not in the unsorted table
+      debugToDisplay("function sortNonCombatAction, adding "..stringToCheck.." to HelpDevsData.NonCombatActions.Unsorted table.")
+      HelpDevsData.NonCombatActions.Unsorted[stringToCheck] = "" --collect attack to table.
+    end --if not table.contains(HelpDevsData.Combat.AgainstPlayer, stringTocheck)
+  end --if getHelpDevs()
+
+end --function sortNonCombatActions</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>Game commands</name>
+				<packageName></packageName>
+				<script>--[[
+Commands used to interact with the game itself.
+
+IE: `wait for drover`
+]]--</script>
+				<eventHandlerList />
 				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>wait for drover</name>
 					<packageName></packageName>
