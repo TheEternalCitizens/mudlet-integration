@@ -1251,26 +1251,27 @@ parthiaAutomationStart(matches[2], matches[3])</script>
 					<regex>^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>parthia automation [group name], [position number] = [command], [seconds or 0], [repeat on fail]</name>
+					<name>parthia automation [group name], [position number] = [command], [trigger], [repeat on fail]</name>
 					<script>--[[
-Aliases\Parthia\parthia auto\parthia automation [group name], [position number] = [command], [seconds or 0], [repeat on fail]
-    Calls, Scripts\Game Commands\auto\parthiaAutomationUpdate(parthiaCmdString)
+Create or update an automation group.
+Replacing any entry in the groups position provided.
+    
 ]]--
 
 --Here we are unpacking ALL 5 of the captures from the pattern above.
 --Unpack format is unpack(array, element start, element end)
 --Since we are not specifing an element end it unpacks until the end of the array.
---This is just like sending it {groupName, parthiaAutomationGroupPosition, command, seconds, repeatOnFail}
+--This is just like sending it {groupName, parthiaAutomationGroupPosition, command, trigger, repeatOnFail}
 parthiaAutomationUpdate(unpack(matches, 2))</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\s+&lt;&gt;]+),\s+(\d+),\s+(\d+)$</regex>
+					<regex>^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\s+]+),\s+(.+)~\s+(\d+)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia automation [group name], [position number] = [command], [seconds or 0], [repeat on fail], [insert]</name>
 					<script>--[[
-Aliases\Parthia\parthia auto\parthia automation [group name], [position number] = [command], [seconds or 0], [repeat on fail], [insert]
-    Calls, Scripts\Game Commands\auto\parthiaAutomationUpdate(parthiaCmdString)
+Supports creation an automation group or position while inserting into the automation group.
+Not replacing an existing entry.
 ]]--
 
 --Here we are unpacking ALL 6 of the captures from the pattern above.
@@ -1280,7 +1281,7 @@ Aliases\Parthia\parthia auto\parthia automation [group name], [position number] 
 parthiaAutomationUpdate(unpack(matches, 2))</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\s+&lt;&gt;]+),\s+(\d+),\s+(\d+),\s+(\d+)$</regex>
+					<regex>^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\s+]+),\s+(.+)~\s+(\d+),\s+(\d+)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia automation start</name>
