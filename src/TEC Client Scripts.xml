@@ -9530,6 +9530,11 @@ function parthiaAutomationStop(displayToScreen)
     parthiaAutomationTimerID = false  -- Set the timer ID to false it is no longer needed.
   end  -- if parthiaAutomationTimerID then
   
+  if parthiaAutomationRegexTrigger then
+  
+    parthiaAutomationRegexTrigger = false
+  end
+  
   if displayToScreen then
     pecho("\nAutomation stopped.\n\n")
   end -- if displayToScreen then
