@@ -9458,7 +9458,7 @@ function parthiaAutomationCall()
   --convert old secondsToWait to custom triggers
   if tecSettings.automation[groupName][groupPosition].secondsToWait then
     tecSettings.automation[groupName][groupPosition].automationTrigger = tecSettings.automation[groupName][groupPosition].secondsToWait
-    table.remove(tecSettings.automation[groupName][groupPosition], "secondsToWait")
+    tecSettings.automation[groupName][groupPosition].secondsToWait = nil
   end  -- if tecSettings.automation[groupName][groupPosition].secondsToWait then
   
   -- The command to run

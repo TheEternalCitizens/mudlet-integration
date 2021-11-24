@@ -2284,7 +2284,7 @@ if parthiaAutomationRunning then
   groupName = parthiaAutomationRunning["groupName"]
   -- Check if this automation is called off of a timer or this trigger
   -- If seconds to wait for this automation group is 0, automation is called by this trigger.
-  if not parthiaToBoolean(tecSettings.automation[groupName][parthiaAutomationGroupPosition].secondsToWait) then
+  if not parthiaToBoolean(tecSettings.automation[groupName][parthiaAutomationGroupPosition].automationTrigger) then
     parthiaAutomationCall()  -- Call the automation handler
   end  -- if not parthiaToBoolean(tecSettings.automation[groupName][parthiaAutomationGroupPosition].secondsToWait) then
 end -- if parthiaAutomationRunning then</script>
