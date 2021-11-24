@@ -9084,7 +9084,7 @@ end --parthiaTalkSetvolume(volume, displayToScreen)
 					<script>--[[
 Codeless scripting.
 This is done by running a command to register you action in a script group.
-  /auto [group name], [position number] = [command], [seconds to wait or 0 for no longer busy, [repeat on fail]
+  /auto [group name], [position number] = [command], [seconds to wait or 0 for no longer busy], [repeat on fail], [insert]
 Example /auto Attack Rotation, 1 = slash &amp;lt;target&amp;gt;, 0, False /auto Attack Rotation, 2 = chop &amp;lt;target&amp;gt;, 0, False /auto Attack Rotation, 3 = jab &amp;lt;target&amp;gt;, 0, False
   Would create a three attack rotation where you character would slash, chop than jab the target. Where if you failed at the attack you continue to the next action.
 Example /auto Heal Rotation, 1 = diagnose &amp;lt;target&amp;gt;, 0, True /auto Heal Rotation, 2 = bandage &amp;lt;target&amp;gt; with bandage, 0, True /auto Heal Rotation, 3 = cut bandage from &amp;lt;target&amp;gt;, 0, True
@@ -9093,6 +9093,29 @@ Than to run to rotation /auto [group name], [number of times, leave out for infi
   Example /auto Heal Rotation to run the healing rotation an infinit  e number of times.
   auto Heal Rotation, 10 to run the healing rotation group 10 times.
 Where the stop command stops you script.
+
+Allow custom trigger-----------------------------------------------------------
+  Command format:
+    /auto [group name], [position number] = [command], [trigger], [repeat on fail], [insert]
+    
+    Functions to change
+      parthiaAutomationUpdate:
+        update secondsToWait to automationTrigger
+      parthiaAutomationCall
+        update secondsToWait to automationTrigger
+        Change logic starting line 72
+          if trigger converts to a number, make a timer as exists now.
+          if trigger does not convert to number, make a temp trigger with parthiaAutomationRegexTrigger
+      parthiaAutomationStop
+        Kill the regex temp trigger if it exists.
+      parthiaAutomationRegedTrigger, needs to be made. Creates a regex trigger that supports &lt;color&gt;&lt;/color&gt;.
+      
+    Aliases to change
+      The patterns on ALL the automation creation aliases need to be updated to allow text and regex triggers.
+    
+    if seconds does not convert to a number.
+      Create a temp trigger: https://wiki.mudlet.org/w/Manual:Mudlet_Object_Functions#tempRegexTrigger
+    The trigger calls parthiaAutomationCall
 
 Track command success----------------------------------------------------------
   Triggers\Game Events\player involved in an action
@@ -9121,6 +9144,7 @@ Functions---------------------------------------------------------
     automation group.
   parthiaAutomationHelp, a general help message for the automation system.
   parthiaAutomationManageGroups, allows a dynamic method to manage groups in the tecSettings.automation tables.
+  parthiaAutomationRegexTrigger, create a temp regex trigger with html color support.
       
 Variables---------------------------------------------------------
   parthiaLastCommandSuccess: records if the last command the player's character ran was successful.
@@ -9732,6 +9756,20 @@ function parthiaAutomationShowGroups(groupName, removeElement, groupPosition)
   end  -- if groupName then
   
 end  -- function parthiaAutomationShowGroups()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationRegexTrigger()</name>
+						<packageName></packageName>
+						<script>--[[
+variable
+  pattern, is the regex pattern passed from the automation group.
+  
+References:
+  https://wiki.mudlet.org/w/Manual:Mudlet_Object_Functions#tempRegexTrigger
+]]--
+function parthiaAutomationRegexTrigger(pattern)
+end</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
