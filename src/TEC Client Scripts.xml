@@ -9168,7 +9168,10 @@ Scripts\Game Commands\auto\parthiaAutomationUpdate(parthiaCmdString)
   Prompts user to save.
 ]]--
 
-function parthiaAutomationUpdate(groupName, groupPosition, automationCommand, secondsToWait, repeatOnFail)
+function parthiaAutomationUpdate(groupName, groupPosition, automationCommand, secondsToWait, repeatOnFail, insert)
+  
+  -- Give insert a default value
+  if not insert then insert = false end
   
   -- Make certain groupPosition is a number that is not zero.
   if not parthiaToBoolean(groupPosition) then
@@ -9186,12 +9189,22 @@ function parthiaAutomationUpdate(groupName, groupPosition, automationCommand, se
     tecSettings.automation[groupName] = {}  -- Make the group name an empty dictionary
   end  -- END if not tecSettings.automation[groupName] then
   
-  -- Save the group and settings passed by the user
-  tecSettings.automation[groupName][groupPosition] = { 
-                                        automationCommand = automationCommand,
-                                        secondsToWait = tonumber(secondsToWait),
-                                        repeatOnFail = tonumber(repeatOnFail)
-                                      }
+  -- a temp table to insert into the automations group name
+  local positionTable = { 
+                          automationCommand = automationCommand,
+                          secondsToWait = tonumber(secondsToWait),
+                          repeatOnFail = tonumber(repeatOnFail)
+                        }  -- END local positionTable
+  
+  -- if the user would like to insert rather than replace an entry
+  if parthiaToBoolean(insert) then
+    table.insert(tecSettings.automation[groupName], groupPosition, positionTable)
+  else  -- The user would like to replace an entry.
+    -- remove any possible previous entry
+    table.remove(tecSettings.automation[groupName], groupPosition)
+    -- Save the group and settings passed by the user
+    table.insert(tecSettings.automation[groupName], groupPosition, positionTable)
+  end  -- if not parthiaToBoolean(insert)
 
   -- Show user the changes they made.
   pecho("Automation group "..groupName.." updated.\nYour update is:")

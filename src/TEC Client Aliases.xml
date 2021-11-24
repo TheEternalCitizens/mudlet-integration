@@ -1267,6 +1267,22 @@ parthiaAutomationUpdate(unpack(matches, 2))</script>
 					<regex>^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\s+&lt;&gt;]+),\s+(\d+),\s+(\d+)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation [group name], [position number] = [command], [seconds or 0], [repeat on fail], [insert]</name>
+					<script>--[[
+Aliases\Parthia\parthia auto\parthia automation [group name], [position number] = [command], [seconds or 0], [repeat on fail], [insert]
+    Calls, Scripts\Game Commands\auto\parthiaAutomationUpdate(parthiaCmdString)
+]]--
+
+--Here we are unpacking ALL 6 of the captures from the pattern above.
+--Unpack format is unpack(array, element start, element end)
+--Since we are not specifing an element end it unpacks until the end of the array.
+--This is just like sending it {groupName, parthiaAutomationGroupPosition, command, seconds, repeatOnFail, insert}
+parthiaAutomationUpdate(unpack(matches, 2))</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\s+&lt;&gt;]+),\s+(\d+),\s+(\d+),\s+(\d+)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
 					<name>parthia automation start</name>
 					<script>-- display help message on how to start automation.
 parthiaAutomationStartHelp()</script>
