@@ -9407,10 +9407,10 @@ Scripts\Game Commands\auto\parthiaAutomationCall()
     is called if iteration is needed. The groupPosition is set by parthiaAutomationIncreaseGroupIteration or just stays at false
     If iteration is not needed groupPosition is set to parthiaAutomationGroupPosition
   Automation is than stopped if groupRepeat is set and is greater than parthiaAutomationIterationCounter
-  automationCommand, secondsToWait and repeatOnFail is collected from the proper group and group position for this automation command
+  automationCommand, automationTrigger and repeatOnFail is collected from the proper group and group position for this automation command
   parthiaAutomationRepeatCmdOnFailure is set to parthiaToBoolean(repeatOnFail)
   parthiaLastCommandSuccess is set to false, incase the command about to be run has no success chance message.
-  if secondsToWait is not 0, than a timer is set to call the next command.
+  if automationTrigger is not 0, than a timer is set to call the next command.
   The automation command is sent to the server
   parthiaAutomationFirstRun is set to false
   debug message is sent to debug
@@ -9457,7 +9457,7 @@ function parthiaAutomationCall()
   -- The command to run
   local automationCommand = tecSettings.automation[groupName][groupPosition].automationCommand
   -- How many seconds to run before the next command
-  local secondsToWait = tecSettings.automation[groupName][groupPosition].secondsToWait
+  local automationTrigger = tecSettings.automation[groupName][groupPosition].automationTrigger
   -- If this command should repeat on failure
   local repeatOnFail = tecSettings.automation[groupName][groupPosition].repeatOnFail
   
@@ -9467,14 +9467,22 @@ function parthiaAutomationCall()
   -- In case user is sending command that has no success chance reset parthiaLastCommandSuccess
   parthiaLastCommandSuccess = false
   
-  -- If the user specified seconds to wait before conducting the next command
-  -- Set a timer for the next command.
-  if parthiaToBoolean(secondsToWait) then
-  
-    -- create timer to call this function here
-    parthiaAutomationTimerID = tempTimer(secondsToWait, [[parthiaAutomationCall()]])
+  -- If the user specified a custom trigger
+  if parthiaToBoolean(automationTrigger) then
     
-  end  -- if parthiaToBoolean(secondsToWait) then
+    --Attempt to convert the trigger to a number
+    timedTrigger = tonumber(automationTrigger)  -- If it is not a number automationDelay will be null
+
+    --If this custom trigger is a time trigger create a temp timer.
+    if timedTrigger then
+      -- create timer to call this function again
+      parthiaAutomationTimerID = tempTimer(automationTrigger, [[parthiaAutomationCall()]])
+    else  -- This trigger is a message based trigger. Create a regex trigger.
+      -- create a regex trigger to call this function again.
+      parthiaAutomationRegexTrigger = parthiaAutomationRegexTrigger(automationTrigger)
+    end  -- if timedTrigger then
+    
+  end  -- if parthiaToBoolean(automationTrigger) then
   
   -- send the command
   send(automationCommand)
