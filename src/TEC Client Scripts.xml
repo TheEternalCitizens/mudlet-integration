@@ -9454,9 +9454,16 @@ function parthiaAutomationCall()
   end -- if parthiaToBoolean(groupRepeat) then
   
   -- collect additional data this function will need
+  
+  --convert old secondsToWait to custom triggers
+  if tecSettings.automation[groupName][groupPosition].secondsToWait then
+    tecSettings.automation[groupName][groupPosition].automationTrigger = tecSettings.automation[groupName][groupPosition].secondsToWait
+    table.remove(tecSettings.automation[groupName][groupPosition], "secondsToWait")
+  end  -- if tecSettings.automation[groupName][groupPosition].secondsToWait then
+  
   -- The command to run
   local automationCommand = tecSettings.automation[groupName][groupPosition].automationCommand
-  -- How many seconds to run before the next command
+  -- The delay before calling the next command
   local automationTrigger = tecSettings.automation[groupName][groupPosition].automationTrigger
   -- If this command should repeat on failure
   local repeatOnFail = tecSettings.automation[groupName][groupPosition].repeatOnFail
