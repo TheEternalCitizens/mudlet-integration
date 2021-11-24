@@ -9188,11 +9188,11 @@ Scripts\Game Commands\auto\parthiaAutomationUpdate(parthiaCmdString)
   Creates a new automation group if it does not already exist.
     tecSettings.automation.[group name]
   Sets the command in the group
-    tecSettings.automation.[group name][position number] = {[command], [seconds or 0], [repeat on fail]}
+    tecSettings.automation.[group name][position number] = {[command], [trigger], [repeat on fail]}
   Prompts user to save.
 ]]--
 
-function parthiaAutomationUpdate(groupName, groupPosition, automationCommand, secondsToWait, repeatOnFail, insert)
+function parthiaAutomationUpdate(groupName, groupPosition, automationCommand, automationTrigger, repeatOnFail, insert)
   
   -- Give insert a default value
   if not insert then insert = false end
@@ -9216,7 +9216,7 @@ function parthiaAutomationUpdate(groupName, groupPosition, automationCommand, se
   -- a temp table to insert into the automations group name
   local positionTable = { 
                           automationCommand = automationCommand,
-                          secondsToWait = tonumber(secondsToWait),
+                          automationTrigger = automationTrigger,
                           repeatOnFail = tonumber(repeatOnFail)
                         }  -- END local positionTable
   
@@ -9234,7 +9234,7 @@ function parthiaAutomationUpdate(groupName, groupPosition, automationCommand, se
   pecho("Automation group "..groupName.." updated.\nYour update is:")
   pecho("\n\tIn position: "..groupPosition)
   pecho("\n\tAutomation Command: "..automationCommand)
-  pecho("\n\tSeconds to wait: "..secondsToWait)
+  pecho("\n\tTrigger: "..automationTrigger)
   pecho("\n\tRepeat on fail: "..repeatOnFail.."\n")
                                         
   -- Remind the user to save their chages
@@ -9251,9 +9251,9 @@ function parthiaAutomationUpdateHelp()
 
   -- Show this commands help message
   pecho("The command format to create or update an automation group is:\n")
-  pecho("\tparthia automation [group name], [position number] = [command], [seconds], [repeat on fail], [insert]\n")
+  pecho("\tparthia automation [group name], [position number] = [command], [trigger], [repeat on fail], [insert]\n")
   pecho("parthia automation has a short name of /auto. It's format is the same.\n")
-  pecho("\t/auto [group name], [position number] = [command], [seconds or 0], [repeat on fail], [insert]\n\n")
+  pecho("\t/auto [group name], [position number] = [command], [trigger], [repeat on fail], [insert]\n\n")
   pecho("[group name] is a name for an automation group.\n")
   pecho("\tIt can be a new or existing group name.\n")
   pecho("\t[group name] can contain letters, numbers and spaces.\n")
@@ -9261,8 +9261,10 @@ function parthiaAutomationUpdateHelp()
   pecho("[position number], is the command's position in the automation group.\n")
   pecho("\tOnly numbers are supported as position number.\n")
   pecho("[command] is the command you would like to be run. A command can contain letters numbers and &lt; &gt;.\n")
-  pecho("[seconds] is the delay in seconds before attempting the next command.\n")
-  pecho("\tIf seconds is 0, the next command will occur just after the 'You are no longer busy.' message appears.\n")
+  pecho("[trigger] is the delay before attempting the next command.\n")
+  pecho("\tIf trigger is 0, the next command will occur just after the 'You are no longer busy.' message appears.\n")
+  pecho("\tIf trigger is a number the next command will occur after than many seconds.\n")
+  pecho("\tIf trigger is a message the next command is called when that message is seen on screen.\n")
   pecho("[repeat on fail], can be 1 or 0.\n")
   pecho("\tIf repeat on fail is 1, this command will repeat until it succeeds.\n")
   pecho("\tIf repeat on fails is 0, the automation system will always continue to the next command in your automation group.\n")
@@ -9293,7 +9295,28 @@ function parthiaAutomationUpdateHelp()
   
   printCmdLine("parthia automation replace_with_your_group, 1 = replace_with_your_command, 0, 0, 0")
 
-end -- function parthiaAutomationUpdateHelp()</script>
+end -- function parthiaAutomationUpdateHelp()
+
+function parthiaAutomationTriggerHelp()
+  pecho("\nIf trigger is 0, the next command will occur just after the 'You are no longer busy.' message appears.\n")
+  pecho("If trigger is a number the next command will occur after than many seconds.\n")
+  pecho("If trigger is a message the next command is called when that message is seen on screen.\n")
+  pecho("\tMessage can be a plain text message you see on screen.\n")
+  pecho("\tIf there is a color change that occurs in your message you can surround the colored text with\n")
+  pecho("\t\tThis is a message you want to trigger off with &lt;color&gt;colored text&lt;/color&gt;.\n")
+  pecho("\t\tThe color of the text does not matter, always use &lt;color&gt;.\n")
+  pecho("\tADVANCED USERS: Message triggers support regex characters.\n")
+  pecho("\t\tThis allows for a very versitle trigger. You have to be willing to learn how to use regex patterns for this.\n")
+  pecho("\t\tWhen using regex patterns keep in mind that tec parthia received text with html codes for the server.\n")
+  pecho("\t\tFor example most text sent to parthia starts with a color code. So using ^ and $ will be difficult.\n")
+  pecho("\t\tIf you would like to see how parthia receive text run ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug on&lt;reset&gt;.\n", 
+  	[[setTECDebugMode(true)]], 
+  	"Enable basic debug", true)
+  pecho("\t\t\tThere will be a docked window you will need to drag out to view.\n")
+  pecho("\t\t\tPlease do not submit issues or requests involving the debuging system.\n")
+  pecho("\t\tUsing a plain text message with the &lt;color&gt; tag will work 99%.")
+end -- function parthiaAutomationTriggerHelp()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">

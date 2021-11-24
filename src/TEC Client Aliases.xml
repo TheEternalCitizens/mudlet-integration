@@ -1346,6 +1346,13 @@ parthiaAutomationShowGroups(matches[2], true)</script>
 					</Alias>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation triggers</name>
+					<script>parthiaAutomationTriggerHelp()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia automation triggers$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
 					<name>/auto [command]</name>
 					<script>--create shorter version of parthia talk command
 expandAlias("parthia automation "..tostring(matches[2]))
