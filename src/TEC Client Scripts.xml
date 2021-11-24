@@ -9486,7 +9486,7 @@ function parthiaAutomationCall()
       parthiaAutomationTimerID = tempTimer(automationTrigger, [[parthiaAutomationCall()]])
     else  -- This trigger is a message based trigger. Create a regex trigger.
       -- create a regex trigger to call this function again.
-      parthiaAutomationRegexTrigger = parthiaAutomationRegexTrigger(automationTrigger)
+      parthiaAutomationRegexTriggerID = parthiaCreateAutomationRegexTrigger(automationTrigger)
     end  -- if timedTrigger then
     
   end  -- if parthiaToBoolean(automationTrigger) then
@@ -9511,6 +9511,7 @@ end -- function parthiaAutomationCall()</script>
 Scripts\Game Commands\auto\parthiaAutomationStop()
     Sets a number of global variables to default.
     Stop any automation timer if one exists.
+    Arop automation trigger if one exists.
     Displays message to user if specified to.
     Returns true
 ]]--
@@ -9524,16 +9525,17 @@ function parthiaAutomationStop(displayToScreen)
   parthiaLastCommandSuccess = false
   parthiaAutomationRepeatCmdOnFailure = false
   
-  --If a timer exists and is waiting to fire. End it now.
+  -- If a timer exists and is waiting to fire. End it now.
   if parthiaAutomationTimerID then
     killTimer(parthiaAutomationTimerID)
     parthiaAutomationTimerID = false  -- Set the timer ID to false it is no longer needed.
   end  -- if parthiaAutomationTimerID then
   
-  if parthiaAutomationRegexTrigger then
-  
-    parthiaAutomationRegexTrigger = false
-  end
+  -- if a custom automation trigger exists, kill it.
+  if parthiaAutomationRegexTriggerID then
+    killTrigger(parthiaAutomationRegexTriggerID)
+    parthiaAutomationRegexTriggerID = false
+  end  -- if parthiaAutomationRegexTriggerID then
   
   if displayToScreen then
     pecho("\nAutomation stopped.\n\n")
@@ -9806,7 +9808,7 @@ end  -- function parthiaAutomationShowGroups()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
-						<name>parthiaAutomationRegexTrigger()</name>
+						<name>parthiaCreateAutomationRegexTrigger()</name>
 						<packageName></packageName>
 						<script>--[[
 variable
@@ -9815,7 +9817,7 @@ variable
 References:
   https://wiki.mudlet.org/w/Manual:Mudlet_Object_Functions#tempRegexTrigger
 ]]--
-function parthiaAutomationRegexTrigger(pattern)
+function parthiaCreateAutomationRegexTrigger(pattern)
 end</script>
 						<eventHandlerList />
 					</Script>
