@@ -1351,7 +1351,14 @@ expandAlias("parthia automation "..tostring(matches[2]))
 </script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^/auto (.*)$</regex>
+					<regex>^/auto\s+(.*)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>/auto</name>
+					<script>expandAlias("parthia automation")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^/auto\s*$</regex>
 				</Alias>
 			</AliasGroup>
 		</AliasGroup>
