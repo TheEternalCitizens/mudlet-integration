@@ -9769,10 +9769,18 @@ function parthiaAutomationShowGroups(groupName, removeElement, groupPosition)
         
         -- Show the group position
         pecho("\tGroup Position: "..groupPosition..", ")
+        
+        -- provide an easy method to edit this group position
+        pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Edit: "..groupName.." position "..groupPosition, 
+        [[printCmdLine("parthia automation ]]..groupName..[[, ]]..groupPosition..[[ = replace_with_your_command, 0~ 0, 0")]],
+        "change group position "..groupPosition.." for group "..groupName, true)
+        
         -- Provide an easy method to remove this group.
         pechoLink("\t&lt;:maroon&gt;Remove "..groupName.." position "..groupPosition, 
         [[expandAlias("parthia automation groups ]]..groupName..[[, delete ]]..groupPosition..[[")]],
-        "parthia automation groups "..groupName..", delete "..groupPosition, true)
+        "delete group position "..groupPosition.." for group "..groupName, true)
+        
+        
         
         -- Collect variables from this automation group, at the correct position.
         local automationCommand = tecSettings.automation[groupName][groupPosition].automationCommand
@@ -9839,7 +9847,6 @@ function parthiaAutomationShowGroups(groupName, removeElement, groupPosition)
         [[expandAlias("parthia automation groups ]]..groupName..[[")]],
         "parthia automation groups "..groupName, true)
       
-      --printCmdLine("parthia automation replace_with_your_group, 1 = replace_with_your_command, 0~ 0, 0")
       pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Edit: "..groupName..namePadding, 
         [[printCmdLine("parthia automation ]]..groupName..[[, 1 = replace_with_your_command, 0~ 0, 0")]],
         "parthia automation groups "..groupName, true)
