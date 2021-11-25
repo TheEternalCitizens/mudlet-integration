@@ -9096,7 +9096,7 @@ Where the stop command stops you script.
 
 Allow custom trigger-----------------------------------------------------------
   Command format:
-    /auto [group name], [position number] = [command], [trigger], [repeat on fail], [insert]
+    /auto [group name], [position number] = [command], [trigger]~ [repeat on fail], [insert]
     
     Functions to change
       parthiaAutomationUpdate:
@@ -9162,6 +9162,7 @@ Variables---------------------------------------------------------
   parthiaAutomationTimerID: The ID for any time created if the user specified a seconds variable on automation group entry creation.
     Collected in parthiaAutomationCall, and is set to false at the start of that method also.
   parthiaAutomationRepeatCmdOnFailure, records if the last command run requires repeating on failure.
+  parthiaAutomationRegexTriggerID, global variable, used to store the automation regex trigger's ID.
     
 Triggers-----------------------------------------------------------
   Triggers\Game Events\You are no longer busy.
@@ -9251,9 +9252,9 @@ function parthiaAutomationUpdateHelp()
 
   -- Show this commands help message
   pecho("The command format to create or update an automation group is:\n")
-  pecho("\tparthia automation [group name], [position number] = [command], [trigger], [repeat on fail], [insert]\n")
+  pecho("\tparthia automation [group name], [position number] = [command], [trigger]~ [repeat on fail], [insert]\n")
   pecho("parthia automation has a short name of /auto. It's format is the same.\n")
-  pecho("\t/auto [group name], [position number] = [command], [trigger], [repeat on fail], [insert]\n\n")
+  pecho("\t/auto [group name], [position number] = [command], [trigger]~ [repeat on fail], [insert]\n\n")
   pecho("[group name] is a name for an automation group.\n")
   pecho("\tIt can be a new or existing group name.\n")
   pecho("\t[group name] can contain letters, numbers and spaces.\n")
@@ -9266,8 +9267,8 @@ function parthiaAutomationUpdateHelp()
   pecho("\tIf trigger is a number the next command will occur after than many seconds.\n")
   pecho("\tIf trigger is a message the next command is called when that message is seen on screen.\n")
   pechoLink("\tRun &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation triggers&lt;reset&gt;, for help on custom automation triggers.\n", 
-  	[[parthiaAutomationTriggerHelp()]], 
-  	"automations trigger help", true)
+    [[parthiaAutomationTriggerHelp()]], 
+    "automations trigger help", true)
   pecho("[repeat on fail], can be 1 or 0.\n")
   pecho("\tIf repeat on fail is 1, this command will repeat until it succeeds.\n")
   pecho("\tIf repeat on fails is 0, the automation system will always continue to the next command in your automation group.\n")
@@ -9290,13 +9291,15 @@ function parthiaAutomationUpdateHelp()
   pecho("\t\tWould both update or create your 'Attack Rotation' automation group position 2.\n")
   pecho("\t\tWith command 'slash rat'.\n")
   pecho("\t\tThe next command will occur when you receive the 'You are no longer busy' message.\n")
-  pecho("\t\tWether this command succeeds or fails automation will continue to the next command in this automation group.\n\n")
-  pecho("You now have an attack rotation that will attack than slash a rat automatically.\n")
-  pecho("If you would like to use TEC target system, you will need to make macros. Than use that macro as the automation [command].\n")
+  pecho("\t\tWether this command succeeds or fails automation will continue to the next command in this automation group.\n")
+  pecho("\tYou now have an attack rotation that will attack than slash a rat automatically.\n\n")
+  pecho("If you would like to use TEC target system, you will need to make macros. Than use a macro as the automation [command].\n")
   pecho("There is no limit on the number of commands that can be in an automation group.\n")
   pecho("When creating an automation group, remeber that when you call it you can have the entire group repeat a number of times or infinitely.\n\n")
   
-  printCmdLine("parthia automation replace_with_your_group, 1 = replace_with_your_command, 0, 0, 0")
+  pecho("The command format to create or update an automation group is:\n")
+  pecho("\tparthia automation [group name], [position number] = [command], [trigger]~ [repeat on fail], [insert]\n")
+  printCmdLine("parthia automation replace_with_your_group, 1 = replace_with_your_command, 0~ 0, 0")
 
 end -- function parthiaAutomationUpdateHelp()
 
@@ -9314,8 +9317,8 @@ function parthiaAutomationTriggerHelp()
   pecho("\t\tFor example most text sent to parthia starts with a color code. So using ^ and $ will be difficult.\n")
   pecho("\t\tIf you would like to see how parthia receive text run ")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug on&lt;reset&gt;.\n", 
-  	[[setTECDebugMode(true)]], 
-  	"Enable basic debug", true)
+    [[setTECDebugMode(true)]], 
+    "Enable basic debug", true)
   pecho("\t\t\tThere will be a docked window you will need to drag out to view.\n")
   pecho("\t\t\tPlease do not submit issues or requests involving the debuging system.\n")
   pecho("\t\tUsing a plain text message with the &lt;color&gt; tag will work 99%.")
@@ -9398,11 +9401,13 @@ end  -- function parthiaAutomationStartHelp()</script>
 					<Script isActive="yes" isFolder="no">
 						<name>parthiaAutomationCall()</name>
 						<packageName></packageName>
-						<script>--[[
+						<script>
+--[[
 Scripts\Game Commands\auto\parthiaAutomationCall()
   collects groupName and groupRepeat from global variable parthiaAutomation
   It than creates a local groupPosition set to false
   parthiaAutomationTimerID is set to false
+  if a custom automation trigger exists kill it, set the trigger ID variable to false
   Group position iteration is than handled through a series of i elseif staments where parthiaAutomationIncreaseGroupIteration
     is called if iteration is needed. The groupPosition is set by parthiaAutomationIncreaseGroupIteration or just stays at false
     If iteration is not needed groupPosition is set to parthiaAutomationGroupPosition
@@ -9427,6 +9432,11 @@ function parthiaAutomationCall()
   local groupPosition = false
   -- Blank out the timer ID it is no longer needed
   parthiaAutomationTimerID = false
+  -- if a custom automation trigger exists, kill it.
+  if parthiaAutomationRegexTriggerID then
+    killTrigger(parthiaAutomationRegexTriggerID)
+    parthiaAutomationRegexTriggerID = false
+  end  -- if parthiaAutomationRegexTriggerID then
   
   -- Iterate to the next command if it is required.
   --if this is the fist run of this automation task, initialize variables.
@@ -9467,12 +9477,16 @@ function parthiaAutomationCall()
   local automationTrigger = tecSettings.automation[groupName][groupPosition].automationTrigger
   -- If this command should repeat on failure
   local repeatOnFail = tecSettings.automation[groupName][groupPosition].repeatOnFail
-  
+
   -- This will be used in the if statement above that determins if automation should continue to the next command
   parthiaAutomationRepeatCmdOnFailure = parthiaToBoolean(repeatOnFail)
   
   -- In case user is sending command that has no success chance reset parthiaLastCommandSuccess
   parthiaLastCommandSuccess = false
+  
+  
+  --Determine how the next command should be called
+  --Determine when the current command should be called ( To avoid the 1 command a second limit )
   
   -- If the user specified a custom trigger
   if parthiaToBoolean(automationTrigger) then
@@ -9482,24 +9496,36 @@ function parthiaAutomationCall()
 
     --If this custom trigger is a time trigger create a temp timer.
     if timedTrigger then
+      
+      -- send the command
+      send(automationCommand)
+      
       -- create timer to call this function again
-      parthiaAutomationTimerID = tempTimer(automationTrigger, [[parthiaAutomationCall()]])
+      parthiaAutomationTimerID = tempTimer(timedTrigger, [[parthiaAutomationCall()]])
+      
     else  -- This trigger is a message based trigger. Create a regex trigger.
-      -- create a regex trigger to call this function again.
-      parthiaAutomationRegexTriggerID = parthiaCreateAutomationRegexTrigger(automationTrigger)
+      
+      -- send the command on a delay to avoid the 1 command per second limit
+      tempTimer(1, [[send("]]..automationCommand..[[")]])
+      
+      -- Wait for the current line check to end. Otherwise we will enter a creation loop and mudlet will crash
+      tempTimer(1, [[parthiaCreateAutomationRegexTrigger("]]..automationTrigger..[[")]])
+      
     end  -- if timedTrigger then
+  
+  else -- The user did not specify a custom trigger.
+  
+    -- send the command
+    send(automationCommand)
     
   end  -- if parthiaToBoolean(automationTrigger) then
   
-  -- send the command
-  send(automationCommand)
+  --Clean up
   
   -- record that the first run of this automation group has completed.
   parthiaAutomationFirstRun = false
   
   debugToDisplay("parthiaAutomationCall completed successfully.")
-  
-  return true
 
 end -- function parthiaAutomationCall()</script>
 						<eventHandlerList />
@@ -9808,17 +9834,39 @@ end  -- function parthiaAutomationShowGroups()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
-						<name>parthiaCreateAutomationRegexTrigger()</name>
+						<name>parthiaCreateAutomationRegexTrigger(pattern)</name>
 						<packageName></packageName>
 						<script>--[[
-variable
+Purpose:
+  Replaces &lt;color&gt; or &lt;/color&gt; with the regex pattern for html color codes TEC uses.
+  Creates a single fire temp regex trigger using the updated pattern.
+  Stores the regex ID in global variable parthiaAutomationRegexTriggerID.
+  Returns the regex trigger id.
+
+Variables:
   pattern, is the regex pattern passed from the automation group.
+  parthiaAutomationRegexTriggerID, global variable, used to store the automation regex trigger's ID.
   
 References:
   https://wiki.mudlet.org/w/Manual:Mudlet_Object_Functions#tempRegexTrigger
+  
+  A standard colored message:
+    &lt;/font&gt;&lt;font color="#0020ff"&gt;arch marked 'VI'&lt;/font&gt;&lt;font color="#000000"&gt; 
 ]]--
+
 function parthiaCreateAutomationRegexTrigger(pattern)
-end</script>
+  
+  --replace any instances of &lt;color&gt; and &lt;/color&gt; with useful regex codes.
+  --modifiedPattern = pattern.gsub("&lt;color&gt;", [[&lt;\/font&gt;&lt;font color="#[A-Fa-f0-9]+"&gt;]])
+  modifiedPattern = string.gsub(pattern, "&lt;color&gt;", [[&lt;\/font&gt;&lt;font color="#[A-Fa-f0-9]+"&gt;]])
+  modifiedPattern = string.gsub(modifiedPattern, "&lt;/color&gt;", [[&lt;\/font&gt;&lt;font color="#[A-Fa-f0-9]+"&gt;]])
+  
+  -- create the regex trigger
+  parthiaAutomationRegexTriggerID = tempRegexTrigger(modifiedPattern, [[parthiaAutomationCall()]], 1)
+  
+  return parthiaAutomationRegexTriggerID
+  
+end  -- function parthiaCreateAutomationRegexTrigger(pattern)</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
