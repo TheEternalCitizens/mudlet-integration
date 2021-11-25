@@ -9297,8 +9297,8 @@ function parthiaAutomationUpdateHelp()
   pecho("There is no limit on the number of commands that can be in an automation group.\n")
   pecho("When creating an automation group, remeber that when you call it you can have the entire group repeat a number of times or infinitely.\n\n")
   
-  pecho("The command format to create or update an automation group is:\n")
-  pecho("\tparthia automation [group name], [position number] = [command], [trigger]~ [repeat on fail], [insert]\n")
+  pecho("Command Fomat:\n")
+  pecho("parthia automation [group name], [position number] = [command], [trigger]~ [repeat on fail], [insert]\n")
   printCmdLine("parthia automation replace_with_your_group, 1 = replace_with_your_command, 0~ 0, 0")
 
 end -- function parthiaAutomationUpdateHelp()
@@ -9690,7 +9690,7 @@ Allows dynamic management of the tecSettings.automation group tables.
 Example of group creation:
   tecSettings.automation[groupName][groupPosition] = { 
                                         automationCommand = automationCommand,
-                                        secondsToWait = tonumber(secondsToWait),
+                                        automationTrigger = tonumber(automationTrigger),
                                         repeatOnFail = tonumber(repeatOnFail)
                                       }
 ]]--
@@ -9776,15 +9776,26 @@ function parthiaAutomationShowGroups(groupName, removeElement, groupPosition)
         
         -- Collect variables from this automation group, at the correct position.
         local automationCommand = tecSettings.automation[groupName][groupPosition].automationCommand
-        local secondsToWait = tecSettings.automation[groupName][groupPosition].secondsToWait
+        local automationTrigger = tecSettings.automation[groupName][groupPosition].automationTrigger
         local repeatOnFail = tecSettings.automation[groupName][groupPosition].repeatOnFail
         
         pecho("\n\t\tCommand called: "..automationCommand.."\n")
-        if parthiaToBoolean(secondsToWait) then
-          pecho("\t\tSeconds to wait before calling next command: "..secondsToWait.."\n")
+        
+        if parthiaToBoolean(automationTrigger) then
+        
+          --Attempt to convert the trigger to a number
+          timedTrigger = tonumber(automationTrigger)  -- If it is not a number automationDelay will be null
+      
+          --If this custom trigger is a time trigger create a temp timer.
+          if timedTrigger then
+            pecho("\t\tSeconds to wait before calling next command: "..automationTrigger.."\n")
+          else -- this is a custom trigger
+            pecho("\t\tNext command called when you see: '"..automationTrigger.."'\n")
+          end  -- if timedTrigger then
+
         else
-          pecho("\t\tNext command called when you see 'You are no longer busy.'.\n")
-        end  -- if parthiaToBoolean(automationGroup.secondsToWait) then
+          pecho("\t\tNext command called when you see: 'You are no longer busy.'.\n")
+        end  -- if parthiaToBoolean(automationGroup.automationTrigger) then
         pecho("\t\tRepeat this command if it fails: "..tostring(parthiaToBoolean(repeatOnFail)).."\n")
       end  -- for groupPosition, automationGroup in pairs(tecSettings.automation[groupName]) do
       
