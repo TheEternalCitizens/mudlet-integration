@@ -9793,10 +9793,14 @@ function parthiaAutomationShowGroups(groupName, removeElement, groupPosition)
             pecho("\t\tNext command called when you see: '"..automationTrigger.."'\n")
           end  -- if timedTrigger then
 
-        else
+        else -- the trigger is not a custom trigger
+        
           pecho("\t\tNext command called when you see: 'You are no longer busy.'.\n")
+          
         end  -- if parthiaToBoolean(automationGroup.automationTrigger) then
+        
         pecho("\t\tRepeat this command if it fails: "..tostring(parthiaToBoolean(repeatOnFail)).."\n")
+        
       end  -- for groupPosition, automationGroup in pairs(tecSettings.automation[groupName]) do
       
     -- The automation group passed does not exist.
@@ -9828,15 +9832,25 @@ function parthiaAutomationShowGroups(groupName, removeElement, groupPosition)
       end  -- for i=1, namePaddingSize, 1 do
       
       pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Start: "..groupName..namePadding, 
-      [[expandAlias("parthia automation ]]..groupName..[[, 0")]],
-      "parthia automation "..groupName..", 0", true)
+        [[expandAlias("parthia automation ]]..groupName..[[, 0")]],
+        "parthia automation "..groupName..", 0", true)
+        
       pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Show: "..groupName..namePadding, 
-      [[expandAlias("parthia automation groups ]]..groupName..[[")]],
-      "parthia automation groups "..groupName, true)
-      pechoLink("\t&lt;:maroon&gt;Remove: "..groupName.."\n", 
-      [[expandAlias("parthia automation groups ]]..groupName..[[, delete")]],
-      "parthia automation groups "..groupName..", delete", true)
-      pecho("\n")
+        [[expandAlias("parthia automation groups ]]..groupName..[[")]],
+        "parthia automation groups "..groupName, true)
+      
+      --printCmdLine("parthia automation replace_with_your_group, 1 = replace_with_your_command, 0~ 0, 0")
+      pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Edit: "..groupName..namePadding, 
+        [[printCmdLine("parthia automation ]]..groupName..[[, 1 = replace_with_your_command, 0~ 0, 0")]],
+        "parthia automation groups "..groupName, true)
+              
+
+      pechoLink("\t&lt;:maroon&gt;Remove: "..groupName, 
+        [[expandAlias("parthia automation groups ]]..groupName..[[, delete")]],
+        "parthia automation groups "..groupName..", delete", true)
+      
+      pecho("\n\n")
+      
     end  -- for groupName tecSettings.automation do
     
   end  -- if groupName then
