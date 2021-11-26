@@ -9094,28 +9094,21 @@ Than to run to rotation /auto [group name], [number of times, leave out for infi
   auto Heal Rotation, 10 to run the healing rotation group 10 times.
 Where the stop command stops you script.
 
-Allow custom trigger-----------------------------------------------------------
-  Command format:
-    /auto [group name], [position number] = [command], [trigger]~ [repeat on fail], [insert]
+How command calls are handled-----------------------------------------------------------
+  Default method or 0 as the automation group position is created triggers off the 'You are no longer busy.' regex trigger.
+  Timed commands are called by a temp timer after the time specified has passed.
+    temp timer is created in pathiaAutomationCall()
+  Commands with cutom patterns are triggered off of a temp regex trigger.
+    The trigger is created in parthiaAutomationCall() using function parthiaCreateAutomationRegexTrigger()
     
-    Functions to change
-      parthiaAutomationUpdate:
-        update secondsToWait to automationTrigger
-      parthiaAutomationCall
-        update secondsToWait to automationTrigger
-        Change logic starting line 72
-          if trigger converts to a number, make a timer as exists now.
-          if trigger does not convert to number, make a temp trigger with parthiaAutomationRegexTrigger
-      parthiaAutomationStop
-        Kill the regex temp trigger if it exists.
-      parthiaAutomationRegedTrigger, needs to be made. Creates a regex trigger that supports &lt;color&gt;&lt;/color&gt;.
-      
-    Aliases to change
-      The patterns on ALL the automation creation aliases need to be updated to allow text and regex triggers.
-    
-    if seconds does not convert to a number.
-      Create a temp trigger: https://wiki.mudlet.org/w/Manual:Mudlet_Object_Functions#tempRegexTrigger
-    The trigger calls parthiaAutomationCall
+  Execution flow is:
+    parthiaAutomationStart, prepares the automation to occur an calls parthiaAutomationCall
+    parthiaAutomationCall:
+      Cleans up variables between runs.
+      Finds if automation should iterate to the next command or repeat the previous.
+      Calls the command.
+      If need be, creates a timer or trigger to call the next command
+  
 
 Track command success----------------------------------------------------------
   Triggers\Game Events\player involved in an action
