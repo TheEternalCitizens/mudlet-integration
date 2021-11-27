@@ -9107,6 +9107,11 @@ How automation interupts are handled-------------------------------------------
     parthia automation interrupt groups
       To show interrupt groups.
       Send parthiaAutomationShowGroups the "automationInterrupt" as the automationType argument.
+      
+  parthiaAutomationCreateInterruptGroup()
+    Creates the table for the group specified.
+    Reserves element "interruptRepeat" for how many times this interrupt group should repeat
+      before returning control back.
   
   parthiaAutomationShowGroups()
     add on an argument automationType automationType is "automation" or "automationInterrupt".
