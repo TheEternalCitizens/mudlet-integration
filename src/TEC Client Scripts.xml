@@ -9112,6 +9112,12 @@ How automation interupts are handled-------------------------------------------
     Creates the table for the group specified.
     Reserves element "interruptRepeat" for how many times this interrupt group should repeat
       before returning control back.
+      
+  parthiaAutomationUpdate()
+    add on an argument automationType automationType is "automation" or "automationInterrupt".
+      To reflect tecsettings.automation and tecsettings.automationInterrupt.
+    Any time tecsettings.automation is set or called, use tecsettings[automationType] instead.
+    When updating an interrupt interruptRepeat group can not be used. Throw message to user.
   
   parthiaAutomationShowGroups()
     add on an argument automationType automationType is "automation" or "automationInterrupt".
@@ -9123,13 +9129,8 @@ How automation interupts are handled-------------------------------------------
     parthiaAutomationInterruptIterationCounter = 0
     ParthiaAutomationInterruptGroupPosition = false
   
-  parthiaAutomationUpdate()
-    add on an argument automationType automationType is "automation" or "automationInterrupt".
-      To reflect tecsettings.automation and tecsettings.automationInterrupt.
-    Any time tecsettings.automation is set or called, use tecsettings[automationType] instead.
-    When updating an interrupt interruptRepeat group can not be used. Throw message to user.
-  
   parthiaAutomationInterrupt(groupName, groupRepeat)
+    -- starts an interrupt
     Make certain the interrupt group exists
     Set parthiaAutomationFirstRun to true
     set parthiaAutomationInterruptRunning
@@ -9256,7 +9257,7 @@ aliases---------------------------------------------------------------
 ]]--</script>
 					<eventHandlerList />
 					<Script isActive="yes" isFolder="no">
-						<name>parthiaAutomationUpdate(groupName, positionNumber, command, seconds, repeatOnFail, insert)</name>
+						<name>parthiaAutomationUpdate(automationType, groupName, positionNumber, command, seconds, repeatOnFail, insert)</name>
 						<packageName></packageName>
 						<script>--[[
 Allows the user to update or create automation groups and group positions within.
@@ -9274,7 +9275,8 @@ Scripts\Game Commands\auto\parthiaAutomationUpdate(parthiaCmdString)
   Prompts user to save.
 ]]--
 
-function parthiaAutomationUpdate(groupName, groupPosition, automationCommand, automationTrigger, repeatOnFail, insert)
+function parthiaAutomationUpdate(automationType, groupName, groupPosition,
+                                 automationCommand, automationTrigger, repeatOnFail, insert)
   
   -- Give insert a default value
   if not insert then insert = false end
@@ -9324,7 +9326,7 @@ function parthiaAutomationUpdate(groupName, groupPosition, automationCommand, au
   
   return true  --function executed without error
   
-end  -- function parthiaAutomationUpdate(groupName, groupPosition, automationCommand, secondsToWait, repeatOnFail])
+end  -- function parthiaAutomationUpdate(automationType, groupName, groupPosition, automationCommand, secondsToWait, repeatOnFail])
 
 -- create a help message on how to update parthia automation
 function parthiaAutomationUpdateHelp()

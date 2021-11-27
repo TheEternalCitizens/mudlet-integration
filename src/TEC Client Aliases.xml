@@ -1262,7 +1262,7 @@ Replacing any entry in the groups position provided.
 --Unpack format is unpack(array, element start, element end)
 --Since we are not specifing an element end it unpacks until the end of the array.
 --This is just like sending it {groupName, parthiaAutomationGroupPosition, command, trigger, repeatOnFail}
-parthiaAutomationUpdate(unpack(matches, 2))</script>
+parthiaAutomationUpdate("automation", unpack(matches, 2))</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\s+]+),\s+(.+)~\s+(\d+)$</regex>
@@ -1278,7 +1278,7 @@ Not replacing an existing entry.
 --Unpack format is unpack(array, element start, element end)
 --Since we are not specifing an element end it unpacks until the end of the array.
 --This is just like sending it {groupName, parthiaAutomationGroupPosition, command, seconds, repeatOnFail, insert}
-parthiaAutomationUpdate(unpack(matches, 2))</script>
+parthiaAutomationUpdate("automation", unpack(matches, 2))</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\s+]+),\s+(.+)~\s+(\d+),\s+(\d+)$</regex>
