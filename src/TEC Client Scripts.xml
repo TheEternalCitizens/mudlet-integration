@@ -9247,6 +9247,9 @@ Variables---------------------------------------------------------
     Collected in parthiaAutomationCall, and is set to false at the start of that method also.
   parthiaAutomationRepeatCmdOnFailure, records if the last command run requires repeating on failure.
   parthiaAutomationRegexTriggerID, global variable, used to store the automation regex trigger's ID.
+  parthiaAutomationInterruptRunning, the group name of a current interrupt or false if no interrupt is active.
+  parthiaAutomationInterruptIterationCounter, keeps track of how many times the group of commands has run for a interrupt.
+  ParthiaAutomationInterruptGroupPosition, The group position that interrupt automation last run.
     
 Triggers-----------------------------------------------------------
   Triggers\Game Events\You are no longer busy.
@@ -10043,6 +10046,40 @@ function parthiaAutomationInterruptStop()
   parthiaAutomationInterruptIterationCounter = 0
   ParthiaAutomationInterruptGroupPosition = false
 end -- function parthiaAutomationInterruptStop()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationInterruptStart(groupName)</name>
+						<packageName></packageName>
+						<script>--[[
+Call or start an interrupt autmation task.
+]]--
+
+function parthiaAutomationInterruptStart(groupName)
+
+  -- Make certain this automation group exists.
+  if not tecSettings.automationInterrupt[groupName] then
+    pecho("\nAutomation interrupt group "..groupName.." does not exist. A full help message is above.\n\n")
+    return false
+  end -- if not tecSettings.automation[groupName] then
+  
+  --Setting automation first run to true, so we can iterate through the automation group properly
+  parthiaAutomationFirstRun = true
+  
+  -- Setting the interrupt running variable, to keep track of this interrupt
+  parthiaAutomationInterruptRunning = groupName
+
+  -- message the player that this interrupt occured.
+  pecho("Interrupt "..groupName.." triggered.\n")
+  
+  -- If automation is not currently running we have to start it to run this interrupt.
+  if not parthiaAutomationRunning then
+    parthiaAutomationCall()
+  end  -- if not parthiaAutomationRunning then
+  
+  -- If automation is already running parthiaAutomationCall is be called automatically, running this interrupt.
+    
+end -- function parthiaAutomationInterruptStart(groupName)</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
