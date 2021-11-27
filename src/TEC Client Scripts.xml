@@ -9262,16 +9262,16 @@ aliases---------------------------------------------------------------
 						<script>--[[
 Allows the user to update or create automation groups and group positions within.
   It makes certain the groupPosition passed is not a 0.
-  If the groupName passed does not exist in the tecSettings.automation table, it is added.
+  If the groupName passed does not exist in the tecSettings[automationType] table, it is added.
   The command, seconds to wait and repeat on failure are added to that group.
   A message is presented to the user, and they are reminded to save.
 
 Scripts\Game Commands\auto\parthiaAutomationUpdate(parthiaCmdString)
   Makes certain the position number is possible, for lua arrays must be 1 or greater.
   Creates a new automation group if it does not already exist.
-    tecSettings.automation.[group name]
+    tecSettings[automationType][group name]
   Sets the command in the group
-    tecSettings.automation.[group name][position number] = {[command], [trigger], [repeat on fail]}
+    tecSettings[automationType][group name][position number] = {[command], [trigger], [repeat on fail]}
   Prompts user to save.
 ]]--
 
@@ -9290,12 +9290,12 @@ function parthiaAutomationUpdate(automationType, groupName, groupPosition,
   -- Due to the regex pattern that captured groupPosition it is impossible for it to be a negative number.
   -- No check for positive numbers only required.
   
-  -- if tecSettings.automation[groupName] does not exist create it
-  -- tecSettings.automation is created automatically when parthia starts.
-  if not tecSettings.automation[groupName] then
+  -- if tecSettings[automationType][groupName] does not exist create it
+  -- tecSettings[automationType] is created automatically when parthia starts.
+  if not tecSettings[automationType][groupName] then
     pecho("Automation group "..groupName.." does not exist. Creating it now.\n")
-    tecSettings.automation[groupName] = {}  -- Make the group name an empty dictionary
-  end  -- END if not tecSettings.automation[groupName] then
+    tecSettings[automationType][groupName] = {}  -- Make the group name an empty dictionary
+  end  -- END if not tecSettings[automationType][groupName] then
   
   -- a temp table to insert into the automations group name
   local positionTable = { 
@@ -9306,12 +9306,12 @@ function parthiaAutomationUpdate(automationType, groupName, groupPosition,
   
   -- if the user would like to insert rather than replace an entry
   if parthiaToBoolean(insert) then
-    table.insert(tecSettings.automation[groupName], groupPosition, positionTable)
+    table.insert(tecSettings[automationType][groupName], groupPosition, positionTable)
   else  -- The user would like to replace an entry.
     -- remove any possible previous entry
-    table.remove(tecSettings.automation[groupName], groupPosition)
+    table.remove(tecSettings[automationType][groupName], groupPosition)
     -- Save the group and settings passed by the user
-    table.insert(tecSettings.automation[groupName], groupPosition, positionTable)
+    table.insert(tecSettings[automationType][groupName], groupPosition, positionTable)
   end  -- if not parthiaToBoolean(insert)
 
   -- Show user the changes they made.
