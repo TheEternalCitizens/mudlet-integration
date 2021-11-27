@@ -1284,7 +1284,7 @@ parthiaAutomationUpdate(unpack(matches, 2))</script>
 					<regex>^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\s+]+),\s+(.+)~\s+(\d+),\s+(\d+)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>parthia automation interrupt [group name], [position number] = [command], [trigger], [repeat on fail]</name>
+					<name>parthia interrupt [group name], [position number] = [command], [trigger], [repeat on fail]</name>
 					<script>--[[
 Create or update an automation group.
 Replacing any entry in the groups position provided.
@@ -1298,10 +1298,10 @@ Replacing any entry in the groups position provided.
 parthiaAutomationUpdate("automationInterrupt", unpack(matches, 2))</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^parthia\s+automation\s+interrupt\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\s+]+),\s+(.+)~\s+(\d+)$</regex>
+					<regex>^parthia\s+interrupt\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\s+]+),\s+(.+)~\s+(\d+)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>parthia automation interrupt [group name], [position number] = [command], [trigger]~ [repeat on fail], [insert]</name>
+					<name>parthia interrupt [group name], [position number] = [command], [trigger]~ [repeat on fail], [insert]</name>
 					<script>--[[
 Supports creation an interrupt automation group or position while inserting into the automation group.
 Not replacing an existing entry.
@@ -1314,15 +1314,15 @@ Not replacing an existing entry.
 parthiaAutomationUpdate("automationInterrupt", unpack(matches, 2))</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^parthia\s+automation\s+interrupt\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\s+]+),\s+(.+)~\s+(\d+),\s+(\d+)$</regex>
+					<regex>^parthia\s+interrupt\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\s+]+),\s+(.+)~\s+(\d+),\s+(\d+)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>parthia automation interrupt [group name], [repeat]</name>
+					<name>parthia interrupt [group name], [repeat]</name>
 					<script>--[[
 Creates an interrupt group
 
-parthiaAutomationStart
-  is located in Scripts\TEC Functions\Game Commands\automation\parthiaAutomationStart
+parthiaAutomationCreateInterruptGroup(groupName, groupRepeat)
+  is located in Scripts\TEC Functions\Game Commands\automation\parthiaAutomationCreateInterruptGroup(groupName, groupRepeat)
     
 matches[1], Entire line captured
 matches[2], First item captured in a capture group ()
@@ -1330,11 +1330,11 @@ matches[3], second item captured in a capture group ()
 ]]--
 
 -- matches[2] is the first item captured in the pattern, or the automation group name
--- matches [3] is the second item captured in the pattern, or how many times this automation group should repeat.
-</script>
+-- matches[3] is the second item captured in the pattern, or how many times this automation group should repeat.
+parthiaAutomationCreateInterruptGroup(matches[2], matches[3])</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^parthia\s+automation\s+interrupt\s+([a-zA-Z0-9\s+]+),\s+(\d+)$</regex>
+					<regex>^parthia\s+interrupt\s+([a-zA-Z0-9\s+]+),\s+(\d+)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia automation start</name>
@@ -1399,33 +1399,33 @@ parthiaAutomationShowGroups(matches[2], true)</script>
 					</Alias>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>parthia automation interrupt groups</name>
+					<name>parthia interrupt groups</name>
 					<script>parthiaAutomationShowGroups("automationInterrupt")</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^parthia automation interrupt groups$</regex>
+					<regex>^parthia interrupt groups$</regex>
 					<Alias isActive="yes" isFolder="no">
-						<name>parthia automation interrupt groups [name]</name>
+						<name>parthia interrupt groups [name]</name>
 						<script>parthiaAutomationShowGroups("automationInterrupt", matches[2])</script>
 						<command></command>
 						<packageName></packageName>
-						<regex>^parthia automation interrupt groups\s+([a-zA-Z0-9\s+]+)$</regex>
+						<regex>^parthia interrupt groups\s+([a-zA-Z0-9\s+]+)$</regex>
 					</Alias>
 					<Alias isActive="yes" isFolder="no">
-						<name>parthia automation interrupt groups[name], delete [group position]</name>
+						<name>parthia interrupt groups[name], delete [group position]</name>
 						<script>--delete the automation group passed.
 parthiaAutomationShowGroups("automationInterrupt", matches[2], true, matches[3])</script>
 						<command></command>
 						<packageName></packageName>
-						<regex>^parthia automation interrupt groups\s+([a-zA-Z0-9\s+]+),\s+delete\s+(\d+)$</regex>
+						<regex>^parthia interrupt groups\s+([a-zA-Z0-9\s+]+),\s+delete\s+(\d+)$</regex>
 					</Alias>
 					<Alias isActive="yes" isFolder="no">
-						<name>parthia automation interrupt groups [name], delete</name>
+						<name>parthia interrupt groups [name], delete</name>
 						<script>--delete the automation group passed.
 parthiaAutomationShowGroups("automationInterrupt", matches[2], true)</script>
 						<command></command>
 						<packageName></packageName>
-						<regex>^parthia automation interrupt groups\s+([a-zA-Z0-9\s+]+),\s+delete$</regex>
+						<regex>^parthia interrupt groups\s+([a-zA-Z0-9\s+]+),\s+delete$</regex>
 					</Alias>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">

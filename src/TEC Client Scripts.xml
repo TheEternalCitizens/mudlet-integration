@@ -9120,6 +9120,7 @@ How automation interupts are handled-------------------------------------------
     add on an argument automationType automationType is "automation" or "automationInterrupt".
       To reflect tecsettings.automation and tecsettings.automationInterrupt.
     Any time tecsettings.automation is set or called, use tecsettings[automationType] instead.
+    When updating an interrupt interruptRepeat group can not be used. Throw message to user.
   
   parthiaAutomationInterrupt(groupName, groupRepeat)
     Make certain the interrupt group exists
@@ -9396,6 +9397,39 @@ function parthiaAutomationTriggerHelp()
   pecho("\t\t\tPlease do not submit issues or requests involving the debuging system.\n")
   pecho("\t\tUsing a plain text message with the &lt;color&gt; tag will work 99%.")
 end -- function parthiaAutomationTriggerHelp()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationCreateInterruptGroup(groupName, groupRepeat)</name>
+						<packageName></packageName>
+						<script>--[[
+Creates an automation interrupt group.
+]]--
+
+function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat)
+
+  -- Make certain groupRepeat is a number that is not zero.
+  if not parthiaToBoolean(groupRepeat) then
+    pecho('Repeat number (second argument in the command) can not be 0.')
+    return false
+  end  --if not parthiaToBoolean(groupRepeat) then
+  
+  -- if tecSettings.automation[groupName] does not exist create it
+  -- tecSettings.automation is created automatically when parthia starts.
+  if not tecSettings.automationInterrupt[groupName] then
+    pecho("Automation interrupt group "..groupName.." does not exist. Creating it now.\n")
+    pecho("Automation interrupt group "..groupName.." will repeat "..groupRepeat.." ")
+    pecho("times before the iterrupt stops.\n")
+    tecSettings.automationInterrupt[groupName] = {}  -- Make the group name an empty dictionary
+  else
+    pecho("Automation interrupt group "..groupName.." updated to repeat "..groupRepeat.." times. ")
+    pecho("No other changes made.\n")
+  end  -- END if not tecSettings.automation[groupName] then
+  
+  -- set how many times this interrupt repeats
+  tecSettings.automationInterrupt[groupName].interruptRepeat = groupRepeat
+
+end -- function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat)</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
