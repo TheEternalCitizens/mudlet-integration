@@ -9827,7 +9827,7 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
   --show information on the group name provided.
   if groupName then
   
-    -- removeGroup is false, show the group.
+    -- if the group exists show information about it or remove it if removeElement is truthy
     if tecSettings[automationType][groupName] then
   
       -- an element needs to be removed from an automation table.
@@ -9879,13 +9879,15 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
         
       end  -- if removeGroup then
   
-    
       pecho("Automation group: "..groupName.."\n")
       
       -- Create a temp table to show the human logical sorted version of this automation group.
       local sortedGroupNameTable = {}
       for key, _ in pairs(tecSettings[automationType][groupName]) do
-        table.insert(sortedGroupNameTable, key)
+        -- Do not insert pattern or interruptRepeat used on interrupt groups
+        if tonumber(key) then
+          table.insert(sortedGroupNameTable, key)
+        end
       end -- for _, value in pairs(tecSettings[automationType][groupName]) do
       table.sort(sortedGroupNameTable)
       
