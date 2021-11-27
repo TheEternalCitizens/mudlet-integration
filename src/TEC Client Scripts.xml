@@ -9117,7 +9117,6 @@ How automation interupts are handled-------------------------------------------
     add on an argument automationType automationType is "automation" or "automationInterrupt".
       To reflect tecsettings.automation and tecsettings.automationInterrupt.
     Any time tecsettings.automation is set or called, use tecsettings[automationType] instead.
-    When updating an interrupt interruptRepeat group can not be used. Throw message to user.
   
   parthiaAutomationShowGroups()
     add on an argument automationType automationType is "automation" or "automationInterrupt".
