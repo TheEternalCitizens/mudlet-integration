@@ -9418,13 +9418,13 @@ end -- function parthiaAutomationTriggerHelp()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
-						<name>parthiaAutomationCreateInterruptGroup(groupName, groupRepeat)</name>
+						<name>parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern)</name>
 						<packageName></packageName>
 						<script>--[[
 Creates an automation interrupt group.
 ]]--
 
-function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat)
+function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern)
 
   -- Make certain groupRepeat is a number that is not zero.
   if not parthiaToBoolean(groupRepeat) then
@@ -9446,6 +9446,9 @@ function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat)
   
   -- set how many times this interrupt repeats
   tecSettings.automationInterrupt[groupName].interruptRepeat = groupRepeat
+  tecSettings.automationInterrupt[groupName].pattern = pattern
+  
+  return true
 
 end -- function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat)</script>
 						<eventHandlerList />
