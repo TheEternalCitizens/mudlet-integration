@@ -9799,10 +9799,10 @@ end  -- function parthiaAutomationHelp()</script>
 						<name>parthiaAutomationShowGroups()</name>
 						<packageName></packageName>
 						<script>--[[
-Allows dynamic management of the tecSettings.automation group tables.
+Allows dynamic management of the tecSettings[automationType] group tables.
 
 Example of group creation:
-  tecSettings.automation[groupName][groupPosition] = { 
+  tecSettings[automationType][groupName][groupPosition] = { 
                                         automationCommand = automationCommand,
                                         automationTrigger = tonumber(automationTrigger),
                                         repeatOnFail = tonumber(repeatOnFail)
@@ -9815,7 +9815,7 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
   if groupName then
   
     -- removeGroup is false, show the group.
-    if tecSettings.automation[groupName] then
+    if tecSettings[automationType][groupName] then
   
       -- an element needs to be removed from an automation table.
       if removeElement then
@@ -9824,9 +9824,9 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
         if groupPosition then
           
           -- Verify this group position exists.
-          if tecSettings.automation[groupName][groupPosition] then
+          if tecSettings[automationType][groupName][groupPosition] then
             
-            tecSettings.automation[groupName][groupPosition] = nil
+            tecSettings[automationType][groupName][groupPosition] = nil
             pecho("Postion "..groupPosition.." was removed from group "..groupName.."\n")
             pecho("If this was an accidental delition you can restore the position with:\n")
             pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia load", 
@@ -9843,12 +9843,12 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
             
             pecho("Position: "..groupPosition.." does not exist in group: "..groupName.."\n")
           
-          end  -- if tecSettings.automation[groupName][groupPosition] then
+          end  -- if tecSettings[automationType][groupName][groupPosition] then
         
         -- a group position was not specified, remove the entire group.
         else  
           
-          tecSettings.automation[groupName] = nil
+          tecSettings[automationType][groupName] = nil
           pecho("Group "..groupName.." deleted.\n")
           pecho("If this was an accidental delition you can restore the group with:\n")
           pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia load", 
@@ -9871,9 +9871,9 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
       
       -- Create a temp table to show the human logical sorted version of this automation group.
       local sortedGroupNameTable = {}
-      for key, _ in pairs(tecSettings.automation[groupName]) do
+      for key, _ in pairs(tecSettings[automationType][groupName]) do
         table.insert(sortedGroupNameTable, key)
-      end -- for _, value in pairs(tecSettings.automation[groupName]) do
+      end -- for _, value in pairs(tecSettings[automationType][groupName]) do
       table.sort(sortedGroupNameTable)
       
       -- Loop through the sorted group.
@@ -9895,9 +9895,9 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
         "delete group position "..groupPosition.." for group "..groupName, true)
         
         -- Collect variables from this automation group, at the correct position.
-        local automationCommand = tecSettings.automation[groupName][groupPosition].automationCommand
-        local automationTrigger = tecSettings.automation[groupName][groupPosition].automationTrigger
-        local repeatOnFail = tecSettings.automation[groupName][groupPosition].repeatOnFail
+        local automationCommand = tecSettings[automationType][groupName][groupPosition].automationCommand
+        local automationTrigger = tecSettings[automationType][groupName][groupPosition].automationTrigger
+        local repeatOnFail = tecSettings[automationType][groupName][groupPosition].repeatOnFail
         
         pecho("\n\t\tCommand called: "..automationCommand.."\n")
         
@@ -9921,12 +9921,12 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
         
         pecho("\t\tRepeat this command if it fails: "..tostring(parthiaToBoolean(repeatOnFail)).."\n")
         
-      end  -- for groupPosition, automationGroup in pairs(tecSettings.automation[groupName]) do
+      end  -- for groupPosition, automationGroup in pairs(tecSettings[automationType][groupName]) do
       
     -- The automation group passed does not exist.
     else
       pecho("Automation group named ["..groupName.."] does not exist\n")
-    end  -- if tecSettings.automation[groupName] then
+    end  -- if tecSettings[automationType][groupName] then
   
   -- No group name was provided show all the groups, but no details of each group until the link is clicked.
   else
@@ -9934,15 +9934,15 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
     -- Will hold how long the longest group name is.
     local longestGroupNameSize = 0
     -- Collect the longest group name
-    for groupName, _ in pairs(tecSettings.automation) do
+    for groupName, _ in pairs(tecSettings[automationType]) do
       if #groupName &gt; longestGroupNameSize then
         longestGroupNameSize = #groupName
       end  --if #groupName &gt; longestGroupNameSize then
-    end  -- for groupName, _ in pairs(tecSettings.automation) do
+    end  -- for groupName, _ in pairs(tecSettings[automationType]) do
     
     pecho("You can click a blue link below to start or show that group's information. You can click a red link to remove that group.\n")
     
-    for groupName, _ in pairs(tecSettings.automation) do
+    for groupName, _ in pairs(tecSettings[automationType]) do
     
       --create spacing so ann the columns are spaced evenly.
       local namePaddingSize = longestGroupNameSize - #groupName
@@ -9973,7 +9973,7 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
       
       pecho("\n\n")
       
-    end  -- for groupName tecSettings.automation do
+    end  -- for groupName tecSettings[automationType] do
     
   end  -- if groupName then
   
