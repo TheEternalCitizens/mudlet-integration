@@ -9117,6 +9117,9 @@ How automation interupts are handled-------------------------------------------
     add on an argument automationType automationType is "automation" or "automationInterrupt".
       To reflect tecsettings.automation and tecsettings.automationInterrupt.
     Any time tecsettings.automation is set or called, use tecsettings[automationType] instead.
+    If the group does not exist
+      if the automation type is interrupt
+        prompt the user to create the interrupt group, repeat and pattern is required...
   
   parthiaAutomationShowGroups()
     add on an argument automationType automationType is "automation" or "automationInterrupt".
@@ -9292,8 +9295,15 @@ function parthiaAutomationUpdate(automationType, groupName, groupPosition,
   -- if tecSettings[automationType][groupName] does not exist create it
   -- tecSettings[automationType] is created automatically when parthia starts.
   if not tecSettings[automationType][groupName] then
-    pecho("Automation group "..groupName.." does not exist. Creating it now.\n")
-    tecSettings[automationType][groupName] = {}  -- Make the group name an empty dictionary
+  
+    -- this this is an interrupt prompt the user to create the interrupt first, pattern and repeat count is needed
+    if automationType == "automationInterrupt" then
+      pecho("Automation Interrupts must first be created with the parthia interrupt command first.")
+      return true
+    else -- this is a standard automation group
+      pecho("Automation group "..groupName.." does not exist. Creating it now.\n")
+      tecSettings[automationType][groupName] = {}  -- Make the group name an empty dictionary
+    end -- if automationType == "automationInterrupt" then
   end  -- END if not tecSettings[automationType][groupName] then
   
   -- a temp table to insert into the automations group name
