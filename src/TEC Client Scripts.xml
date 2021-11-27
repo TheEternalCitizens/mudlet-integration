@@ -9094,7 +9094,88 @@ Than to run to rotation /auto [group name], [number of times, leave out for infi
   auto Heal Rotation, 10 to run the healing rotation group 10 times.
 Where the stop command stops you script.
 
-How command calls are handled-----------------------------------------------------------
+How automation interupts are handled-------------------------------------------
+  
+  Interupt groups are stored in tecsettings.automationInterrupts
+  
+  Aliases
+    create an interupt group.
+    change an interrupt group
+      Change existing aliases, they will need to pass automationType to parthiaAutomationUpdate
+    parthia automation interrupt groups
+      To show interrupt groups.
+      Send parthiaAutomationShowGroups the "automationInterrupt" as the automationType argument.
+  
+  parthiaAutomationShowGroups()
+    add on an argument automationType automationType is "automation" or "automationInterrupt".
+      To reflect tecsettings.automation and tecsettings.automationInterrupt.
+    Any time tecsettings.automation is set or called, use tecsettings[automationType] instead.
+  
+  parthiaAutomationInterruptStop()
+    parthiaAutomationInterruptRunning = false
+    parthiaAutomationInterruptIterationCounter = 0
+    ParthiaAutomationInterruptGroupPosition = false
+  
+  parthiaAutomationUpdate()
+    add on an argument automationType automationType is "automation" or "automationInterrupt".
+      To reflect tecsettings.automation and tecsettings.automationInterrupt.
+    Any time tecsettings.automation is set or called, use tecsettings[automationType] instead.
+  
+  parthiaAutomationInterrupt(groupName, groupRepeat)
+    Make certain the interrupt group exists
+    Set parthiaAutomationFirstRun to true
+    set parthiaAutomationInterruptRunning
+    echo that an interrupt has occured.
+    if not parthiaAutomationRunning  -- If automation is running parthiaAutomationCall will be called automatically.
+      parthiaAutomationCall()
+  
+  parthiaAutomationCall()
+    add local variable, automationType. automationType is "automation" or "automationInterrupt".
+      To reflect tecsettings.automation and tecsettings.automationInterrupt.
+    if parthiaAutomationInterruptRunning is truthy
+      collect group name and repeat from parthiaAutomationInterruptRunning
+      set automationType to "automationInterrupt"
+    else
+      collect groupName and repeat from parthiaAutomationRunning
+      set automationType to "automation"
+    Change all calls to tecsettings.automation to tecsettings[automationType]
+    if groupRepeat has been reached
+      it automationType is automationInterrupt
+        Call parthiaAutomationInterruptStop()
+        if parthiaAutomationRunning
+          parthiaAutomationCall()  -- next automation has to occur without the need to change more code
+          return true  -- This automation call is complete.
+      else
+        Do the code currently in the groupRepeat if statement.
+      
+  parthiaAutomationIncreaseGroupIteration()
+    add local variable, automationType. automationType is "automation" or "automationInterrupt".
+      To reflect tecsettings.automation and tecsettings.automationInterrupt.
+    if parthiaAutomationInterruptRunning is truthy
+      collect group name and repeat from parthiaAutomationInterruptRunning
+      set automationType to "automationInterrupt"
+    else
+      collect groupName and repeat from parthiaAutomationRunning
+      set automationType to "automation"
+    Change all calls to tecsettings.automation to tecsettings[automationType]
+    If parthiaAutomationGroupPosition is being set to a value, anywhere in the function
+      Use an if parthiaAutomationInterruptRunning
+        if true
+          Instead set ParthiaAutomationInterruptGroupPosition
+        else
+          set parthiaAutomationGroupPosition as normal
+    If parthiaAutomationIterationCounter is being interrated
+      Use an if parthiaAutomationInterruptRunning
+          if true
+            iterate parthiaAutomationInterruptIterationCounter
+          else
+            iterate parthiaAutomationIterationCounter
+      
+  trigger 'You are no longer busy.'
+    the if statement needs to have an or parthiaAutomationInterruptRunning.
+      So it triggers when only an interrupt is active.
+
+How command calls are handled---------------------------------------------------
   Default method or 0 as the automation group position is created triggers off the 'You are no longer busy.' regex trigger.
   Timed commands are called by a temp timer after the time specified has passed.
     temp timer is created in pathiaAutomationCall()
@@ -9108,7 +9189,6 @@ How command calls are handled---------------------------------------------------
       Finds if automation should iterate to the next command or repeat the previous.
       Calls the command.
       If need be, creates a timer or trigger to call the next command
-  
 
 Track command success----------------------------------------------------------
   Triggers\Game Events\player involved in an action
@@ -9476,7 +9556,6 @@ function parthiaAutomationCall()
   
   -- In case user is sending command that has no success chance reset parthiaLastCommandSuccess
   parthiaLastCommandSuccess = false
-  
   
   --Determine how the next command should be called
   --Determine when the current command should be called ( To avoid the 1 command a second limit )
