@@ -9131,7 +9131,7 @@ How automation interupts are handled-------------------------------------------
     parthiaAutomationInterruptIterationCounter = 0
     ParthiaAutomationInterruptGroupPosition = false
   
-  parthiaAutomationInterrupt(groupName, groupRepeat)
+  parthiaAutomationInterruptStart(groupName)
     -- starts an interrupt
     Make certain the interrupt group exists
     Set parthiaAutomationFirstRun to true
@@ -9884,10 +9884,10 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
       -- Create a temp table to show the human logical sorted version of this automation group.
       local sortedGroupNameTable = {}
       for key, _ in pairs(tecSettings[automationType][groupName]) do
-        -- Do not insert pattern or interruptRepeat used on interrupt groups
+        -- Do not insert pattern or interruptRepeat used on interrupt groups, only numrical keys
         if tonumber(key) then
           table.insert(sortedGroupNameTable, key)
-        end
+        end  -- if tonumber(key) then
       end -- for _, value in pairs(tecSettings[automationType][groupName]) do
       table.sort(sortedGroupNameTable)
       
@@ -10029,6 +10029,20 @@ function parthiaCreateAutomationRegexTrigger(pattern)
   return parthiaAutomationRegexTriggerID
   
 end  -- function parthiaCreateAutomationRegexTrigger(pattern)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="no" isFolder="no">
+						<name>parthiaAutomationInterruptStop()</name>
+						<packageName></packageName>
+						<script>--[[
+Stop the currently running interrupt automation task.
+]]--
+
+function parthiaAutomationInterruptStop()
+  parthiaAutomationInterruptRunning = false
+  parthiaAutomationInterruptIterationCounter = 0
+  ParthiaAutomationInterruptGroupPosition = false
+end -- function parthiaAutomationInterruptStop()</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
