@@ -10031,7 +10031,7 @@ function parthiaCreateAutomationRegexTrigger(pattern)
 end  -- function parthiaCreateAutomationRegexTrigger(pattern)</script>
 						<eventHandlerList />
 					</Script>
-					<Script isActive="no" isFolder="no">
+					<Script isActive="yes" isFolder="no">
 						<name>parthiaAutomationInterruptStop()</name>
 						<packageName></packageName>
 						<script>--[[
