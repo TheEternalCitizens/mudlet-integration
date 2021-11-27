@@ -9779,7 +9779,7 @@ function parthiaAutomationHelp()
   "parthia automation start", true)
   pecho(", how to start an automation task.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation groups", 
-  [[parthiaAutomationShowGroups()]],
+  [[parthiaAutomationShowGroups("automation")]],
   "parthia automation groups", true)
   pecho(", view and manage automation groups you have made.\n")
   
@@ -9809,7 +9809,7 @@ Example of group creation:
                                       }
 ]]--
 
-function parthiaAutomationShowGroups(groupName, removeElement, groupPosition)
+function parthiaAutomationShowGroups(automationType, groupName, removeElement, groupPosition)
   
   --show information on the group name provided.
   if groupName then

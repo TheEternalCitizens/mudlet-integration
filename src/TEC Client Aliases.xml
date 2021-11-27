@@ -1370,13 +1370,13 @@ parthiaAutomationUpdateHelp()</script>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia automation groups</name>
-					<script>parthiaAutomationShowGroups(false)</script>
+					<script>parthiaAutomationShowGroups("automation")</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia automation groups$</regex>
 					<Alias isActive="yes" isFolder="no">
 						<name>parthia automation groups [name]</name>
-						<script>parthiaAutomationShowGroups(matches[2])</script>
+						<script>parthiaAutomationShowGroups("automation", matches[2])</script>
 						<command></command>
 						<packageName></packageName>
 						<regex>^parthia automation groups\s+([a-zA-Z0-9\s+]+)$</regex>
@@ -1384,7 +1384,7 @@ parthiaAutomationUpdateHelp()</script>
 					<Alias isActive="yes" isFolder="no">
 						<name>parthia automation [name], delete [group position]</name>
 						<script>--delete the automation group passed.
-parthiaAutomationShowGroups(matches[2], true, matches[3])</script>
+parthiaAutomationShowGroups("automation", matches[2], true, matches[3])</script>
 						<command></command>
 						<packageName></packageName>
 						<regex>^parthia automation groups\s+([a-zA-Z0-9\s+]+),\s+delete\s+(\d+)$</regex>
@@ -1392,7 +1392,7 @@ parthiaAutomationShowGroups(matches[2], true, matches[3])</script>
 					<Alias isActive="yes" isFolder="no">
 						<name>parthia automation [name], delete</name>
 						<script>--delete the automation group passed.
-parthiaAutomationShowGroups(matches[2], true)</script>
+parthiaAutomationShowGroups("automation", matches[2], true)</script>
 						<command></command>
 						<packageName></packageName>
 						<regex>^parthia automation groups\s+([a-zA-Z0-9\s+]+),\s+delete$</regex>
