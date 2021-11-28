@@ -9807,7 +9807,7 @@ function parthiaAutomationIncreaseGroupIteration()
       -- set the group iterator to the first element in the groups command table
       setGlobalAutomationGroupPosition(automationGroupKeySet[1])
       -- Increase the automation rotation iterator by 1.
-      parthiaAutomationIterationCounter = parthiaAutomationIterationCounter + 1
+      setGlobalAutomationIterationCounter(parthiaAutomationIterationCounter + 1)
     end -- if key == #automationGroupKeySet
   
   end  -- for key, value in pairs(automationGroupKeySet) do
@@ -9818,11 +9818,21 @@ function parthiaAutomationIncreaseGroupIteration()
 
 end  --function parthiaAutomationIncreaseGroupIteration()
 
+function setGlobalAutomationIterationCounter(value)
+  --[[ Sets global automation iterators ]]--
+  -- This is an interrupt automation task
+  if parthiaAutomationInterruptRunning then
+    parthiaAutomationInterruptGroupPosition = value
+  else  -- This is a standard automation task
+    parthiaAutomationIterationCounter = value
+  end  -- if parthiaAutomationInterruptRunning then
+end  -- function setGlobalAutomationIterationCounter(value)
+
 function setGlobalAutomationGroupPosition(value)
   --[[ Sets the global automation iterators ]]--
   -- This is an interrupt automation task
   if parthiaAutomationInterruptRunning then
-    parthiaAutomationInterruptGroupPosition = value
+    parthiaAutomationInterruptIterationCounter = value
   else  -- This is a standard automation task
     parthiaAutomationGroupPosition = value
   end  -- if parthiaAutomationInterruptRunning then
