@@ -9569,8 +9569,10 @@ function parthiaAutomationCall()
   
   -- Will be used to record what position in the automation group should be called.
   local groupPosition = false
+  
   -- Blank out the timer ID it is no longer needed
   parthiaAutomationTimerID = false
+  
   -- if a custom automation trigger exists, kill it.
   if parthiaAutomationRegexTriggerID then
     killTrigger(parthiaAutomationRegexTriggerID)
@@ -9688,6 +9690,9 @@ function parthiaAutomationStop(displayToScreen)
   parthiaAutomationFirstRun = true
   parthiaLastCommandSuccess = false
   parthiaAutomationRepeatCmdOnFailure = false
+  
+  -- Stop any running interrupts
+  parthiaAutomationInterruptStop()
   
   -- If a timer exists and is waiting to fire. End it now.
   if parthiaAutomationTimerID then
