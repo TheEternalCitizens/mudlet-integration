@@ -10156,20 +10156,22 @@ Enables or disables an interrupt.
 ]]--
 
 function parthiaAutomationInterruptToggleState(groupName)
-  
+
   -- Make certain this interrupt group exists.
   if not tecSettings.automationInterrupt[groupName] then
     pecho("\nAutomation interrupt group "..groupName.." does not exist. A full help message is above.\n\n")
     return false
   end -- if not tecSettings.automation[groupName] then
-  
+
   --toggle the state of this interrupt.
   if tecSettings.automationInterrupt[groupName].enabled then
     tecSettings.automationInterrupt[groupName].enabled = false
+    pecho("Interrupt "..groupName.." is now disabled.\n")
   else
     tecSettings.automationInterrupt[groupName].enabled = true
+    pecho("Interrupt "..groupName.." is now enabled.\n")
   end  -- if tecSettings.automationInterrupt[groupName].enabled then
-  
+
 end  -- function parthiaAutomationInterruptToggleState()</script>
 						<eventHandlerList />
 					</Script>

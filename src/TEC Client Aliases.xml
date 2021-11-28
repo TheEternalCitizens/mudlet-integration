@@ -1430,11 +1430,12 @@ parthiaAutomationShowGroups("automationInterrupt", matches[2], true)</script>
 					</Alias>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>parthia interrupt enable [groupName]</name>
-					<script></script>
+					<name>parthia interrupt toggle [groupName]</name>
+					<script>-- turns interrupts on or off
+parthiaAutomationInterruptToggleState(matches[2])</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>parthia interrupt enable\s+([a-zA-Z0-9\s+]+)$</regex>
+					<regex>parthia interrupt toggle\s+([a-zA-Z0-9\s+]+)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia automation triggers</name>
