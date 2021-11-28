@@ -9596,6 +9596,7 @@ function parthiaAutomationCall()
     groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
   -- It repeatOnFail is true and the last command was successfull iterate
   elseif parthiaAutomationRepeatCmdOnFailure and parthiaLastCommandSuccess then
+    debugToDisplay("parthiaAutomationCall, last command successful iteration required found.")
     groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
   end  -- if parthiaAutomationFirstRun
   
