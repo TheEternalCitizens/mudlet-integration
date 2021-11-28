@@ -9565,6 +9565,7 @@ function parthiaAutomationCall()
   -- How many times this automation group has repeated
   local iterationCounter = 0
   
+  -- Now create the local variables collecting from global variables of the automation type being run.
   if parthiaAutomationInterruptRunning then
     --collect group name and repeat from parthiaAutomationInterruptRunning
     groupName = parthiaAutomationInterruptRunning
@@ -9629,7 +9630,7 @@ function parthiaAutomationCall()
     tecSettings.automation[groupName][groupPosition].automationTrigger = tecSettings.automation[groupName][groupPosition].secondsToWait
     tecSettings.automation[groupName][groupPosition].secondsToWait = nil
   end  -- if tecSettings.automation[groupName][groupPosition].secondsToWait then
-pecho("\nautomationType: "..automationType.."\n")
+
   -- The command to run
   local automationCommand = tecSettings[automationType][groupName][groupPosition].automationCommand
   -- The delay before calling the next command
