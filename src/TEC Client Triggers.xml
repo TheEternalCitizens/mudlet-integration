@@ -2266,27 +2266,52 @@ end --if parthiaMap.getEnabled()
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>You are no longer busy.</name>
-				<script>--[[
+				<script> --[[
 Patter example: &lt;/font&gt;&lt;font color="#ff9b00"&gt;You are no longer busy.&lt;/font&gt;&lt;/font&gt;
-
-Triggers\Game Events\You are no longer busy.
-    Pattern: "&lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are no longer busy%.&lt;/font&gt;&lt;/font&gt;"
-    if parthiaAutomationRunning is truthy
-      Call Scripts\Game Commands\automation\parthiaAutomationCall()
-      
-      parthiaAutomationRunning = { groupName = groupName, groupRepeat = groupRepeat }
 ]]--
 
 -- Handle automation tasks.
 -- Check if automation is running
 if parthiaAutomationRunning then
   debugToDisplay("pathiaAutomation trigger You are no longer busy called.")
-  groupName = parthiaAutomationRunning["groupName"]
-  -- Check if this automation is called off of a timer or this trigger
-  -- If seconds to wait for this automation group is 0, automation is called by this trigger.
-  if not parthiaToBoolean(tecSettings.automation[groupName][parthiaAutomationGroupPosition].automationTrigger) then
-    parthiaAutomationCall()  -- Call the automation handler
-  end  -- if not parthiaToBoolean(tecSettings.automation[groupName][parthiaAutomationGroupPosition].secondsToWait) then
+  
+  -- Set local variables this function will use.
+  local groupName = false
+  local groupRepeat = 1
+  local groupPosition = false
+  
+  -- An interrupt automation is running, it is the mmmain priority
+  if parthiaAutomationInterruptRunning then
+    
+    --collect group name and repeat from parthiaAutomationInterruptRunning
+    groupName = parthiaAutomationInterruptRunning
+    groupRepeat = tecSettings.automationInterrupt[groupName].interruptRepeat
+    --collecct group position from the global interrupt variable
+    groupPosition = parthiaAutomationInterruptGroupPosition
+    
+    -- Check if this interrupt is called off of a timer or this trigger
+    -- If automation trigger for this automation group is 0, automation is called by this trigger.
+    if not parthiaToBoolean(tecSettings.automationInterrupt[groupName][groupPosition].automationTrigger) then
+      parthiaAutomationCall()  -- Call the automation handler
+    end  -- if not parthiaToBoolean(tecSettings.automation[groupName][parthiaAutomationGroupPosition].secondsToWait) then
+    
+  -- a standard automation task is running
+  elseif parthiaAutomationRunning then
+    
+    -- collect group name and repeat from standard automation task
+    groupName = parthiaAutomationRunning["groupName"]
+    groupRepeat = parthiaAutomationRunning["groupRepeat"]
+    -- collect group position from the global variable
+    groupPosition = parthiaAutomationGroupPosition
+    
+    -- Check if this automation is called off of a timer or this trigger
+    -- If automation trigger for this automation group is 0, automation is called by this trigger.
+    if not parthiaToBoolean(tecSettings.automation[groupName][groupPosition].automationTrigger) then
+      parthiaAutomationCall()  -- Call the automation handler
+    end  -- if not parthiaToBoolean(tecSettings.automation[groupName][parthiaAutomationGroupPosition].secondsToWait) then
+    
+  end -- if parthiaAutomationInterruptRunning then
+  
 end -- if parthiaAutomationRunning then</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
