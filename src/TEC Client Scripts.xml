@@ -9557,6 +9557,8 @@ function parthiaAutomationCall()
   
   -- Will be used to record what position in the automation group should be called.
   local groupPosition = false
+  -- Will be used to store how many times this automation group has repeated
+  local iterationCounter = 0
   
   if parthiaAutomationInterruptRunning then
     --collect group name and repeat from parthiaAutomationInterruptRunning
@@ -9566,6 +9568,8 @@ function parthiaAutomationCall()
     local automationType = "automationInterrupt"
     -- setting this now, incase the previous task should repeat.
     groupPosition = ParthiaAutomationInterruptGroupPosition
+    -- How many times this interrupt group has repeated
+    iterationCounter = parthiaAutomationInterruptIterationCounter
   else  -- this is a standard automation task collect from that table instead.
     -- Get required variables for this function.  
     local groupName = parthiaAutomationRunning["groupName"]  -- the name of this automation group
@@ -9574,6 +9578,8 @@ function parthiaAutomationCall()
     local automationType = "automation"
     -- setting this now, incase the previous task should repeat.
     groupPosition = parthiaAutomationGroupPosition
+    -- How many times this automation group has repeated
+    iterationCounter = parthiaAutomationIterationCounter
   end -- if parthiaAutomationInterruptRunning then
   
   -- Blank out the timer ID it is no longer needed
@@ -9600,9 +9606,14 @@ function parthiaAutomationCall()
   
   -- stop this automation loop if user specified a group repeat and it has been reached.
   if parthiaToBoolean(groupRepeat) then  -- Only check if a group repeat was specified.
-    if parthiaAutomationIterationCounter &gt;= tonumber(groupRepeat) then  -- this has iterated more than group repeat specified
-      pecho("Automation task complete.")
-      parthiaAutomationStop()  -- Stop automation.
+    if iterationCounter &gt;= tonumber(groupRepeat) then  -- this has iterated more than group repeat specified
+      if automationType == "automationInterrupt" then
+        pecho("Interrupt "..groupName.." completed.\n")
+        parthiaAutomationInterruptStop()
+      else
+        pecho("Automation task"..groupName.." complete.\n")
+        parthiaAutomationStop()  -- Stop automation.
+      end -- if automationType == "automationInterrupt" then
       return true  -- stop current automation call also.
     end  -- if parthiaAutomationIterationCounter &gt; tonumber(groupRepeat) then
   end -- if parthiaToBoolean(groupRepeat) then
