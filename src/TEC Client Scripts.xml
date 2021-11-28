@@ -513,6 +513,8 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   tecSettings.automation = {}  --Used to track automation groups.
   
   tecSettings.automationInterrupt = {} --used to track automation interrupts.
+  
+  tecSettings.automationInterruptTriggers = {} --used to track interrupt triggers. groupName is the key, trigger ID is the value
 
   if displayToScreen then pecho("Parthia settings set to default.\n") end
 
@@ -9099,6 +9101,20 @@ Where the stop command stops you script.
 How automation interupts are handled-------------------------------------------
   
   Interupt groups are stored in tecsettings.automationInterrupts
+  Triggers for interrupts are stored in tecSettings.automationInterruptTriggers
+    The key is the groupName, the value is the trigger ID.
+    
+  Interrupt Enable Logic:
+    User toggles the interrupt to enabled with aliase 'parthia interrupt toggle [groupName]'
+      parthiaAutomationInterruptToggleState(groupName) is called.
+        tecSettings.automationInterrupt[groupName] is enabled.
+        parthiaCreateInterruptRegexTrigger(groupName) is called
+          a trigger is created that calls parthiaAutomationInterruptStart(groupName)
+            The trigger has NO expireAfter value, it will fire infinite number of times.
+          The trigger ID is stored in tecSettings.automationInterruptTriggers[groupName]
+          
+    regex trigger is created with the pattern from the interrupt.
+      When the trigger fires is calls parthiaAutomationInterruptStart(groupName)
   
   Aliases
     create an interupt group.
@@ -9172,6 +9188,9 @@ How automation interupts are handled-------------------------------------------
             iterate parthiaAutomationInterruptIterationCounter
           else
             iterate parthiaAutomationIterationCounter
+  parthiaAutomationInterruptToggleState
+    Toggles the enabled disabled state of an interrupt.
+    Creates a regex trigger if 
   trigger 'You are no longer busy.'
     the if statement needs to have an or parthiaAutomationInterruptRunning.
       So it triggers when only an interrupt is active.
@@ -10173,6 +10192,46 @@ function parthiaAutomationInterruptToggleState(groupName)
   end  -- if tecSettings.automationInterrupt[groupName].enabled then
 
 end  -- function parthiaAutomationInterruptToggleState()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaCreateInterruptRegexTrigger(pattern)</name>
+						<packageName></packageName>
+						<script>--[[
+Purpose:
+  Replaces &lt;color&gt; or &lt;/color&gt; with the regex pattern for html color codes TEC uses.
+  Creates a single fire temp regex trigger using the updated pattern.
+  Stores the regex ID in global table tecSettings.automationInterruptTriggers
+  Returns the regex trigger id, of the trigger newly created.
+
+Variables:
+  tecSettings.automationInterruptTriggers, global saved table of triggers to create.
+  
+References:
+  https://wiki.mudlet.org/w/Manual:Mudlet_Object_Functions#tempRegexTrigger
+  
+  A standard colored message:
+    &lt;/font&gt;&lt;font color="#0020ff"&gt;arch marked 'VI'&lt;/font&gt;&lt;font color="#000000"&gt; 
+]]--
+
+function parthiaCreateInterruptRegexTrigger(groupName)
+
+  local pattern = tecSettings.automationInterrupt[groupName].pattern
+  
+  --replace any instances of &lt;color&gt; and &lt;/color&gt; with useful regex codes.
+  --modifiedPattern = pattern.gsub("&lt;color&gt;", [[&lt;\/font&gt;&lt;font color="#[A-Fa-f0-9]+"&gt;]])
+  modifiedPattern = string.gsub(pattern, "&lt;color&gt;", [[&lt;\/font&gt;&lt;font color="#[A-Fa-f0-9]+"&gt;]])
+  modifiedPattern = string.gsub(modifiedPattern, "&lt;/color&gt;", [[&lt;\/font&gt;&lt;font color="#[A-Fa-f0-9]+"&gt;]])
+  
+  -- create the regex trigger
+  local triggerID = tempRegexTrigger(modifiedPattern, [[parthiaAutomationInterruptStart("]]..groupName..[[")]])
+  
+  -- Insert the trigger ID into the tracking table
+  tecSettings.automationInterruptTriggers[groupName] = triggerID
+  
+  return triggerID
+  
+end  -- function parthiaCreateAutomationRegexTrigger(pattern)</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
