@@ -9107,12 +9107,11 @@ How automation interupts are handled-------------------------------------------
     parthia automation interrupt groups
       To show interrupt groups.
       Send parthiaAutomationShowGroups the "automationInterrupt" as the automationType argument.
-      
+    to enable an automation
   parthiaAutomationCreateInterruptGroup()
     Creates the table for the group specified.
     Reserves element "interruptRepeat" for how many times this interrupt group should repeat
       before returning control back.
-      
   parthiaAutomationUpdate()
     add on an argument automationType automationType is "automation" or "automationInterrupt".
       To reflect tecsettings.automation and tecsettings.automationInterrupt.
@@ -9120,17 +9119,14 @@ How automation interupts are handled-------------------------------------------
     If the group does not exist
       if the automation type is interrupt
         prompt the user to create the interrupt group, repeat and pattern is required...
-  
   parthiaAutomationShowGroups()
     add on an argument automationType automationType is "automation" or "automationInterrupt".
       To reflect tecsettings.automation and tecsettings.automationInterrupt.
     Any time tecsettings.automation is set or called, use tecsettings[automationType] instead.
-  
   parthiaAutomationInterruptStop()
     parthiaAutomationInterruptRunning = false
     parthiaAutomationInterruptIterationCounter = 0
     parthiaAutomationInterruptGroupPosition = false
-  
   parthiaAutomationInterruptStart(groupName)
     -- starts an interrupt
     Make certain the interrupt group exists
@@ -9139,7 +9135,6 @@ How automation interupts are handled-------------------------------------------
     echo that an interrupt has occured.
     if not parthiaAutomationRunning  -- If automation is running parthiaAutomationCall will be called automatically.
       parthiaAutomationCall()
-  
   parthiaAutomationCall()
     add local variable, automationType. automationType is "automation" or "automationInterrupt".
       To reflect tecsettings.automation and tecsettings.automationInterrupt.
@@ -9155,7 +9150,6 @@ How automation interupts are handled-------------------------------------------
         Call parthiaAutomationInterruptStop()
       else
         Do the code currently in the groupRepeat if statement.
-      
   parthiaAutomationIncreaseGroupIteration()
     add local variable, automationType. automationType is "automation" or "automationInterrupt".
       To reflect tecsettings.automation and tecsettings.automationInterrupt.
@@ -9178,7 +9172,6 @@ How automation interupts are handled-------------------------------------------
             iterate parthiaAutomationInterruptIterationCounter
           else
             iterate parthiaAutomationIterationCounter
-      
   trigger 'You are no longer busy.'
     the if statement needs to have an or parthiaAutomationInterruptRunning.
       So it triggers when only an interrupt is active.
