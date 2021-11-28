@@ -10148,6 +10148,31 @@ function parthiaAutomationInterruptStart(groupName)
 end -- function parthiaAutomationInterruptStart(groupName)</script>
 						<eventHandlerList />
 					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationInterruptToggleState(groupName)</name>
+						<packageName></packageName>
+						<script>--[[
+Enables or disables an interrupt.
+]]--
+
+function parthiaAutomationInterruptToggleState(groupName)
+  
+  -- Make certain this interrupt group exists.
+  if not tecSettings.automationInterrupt[groupName] then
+    pecho("\nAutomation interrupt group "..groupName.." does not exist. A full help message is above.\n\n")
+    return false
+  end -- if not tecSettings.automation[groupName] then
+  
+  --toggle the state of this interrupt.
+  if tecSettings.automationInterrupt[groupName].enabled then
+    tecSettings.automationInterrupt[groupName].enabled = false
+  else
+    tecSettings.automationInterrupt[groupName].enabled = true
+  end  -- if tecSettings.automationInterrupt[groupName].enabled then
+  
+end  -- function parthiaAutomationInterruptToggleState()</script>
+						<eventHandlerList />
+					</Script>
 				</ScriptGroup>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
