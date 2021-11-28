@@ -9104,17 +9104,39 @@ How automation interupts are handled-------------------------------------------
   Triggers for interrupts are stored in tecSettings.automationInterruptTriggers
     The key is the groupName, the value is the trigger ID.
     
+  Interrupt Creation Logic:
+    User runs aliase: parthia interrupt [group name], [repeat], [pattern]
+      parthiaAutomationCreateInterruptGroup([group name], [repeat], [pattern]) is called
+        tecSettings.automationInterrupt[groupName] is created
+          It has keys interruptRepeat and pattern created, with the values passed.
+        A message is presented to the user.
+  NOTE: parthiaAutomationCreateInterruptGroup, needs better messaging yet!
+  
   Interrupt Enable Logic:
     User toggles the interrupt to enabled with aliase 'parthia interrupt toggle [groupName]'
       parthiaAutomationInterruptToggleState(groupName) is called.
         tecSettings.automationInterrupt[groupName] is enabled.
         parthiaCreateInterruptRegexTrigger(groupName) is called
+          Collects the pattern from tecSettings.automationInterrupt[groupName].pattern
+            converts &lt;color&gt; into html regex pattern
           a trigger is created that calls parthiaAutomationInterruptStart(groupName)
             The trigger has NO expireAfter value, it will fire infinite number of times.
           The trigger ID is stored in tecSettings.automationInterruptTriggers[groupName]
+  
+  Interrupt trigger logic:
+    The pattern from a trigger created with parthiaCreateInterruptRegexTrigger is found and the trigger is automatically called.
+      parthiaAutomationInterruptStart(groupName) is called
+        parthiaAutomationInterruptRunning global variable is set to groupName
+        if parthiaAutomationRunning is true
+          No other action is take.
+            NOTE parthiaAutomationCall() will be automatically called by the currently running automation task.
+        else
+          parthiaAutomationCall() is called.
           
-    regex trigger is created with the pattern from the interrupt.
-      When the trigger fires is calls parthiaAutomationInterruptStart(groupName)
+  
+  Interrupt Disable Logic:
+  
+  Interrupt Deletion Logic:
   
   Aliases
     create an interupt group.
