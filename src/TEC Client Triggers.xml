@@ -2293,7 +2293,7 @@ if parthiaAutomationRunning then
     -- If automation trigger for this automation group is 0, automation is called by this trigger.
     if not parthiaToBoolean(tecSettings.automationInterrupt[groupName][groupPosition].automationTrigger) then
       parthiaAutomationCall()  -- Call the automation handler
-    end  -- if not parthiaToBoolean(tecSettings.automation[groupName][parthiaAutomationGroupPosition].secondsToWait) then
+    end  -- if not parthiaToBoolean(tecSettings.automationInterrupt[groupName][groupPosition].automationTrigger) then
     
   -- a standard automation task is running
   elseif parthiaAutomationRunning then
@@ -2308,7 +2308,7 @@ if parthiaAutomationRunning then
     -- If automation trigger for this automation group is 0, automation is called by this trigger.
     if not parthiaToBoolean(tecSettings.automation[groupName][groupPosition].automationTrigger) then
       parthiaAutomationCall()  -- Call the automation handler
-    end  -- if not parthiaToBoolean(tecSettings.automation[groupName][parthiaAutomationGroupPosition].secondsToWait) then
+    end  -- if not parthiaToBoolean(tecSettings.automation[groupName][groupPosition].automationTrigger) then
     
   end -- if parthiaAutomationInterruptRunning then
   
