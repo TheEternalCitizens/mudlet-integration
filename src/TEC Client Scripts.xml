@@ -9762,22 +9762,23 @@ function parthiaAutomationIncreaseGroupIteration()
     groupRepeat = tecSettings.automationInterrupt[groupName].interruptRepeat
     --collecct group position from the global interrupt variable
     groupPosition = parthiaAutomationInterruptGroupPosition
+    automationType = "automationInterrupt"
   else  -- a standard automation task is running, collect from it.
     -- collect group name and repeat from standard automation task
     groupName = parthiaAutomationRunning["groupName"]
     groupRepeat = parthiaAutomationRunning["groupRepeat"]
     -- collect group position from the global variable
     groupPosition = parthiaAutomationGroupPosition
+    automationType = "automation"
   end -- if parthiaAutomationInterruptRunning then
   
   --used to collect all keys in this automation group.
   local automationGroupKeySet = {}
   
   -- Gather all the keys for the group and sort them.
-  --tecSettings.automation[groupName]
-  for key, _ in pairs(tecSettings.automation[groupName]) do
+  for key, _ in pairs(tecSettings[automationType][groupName]) do
     table.insert(automationGroupKeySet, key)
-  end -- for key, _ in pairs(tecSettings.automation[groupName]) do
+  end -- for key, _ in pairs(tecSettings[automationType][groupName]) do
   
   -- Sort the table 
   table.sort(automationGroupKeySet)
