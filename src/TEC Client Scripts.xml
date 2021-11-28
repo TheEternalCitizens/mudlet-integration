@@ -9596,6 +9596,7 @@ function parthiaAutomationCall()
     groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
   -- It repeatOnFail is true and the last command was successfull iterate
   elseif parthiaAutomationRepeatCmdOnFailure and parthiaLastCommandSuccess then
+    pecho("\n\nLast command success iterator called\n\n")
     groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
   end  -- if parthiaAutomationFirstRun
   
@@ -9606,7 +9607,7 @@ function parthiaAutomationCall()
         pecho("Interrupt "..groupName.." completed.\n")
         parthiaAutomationInterruptStop()
       else
-        pecho("Automation task"..groupName.." complete.\n")
+        pecho("Automation task "..groupName.." complete.\n")
         parthiaAutomationStop()  -- Stop automation.
       end -- if automationType == "automationInterrupt" then
       return true  -- stop current automation call also.
@@ -9778,6 +9779,7 @@ function parthiaAutomationIncreaseGroupIteration()
   
   -- if the iterator does not exist this means this is the first run of this automation group.
   if not groupPosition then
+    debugToDisplay("parthiaAutomationIncreaseGroupIteration groupPosition is false setting it to first element in group.")
     -- Returning the lowest element in the  automation group
     groupPosition = automationGroupKeySet[1]
     -- Set the global variables also
@@ -9792,6 +9794,8 @@ function parthiaAutomationIncreaseGroupIteration()
     -- This is the next iteration in our automation group.
     if tonumber(value) &gt; tonumber(groupPosition) then
       setGlobalAutomationGroupPosition(value)
+      groupPosition = value
+      debugToDisplay("parthiaAutomationIncreaseGroupIteration groupPosition increased to next element.")
       break  -- stop the loop
     end  -- if tonumber(value) &gt; tonumber(groupPosition) then
     
@@ -9802,6 +9806,7 @@ function parthiaAutomationIncreaseGroupIteration()
       setGlobalAutomationGroupPosition(automationGroupKeySet[1])
       -- Increase the automation rotation iterator by 1.
       setGlobalAutomationIterationCounter(parthiaAutomationIterationCounter + 1)
+      debugToDisplay("parthiaAutomationIncreaseGroupIteration ")
     end -- if key == #automationGroupKeySet
   
   end  -- for key, value in pairs(automationGroupKeySet) do
