@@ -9555,9 +9555,17 @@ Scripts\Game Commands\auto\parthiaAutomationCall()
 
 function parthiaAutomationCall()
   
-  -- Get required variables for this function.  
-  local groupName = parthiaAutomationRunning["groupName"]  -- the name of this automation group
-  local groupRepeat = parthiaAutomationRunning["groupRepeat"]  -- How many times this group automation should repeat
+  if parthiaAutomationInterruptRunning then
+    --collect group name and repeat from parthiaAutomationInterruptRunning
+    local groupName = parthiaAutomationInterruptRunning
+    local groupRepeat = tecSettings.automationInterrupt[groupName].interruptRepeat
+    local automationType = "automationInterrupt"
+  else  -- this is a standard automation task collect from that table instead.
+    -- Get required variables for this function.  
+    local groupName = parthiaAutomationRunning["groupName"]  -- the name of this automation group
+    local groupRepeat = parthiaAutomationRunning["groupRepeat"]  -- How many times this group automation should repeat
+    local automationType = "automation"
+  end -- if parthiaAutomationInterruptRunning then
   
   -- Will be used to record what position in the automation group should be called.
   local groupPosition = false
