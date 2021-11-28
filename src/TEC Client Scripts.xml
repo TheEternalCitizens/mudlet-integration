@@ -9129,7 +9129,7 @@ How automation interupts are handled-------------------------------------------
   parthiaAutomationInterruptStop()
     parthiaAutomationInterruptRunning = false
     parthiaAutomationInterruptIterationCounter = 0
-    ParthiaAutomationInterruptGroupPosition = false
+    parthiaAutomationInterruptGroupPosition = false
   
   parthiaAutomationInterruptStart(groupName)
     -- starts an interrupt
@@ -9169,7 +9169,7 @@ How automation interupts are handled-------------------------------------------
     If parthiaAutomationGroupPosition is being set to a value, anywhere in the function
       Use an if parthiaAutomationInterruptRunning
         if true
-          Instead set ParthiaAutomationInterruptGroupPosition
+          Instead set parthiaAutomationInterruptGroupPosition
         else
           set parthiaAutomationGroupPosition as normal
     If parthiaAutomationIterationCounter is being interrated
@@ -9246,7 +9246,7 @@ Variables---------------------------------------------------------
   parthiaAutomationRegexTriggerID, global variable, used to store the automation regex trigger's ID.
   parthiaAutomationInterruptRunning, the group name of a current interrupt or false if no interrupt is active.
   parthiaAutomationInterruptIterationCounter, keeps track of how many times the group of commands has run for a interrupt.
-  ParthiaAutomationInterruptGroupPosition, The group position that interrupt automation last run.
+  parthiaAutomationInterruptGroupPosition, The group position that interrupt automation last run.
     
 Triggers-----------------------------------------------------------
   Triggers\Game Events\You are no longer busy.
@@ -9570,7 +9570,7 @@ function parthiaAutomationCall()
     -- this is an interrupt task
     automationType = "automationInterrupt"
     -- setting this now, incase the previous task should repeat.
-    groupPosition = ParthiaAutomationInterruptGroupPosition
+    groupPosition = parthiaAutomationInterruptGroupPosition
     -- How many times this interrupt group has repeated
     iterationCounter = parthiaAutomationInterruptIterationCounter
   else  -- this is a standard automation task collect from that table instead.
@@ -9750,9 +9750,25 @@ Keys in the automation group name may not be in order or correctly sequenced.
 
 function parthiaAutomationIncreaseGroupIteration()
 
-  -- Get required variables for this function.
-  groupName = parthiaAutomationRunning["groupName"]
-  groupRepeat = parthiaAutomationRunning["groupRepeat"]
+  -- Set local variables this function will use.
+  local groupName = false
+  local groupRepeat = 1
+  local groupPosition = false
+  
+  -- Now create the local variables collecting from global variables of the automation type being run.
+  if parthiaAutomationInterruptRunning then
+    --collect group name and repeat from parthiaAutomationInterruptRunning
+    groupName = parthiaAutomationInterruptRunning
+    groupRepeat = tecSettings.automationInterrupt[groupName].interruptRepeat
+    --collecct group position from the global interrupt variable
+    groupPosition = parthiaAutomationInterruptGroupPosition
+  else  -- a standard automation task is running, collect from it.
+    -- collect group name and repeat from standard automation task
+    groupName = parthiaAutomationRunning["groupName"]
+    groupRepeat = parthiaAutomationRunning["groupRepeat"]
+    -- collect group position from the global variable
+    groupPosition = parthiaAutomationGroupPosition
+  end -- if parthiaAutomationInterruptRunning then
   
   --used to collect all keys in this automation group.
   local automationGroupKeySet = {}
@@ -9767,38 +9783,50 @@ function parthiaAutomationIncreaseGroupIteration()
   table.sort(automationGroupKeySet)
   
   -- if the iterator does not exist this means this is the first run of this automation group.
-  if not parthiaAutomationGroupPosition then
+  if not groupPosition then
     -- Returning the lowest element in the  automation group
-    parthiaAutomationGroupPosition = automationGroupKeySet[1]
-    return parthiaAutomationGroupPosition
-  end  -- if not parthiaAutomationGroupPosition then
+    groupPosition = automationGroupKeySet[1]
+    -- Set the global variables also
+    setGlobalAutomationGroupPosition(groupPosition)
+    return groupPosition
+  end  -- if not groupPosition then
   
   -- find the next highest logical key in the automation group's table
   for key, value in pairs(automationGroupKeySet) do
     
     -- if the value from the automationGroupKeySet is larger than the current command iteration
     -- This is the next iteration in our automation group.
-    if tonumber(value) &gt; tonumber(parthiaAutomationGroupPosition) then
-      parthiaAutomationGroupPosition = value
+    if tonumber(value) &gt; tonumber(groupPosition) then
+      setGlobalAutomationGroupPosition(value)
       break  -- stop the loop
-    end  -- if key &gt;= parthiaAutomationGroupPosition then
+    end  -- if tonumber(value) &gt; tonumber(groupPosition) then
     
     -- Check if we are about to iterate past the automationGroupKeySet
     -- Set the automations iterator to the first element in this automation groups sequence
     if key == #automationGroupKeySet then
       -- set the group iterator to the first element in the groups command table
-      parthiaAutomationGroupPosition = automationGroupKeySet[1]
+      setGlobalAutomationGroupPosition(automationGroupKeySet[1])
       -- Increase the automation rotation iterator by 1.
       parthiaAutomationIterationCounter = parthiaAutomationIterationCounter + 1
     end -- if key == #automationGroupKeySet
   
   end  -- for key, value in pairs(automationGroupKeySet) do
   
-  debugToDisplay("parthiaAutomationIncreaseGroupIteration() Next iterator: "..parthiaAutomationGroupPosition)
+  debugToDisplay("parthiaAutomationIncreaseGroupIteration() Next iterator: "..groupPosition)
   
-  return parthiaAutomationGroupPosition
+  return groupPosition
 
-end  --function parthiaAutomationIncreaseGroupIteration()</script>
+end  --function parthiaAutomationIncreaseGroupIteration()
+
+function setGlobalAutomationGroupPosition(value)
+  --[[ Sets the global automation iterators ]]--
+  -- This is an interrupt automation task
+  if parthiaAutomationInterruptRunning then
+    parthiaAutomationInterruptGroupPosition = value
+  else  -- This is a standard automation task
+    parthiaAutomationGroupPosition = value
+  end  -- if parthiaAutomationInterruptRunning then
+end -- local function setIterators()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
@@ -10073,7 +10101,7 @@ Stop the currently running interrupt automation task.
 function parthiaAutomationInterruptStop()
   parthiaAutomationInterruptRunning = false
   parthiaAutomationInterruptIterationCounter = 0
-  ParthiaAutomationInterruptGroupPosition = false
+  parthiaAutomationInterruptGroupPosition = false
 end -- function parthiaAutomationInterruptStop()</script>
 						<eventHandlerList />
 					</Script>
