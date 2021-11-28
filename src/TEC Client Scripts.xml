@@ -9555,20 +9555,26 @@ Scripts\Game Commands\auto\parthiaAutomationCall()
 
 function parthiaAutomationCall()
   
+  -- Will be used to record what position in the automation group should be called.
+  local groupPosition = false
+  
   if parthiaAutomationInterruptRunning then
     --collect group name and repeat from parthiaAutomationInterruptRunning
     local groupName = parthiaAutomationInterruptRunning
     local groupRepeat = tecSettings.automationInterrupt[groupName].interruptRepeat
+    -- this is an interrupt task
     local automationType = "automationInterrupt"
+    -- setting this now, incase the previous task should repeat.
+    groupPosition = ParthiaAutomationInterruptGroupPosition
   else  -- this is a standard automation task collect from that table instead.
     -- Get required variables for this function.  
     local groupName = parthiaAutomationRunning["groupName"]  -- the name of this automation group
     local groupRepeat = parthiaAutomationRunning["groupRepeat"]  -- How many times this group automation should repeat
+    -- This is a standard automation task.
     local automationType = "automation"
+    -- setting this now, incase the previous task should repeat.
+    groupPosition = parthiaAutomationGroupPosition
   end -- if parthiaAutomationInterruptRunning then
-  
-  -- Will be used to record what position in the automation group should be called.
-  local groupPosition = false
   
   -- Blank out the timer ID it is no longer needed
   parthiaAutomationTimerID = false
@@ -9590,9 +9596,6 @@ function parthiaAutomationCall()
   -- It repeatOnFail is true and the last command was successfull iterate
   elseif parthiaAutomationRepeatCmdOnFailure and parthiaLastCommandSuccess then
     groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
-  -- The group position should not change
-  else
-    groupPosition = parthiaAutomationGroupPosition
   end  -- if parthiaAutomationFirstRun
   
   -- stop this automation loop if user specified a group repeat and it has been reached.
