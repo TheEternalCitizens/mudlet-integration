@@ -9153,9 +9153,6 @@ How automation interupts are handled-------------------------------------------
     if groupRepeat has been reached
       it automationType is automationInterrupt
         Call parthiaAutomationInterruptStop()
-        if parthiaAutomationRunning
-          parthiaAutomationCall()  -- next automation has to occur without the need to change more code
-          return true  -- This automation call is complete.
       else
         Do the code currently in the groupRepeat if statement.
       
