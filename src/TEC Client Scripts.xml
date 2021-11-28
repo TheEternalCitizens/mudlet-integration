@@ -9596,7 +9596,6 @@ function parthiaAutomationCall()
     groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
   -- It repeatOnFail is true and the last command was successfull iterate
   elseif parthiaAutomationRepeatCmdOnFailure and parthiaLastCommandSuccess then
-    pecho("\n\nLast command success iterator called\n\n")
     groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
   end  -- if parthiaAutomationFirstRun
   
