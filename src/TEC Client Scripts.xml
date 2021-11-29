@@ -9099,6 +9099,12 @@ Than to run to rotation /auto [group name], [number of times, leave out for infi
 Where the stop command stops you script.
 
 How automation interupts are handled-------------------------------------------
+
+  ToDo:
+    parthiaAutomationShowGroups, click links need to be updated so they will work with interrupts
+    parthiaAutomationShowGroups, interrupts need enable and disable
+    Aliase 'parthia automation [name], Delete' needs to check if interrupt is active
+      If it is call parthiaAutomationInterruptToggleState
   
   Interupt groups are stored in tecsettings.automationInterrupts
   Triggers for interrupts are stored in tecSettings.automationInterruptTriggers
@@ -9132,11 +9138,18 @@ How automation interupts are handled-------------------------------------------
             NOTE parthiaAutomationCall() will be automatically called by the currently running automation task.
         else
           parthiaAutomationCall() is called.
-          
   
   Interrupt Disable Logic:
+    parthiaAutomationInterruptToggleState is called.
+      tecSettings.automationInterrupt[groupName].enabled is set to false
+  NOT DONE YET
+      the regex trigger needs to be killed and removed from the tecSettings.automationInterruptTriggers table
   
   Interrupt Deletion Logic:
+    User runs aliase parthia automation [name], delete
+      Check if the interrupt is currently active
+        if yes turn it off with parthiaAutomationInterruptToggleState
+      parthiaAutomationShowGroups() is called with the group name and deletion switch. Deleting the group
   
   Aliases
     create an interupt group.
@@ -10194,6 +10207,9 @@ end -- function parthiaAutomationInterruptStart(groupName)</script>
 						<packageName></packageName>
 						<script>--[[
 Enables or disables an interrupt.
+
+enabled needs to create the regex trigger
+disable needs to locate the regex trigger and remove it
 ]]--
 
 function parthiaAutomationInterruptToggleState(groupName)
