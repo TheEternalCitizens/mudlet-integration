@@ -9105,6 +9105,8 @@ How automation interupts are handled-------------------------------------------
     parthiaAutomationShowGroups, interrupts need enable and disable
     Aliase 'parthia automation [name], Delete' needs to check if interrupt is active
       If it is call parthiaAutomationInterruptToggleState
+    parthiaAutomationCreateInterruptGroup, needs better messaging yet!
+    parthiaAutomationInterruptToggleState, the regex trigger needs to be killed and removed from the tecSettings.automationInterruptTriggers table
   
   Interupt groups are stored in tecsettings.automationInterrupts
   Triggers for interrupts are stored in tecSettings.automationInterruptTriggers
@@ -9116,7 +9118,6 @@ How automation interupts are handled-------------------------------------------
         tecSettings.automationInterrupt[groupName] is created
           It has keys interruptRepeat and pattern created, with the values passed.
         A message is presented to the user.
-  NOTE: parthiaAutomationCreateInterruptGroup, needs better messaging yet!
   
   Interrupt Enable Logic:
     User toggles the interrupt to enabled with aliase 'parthia interrupt toggle [groupName]'
@@ -9142,7 +9143,6 @@ How automation interupts are handled-------------------------------------------
   Interrupt Disable Logic:
     parthiaAutomationInterruptToggleState is called.
       tecSettings.automationInterrupt[groupName].enabled is set to false
-  NOT DONE YET
       the regex trigger needs to be killed and removed from the tecSettings.automationInterruptTriggers table
   
   Interrupt Deletion Logic:
@@ -10222,10 +10222,24 @@ function parthiaAutomationInterruptToggleState(groupName)
 
   --toggle the state of this interrupt.
   if tecSettings.automationInterrupt[groupName].enabled then
+    
+    --disable the inteurrupt flag
     tecSettings.automationInterrupt[groupName].enabled = false
+    
+    -- kill the interrupt trigger and manage it's variables
+    parthiaDeleteInterruptRegexTrigger(groupName)
+    
+    -- Message the player
     pecho("Interrupt "..groupName.." is now disabled.\n")
+    
   else
+  
+    -- enable the interrupt flag
     tecSettings.automationInterrupt[groupName].enabled = true
+    
+    -- create the regex trigger
+    parthiaCreateInterruptRegexTrigger(groupName)
+    
     pecho("Interrupt "..groupName.." is now enabled.\n")
   end  -- if tecSettings.automationInterrupt[groupName].enabled then
 
@@ -10268,6 +10282,39 @@ function parthiaCreateInterruptRegexTrigger(groupName)
   tecSettings.automationInterruptTriggers[groupName] = triggerID
   
   return triggerID
+  
+end  -- function parthiaCreateAutomationRegexTrigger(pattern)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaDeleteInterruptRegexTrigger(pattern)</name>
+						<packageName></packageName>
+						<script>--[[
+Purpose:
+  Removes an intterpt trigger and flags it's variables off.
+
+Variables:
+  tecSettings.automationInterruptTriggers, global saved table of triggers to create.
+  
+]]--
+
+function parthiaDeleteInterruptRegexTrigger(groupName)
+  
+  if not tecSettings.automationInterruptTriggers[groupName] then
+    tecErrorNotification("parthiaDeleteInterruptRegexTrigger, could not find groupName in the tecSettings.automationInterruptTriggers table.")
+    return false
+  end  -- if not tecSettings.automationInterruptTriggers[groupName] then
+  
+  -- Collect the trigger ID.
+  local triggerID = tecSettings.automationInterruptTriggers[groupName]
+  
+  -- kill the trigger
+  killTrigger(triggerID)
+  
+  -- remove the entry for the triggers dictionary.
+  tecSettings.automationInterruptTriggers[groupName] = nil
+  
+  return true
   
 end  -- function parthiaCreateAutomationRegexTrigger(pattern)</script>
 						<eventHandlerList />
