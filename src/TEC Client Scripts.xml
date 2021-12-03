@@ -10331,6 +10331,8 @@ Variables:
 ]]--
 
 function parthiaDeleteInterruptRegexTrigger(groupName)
+
+  debugToDisplay("parthiaDeleteInterruptRegexTrigger called with groupName: "..groupName)
   
   if not tecSettings.automationInterruptTriggers[groupName] then
     tecErrorNotification("parthiaDeleteInterruptRegexTrigger, could not find groupName in the tecSettings.automationInterruptTriggers table.")
@@ -10339,6 +10341,11 @@ function parthiaDeleteInterruptRegexTrigger(groupName)
   
   -- Collect the trigger ID.
   local triggerID = tecSettings.automationInterruptTriggers[groupName]
+  
+  debugToDisplay("parthiaDeleteInterruptRegexTrigger killing triggerID: "..triggerID)
+  
+  -- disable the trigger, deleting ONLY will result in the trigger being called one time.
+  disableTrigger(triggerID)
   
   -- kill the trigger
   killTrigger(triggerID)
