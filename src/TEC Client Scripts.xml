@@ -9106,7 +9106,8 @@ How automation interupts are handled-------------------------------------------
     Aliase 'parthia automation [name], Delete' needs to check if interrupt is active
       If it is call parthiaAutomationInterruptToggleState
     parthiaAutomationCreateInterruptGroup, needs better messaging yet!
-    parthiaAutomationInterruptToggleState, the regex trigger needs to be killed and removed from the tecSettings.automationInterruptTriggers table
+    remember to save reminder when an interrupt is created or updated.
+    Change the message when an interrupt is updated, it does not show pattern being updated.
   
   Interupt groups are stored in tecsettings.automationInterrupts
   Triggers for interrupts are stored in tecSettings.automationInterruptTriggers
@@ -9631,6 +9632,12 @@ function parthiaAutomationCall()
     iterationCounter = parthiaAutomationIterationCounter
   end -- if parthiaAutomationInterruptRunning then
   
+  -- display debugging messages
+  debugToDisplay("parthiaAutomationCall post set local variables:")
+  debugToDisplay("\tgroupName: "..groupName.." groupRepeat: "..groupRepeat)
+  debugToDisplay("\tautomationType: "..automationType.." groupPosition: "..
+                 tostring(groupPosition).." iterationCounter: "..tostring(iterationCounter))
+  
   -- Blank out the timer ID it is no longer needed
   parthiaAutomationTimerID = false
   
@@ -9653,6 +9660,17 @@ function parthiaAutomationCall()
     debugToDisplay("parthiaAutomationCall, last command successful iteration required found.")
     groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
   end  -- if parthiaAutomationFirstRun
+  
+  -- Update the iteration counter
+  if parthiaAutomationInterruptRunning then
+    iterationCounter = parthiaAutomationInterruptIterationCounter
+  else  -- this is a standard automation task collect from that table instead.
+    iterationCounter = parthiaAutomationIterationCounter
+  end -- if parthiaAutomationInterruptRunning then
+  
+  --send debugging messages
+  debugToDisplay("parthiaAutomationCall post Iteration variables post iteration:")
+  debugToDisplay("\tgroupPosition: "..tostring(groupPosition).." iterationCounter: "..tostring(iterationCounter))
   
   -- stop this automation loop if user specified a group repeat and it has been reached.
   if parthiaToBoolean(groupRepeat) then  -- Only check if a group repeat was specified.
@@ -9798,6 +9816,8 @@ Keys in the automation group name may not be in order or correctly sequenced.
 
 function parthiaAutomationIncreaseGroupIteration()
 
+  debugToDisplay("ParthiaAutomationIncreaseGroupIteration called.")
+
   -- Set local variables this function will use.
   local groupName = false
   local groupRepeat = 1
@@ -9820,12 +9840,19 @@ function parthiaAutomationIncreaseGroupIteration()
     automationType = "automation"
   end -- if parthiaAutomationInterruptRunning then
   
+  debugToDisplay("\tgroupName: "..groupName.." groupRepeat: "..groupRepeat)
+  debugToDisplay("\tautomationType: "..automationType.." groupPosition: "..
+                 tostring(groupPosition).." iterationCounter: "..tostring(iterationCounter))
+  
   --used to collect all keys in this automation group.
   local automationGroupKeySet = {}
   
   -- Gather all the keys for the group and sort them.
   for key, _ in pairs(tecSettings[automationType][groupName]) do
-    table.insert(automationGroupKeySet, key)
+    -- Do not insert pattern or interruptRepeat used on interrupt groups, only numrical keys
+    if tonumber(key) then
+      table.insert(automationGroupKeySet, key)
+    end  -- if tonumber(key) then
   end -- for key, _ in pairs(tecSettings[automationType][groupName]) do
   
   -- Sort the table 
@@ -9885,7 +9912,7 @@ function setGlobalAutomationGroupPosition(value)
   --[[ Sets the global automation iterators ]]--
   -- This is an interrupt automation task
   if parthiaAutomationInterruptRunning then
-    parthiaAutomationInterruptIterationCounter = value
+    parthiaAutomationInterruptGroupPosition = value
   else  -- This is a standard automation task
     parthiaAutomationGroupPosition = value
   end  -- if parthiaAutomationInterruptRunning then
@@ -10177,6 +10204,8 @@ Call or start an interrupt autmation task.
 
 function parthiaAutomationInterruptStart(groupName)
 
+  debugToDisplay("parthiaAutomationInterruptStart, called with groupName: "..groupName)
+
   -- Make certain this automation group exists.
   if not tecSettings.automationInterrupt[groupName] then
     pecho("\nAutomation interrupt group "..groupName.." does not exist. A full help message is above.\n\n")
@@ -10194,7 +10223,8 @@ function parthiaAutomationInterruptStart(groupName)
   
   -- If automation is not currently running we have to start it to run this interrupt.
   if not parthiaAutomationRunning then
-    parthiaAutomationCall()
+    debugToDisplay("parthiaAutomationInterruptStart, calling parthiaAutomationCall.")
+    tempTimer(1, [[parthiaAutomationCall()]])
   end  -- if not parthiaAutomationRunning then
   
   -- If automation is already running parthiaAutomationCall is be called automatically, running this interrupt.
@@ -10220,7 +10250,9 @@ function parthiaAutomationInterruptToggleState(groupName)
     return false
   end -- if not tecSettings.automation[groupName] then
 
-  --toggle the state of this interrupt.
+  --toggle the state of this interrupt--------------------------
+  
+  -- The interrupt is enabled, so disable it
   if tecSettings.automationInterrupt[groupName].enabled then
     
     --disable the inteurrupt flag
@@ -10232,7 +10264,7 @@ function parthiaAutomationInterruptToggleState(groupName)
     -- Message the player
     pecho("Interrupt "..groupName.." is now disabled.\n")
     
-  else
+  else  -- the interrupt is disabled, so enable it
   
     -- enable the interrupt flag
     tecSettings.automationInterrupt[groupName].enabled = true
