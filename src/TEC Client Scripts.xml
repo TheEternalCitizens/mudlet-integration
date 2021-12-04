@@ -9114,10 +9114,10 @@ How automation interupts are handled-------------------------------------------
     The key is the groupName, the value is the trigger ID.
     
   Interrupt Creation Logic:
-    User runs aliase: parthia interrupt [group name], [repeat], [pattern]
-      parthiaAutomationCreateInterruptGroup([group name], [repeat], [pattern]) is called
+    User runs aliase: parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]
+      parthiaAutomationCreateInterruptGroup([group name], [repeat], [pattern], firstCommandTrigger) is called
         tecSettings.automationInterrupt[groupName] is created
-          It has keys interruptRepeat and pattern created, with the values passed.
+          It has keys interruptRepeat, pattern and firstCommandTrigger created, with the values passed.
         A message is presented to the user.
   
   Interrupt Enable Logic:
@@ -9135,11 +9135,15 @@ How automation interupts are handled-------------------------------------------
     The pattern from a trigger created with parthiaCreateInterruptRegexTrigger is found and the trigger is automatically called.
       parthiaAutomationInterruptStart(groupName) is called
         parthiaAutomationInterruptRunning global variable is set to groupName
-        if parthiaAutomationRunning is true
-          No other action is take.
-            NOTE parthiaAutomationCall() will be automatically called by the currently running automation task.
-        else
-          parthiaAutomationCall() is called.
+        If parthiaAutomationRunning
+          make parthiaAutomationPaused = parthiaAutomationRunning
+          parthiaAutomationRunning = false ( because it is no longer running )
+        Collects the first command trigger from tecSettings.automationInterrupt[groupName].firstCommandTrigger
+        Determins how the first command in the interrupt group should be called.
+          Than calls the first command in the interrupt group.
+          
+  Interrupt stop logic:
+    parthiaAutomationCall
   
   Interrupt Disable Logic:
     parthiaAutomationInterruptToggleState is called.
@@ -9159,6 +9163,7 @@ How automation interupts are handled-------------------------------------------
     parthia automation interrupt groups
       To show interrupt groups.
       Send parthiaAutomationShowGroups the "automationInterrupt" as the automationType argument.
+    
     to enable an automation
   parthiaAutomationCreateInterruptGroup()
     Creates the table for the group specified.
@@ -9179,6 +9184,9 @@ How automation interupts are handled-------------------------------------------
     parthiaAutomationInterruptRunning = false
     parthiaAutomationInterruptIterationCounter = 0
     parthiaAutomationInterruptGroupPosition = false
+    if an automation task was paused, unpause it now.
+      parthiaAutomationRunning = parthiaAutomationPaused
+      parthiaAutomationPaused = false
   parthiaAutomationInterruptStart(groupName)
     -- starts an interrupt
     Make certain the interrupt group exists
@@ -9282,6 +9290,7 @@ Variables---------------------------------------------------------
   tecSettings.automation.[group name][position number] = {[command], [seconds or 0], [repeat on fail]}
     This will automatically get saved since it is in tecSettings.
   parthiaAutomationRunning: If automation is running it is set to ([group name], [repeat]), it is False if automation is not running
+  parthiaAutomationPaused: Used to pause an active automation task during an interrupt automation task.
   parthiaAutomationGroupPosition: a number, noting what command in array is going to be run
     This must be set to one on client startup.
   parthiaAutomationIterationCounter: Keeps track of how many times the group of commands has iterated.
@@ -9472,7 +9481,7 @@ end -- function parthiaAutomationTriggerHelp()</script>
 Creates an automation interrupt group.
 ]]--
 
-function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern)
+function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern, firstCommandTrigger)
 
   -- Make certain groupRepeat is a number that is not zero.
   if not parthiaToBoolean(groupRepeat) then
@@ -9495,6 +9504,7 @@ function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern)
   -- set how many times this interrupt repeats
   tecSettings.automationInterrupt[groupName].interruptRepeat = groupRepeat
   tecSettings.automationInterrupt[groupName].pattern = pattern
+  tecSettings.automationInterrupt[groupName].firstCommandTrigger = firstCommandTrigger
   
   return true
 
@@ -10192,6 +10202,13 @@ function parthiaAutomationInterruptStop()
   parthiaAutomationInterruptRunning = false
   parthiaAutomationInterruptIterationCounter = 0
   parthiaAutomationInterruptGroupPosition = false
+  
+  -- if an automation task was paused, unpause it now.
+  if parthiaAutomationPaused then
+    parthiaAutomationRunning = parthiaAutomationPaused
+    parthiaAutomationPaused = false
+  end --if parthiaAutomationPaused then
+  
 end -- function parthiaAutomationInterruptStop()</script>
 						<eventHandlerList />
 					</Script>
@@ -10217,17 +10234,41 @@ function parthiaAutomationInterruptStart(groupName)
   
   -- Setting the interrupt running variable, to keep track of this interrupt
   parthiaAutomationInterruptRunning = groupName
+  
+  -- if automation is running, pause it.
+  if parthiaAutomationRunning then
+    parthiaAutomationPaused = parthiaAutomationRunning
+    parthiaAutomationRunning = false
+  end  -- if parthiaAutomationRunning then
 
   -- message the player that this interrupt occured.
-  pecho("Interrupt "..groupName.." triggered.\n")
+  pecho("\nInterrupt "..groupName.." triggered.\n")
   
+  -- collect the trigger that will call the first command for this interrupt
+  local firstCommandTrigger = tecSettings.automationInterrupt[groupName].firstCommandTrigger
+
   -- If automation is not currently running we have to start it to run this interrupt.
-  if not parthiaAutomationRunning then
-    debugToDisplay("parthiaAutomationInterruptStart, calling parthiaAutomationCall.")
-    tempTimer(1, [[parthiaAutomationCall()]])
-  end  -- if not parthiaAutomationRunning then
+  if parthiaToBoolean(firstCommandTrigger) then
+    
+    --Attempt to convert the trigger to a number
+    timedTrigger = tonumber(firstCommandTrigger)  -- If it is not a number automationDelay will be null
+
+    --If this custom trigger is a time trigger create a temp timer.
+    if timedTrigger then
+      
+      -- create timer to call this function again
+      parthiaAutomationTimerID = tempTimer(timedTrigger, [[parthiaAutomationCall()]])
+      
+    else  -- This trigger is a message based trigger. Create a regex trigger.
+      
+      -- Wait for the current line check to end. Otherwise we will enter a creation loop and mudlet will crash
+      tempTimer(1, [[parthiaCreateAutomationRegexTrigger("]]..firstCommandTrigger..[[")]])
+      
+    end  -- if timedTrigger then
+    
+  end  -- if parthiaToBoolean(firstCommandTrigger) then
   
-  -- If automation is already running parthiaAutomationCall is be called automatically, running this interrupt.
+  -- If the user set the first command trigger to 0, parthiaAutomationCall will be called when 'You are no longer busy.' trigger triggers.
     
 end -- function parthiaAutomationInterruptStart(groupName)</script>
 						<eventHandlerList />

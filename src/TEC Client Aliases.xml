@@ -1317,7 +1317,7 @@ parthiaAutomationUpdate("automationInterrupt", unpack(matches, 2))</script>
 					<regex>^parthia\s+interrupt\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\s+]+),\s+(.+)~\s+(\d+),\s+(\d+)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>parthia interrupt [group name], [repeat], [pattern]</name>
+					<name>parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]</name>
 					<script>--[[
 Creates an interrupt group
 
@@ -1335,7 +1335,7 @@ matches[3], second item captured in a capture group ()
 parthiaAutomationCreateInterruptGroup(unpack(matches, 2))</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^parthia\s+interrupt\s+([a-zA-Z0-9\s+]+),\s+(\d+),\s+(.+)$</regex>
+					<regex>^parthia\s+interrupt\s+([a-zA-Z0-9\s+]+),\s+(\d+),\s+(.+)~\s+(.+)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia automation start</name>
