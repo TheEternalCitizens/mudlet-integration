@@ -1370,6 +1370,14 @@ parthiaAutomationUpdateHelp()</script>
 					<regex>^parthia automation create$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
+					<name>parthia interrupt stop</name>
+					<script>-- stop the active interrupt
+parthiaAutomationInterruptStop()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia interrupt stop$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
 					<name>parthia automation groups</name>
 					<script>parthiaAutomationShowGroups("automation")</script>
 					<command></command>
