@@ -2272,7 +2272,7 @@ Patter example: &lt;/font&gt;&lt;font color="#ff9b00"&gt;You are no longer busy.
 
 -- Handle automation tasks.
 -- Check if automation is running
-if parthiaAutomationRunning then
+if parthiaAutomationRunning or parthiaAutomationInterruptRunning then
   debugToDisplay("pathiaAutomation trigger You are no longer busy called.")
   
   -- Set local variables this function will use.

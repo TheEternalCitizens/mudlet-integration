@@ -9108,6 +9108,16 @@ How automation interupts are handled-------------------------------------------
     parthiaAutomationCreateInterruptGroup, needs better messaging yet!
     remember to save reminder when an interrupt is created or updated.
     Change the message when an interrupt is updated, it does not show pattern being updated.
+    interrupts auto load when not using welcome room character
+      Make option to disable autoload
+    help system
+    aliases that have ~ in them, move the patterns to the end of the command
+    edit buttons load the settings from the group name being edited.
+    parthia interrupt stop, should have an echo
+    issue found, interrupt triggers, automation returns to running, but could not because the target was dead.
+      Later I run a command to start automation back up again, slt.
+      Rather than returning to automation, the interrupt command is called.
+      Looks like interrupt running variable and automation never swap back?
   
   Interupt groups are stored in tecsettings.automationInterrupts
   Triggers for interrupts are stored in tecSettings.automationInterruptTriggers
@@ -9814,7 +9824,7 @@ end -- function parthiaAutomationStop()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
-						<name>parthiaAutomationIncreaseGroupIteration()</name>
+						<name>parthiaAutomationIncreaseGroupIteration(skipIterationCount)</name>
 						<packageName></packageName>
 						<script>--[[
 Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
@@ -9830,14 +9840,15 @@ Keys in the automation group name may not be in order or correctly sequenced.
     We have to find the next highest possible iterator we can use.
 ]]--
 
-function parthiaAutomationIncreaseGroupIteration()
+function parthiaAutomationIncreaseGroupIteration(skipIterationCount)
 
-  debugToDisplay("ParthiaAutomationIncreaseGroupIteration called.")
+  debugToDisplay("ParthiaAutomationIncreaseGroupIteration called. skipIterationCount: "..tostring(skipIterationCount))
 
   -- Set local variables this function will use.
   local groupName = false
   local groupRepeat = 1
   local groupPosition = false
+  local iterationCounter = 0
   
   -- Now create the local variables collecting from global variables of the automation type being run.
   if parthiaAutomationInterruptRunning then
@@ -9847,6 +9858,7 @@ function parthiaAutomationIncreaseGroupIteration()
     --collecct group position from the global interrupt variable
     groupPosition = parthiaAutomationInterruptGroupPosition
     automationType = "automationInterrupt"
+    iterationCounter = parthiaAutomationInterruptIterationCounter
   else  -- a standard automation task is running, collect from it.
     -- collect group name and repeat from standard automation task
     groupName = parthiaAutomationRunning["groupName"]
@@ -9854,6 +9866,7 @@ function parthiaAutomationIncreaseGroupIteration()
     -- collect group position from the global variable
     groupPosition = parthiaAutomationGroupPosition
     automationType = "automation"
+    iterationCounter = parthiaAutomationIterationCounter
   end -- if parthiaAutomationInterruptRunning then
   
   debugToDisplay("\tgroupName: "..groupName.." groupRepeat: "..groupRepeat)
@@ -9898,12 +9911,13 @@ function parthiaAutomationIncreaseGroupIteration()
     
     -- Check if we are about to iterate past the automationGroupKeySet
     -- Set the automations iterator to the first element in this automation groups sequence
-    if key == #automationGroupKeySet then
+    -- Skip group iteration count if function reveiced true
+    if key == #automationGroupKeySet and not skipIterationCount then
       -- set the group iterator to the first element in the groups command table
       setGlobalAutomationGroupPosition(automationGroupKeySet[1])
       -- Increase the automation rotation iterator by 1.
-      setGlobalAutomationIterationCounter(parthiaAutomationIterationCounter + 1)
-      debugToDisplay("parthiaAutomationIncreaseGroupIteration ")
+      setGlobalAutomationIterationCounter(iterationCounter + 1)
+      debugToDisplay("parthiaAutomationIncreaseGroupIteration increased iterationCounter.")
     end -- if key == #automationGroupKeySet
   
   end  -- for key, value in pairs(automationGroupKeySet) do
@@ -10235,9 +10249,6 @@ function parthiaAutomationInterruptStart(groupName)
     return false
   end -- if not tecSettings.automation[groupName] then
   
-  --Setting automation first run to true, so we can iterate through the automation group properly
-  parthiaAutomationFirstRun = true
-  
   -- Setting the interrupt running variable, to keep track of this interrupt
   parthiaAutomationInterruptRunning = groupName
   
@@ -10246,6 +10257,15 @@ function parthiaAutomationInterruptStart(groupName)
     parthiaAutomationPaused = parthiaAutomationRunning
     parthiaAutomationRunning = false
   end  -- if parthiaAutomationRunning then
+  
+  -- interrupts must have their iterations set before being called, they need to be indexed in the 'You are no longer busy.' trigger.
+  parthiaAutomationFirstRun = false
+  -- increase group iteration to first element, but skip full group iteration count check.
+  parthiaAutomationIncreaseGroupIteration(true)
+  
+  -- force parthiaAutomationCall to skip group iteration
+  parthiaAutomationRepeatCmdOnFailure = true
+  parthiaLastCommandSuccess = false
 
   -- message the player that this interrupt occured.
   pecho("\nInterrupt "..groupName.." triggered.\n")
