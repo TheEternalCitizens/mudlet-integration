@@ -9506,6 +9506,12 @@ function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern, 
   tecSettings.automationInterrupt[groupName].pattern = pattern
   tecSettings.automationInterrupt[groupName].firstCommandTrigger = firstCommandTrigger
   
+  -- if this interrupt was enabled, toggle it off than on to update it's pattern which may have changed
+  if tecSettings.automationInterrupt[groupName].enabled then
+    parthiaAutomationInterruptToggleState(groupName)  -- disable the interrupt
+    parthiaAutomationInterruptToggleState(groupName)  -- enable the interrupt with the updates.
+  end  -- if tecSettings.automationInterrupt[groupName].enabled then
+  
   return true
 
 end -- function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat)</script>
@@ -10246,6 +10252,8 @@ function parthiaAutomationInterruptStart(groupName)
   
   -- collect the trigger that will call the first command for this interrupt
   local firstCommandTrigger = tecSettings.automationInterrupt[groupName].firstCommandTrigger
+  
+  debugToDisplay("parthiaAutomationInterruptStart, firstCommandTrigger: "..firstCommandTrigger)
 
   -- If automation is not currently running we have to start it to run this interrupt.
   if parthiaToBoolean(firstCommandTrigger) then
@@ -10255,16 +10263,24 @@ function parthiaAutomationInterruptStart(groupName)
 
     --If this custom trigger is a time trigger create a temp timer.
     if timedTrigger then
+    
+      debugToDisplay("parthiaAutomationInterruptStart, timed trigger")
       
       -- create timer to call this function again
       parthiaAutomationTimerID = tempTimer(timedTrigger, [[parthiaAutomationCall()]])
       
     else  -- This trigger is a message based trigger. Create a regex trigger.
       
+      debugToDisplay("parthiaAutomationInterruptStart, regex trigger")
+      
       -- Wait for the current line check to end. Otherwise we will enter a creation loop and mudlet will crash
       tempTimer(1, [[parthiaCreateAutomationRegexTrigger("]]..firstCommandTrigger..[[")]])
       
     end  -- if timedTrigger then
+    
+  else -- this triggers when "You are no longer busy." is called.
+  
+    debugToDisplay("parthiaAutomationInterruptStart, 'You are no longer busy.' trigger.")
     
   end  -- if parthiaToBoolean(firstCommandTrigger) then
   
