@@ -9475,7 +9475,7 @@ end -- function parthiaAutomationTriggerHelp()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
-						<name>parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern)</name>
+						<name>parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern, firstCommandTrigger)</name>
 						<packageName></packageName>
 						<script>--[[
 Creates an automation interrupt group.
