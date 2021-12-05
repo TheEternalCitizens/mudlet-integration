@@ -2281,7 +2281,7 @@ if parthiaAutomationRunning then
   local groupPosition = false
   
   -- An interrupt automation is running, it is the mmmain priority
-  if parthiaAutomationInterruptRunning then
+  if parthiaAutomationInterruptRunning or parthiaAutomationInterruptRunning then
     
     --collect group name and repeat from parthiaAutomationInterruptRunning
     groupName = parthiaAutomationInterruptRunning
