@@ -9108,6 +9108,12 @@ How automation interupts are handled-------------------------------------------
     parthiaAutomationCreateInterruptGroup, needs better messaging yet!
     remember to save reminder when an interrupt is created or updated.
     Change the message when an interrupt is updated, it does not show pattern being updated.
+    interrupts auto load when not using welcome room character
+      Make option to disable autoload
+    help system
+    aliases that have ~ in them, move the patterns to the end of the command
+    edit buttons load the settings from the group name being edited.
+    parthia interrupt stop, should have an echo
   
   Interupt groups are stored in tecsettings.automationInterrupts
   Triggers for interrupts are stored in tecSettings.automationInterruptTriggers
@@ -9838,6 +9844,7 @@ function parthiaAutomationIncreaseGroupIteration()
   local groupName = false
   local groupRepeat = 1
   local groupPosition = false
+  local iterationCounter = 0
   
   -- Now create the local variables collecting from global variables of the automation type being run.
   if parthiaAutomationInterruptRunning then
@@ -9847,6 +9854,7 @@ function parthiaAutomationIncreaseGroupIteration()
     --collecct group position from the global interrupt variable
     groupPosition = parthiaAutomationInterruptGroupPosition
     automationType = "automationInterrupt"
+    iterationCounter = parthiaAutomationInterruptIterationCounter
   else  -- a standard automation task is running, collect from it.
     -- collect group name and repeat from standard automation task
     groupName = parthiaAutomationRunning["groupName"]
@@ -9854,6 +9862,7 @@ function parthiaAutomationIncreaseGroupIteration()
     -- collect group position from the global variable
     groupPosition = parthiaAutomationGroupPosition
     automationType = "automation"
+    iterationCounter = parthiaAutomationIterationCounter
   end -- if parthiaAutomationInterruptRunning then
   
   debugToDisplay("\tgroupName: "..groupName.." groupRepeat: "..groupRepeat)
@@ -9902,8 +9911,8 @@ function parthiaAutomationIncreaseGroupIteration()
       -- set the group iterator to the first element in the groups command table
       setGlobalAutomationGroupPosition(automationGroupKeySet[1])
       -- Increase the automation rotation iterator by 1.
-      setGlobalAutomationIterationCounter(parthiaAutomationIterationCounter + 1)
-      debugToDisplay("parthiaAutomationIncreaseGroupIteration ")
+      setGlobalAutomationIterationCounter(iterationCounter + 1)
+      debugToDisplay("parthiaAutomationIncreaseGroupIteration increased iterationCounter")
     end -- if key == #automationGroupKeySet
   
   end  -- for key, value in pairs(automationGroupKeySet) do
