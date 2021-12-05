@@ -9113,7 +9113,7 @@ How automation interupts are handled-------------------------------------------
     help system
     aliases that have ~ in them, move the patterns to the end of the command
     edit buttons load the settings from the group name being edited.
-    parthia interrupt stop, should have an echo
+    Windows for automation and interrupt groups
   
   Interupt groups are stored in tecsettings.automationInterrupts
   Triggers for interrupts are stored in tecSettings.automationInterruptTriggers
@@ -10000,6 +10000,19 @@ Example of group creation:
 ]]--
 
 function parthiaAutomationShowGroups(automationType, groupName, removeElement, groupPosition)
+
+  debugToDisplay("parthiaAutomationShowGroups:")
+  debugToDisplay("\tautomationType, "..automationType)
+  debugToDisplay("\tgroupName, "..tostring(groupName))
+  debugToDisplay("\tremoveElement, "..tostring(removeElement))
+  debugToDisplay("\tgroupPosition, "..tostring(groupPosition))
+  
+  -- Create a variable to use in template commands and command calls
+  local automationTypeName = 'automation'
+  if automationType == 'automationInterrupt' then automationTypeName = 'interrupt' end
+  
+  --convert groupPosition to a number
+  local groupPosition = tonumber(groupPosition)
   
   --show information on the group name provided.
   if groupName then
@@ -10078,12 +10091,12 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
         
         -- provide an easy method to edit this group position
         pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Edit: "..groupName.." position "..groupPosition, 
-        [[printCmdLine("parthia automation ]]..groupName..[[, ]]..groupPosition..[[ = replace_with_your_command, 0~ 0, 0")]],
+        [[printCmdLine("parthia ]]..automationTypeName..[[ ]]..groupName..[[, ]]..groupPosition..[[ = replace_with_your_command, 0~ 0, 0")]],
         "change group position "..groupPosition.." for group "..groupName, true)
         
         -- Provide an easy method to remove this group.
         pechoLink("\t&lt;:maroon&gt;Remove "..groupName.." position "..groupPosition, 
-        [[expandAlias("parthia automation groups ]]..groupName..[[, delete ]]..groupPosition..[[")]],
+        [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[, delete ]]..groupPosition..[[")]],
         "delete group position "..groupPosition.." for group "..groupName, true)
         
         -- Collect variables from this automation group, at the correct position.
@@ -10145,23 +10158,23 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
       
       -- Start group button
       pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Start: "..groupName..namePadding, 
-        [[expandAlias("parthia automation ]]..groupName..[[, 0")]],
-        "parthia automation "..groupName..", 0", true)
+        [[expandAlias("parthia ]]..automationTypeName..[[ ]]..groupName..[[, 0")]],
+        "parthia "..automationTypeName.." "..groupName..", 0", true)
         
       -- Show group button
       pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Show: "..groupName..namePadding, 
-        [[expandAlias("parthia automation groups ]]..groupName..[[")]],
-        "parthia automation groups "..groupName, true)
+        [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[")]],
+        "parthia "..automationTypeName.." groups "..groupName, true)
       
       -- Edit group button
       pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Edit: "..groupName..namePadding, 
-        [[printCmdLine("parthia automation ]]..groupName..[[, 1 = replace_with_your_command, 0~ 0, 0")]],
-        "parthia automation groups "..groupName, true)
+        [[printCmdLine("parthia ]]..automationTypeName..[[ ]]..groupName..[[, 1 = replace_with_your_command, 0~ 0, 0")]],
+        "parthia "..automationTypeName.." groups "..groupName, true)
               
       -- Remove group button
       pechoLink("\t&lt;:maroon&gt;Remove: "..groupName, 
-        [[expandAlias("parthia automation groups ]]..groupName..[[, delete")]],
-        "parthia automation groups "..groupName..", delete", true)
+        [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[, delete")]],
+        "parthia "..automationTypeName.." groups "..groupName..", delete", true)
       
       pecho("\n\n")
       
