@@ -1372,7 +1372,24 @@ parthiaAutomationUpdateHelp()</script>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia interrupt stop</name>
 					<script>-- stop the active interrupt
-parthiaAutomationInterruptStop()</script>
+
+--if there is an interrupt running, stop it and show a message
+if parthiaAutomationInterruptRunning then
+  
+  local interruptName = parthiaAutomationInterruptRunning
+  
+  -- if the stop was successful
+  if parthiaAutomationInterruptStop() then
+    pecho("Interrupt "..interruptName.." stopped.")
+  else  -- interrupt task did not stop succesfully, throw an error
+    tecErrorNotification("aliase `parthia interrupt stop`, failed to stop the interrupt task.", true)
+  end  -- if parthiaAutomationInterruptStop() then
+  
+else  -- There is no interrupt active.
+
+  pecho("You have no interrupts currently active.")
+  
+end  -- if parthiaAutomationInterruptRunning then</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia interrupt stop$</regex>

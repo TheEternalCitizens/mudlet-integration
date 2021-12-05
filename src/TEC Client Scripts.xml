@@ -10216,6 +10216,7 @@ Stop the currently running interrupt automation task.
 ]]--
 
 function parthiaAutomationInterruptStop()
+
   parthiaAutomationInterruptRunning = false
   parthiaAutomationInterruptIterationCounter = 0
   parthiaAutomationInterruptGroupPosition = false
@@ -10226,9 +10227,9 @@ function parthiaAutomationInterruptStop()
     parthiaAutomationPaused = false
   end --if parthiaAutomationPaused then
   
-  pecho("Interrrupt stop called.")
-  
   debugToDisplay("parthiaAutomationInterruptStop completed succesfully.")
+  
+  return true
   
 end -- function parthiaAutomationInterruptStop()</script>
 						<eventHandlerList />
