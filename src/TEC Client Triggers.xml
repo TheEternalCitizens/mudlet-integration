@@ -2272,7 +2272,7 @@ Patter example: &lt;/font&gt;&lt;font color="#ff9b00"&gt;You are no longer busy.
 
 -- Handle automation tasks.
 -- Check if automation is running
-if parthiaAutomationRunning then
+if parthiaAutomationRunning or parthiaAutomationInterruptRunning then
   debugToDisplay("pathiaAutomation trigger You are no longer busy called.")
   
   -- Set local variables this function will use.
@@ -2281,13 +2281,37 @@ if parthiaAutomationRunning then
   local groupPosition = false
   
   -- An interrupt automation is running, it is the mmmain priority
-  if parthiaAutomationInterruptRunning or parthiaAutomationInterruptRunning then
+  if parthiaAutomationInterruptRunning then
     
     --collect group name and repeat from parthiaAutomationInterruptRunning
     groupName = parthiaAutomationInterruptRunning
     groupRepeat = tecSettings.automationInterrupt[groupName].interruptRepeat
     --collecct group position from the global interrupt variable
     groupPosition = parthiaAutomationInterruptGroupPosition
+    
+    -- if groupPosition is not yet set, collect it now.
+    if not groupPosition then
+    
+      --used to collect all keys in this automation group.
+      local automationGroupKeySet = {}
+      
+      -- Gather all the keys for the group and sort them.
+      for key, _ in pairs(tecSettings.automationInterrupt[groupName]) do
+        -- Do not insert pattern or interruptRepeat used on interrupt groups, only numrical keys
+        if tonumber(key) then
+          table.insert(automationGroupKeySet, key)
+        end  -- if tonumber(key) then
+      end -- for key, _ in pairs(tecSettings[automationType][groupName]) do
+      
+      -- Sort the table 
+      table.sort(automationGroupKeySet)
+      
+      -- Returning the lowest element in the  automation group
+      groupPosition = automationGroupKeySet[1]
+      
+      debugToDisplay("'You are no longer busy.' trigger groupPosition false, collected position: ")
+    
+    end  -- if not groupPosition then
     
     -- Check if this interrupt is called off of a timer or this trigger
     -- If automation trigger for this automation group is 0, automation is called by this trigger.
