@@ -9700,10 +9700,10 @@ function parthiaAutomationCall()
   if parthiaToBoolean(groupRepeat) then  -- Only check if a group repeat was specified.
     if iterationCounter &gt;= tonumber(groupRepeat) then  -- this has iterated more than group repeat specified
       if automationType == "automationInterrupt" then
-        pecho("Interrupt "..groupName.." completed.\n")
+        pecho("\nInterrupt "..groupName.." completed.\n")
         parthiaAutomationInterruptStop()
       else
-        pecho("Automation task "..groupName.." complete.\n")
+        pecho("\nAutomation task "..groupName.." complete.\n")
         parthiaAutomationStop()  -- Stop automation.
       end -- if automationType == "automationInterrupt" then
       return true  -- stop current automation call also.
@@ -10928,8 +10928,9 @@ function sortCombatActions(stringToCheck)
     end --if getHelpDevs()
     
   --if the attack is one the player is using
-  elseif  stringToCheck:match("%] You") or 
-          stringToCheck:match(", you") then
+  elseif  stringToCheck:match("%] You") or -- common action echo
+          stringToCheck:match(", you") -- common action echo
+          then
           
     -- record if this command was successful or not.
     parthiaLastCommandSuccess = commandSuccessful(stringToCheck)

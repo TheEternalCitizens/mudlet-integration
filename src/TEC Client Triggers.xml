@@ -2102,7 +2102,7 @@ text to trigger on &lt;/font&gt;&lt;font color="#00CD20"&gt;[Success: 5, Roll: 7
 ]]--
 
 --if player has help devs or they are running the automation system.
-if getHelpDevs() or parthiaAutomationRunning then
+if getHelpDevs() or parthiaAutomationRunning or parthiaAutomationInterruptRunning then
   sortActions() --sort and collects actions into Help The Devs tables
 end --if getHelpDevs()</script>
 				<triggerType>0</triggerType>
