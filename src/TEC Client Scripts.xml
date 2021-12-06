@@ -10145,9 +10145,11 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
       end  --if #groupName &gt; longestGroupNameSize then
     end  -- for groupName, _ in pairs(tecSettings[automationType]) do
     
-    pecho("You can click a blue link below to start or show that group's information. You can click a red link to remove that group.\n")
+    pecho("You can click a blue link below to start or show that group's information. You can click a red link to remove that group.\n\n")
     
     for groupName, _ in pairs(tecSettings[automationType]) do
+    
+      pecho(groupName.."\n")
     
       --create spacing so ann the columns are spaced evenly.
       local namePaddingSize = longestGroupNameSize - #groupName
@@ -10156,23 +10158,44 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
         namePadding = namePadding.." "
       end  -- for i=1, namePaddingSize, 1 do
       
-      -- Start group button
-      pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Start: "..groupName..namePadding, 
-        [[expandAlias("parthia ]]..automationTypeName..[[ ]]..groupName..[[, 0")]],
-        "parthia "..automationTypeName.." "..groupName..", 0", true)
+      -- Make a Start button for automation OR an enable disable button for interrupts
+      if automationType == 'automationInterrupt' then
+        
+        local toggleInterruptButtonColor = "ansi_red"
+        local toggleInterruptButtonState = "Inactive"
+        
+        -- This intterrupt is currently enabled. Set the color to standard blue
+        if tecSettings[automationType][groupName].enabled then
+          toggleInterruptButtonColor = "ansi_green"
+          toggleInterruptButtonState = "Active  "
+        end  -- if tecSettings[automationType][groupName].enabled then
+        
+        -- Display the button
+        pechoLink("\t&lt;:"..toggleInterruptButtonColor.."&gt;Toggle: "..toggleInterruptButtonState,
+                  [[expandAlias("parthia interrupt toggle ]]..groupName..[[")]],
+                  "parthia interrupt toggle "..groupName, true)
+                  --parthia interrupt toggle [groupName]
+        
+      else  -- This is a standard automation group
+        
+        pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Start", 
+          [[expandAlias("parthia ]]..automationTypeName..[[ ]]..groupName..[[, 0")]],
+          "parthia "..automationTypeName.." "..groupName..", 0", true)
+          
+      end  -- if automationType == 'automationInterrupt' then
         
       -- Show group button
-      pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Show: "..groupName..namePadding, 
+      pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Show", 
         [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[")]],
         "parthia "..automationTypeName.." groups "..groupName, true)
       
       -- Edit group button
-      pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Edit: "..groupName..namePadding, 
+      pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
         [[printCmdLine("parthia ]]..automationTypeName..[[ ]]..groupName..[[, 1 = replace_with_your_command, 0~ 0, 0")]],
         "parthia "..automationTypeName.." groups "..groupName, true)
               
       -- Remove group button
-      pechoLink("\t&lt;:maroon&gt;Remove: "..groupName, 
+      pechoLink("\t&lt;:ansi_red&gt;Remove", 
         [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[, delete")]],
         "parthia "..automationTypeName.." groups "..groupName..", delete", true)
       
