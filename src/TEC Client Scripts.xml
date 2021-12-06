@@ -10086,23 +10086,23 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
       -- This is what allows the function to show this group in a numerical order. Not the order it was created in.
       for _, groupPosition in pairs(sortedGroupNameTable) do
         
+        -- Collect variables from this automation group, at the correct position.
+        local automationCommand = tecSettings[automationType][groupName][groupPosition].automationCommand
+        local automationTrigger = tecSettings[automationType][groupName][groupPosition].automationTrigger
+        local repeatOnFail = tecSettings[automationType][groupName][groupPosition].repeatOnFail
+        
         -- Show the group position
         pecho("\tGroup Position: "..groupPosition..", ")
         
         -- provide an easy method to edit this group position
         pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Edit", 
-        [[printCmdLine("parthia ]]..automationTypeName..[[ ]]..groupName..[[, ]]..groupPosition..[[ = replace_with_your_command, 0~ 0, 0")]],
+        [[printCmdLine("parthia ]]..automationTypeName..[[ ]]..groupName..[[, ]]..groupPosition..[[ = ]]..automationCommand..[[, ]]..automationTrigger..[[~ ]]..repeatOnFail..[[, 0")]],
         "change group position "..groupPosition.." for group "..groupName, true)
         
         -- Provide an easy method to remove this group.
         pechoLink("\t&lt;:ansi_red&gt;Remove", 
         [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[, delete ]]..groupPosition..[[")]],
         "delete group position "..groupPosition.." for group "..groupName, true)
-        
-        -- Collect variables from this automation group, at the correct position.
-        local automationCommand = tecSettings[automationType][groupName][groupPosition].automationCommand
-        local automationTrigger = tecSettings[automationType][groupName][groupPosition].automationTrigger
-        local repeatOnFail = tecSettings[automationType][groupName][groupPosition].repeatOnFail
         
         pecho("\n\t\tCommand called: "..automationCommand.."\n")
         
