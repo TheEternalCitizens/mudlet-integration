@@ -10150,13 +10150,6 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
     for groupName, _ in pairs(tecSettings[automationType]) do
     
       pecho(groupName.."\n")
-    
-      --create spacing so ann the columns are spaced evenly.
-      local namePaddingSize = longestGroupNameSize - #groupName
-      local namePadding = ''
-      for i=1, namePaddingSize, 1 do
-        namePadding = namePadding.." "
-      end  -- for i=1, namePaddingSize, 1 do
       
       -- Make a Start button for automation OR an enable disable button for interrupts
       if automationType == 'automationInterrupt' then
