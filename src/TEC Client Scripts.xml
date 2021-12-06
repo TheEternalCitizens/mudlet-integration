@@ -10151,6 +10151,12 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
     
       pecho(groupName.."\n")
       
+      -- collect variables from interrupts, on standard automations these would just be nil
+      local groupEnabled = tecSettings[automationType][groupName].enabled
+      local firstCommandTrigger = tecSettings[automationType][groupName].firstCommandTrigger
+      local groupRepeat = tecSettings[automationType][groupName].interruptRepeat
+      local callPattern = tecSettings[automationType][groupName].pattern
+      
       -- Make a Start button for automation OR an enable disable button for interrupts
       if automationType == 'automationInterrupt' then
         
@@ -10158,7 +10164,7 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
         local toggleInterruptButtonState = "Inactive"
         
         -- This intterrupt is currently enabled. Set the color to standard blue
-        if tecSettings[automationType][groupName].enabled then
+        if groupEnabled then
           toggleInterruptButtonColor = "ansi_green"
           toggleInterruptButtonState = "Active  "
         end  -- if tecSettings[automationType][groupName].enabled then
@@ -10182,10 +10188,20 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
         [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[")]],
         "parthia "..automationTypeName.." groups "..groupName, true)
       
-      -- Edit group button
-      pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
-        [[printCmdLine("parthia ]]..automationTypeName..[[ ]]..groupName..[[, 1 = replace_with_your_command, 0~ 0, 0")]],
-        "parthia "..automationTypeName.." groups "..groupName, true)
+      --Make a customized edit button for interrupts vs automations
+      if automationType == 'automationInterrupt' then
+        pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
+        --parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]
+        [[printCmdLine("parthia interrupt ]]..groupName..[[, ]]..groupRepeat..[[, ]]..callPattern..[[~ ]]..firstCommandTrigger..[[")]],
+        "fill command line with edit command for "..groupName, true)
+      else  -- This is a standard automation
+      
+        -- Edit group button
+        pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
+          [[printCmdLine("parthia automation ]]..groupName..[[, 1 = replace_with_your_command, 0~ 0, 0")]],
+          "fill command line with edit command for "..groupName, true)
+      
+      end  -- if automationType == 'automationInterrupt' then
               
       -- Remove group button
       pechoLink("\t&lt;:ansi_red&gt;Remove", 
