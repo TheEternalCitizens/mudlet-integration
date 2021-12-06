@@ -9112,7 +9112,6 @@ How automation interupts are handled-------------------------------------------
       Make option to disable autoload
     help system
     aliases that have ~ in them, move the patterns to the end of the command
-    edit buttons load the settings from the group name being edited.
     Windows for automation and interrupt groups
   
   Interupt groups are stored in tecsettings.automationInterrupts
@@ -10120,7 +10119,7 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
 
         else -- the trigger is not a custom trigger
         
-          pecho("\t\tNext command called when you see: 'You are no longer busy.'.\n")
+          pecho("\t\tNext command called when you see: 'You are no longer busy.'\n")
           
         end  -- if parthiaToBoolean(automationGroup.automationTrigger) then
         
@@ -10190,10 +10189,12 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
       
       --Make a customized edit button for interrupts vs automations
       if automationType == 'automationInterrupt' then
+      
         pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
         --parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]
         [[printCmdLine("parthia interrupt ]]..groupName..[[, ]]..groupRepeat..[[, ]]..callPattern..[[~ ]]..firstCommandTrigger..[[")]],
         "fill command line with edit command for "..groupName, true)
+        
       else  -- This is a standard automation
       
         -- Edit group button
@@ -10207,6 +10208,37 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
       pechoLink("\t&lt;:ansi_red&gt;Remove", 
         [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[, delete")]],
         "parthia "..automationTypeName.." groups "..groupName..", delete", true)
+        
+      -- Show interrupt specific data
+      if automationType == 'automationInterrupt' then
+      
+        pecho("\n")
+        
+        --groupEnabled = tecSettings[automationType][groupName].enabled
+        --local firstCommandTrigger = tecSettings[automationType][groupName].firstCommandTrigger
+        pecho("\tCall pattern: `"..callPattern.."`\n")
+        pecho("\tGroup repeat: "..groupRepeat.."\n")
+        
+        -- Show when the first command is done
+        if parthiaToBoolean(firstCommandTrigger) then
+        
+          --Attempt to convert the trigger to a number
+          timedTrigger = tonumber(firstCommandTrigger)  -- If it is not a number automationDelay will be null
+      
+          --If this custom trigger is a time trigger create a temp timer.
+          if timedTrigger then
+            pecho("\tSeconds to wait before calling next command: "..firstCommandTrigger)
+          else -- this is a custom trigger
+            pecho("\tNext command called when you see: '"..firstCommandTrigger.."'")
+          end  -- if timedTrigger then
+
+        else -- the trigger is not a custom trigger
+        
+          pecho("\tNext command called when you see: 'You are no longer busy.'")
+          
+        end  -- if parthiaToBoolean(firstCommandTrigger) then
+      
+      end  -- if automationType == 'automationInterrupt' then
       
       pecho("\n\n")
       
