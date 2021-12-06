@@ -10090,12 +10090,12 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
         pecho("\tGroup Position: "..groupPosition..", ")
         
         -- provide an easy method to edit this group position
-        pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Edit: "..groupName.." position "..groupPosition, 
+        pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Edit", 
         [[printCmdLine("parthia ]]..automationTypeName..[[ ]]..groupName..[[, ]]..groupPosition..[[ = replace_with_your_command, 0~ 0, 0")]],
         "change group position "..groupPosition.." for group "..groupName, true)
         
         -- Provide an easy method to remove this group.
-        pechoLink("\t&lt;:maroon&gt;Remove "..groupName.." position "..groupPosition, 
+        pechoLink("\t&lt;:ansi_red&gt;Remove", 
         [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[, delete ]]..groupPosition..[[")]],
         "delete group position "..groupPosition.." for group "..groupName, true)
         
