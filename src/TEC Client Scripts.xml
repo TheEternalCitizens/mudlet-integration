@@ -15489,6 +15489,75 @@ end --end function keep square.
 UIManagerRegisterWindow(MultiWindow.back) --send the window to the UI Manager</script>
 				<eventHandlerList />
 			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>Interrupts Window</name>
+				<packageName></packageName>
+				<script>intteruptsWindow = Geyser.Container:new({
+  name = "Interrupts",    -- give it a unique name here
+  x=0, y=0,                   
+  width = 0, height=0, 
+})
+
+--box that will store the miniconsoles
+interruptsWindowBack = Geyser.Label:new({
+  name = "interruptsWindowBack",
+  x = 0, --horizontal position
+  y = 0, --adjusted for tabs
+  width = "100%",
+  height = "100%"
+},intteruptsWindow)
+
+interruptsWindowBack:setStyleSheet(labelsStyle) --set to default label style
+
+--This are the miniconsoles that will hold the text
+interruptsWindowConsole = Geyser.MiniConsole:new({
+  name = "interruptsWindowConsole",
+  x = 0, --%horizontally position in parent
+  y = 0, --%vertical position in parent
+  width = "100%", --% of parent
+  height = "100%", --% of parent
+  autoWrap = true, --allows text to wrap if too long
+  fontSize = getTECFont(), --in variables
+  font = getFont(), --get font type from main
+  --scrollBar = true,
+},interruptsWindowBack)
+interruptsWindowConsole:setColor(getBgColor()) --set miniconsoles to main consol BG color
+interruptsWindowConsole:raise()
+
+function interruptsWindowResize()
+
+  --Resize the back label by 6. We want a 3px border around the entire window
+  interruptsWindowBack:resize(tostring(intteruptsWindow:get_width() - 0)
+    , tostring(intteruptsWindow:get_height() - 0))
+  interruptsWindowBack:move (0, 0) --left and top borders
+
+  --Resize the room character window by 6. We want a 3px border around the entire window
+  interruptsWindowConsole:resize(tostring(interruptsWindowBack:get_width() - 0)
+    , tostring(interruptsWindowBack:get_height() - 0))
+  interruptsWindowConsole:move (0, 0) --left and top borders
+  
+  tecScrollBarCheck("interruptsWindowConsole") --Checks if a scroll bar is needed.
+
+  if getTECDisplayDebugMode() then --if display debug mode is on
+    debugToDisplay("Room Character Window,"
+      .." interruptsWindowBack width: "..interruptsWindowBack:get_width()
+      .." interruptsWindowBack Height: "..interruptsWindowBack:get_height()
+      .." interruptsWindowConsole Width: "..interruptsWindowConsole:get_width()
+      .." interruptsWindowConsole Height: "..interruptsWindowConsole:get_height()
+    )--end debugToDisplay
+  end --end if display debug is enabled.
+
+end --interruptsWindowResize()
+
+--set location for container in GUIframe.
+intteruptsWindow.GUIframeLocation = "topleft"
+--add cobntainer to UI manager.
+UIManagerRegisterWindow(intteruptsWindow)
+
+--tecRefreshSettingsWindow() --Refreshes text in settings window.
+--interruptsWindowResize() --resize the Room Character window now</script>
+				<eventHandlerList />
+			</Script>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
 			<name>Events</name>
@@ -15511,27 +15580,30 @@ UIManagerRegisterWindow(MultiWindow.back) --send the window to the UI Manager</s
 --If I Recall the last event would not occur.
 
 function guiChange()
-	setMainWindowAutoWrap() --adjusts word wrap for main window.
-	if getTECDisplayDebugMode() then geyserDebug() end --if displaydebug is on
+  setMainWindowAutoWrap() --adjusts word wrap for main window.
+  if getTECDisplayDebugMode() then geyserDebug() end --if displaydebug is on
   --only resize windows managed by UIManager if they are enabled
-	if UIManagerSettings[tecCompass.window.name] then --if window exists chek if it is enabled
+  if UIManagerSettings[tecCompass.window.name] then --if window exists chek if it is enabled
     if not UIManagerSettings[tecCompass.window.name].disabled then tecCompass.drawKeepSquare() end --Keep the windowed compass square
   end --if UIManagerSettings[tecCompass.window.name]
   if UIManagerSettings[MultiWindow.back.name] then --if window exists chek if it is enabled
     if not UIManagerSettings[MultiWindow.back.name].disabled then MultiWindow.redrawWindows() end--keep the compass in the multi window square
   end --if UIManagerSettings[MultiWindow.back.name]
   if UIManagerSettings[tecMap.name] then --if window exists chek if it is enabled
-	 if not UIManagerSettings[tecMap.name].disabled then tecMapdrawKeepSquare() end --resize map
+   if not UIManagerSettings[tecMap.name].disabled then tecMapdrawKeepSquare() end --resize map
   end --if UIManagerSettings[tecMap.name]
   if UIManagerSettings[tecComWindows.container.name] then --if window exists chek if it is enabled
-	 if not UIManagerSettings[tecComWindows.container.name].disabled then tecComWindowResize() end --resize commmunications window
+   if not UIManagerSettings[tecComWindows.container.name].disabled then tecComWindowResize() end --resize commmunications window
   end --if UIManagerSettings[tecComWindows.container.name]
   if UIManagerSettings[tecSettingsBar.name] then --if window exists chek if it is enabled
-	 if not UIManagerSettings[tecSettingsBar.name].disabled then tecSettingsWindowResize() end--resize the Room Character window now
+   if not UIManagerSettings[tecSettingsBar.name].disabled then tecSettingsWindowResize() end--resize the Room Character window now
   end --if UIManagerSettings[tecSettingsBar.name]
   if UIManagerSettings[status_bar.name] then --if window exists chek if it is enabled
-	 if not UIManagerSettings[status_bar.name].disabled then resizeStatusWindow() end--resize the status bar window
+   if not UIManagerSettings[status_bar.name].disabled then resizeStatusWindow() end--resize the status bar window
   end --if UIManagerSettings[status_bar]
+  if UIManagerSettings[intteruptsWindow.name] then --if window exists chek if it is enabled
+   if not UIManagerSettings[intteruptsWindow.name].disabled then interruptsWindowResize() end--resize the Room Character window now
+  end --if UIManagerSettings[intteruptsWindow.name]
 end --end function guiChange
 
 --whenever event sysWindowReizeEvent occurs run setMainWindowAutowrap.
