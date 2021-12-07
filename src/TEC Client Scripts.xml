@@ -9101,8 +9101,6 @@ Where the stop command stops you script.
 How automation interupts are handled-------------------------------------------
 
   ToDo:
-    parthiaAutomationShowGroups, click links need to be updated so they will work with interrupts
-    parthiaAutomationShowGroups, interrupts need enable and disable
     Aliase 'parthia automation [name], Delete' needs to check if interrupt is active
       If it is call parthiaAutomationInterruptToggleState
     parthiaAutomationCreateInterruptGroup, needs better messaging yet!
@@ -10049,6 +10047,11 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
         
         -- a group position was not specified, remove the entire group.
         else  
+        
+          -- If this is an active interrupt, disable it first to remove the trigger.
+          if tecSettings[automationType][groupName].enabled then
+            parthiaAutomationInterruptToggleState(groupName)
+          end  -- if tecSettings[automationType][groupName].enabled then
           
           tecSettings[automationType][groupName] = nil
           pecho("Group "..groupName.." deleted.\n")
