@@ -9555,6 +9555,9 @@ function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern, 
     
   end  -- if parthiaToBoolean(firstCommandTrigger) then
   
+  -- Remind the user to save their chages
+  dontForgetToSave()
+  
   return true
 
 end -- function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat)</script>
@@ -10467,6 +10470,9 @@ function parthiaAutomationInterruptToggleState(groupName)
     
     pecho("Interrupt "..groupName.." is now enabled.\n")
   end  -- if tecSettings.automationInterrupt[groupName].enabled then
+  
+  -- Remind the user to save their chages
+  dontForgetToSave()
 
 end  -- function parthiaAutomationInterruptToggleState()</script>
 						<eventHandlerList />
