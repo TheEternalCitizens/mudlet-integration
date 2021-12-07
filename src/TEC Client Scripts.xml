@@ -9364,6 +9364,8 @@ function parthiaAutomationUpdate(automationType, groupName, groupPosition,
       pecho("Automation group "..groupName.." does not exist. Creating it now.\n")
       tecSettings[automationType][groupName] = {}  -- Make the group name an empty dictionary
     end -- if automationType == "automationInterrupt" then
+  else -- this group already exists, this is an update.
+    pecho("Automation group "..groupName.." updated.\n")
   end  -- END if not tecSettings[automationType][groupName] then
   
   -- a temp table to insert into the automations group name
@@ -9384,11 +9386,28 @@ function parthiaAutomationUpdate(automationType, groupName, groupPosition,
   end  -- if not parthiaToBoolean(insert)
 
   -- Show user the changes they made.
-  pecho("Automation group "..groupName.." updated.\nYour update is:")
-  pecho("\n\tIn position: "..groupPosition)
+  pecho("\tIn position: "..groupPosition)
   pecho("\n\tAutomation Command: "..automationCommand)
-  pecho("\n\tTrigger: "..automationTrigger)
   pecho("\n\tRepeat on fail: "..repeatOnFail.."\n")
+  
+  -- Show when the first command is done
+  if parthiaToBoolean(automationTrigger) then
+  
+    --Attempt to convert the trigger to a number
+    timedTrigger = tonumber(automationTrigger)  -- If it is not a number automationDelay will be null
+
+    --If this custom trigger is a time trigger create a temp timer.
+    if timedTrigger then
+      pecho("\tSeconds to wait before calling next command: "..automationTrigger.."\n")
+    else -- this is a custom trigger
+      pecho("\tNext command called when you see: '"..automationTrigger.."'\n")
+    end  -- if timedTrigger then
+
+  else -- the trigger is not a custom trigger
+  
+    pecho("\tNext command called when you see: 'You are no longer busy.'\n")
+    
+  end  -- if parthiaToBoolean(automationTrigger) then
                                         
   -- Remind the user to save their chages
   dontForgetToSave()
