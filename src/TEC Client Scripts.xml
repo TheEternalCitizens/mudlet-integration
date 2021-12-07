@@ -9495,14 +9495,12 @@ function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern, 
   -- if tecSettings.automation[groupName] does not exist create it
   -- tecSettings.automation is created automatically when parthia starts.
   if not tecSettings.automationInterrupt[groupName] then
-    pecho("Automation interrupt group "..groupName.." does not exist. Creating it now.\n")
-    pecho("Automation interrupt group "..groupName.." will repeat "..groupRepeat.." ")
-    pecho("times before the iterrupt stops.\n")
+    pecho("Interrupt group "..groupName.." does not exist. Creating it now.\n")
     tecSettings.automationInterrupt[groupName] = {}  -- Make the group name an empty dictionary
   else
-    pecho("Automation interrupt group "..groupName.." updated to repeat "..groupRepeat.." times. ")
-    pecho("No other changes made.\n")
+    pecho("Automation interrupt group "..groupName.." updated.\n")
   end  -- END if not tecSettings.automation[groupName] then
+  
   
   -- set how many times this interrupt repeats
   tecSettings.automationInterrupt[groupName].interruptRepeat = groupRepeat
@@ -9514,6 +9512,29 @@ function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern, 
     parthiaAutomationInterruptToggleState(groupName)  -- disable the interrupt
     parthiaAutomationInterruptToggleState(groupName)  -- enable the interrupt with the updates.
   end  -- if tecSettings.automationInterrupt[groupName].enabled then
+  
+  -- show information about the changes
+  pecho("\t"..groupName.." will repeat "..groupRepeat.." times when called.\n")
+  pecho("\tCall pattern: "..pattern.."\n")
+  
+  -- Show when the first command is done
+  if parthiaToBoolean(firstCommandTrigger) then
+  
+    --Attempt to convert the trigger to a number
+    timedTrigger = tonumber(firstCommandTrigger)  -- If it is not a number automationDelay will be null
+
+    --If this custom trigger is a time trigger create a temp timer.
+    if timedTrigger then
+      pecho("\tSeconds to wait before calling next command: "..firstCommandTrigger.."\n")
+    else -- this is a custom trigger
+      pecho("\tNext command called when you see: '"..firstCommandTrigger.."'\n")
+    end  -- if timedTrigger then
+
+  else -- the trigger is not a custom trigger
+  
+    pecho("\tNext command called when you see: 'You are no longer busy.'\n")
+    
+  end  -- if parthiaToBoolean(firstCommandTrigger) then
   
   return true
 
