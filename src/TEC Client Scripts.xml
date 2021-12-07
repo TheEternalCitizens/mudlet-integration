@@ -9487,6 +9487,9 @@ function parthiaAutomationUpdate(automationType, groupName, groupPosition,
   -- Remind the user to save their chages
   dontForgetToSave()
   
+  --refresh the text on the interrupts window
+  refreshInterruptsWindow()
+  
   return true  --function executed without error
   
 end  -- function parthiaAutomationUpdate(automationType, groupName, groupPosition, automationCommand, secondsToWait, repeatOnFail])
@@ -9632,6 +9635,9 @@ function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern, 
   
   -- Remind the user to save their chages
   dontForgetToSave()
+  
+  --refresh the text on the interrupts window
+  refreshInterruptsWindow()
   
   return true
 
@@ -10548,6 +10554,9 @@ function parthiaAutomationInterruptToggleState(groupName)
   
   -- Remind the user to save their chages
   dontForgetToSave()
+  
+  --refresh the text on the interrupts window
+  refreshInterruptsWindow()
 
 end  -- function parthiaAutomationInterruptToggleState()</script>
 						<eventHandlerList />
