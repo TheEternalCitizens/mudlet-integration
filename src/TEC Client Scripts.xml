@@ -9101,11 +9101,6 @@ Where the stop command stops you script.
 How automation interupts are handled-------------------------------------------
 
   ToDo:
-    Aliase 'parthia automation [name], Delete' needs to check if interrupt is active
-      If it is call parthiaAutomationInterruptToggleState
-    parthiaAutomationCreateInterruptGroup, needs better messaging yet!
-    remember to save reminder when an interrupt is created or updated.
-    Change the message when an interrupt is updated, it does not show pattern being updated.
     interrupts auto load when not using welcome room character
       Make option to disable autoload
     help system
