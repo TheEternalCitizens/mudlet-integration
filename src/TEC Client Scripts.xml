@@ -10197,6 +10197,9 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
   
       pecho("Automation group: "..groupName.."\n")
       
+      -- Display data in the automation table.
+      showAutomationGroupTableData(groupName, automationTypeName, automationType, tecSettings[automationType][groupName])
+      
       -- Create a temp table to show the human logical sorted version of this automation group.
       local sortedGroupNameTable = {}
       for key, _ in pairs(tecSettings[automationType][groupName]) do
@@ -10261,15 +10264,6 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
   
   -- No group name was provided show all the groups, but no details of each group until the link is clicked.
   else
-  
-    -- Will hold how long the longest group name is.
-    local longestGroupNameSize = 0
-    -- Collect the longest group name
-    for groupName, _ in pairs(tecSettings[automationType]) do
-      if #groupName &gt; longestGroupNameSize then
-        longestGroupNameSize = #groupName
-      end  --if #groupName &gt; longestGroupNameSize then
-    end  -- for groupName, _ in pairs(tecSettings[automationType]) do
     
     pecho("You can click a blue link below to start or show that group's information. You can click a red link to remove that group.\n\n")
     
@@ -10277,11 +10271,24 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
     
       pecho(groupName.."\n")
       
-      -- collect variables from interrupts, on standard automations these would just be nil
-      local groupEnabled = tecSettings[automationType][groupName].enabled
-      local firstCommandTrigger = tecSettings[automationType][groupName].firstCommandTrigger
-      local groupRepeat = tecSettings[automationType][groupName].interruptRepeat
-      local callPattern = tecSettings[automationType][groupName].pattern
+      -- Display data in the automation table.
+      showAutomationGroupTableData(groupName, automationTypeName, automationType, tecSettings[automationType][groupName])
+      
+      pecho("\n\n")
+      
+    end  -- for groupName tecSettings[automationType] do
+    
+  end  -- if groupName then
+  
+end  -- function parthiaAutomationShowGroups()
+
+function showAutomationGroupTableData(groupName, automationTypeName, automationType, groupTable)
+
+-- collect variables from interrupts, on standard automations these would just be nil
+      local groupEnabled = groupTable.enabled
+      local firstCommandTrigger = groupTable.firstCommandTrigger
+      local groupRepeat = groupTable.interruptRepeat
+      local callPattern = groupTable.pattern
       
       -- Make a Start button for automation OR an enable disable button for interrupts
       if automationType == 'automationInterrupt' then
@@ -10293,31 +10300,31 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
         if groupEnabled then
           toggleInterruptButtonColor = "ansi_green"
           toggleInterruptButtonState = "Active  "
-        end  -- if tecSettings[automationType][groupName].enabled then
+        end  -- if groupTable.enabled then
         
         -- Display the button
-        pechoLink("\t&lt;:"..toggleInterruptButtonColor.."&gt;Toggle: "..toggleInterruptButtonState,
+        pechoLink("  &lt;:"..toggleInterruptButtonColor.."&gt;Toggle: "..toggleInterruptButtonState,
                   [[expandAlias("parthia interrupt toggle ]]..groupName..[[")]],
                   "parthia interrupt toggle "..groupName, true)
                   --parthia interrupt toggle [groupName]
         
       else  -- This is a standard automation group
         
-        pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Start", 
+        pechoLink("  &lt;:"..tecSettings.helpHighlightColor.."&gt;Start", 
           [[expandAlias("parthia ]]..automationTypeName..[[ ]]..groupName..[[, 0")]],
           "parthia "..automationTypeName.." "..groupName..", 0", true)
           
       end  -- if automationType == 'automationInterrupt' then
         
       -- Show group button
-      pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Show", 
+      pechoLink("  &lt;:"..tecSettings.helpHighlightColor.."&gt;Show", 
         [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[")]],
         "parthia "..automationTypeName.." groups "..groupName, true)
       
       --Make a customized edit button for interrupts vs automations
       if automationType == 'automationInterrupt' then
       
-        pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
+        pechoLink("  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
         --parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]
         [[printCmdLine("parthia interrupt ]]..groupName..[[, ]]..groupRepeat..[[, ]]..callPattern..[[~ ]]..firstCommandTrigger..[[")]],
         "fill command line with edit command for "..groupName, true)
@@ -10325,26 +10332,22 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
       else  -- This is a standard automation
       
         -- Edit group button
-        pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
+        pechoLink("  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
           [[printCmdLine("parthia automation ]]..groupName..[[, 1 = replace_with_your_command, 0~ 0, 0")]],
           "fill command line with edit command for "..groupName, true)
       
       end  -- if automationType == 'automationInterrupt' then
               
       -- Remove group button
-      pechoLink("\t&lt;:ansi_red&gt;Remove", 
+      pechoLink("  &lt;:ansi_red&gt;Remove\n", 
         [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[, delete")]],
         "parthia "..automationTypeName.." groups "..groupName..", delete", true)
         
       -- Show interrupt specific data
       if automationType == 'automationInterrupt' then
-      
-        pecho("\n")
         
-        --groupEnabled = tecSettings[automationType][groupName].enabled
-        --local firstCommandTrigger = tecSettings[automationType][groupName].firstCommandTrigger
-        pecho("\tCall pattern: `"..callPattern.."`\n")
-        pecho("\tGroup repeat: "..groupRepeat.."\n")
+        pecho("  Call pattern: `"..callPattern.."`\n")
+        pecho("  Group repeat: "..groupRepeat.."\n")
         
         -- Show when the first command is done
         if parthiaToBoolean(firstCommandTrigger) then
@@ -10354,26 +10357,20 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
       
           --If this custom trigger is a time trigger create a temp timer.
           if timedTrigger then
-            pecho("\tSeconds to wait before calling next command: "..firstCommandTrigger)
+            pecho("  Seconds to wait before calling next command: "..firstCommandTrigger.."\n")
           else -- this is a custom trigger
-            pecho("\tNext command called when you see: '"..firstCommandTrigger.."'")
+            pecho("  Next command called when you see: '"..firstCommandTrigger.."'\n")
           end  -- if timedTrigger then
 
         else -- the trigger is not a custom trigger
         
-          pecho("\tNext command called when you see: 'You are no longer busy.'")
+          pecho("  Next command called when you see: 'You are no longer busy.'\n")
           
         end  -- if parthiaToBoolean(firstCommandTrigger) then
       
       end  -- if automationType == 'automationInterrupt' then
-      
-      pecho("\n\n")
-      
-    end  -- for groupName tecSettings[automationType] do
-    
-  end  -- if groupName then
-  
-end  -- function parthiaAutomationShowGroups()</script>
+
+end  -- local function showAutomationGroupTableData(groupTable)</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
