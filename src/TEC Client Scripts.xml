@@ -15758,6 +15758,9 @@ function guiChange()
   if UIManagerSettings[intteruptsWindow.name] then --if window exists chek if it is enabled
    if not UIManagerSettings[intteruptsWindow.name].disabled then interruptsWindowResize() end--resize the Room Character window now
   end --if UIManagerSettings[intteruptsWindow.name]
+  if UIManagerSettings[automationWindow.name] then --if window exists chek if it is enabled
+   if not UIManagerSettings[automationWindow.name].disabled then automationWindowResize() end--resize the Room Character window now
+  end --if UIManagerSettings[intteruptsWindow.name]
 end --end function guiChange
 
 --whenever event sysWindowReizeEvent occurs run setMainWindowAutowrap.
