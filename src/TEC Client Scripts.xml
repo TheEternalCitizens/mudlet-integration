@@ -556,25 +556,31 @@ end --function tecFileSaveSettings(displayToScreen)</script>
 --successfull
 function tecFileLoadSettings(displayToScreen)
   local tecTmpSettingsTable = {}
-	--Set the location and name of file.	
-	local path = tecSettingsFolder.."TECClientData.lua"
-	path = path:gsub("\\","/")
-	--If the file does not exist let the user know.
+  --Set the location and name of file.
+  local path = tecSettingsFolder.."TECClientData.lua"
+  path = path:gsub("\\","/")
+  --If the file does not exist let the user know.
   if not io.exists(path) then 
-		cecho("tecDebugWindow","tecFileLoadSettings: "..path.." file doesn't exist.") --TEC debug screen
-		--debugc("tecFileLoadSettings: "..path.." file doesn't exist.") --mudlets debug screen
-		if displayToScreen then
+    cecho("tecDebugWindow","tecFileLoadSettings: "..path.." file doesn't exist.") --TEC debug screen
+    --debugc("tecFileLoadSettings: "..path.." file doesn't exist.") --mudlets debug screen
+    if displayToScreen then
       pecho("[ Info ]  - No settings file. Parthia using default settings.\n")
     end
-	return --kill the function before real errors occur
-	else
+  return --kill the function before real errors occur
+  else
     table.load(path, tecTmpSettingsTable) --Load the settings in from file
     --Load settings from file updating default settings where different.
     tecSettings = table.update(tecSettings, tecTmpSettingsTable)
     if displayToScreen then 
       pecho("[  OK  ]  - Parthia settings successfully loaded from file.\n") 
     end --if displayToScreen
-	end --end if file exists else
+  end --end if file exists else
+  
+  --refresh the text on the interrupts window
+  refreshInterruptsWindow()
+  
+  -- Refresh the text in the automation window
+  refreshAutomationWindow()
   
 end --function tecFileLoadSettings
 
@@ -7337,7 +7343,7 @@ Handles refreshing the text in the interrupts window.
       
     end  -- for groupName tecSettings[automationType] do
 
-end  -- function refreshInterruptsWindow()
+end  -- function refreshAutomationWindow()
 
 refreshAutomationWindow()</script>
 					<eventHandlerList />
@@ -9575,6 +9581,9 @@ function parthiaAutomationUpdate(automationType, groupName, groupPosition,
   --refresh the text on the interrupts window
   refreshInterruptsWindow()
   
+  -- Refresh the text in the automation window
+  refreshAutomationWindow()
+  
   return true  --function executed without error
   
 end  -- function parthiaAutomationUpdate(automationType, groupName, groupPosition, automationCommand, secondsToWait, repeatOnFail])
@@ -9723,6 +9732,9 @@ function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern, 
   
   --refresh the text on the interrupts window
   refreshInterruptsWindow()
+  
+  -- Refresh the text in the automation window
+  refreshAutomationWindow()
   
   return true
 
@@ -10247,6 +10259,12 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
             --remind the user to save
             dontForgetToSave()
             
+            --refresh the text on the interrupts window
+            refreshInterruptsWindow()
+  
+            -- Refresh the text in the automation window
+            refreshAutomationWindow()
+            
           -- the group position does not exist.
           else
             
@@ -10273,6 +10291,12 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
           
           --remind the user to save
           dontForgetToSave()
+          
+          --refresh the text on the interrupts window
+          refreshInterruptsWindow()
+  
+          -- Refresh the text in the automation window
+          refreshAutomationWindow()
           
         end  -- if groupPosition
         
@@ -10639,6 +10663,11 @@ function parthiaAutomationInterruptToggleState(groupName)
   
   --refresh the text on the interrupts window
   refreshInterruptsWindow()
+  
+  -- Refresh the text in the automation window
+  refreshAutomationWindow()
+  
+  return True
 
 end  -- function parthiaAutomationInterruptToggleState()</script>
 						<eventHandlerList />
