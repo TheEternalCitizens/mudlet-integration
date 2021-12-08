@@ -7266,8 +7266,6 @@ Handles refreshing the text in the interrupts window.
 ]]--
 
   clearWindow("automationWindowConsole")
-  
-  cecho("automationWindowConsole", "test")
 
   local automationType = 'automation'
   local automationTypeName = 'automation'
