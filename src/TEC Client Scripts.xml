@@ -7254,7 +7254,94 @@ Handles refreshing the text in the interrupts window.
 
 end  -- function refreshInterruptsWindow()
 
--- refreshInterruptsWindow()</script>
+refreshInterruptsWindow()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>refreshAutomationWindow</name>
+					<packageName></packageName>
+					<script>function refreshAutomationWindow()
+--[[
+Handles refreshing the text in the interrupts window.
+]]--
+
+  clearWindow("automationWindowConsole")
+  
+  cecho("automationWindowConsole", "test")
+
+  local automationType = 'automation'
+  local automationTypeName = 'automation'
+
+  for groupName, _ in pairs(tecSettings[automationType]) do
+    
+      cecho("automationWindowConsole", groupName..":\n")
+      
+      -- collect variables from interrupts, on standard automations these would just be nil
+      local groupEnabled = tecSettings[automationType][groupName].enabled
+      local firstCommandTrigger = tecSettings[automationType][groupName].firstCommandTrigger
+      local groupRepeat = tecSettings[automationType][groupName].interruptRepeat
+      local callPattern = tecSettings[automationType][groupName].pattern
+      
+      -- Make a Start button for automation OR an enable disable button for interrupts
+      if automationType == 'automationInterrupt' then
+        
+        local toggleInterruptButtonColor = "ansi_red"
+        local toggleInterruptButtonState = "Inactive"
+        
+        -- This intterrupt is currently enabled. Set the color to standard blue
+        if groupEnabled then
+          toggleInterruptButtonColor = "ansi_green"
+          toggleInterruptButtonState = "Active"
+        end  -- if tecSettings[automationType][groupName].enabled then
+        
+        -- Display the button
+        cechoLink("automationWindowConsole", "  &lt;:"..toggleInterruptButtonColor.."&gt;"..toggleInterruptButtonState,
+                  [[expandAlias("parthia interrupt toggle ]]..groupName..[[")]],
+                  "Click to toggle "..groupName.." on or off", true)
+                  --parthia interrupt toggle [groupName]
+        
+      else  -- This is a standard automation group
+        
+        cechoLink("automationWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Start", 
+          [[expandAlias("parthia ]]..automationTypeName..[[ ]]..groupName..[[, 0")]],
+          "parthia "..automationTypeName.." "..groupName..", 0", true)
+          
+      end  -- if automationType == 'automationInterrupt' then
+        
+      -- Show group button
+      cechoLink("automationWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Show", 
+        [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[")]],
+        "parthia "..automationTypeName.." groups "..groupName, true)
+      
+      --Make a customized edit button for interrupts vs automations
+      if automationType == 'automationInterrupt' then
+      
+        cechoLink("automationWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
+        --parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]
+        [[printCmdLine("parthia interrupt ]]..groupName..[[, ]]..groupRepeat..[[, ]]..callPattern..[[~ ]]..firstCommandTrigger..[[")]],
+        "fill command line with edit command for "..groupName, true)
+        
+      else  -- This is a standard automation
+      
+        -- Edit group button
+        cechoLink("automationWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
+          [[printCmdLine("parthia automation ]]..groupName..[[, 1 = replace_with_your_command, 0~ 0, 0")]],
+          "fill command line with edit command for "..groupName, true)
+      
+      end  -- if automationType == 'automationInterrupt' then
+              
+      -- Remove group button
+      cechoLink("automationWindowConsole", "  &lt;:ansi_red&gt;Remove", 
+        [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[, delete")]],
+        "parthia "..automationTypeName.." groups "..groupName..", delete", true)
+      
+      cecho("automationWindowConsole", "\n\n")
+      
+    end  -- for groupName tecSettings[automationType] do
+
+end  -- function refreshInterruptsWindow()
+
+refreshAutomationWindow()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
