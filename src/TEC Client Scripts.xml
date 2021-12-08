@@ -7116,7 +7116,7 @@ end --function parthiaDrawMapExits()</script>
 				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>Settings Window</name>
+				<name>Console Window</name>
 				<packageName></packageName>
 				<script></script>
 				<eventHandlerList />
@@ -15642,6 +15642,74 @@ UIManagerRegisterWindow(intteruptsWindow)
 
 --tecRefreshSettingsWindow() --Refreshes text in settings window.
 --interruptsWindowResize() --resize the Room Character window now</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>Automation Window</name>
+				<packageName></packageName>
+				<script>automationWindow = Geyser.Container:new({
+  name = "Automation",    -- give it a unique name here
+  x=0, y=0,                   
+  width = 0, height=0, 
+})
+
+--box that will store the miniconsoles
+automationWindowBack = Geyser.Label:new({
+  name = "automationWindowBack",
+  x = 0, --horizontal position
+  y = 0, --adjusted for tabs
+  width = "100%",
+  height = "100%"
+},automationWindow)
+
+automationWindowBack:setStyleSheet(labelsStyle) --set to default label style
+
+--This are the miniconsoles that will hold the text
+automationWindowConsole = Geyser.MiniConsole:new({
+  name = "automationWindowConsole",
+  x = 0, --%horizontally position in parent
+  y = 0, --%vertical position in parent
+  width = "100%", --% of parent
+  height = "100%", --% of parent
+  autoWrap = true, --allows text to wrap if too long
+  fontSize = getTECFont(), --in variables
+  font = getFont(), --get font type from main
+  --scrollBar = true,
+},automationWindowBack)
+automationWindowConsole:setColor(getBgColor()) --set miniconsoles to main consol BG color
+automationWindowConsole:raise()
+
+function automationWindowResize()
+
+  --Resize the back label by 6. We want a 3px border around the entire window
+  automationWindowBack:resize(tostring(automationWindow:get_width() - 0)
+    , tostring(automationWindow:get_height() - 0))
+  automationWindowBack:move (0, 0) --left and top borders
+
+  --Resize the room character window by 6. We want a 3px border around the entire window
+  automationWindowConsole:resize(tostring(automationWindowBack:get_width() - 0)
+    , tostring(automationWindowBack:get_height() - 0))
+  automationWindowConsole:move (0, 0) --left and top borders
+  
+  tecScrollBarCheck("automationWindowConsole") --Checks if a scroll bar is needed.
+
+  if getTECDisplayDebugMode() then --if display debug mode is on
+    debugToDisplay("Room Character Window,"
+      .." automationWindowBack width: "..automationWindowBack:get_width()
+      .." automationWindowBack Height: "..automationWindowBack:get_height()
+      .." automationWindowConsole Width: "..automationWindowConsole:get_width()
+      .." automationWindowConsole Height: "..automationWindowConsole:get_height()
+    )--end debugToDisplay
+  end --end if display debug is enabled.
+
+end --automationWindowResize()
+
+--set location for container in GUIframe.
+automationWindow.GUIframeLocation = "bottomleft"
+--add cobntainer to UI manager.
+UIManagerRegisterWindow(automationWindow)
+
+--automationWindowResize() --resize the Room Character window now</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
