@@ -5243,12 +5243,12 @@ function UIManagerEnableWindow(objectName, mode, displayToScreen)
         for windowName, window in pairs(tecGeyserWindows) do--loop through containers
             --make commandfor cechoLink
             local cmdToSend = [[UIManagerEnableWindow("]]..windowName..[[",true,true)]]
-            pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable "..windowName, 
+            pechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable "..windowName, 
               cmdToSend, --runs on click.
               "Enable "..windowName.." window", true)
             pecho(", ")
         end --for pairs(tecGeyserWindows)
-        pecho("and ")
+        pecho("\n\tand ")
           pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable all",
               [[UIManagerEnableWindow("all",true,true)]], --runs on click.
               "Enable all windows", true)
@@ -5258,12 +5258,12 @@ function UIManagerEnableWindow(objectName, mode, displayToScreen)
         for windowName, window in pairs(tecGeyserWindows) do--loop through containers
             --make commandfor cechoLink
             local cmdToSend = [[UIManagerEnableWindow("]]..windowName..[[",false,true)]]
-            pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window disable "..windowName, 
+            pechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;display window disable "..windowName, 
               cmdToSend, --runs on click.
               "Disable "..windowName.." window", true)
             pecho(", ")
         end --for pairs(tecGeyserWindows)
-        pecho("and ")
+        pecho("\n\tand ")
           pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window disable all",
               [[UIManagerEnableWindow("all",false,true)]], --runs on click.
               "Disable all windows", true)
