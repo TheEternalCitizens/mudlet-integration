@@ -10296,7 +10296,7 @@ function parthiaAutomationHelp()
   
   pecho("\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia unfiltered text console", 
-    [[parthiaAutomationShowGroups("automation")]],
+    [[setUnfilteredTextConsole(true)]],
     "parthia automation groups", true)
   pecho(", opens a window showing text as the pattern system views it.\n")
   local cmdToSend = [[UIManagerEnableWindow("Automation",true,true)]]
@@ -10308,7 +10308,7 @@ function parthiaAutomationHelp()
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable Interrupts", 
     cmdToSend, --runs on click.
     "Enable Interrupts window", true)
-  pecho(", opens a docked window with clickable links for your automation tasks.\n")
+  pecho(", opens a docked window with clickable links for your interrupt tasks.\n")
   pecho("\n")
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Parthia automation tutorial video.", 
