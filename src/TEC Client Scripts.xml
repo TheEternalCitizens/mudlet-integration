@@ -2882,25 +2882,25 @@ Debug like functions:
 --triggers system to send debug information to it.
 
 function setTECDebugMode(tectmpSetDebug)
-	
-	--Set debug mode
-	tecSettings.tecDebugMode = tectmpSetDebug or false
-	
-	if tecSettings.tecDebugMode then --if enabling debug
-		openUserWindow("tecDebugWindow")
-		--saveWindowLayout() --save floating miniconsole locations
-		--loadWindowLayout() --load previously save miniconsole position.
-		--tecDebugWindow:addScrollbars(parent, "Vertical")
+
+  --Set debug mode
+  tecSettings.tecDebugMode = tectmpSetDebug or false
+
+  if tecSettings.tecDebugMode then --if enabling debug
+    openUserWindow("tecDebugWindow")
+    --saveWindowLayout() --save floating miniconsole locations
+    --loadWindowLayout() --load previously save miniconsole position.
+    --tecDebugWindow:addScrollbars(parent, "Vertical")
     if tecSettings.showScrollBars then enableScrollBar("tecDebugWindow") end
-		pecho("Debug mode enabled.\n")
-	else --else disabling debug
-		pecho("Debug mode disabled.\n")
-		setTECDisplayDebugMode(tectmpSetDebug)
-		setTECMapDebugMode(tectmpSetDebug)
-		setTECTimerDebugMode(tectmpSetDebug)
+    pecho("Debug mode enabled.\n")
+  else --else disabling debug
+    pecho("Debug mode disabled.\n")
+    setTECDisplayDebugMode(tectmpSetDebug)
+    setTECMapDebugMode(tectmpSetDebug)
+    setTECTimerDebugMode(tectmpSetDebug)
     closeUserWindow("tecDebugWindow")
-	end -- if tectmpSetDebug
-	
+  end -- if tectmpSetDebug
+
 end --end function setTecDebugMode</script>
 					<eventHandlerList />
 				</Script>
