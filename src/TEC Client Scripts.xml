@@ -9808,7 +9808,7 @@ function parthiaInterruptCreateHelp()
     [[parthiaAutomationTriggerHelp()]], 
     "automations trigger help", true)
   pecho("[first command trigger], is when the first command should be called.\n")
-  pechoLink("\tFor trigger detail run or click: &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt toggle&lt;reset&gt;\n", 
+  pechoLink("\tFor trigger detail run or click: &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation triggers&lt;reset&gt;\n", 
     [[parthiaAutomationTriggerHelp()]], 
     "automations trigger help", true)
   
@@ -10276,6 +10276,7 @@ function parthiaAutomationHelp()
   pecho(", view and manage automation groups you have made.\n")
   
   pecho("\nInterrupts allow you interrupt your current action when a text pattern is view on screen.\n")
+  pecho("When an interrupt interrupts an automated task, the automated task will resume when the interrupt completes.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt create", 
     [[parthiaInterruptCreateHelp()]],
     "parthia automation update", true)
@@ -10288,6 +10289,10 @@ function parthiaAutomationHelp()
     [[parthiaAutomationUpdateHelp("interrupt")]],
     "parthia automation groups", true)
   pecho(", create or update an interrupt.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation groups", 
+    [[parthiaAutomationShowGroups("interrupt")]],
+    "parthia automation groups", true)
+  pecho(", view and manage interrupt groups you have made.\n")
   
   pecho("\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia unfiltered text console", 
