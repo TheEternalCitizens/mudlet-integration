@@ -576,11 +576,15 @@ function tecFileLoadSettings(displayToScreen)
     end --if displayToScreen
   end --end if file exists else
   
-  --refresh the text on the interrupts window
-  refreshInterruptsWindow()
+  --refresh the text on the interrupts window, only if the function has initialized
+  if refreshInterruptsWindow then
+    refreshInterruptsWindow()
+  end  -- if refreshInterruptsWindow then
   
-  -- Refresh the text in the automation window
-  refreshAutomationWindow()
+  -- Refresh the text in the automation window, only if the function has initialized
+  if refreshAutomationWindow then
+    refreshAutomationWindow()
+  end  -- if refreshAutomationWindow then
   
 end --function tecFileLoadSettings
 
@@ -7186,6 +7190,13 @@ end --function tecRefreshSettingsWindow
 Handles refreshing the text in the interrupts window.
 ]]--
 
+  -- If the interrupt window does not exists, stop this function
+  if not UIManagerSettings[intteruptsWindow.name] then --if window exists chek if it is enabled
+   if UIManagerSettings[intteruptsWindow.name].disabled then
+    return true
+   end  -- if UIManagerSettings[intteruptsWindow.name].disabled then
+  end --if UIManagerSettings[intteruptsWindow.name]
+
   clearWindow("interruptsWindowConsole")
 
   local automationType = 'automationInterrupt'
@@ -7270,6 +7281,13 @@ refreshInterruptsWindow()</script>
 --[[
 Handles refreshing the text in the interrupts window.
 ]]--
+
+  -- If the automation window does not exists, stop this function
+  if not UIManagerSettings[automationWindow.name] then --if window exists chek if it is enabled
+   if UIManagerSettings[automationWindow.name].disabled then
+    return true
+   end  -- if UIManagerSettings[automationWindow.name].disabled then
+  end --if UIManagerSettings[automationWindow.name]
 
   clearWindow("automationWindowConsole")
 
@@ -16033,7 +16051,10 @@ parthiaSetDiscordID() --inform discord what game the logged in player is playing
 					<script>UIManagerFileLoad(true) --load display settings from file.
 UIManagerSetTheme("PlayersTheme", false) --load windows into display
 tecRefreshSettingsWindow() --Refreshes text in settings window.
+refreshAutomationWindow()  -- refresh text in the Automation window
+refreshInterruptsWindow()  -- Refresh text in the interrupts window.
 tecResetRoomCharacterWindow() --fill room characters window with text
+
 
 --Enable or disable scroll bars. Dependant on user preference.
 tecSetScrollBars(tecSettings.showScrollBars, false)</script>
