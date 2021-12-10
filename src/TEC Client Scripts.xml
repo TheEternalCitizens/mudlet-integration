@@ -515,6 +515,8 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   tecSettings.automationInterrupt = {} --used to track automation interrupts.
   
   tecSettings.automationInterruptTriggers = {} --used to track interrupt triggers. groupName is the key, trigger ID is the value
+  
+  unfilteredTextWindowMode = false  -- a snap out console window ( userWindow ) that shows unfiltered text from TEC
 
   if displayToScreen then pecho("Parthia settings set to default.\n") end
 
@@ -7269,9 +7271,7 @@ Handles refreshing the text in the interrupts window.
       
     end  -- for groupName tecSettings[automationType] do
 
-end  -- function refreshInterruptsWindow()
-
-refreshInterruptsWindow()</script>
+end  -- function refreshInterruptsWindow()</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
@@ -7361,9 +7361,44 @@ Handles refreshing the text in the interrupts window.
       
     end  -- for groupName tecSettings[automationType] do
 
-end  -- function refreshAutomationWindow()
+end  -- function refreshAutomationWindow()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>setUnfilteredTextConsole(mode)</name>
+					<packageName></packageName>
+					<script>--opens an unfiltered text window.
+--triggers system to send raw text to the unfiltered text window
 
-refreshAutomationWindow()</script>
+function setUnfilteredTextConsole(mode)
+
+  --Set mode to unfiltered text
+  unfilteredTextWindowMode = mode or false
+
+  -- create the window if enabling
+  if unfilteredTextWindowMode then
+    
+    openUserWindow("Parthia Unfiltered Text Console", true, false)
+    
+    enableHorizontalScrollBar("Parthia Unfiltered Text Console")
+    
+    -- add a scroll bar if user has scroll bars enabled.
+    if tecSettings.showScrollBars then enableScrollBar("Parthia Unfiltered Text Console") end
+    
+    pecho("Unfiltered text window opened.\n")
+    
+  -- remove the window if disabling
+  else
+  
+    closeUserWindow("Parthia Unfiltered Text Console")
+    
+    pecho("Closed unfiltered text Console.\n")
+    
+  end -- if mode
+  
+  return true
+
+end -- function setUnfilteredTextConsole(mode)</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -10207,13 +10242,17 @@ function parthiaAutomationHelp()
   [[parthiaAutomationShowGroups("automation")]],
   "parthia automation groups", true)
   pecho(", view and manage automation groups you have made.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia unfiltered text console", 
+  [[parthiaAutomationShowGroups("automation")]],
+  "parthia automation groups", true)
+  pecho(", opens a window showing text as the pattern system views it.\n")
   
   pecho("\n")
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Parthia automation tutorial video.", 
   [[openUrl("https://youtu.be/snweHw9XI68")]], 
   "youtube parthia automation tutorial", true)
-  pecho(", view a youtube tutorial video on parthia's automation system..\n")
+  pecho(", view a youtube tutorial video on parthia's automation system.\n")
   
   pecho("\n")
   

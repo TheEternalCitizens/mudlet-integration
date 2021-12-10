@@ -1486,6 +1486,31 @@ expandAlias("parthia automation "..tostring(matches[2]))
 					<regex>^/auto\s*$</regex>
 				</Alias>
 			</AliasGroup>
+			<Alias isActive="yes" isFolder="no">
+				<name>parthia unfiltered text console</name>
+				<script>--[[
+Toggles the state of the unfiltered text window.
+]]--
+
+-- if the window is currently enabled, disable it.
+if unfilteredTextWindowMode then
+  
+  -- disable and close the console
+  setUnfilteredTextConsole(false)
+  
+-- if the window is currently disabled, enable it
+else
+
+  -- enable and open the console
+  setUnfilteredTextConsole(true)
+  
+end  -- if unfilteredTextWindowMode then
+
+return true</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^parthia unfiltered text console$</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Debug</name>
