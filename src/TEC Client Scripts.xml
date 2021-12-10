@@ -9641,20 +9641,21 @@ function parthiaAutomationUpdate(automationType, groupName, groupPosition,
 end  -- function parthiaAutomationUpdate(automationType, groupName, groupPosition, automationCommand, secondsToWait, repeatOnFail])
 
 -- create a help message on how to update parthia automation
-function parthiaAutomationUpdateHelp()
+function parthiaAutomationUpdateHelp(automationType)
 
+  automationType = automationType or "automation"
   -- parthia automation [group name], [position number] = [command], [seconds or 0], [repeat on fail]
 
   -- Show this commands help message
-  pecho("The command format to create or update an automation group is:\n")
-  pecho("\tparthia automation [group name], [position number] = [command], [trigger]~ [repeat on fail], [insert]\n")
-  pecho("parthia automation has a short name of /auto. It's format is the same.\n")
+  pecho("\nThe command format to create or update an "..automationType.." group is:\n")
+  pecho("\tparthia "..automationType.." [group name], [position number] = [command], [trigger]~ [repeat on fail], [insert]\n")
+  pecho("parthia "..automationType.." has a short name of /auto. It's format is the same.\n")
   pecho("\t/auto [group name], [position number] = [command], [trigger]~ [repeat on fail], [insert]\n\n")
-  pecho("[group name] is a name for an automation group.\n")
+  pecho("[group name] is a name for an "..automationType.." group.\n")
   pecho("\tIt can be a new or existing group name.\n")
   pecho("\t[group name] can contain letters, numbers and spaces.\n")
   pecho("\tIt can not contain special characters. It IS case sensitive.\n")
-  pecho("[position number], is the command's position in the automation group.\n")
+  pecho("[position number], is the command's position in the "..automationType.." group.\n")
   pecho("\tOnly numbers are supported as position number.\n")
   pecho("[command] is the command you would like to be run. A command can contain letters numbers and &lt; &gt;.\n")
   pecho("[trigger] is the delay before attempting the next command.\n")
@@ -9666,40 +9667,40 @@ function parthiaAutomationUpdateHelp()
     "automations trigger help", true)
   pecho("[repeat on fail], can be 1 or 0.\n")
   pecho("\tIf repeat on fail is 1, this command will repeat until it succeeds.\n")
-  pecho("\tIf repeat on fails is 0, the automation system will always continue to the next command in your automation group.\n")
+  pecho("\tIf repeat on fails is 0, the automation system will always continue to the next command in your "..automationType.." group.\n")
   pecho("[insert], can be 1 for yes or 0 for no.\n")
   pecho("\tOptional argument, default is 0\n")
-  pecho("\tIf insert is 1, this command will be inserted into the automation group at the position specified. ")
+  pecho("\tIf insert is 1, this command will be inserted into the "..automationType.." group at the position specified. ")
   pecho("Moving all other commands up a position (if required).\n")
-  pecho("\tIf insert is 0, this command will replace the command at the position specified in the automation group.\n\n")
+  pecho("\tIf insert is 0, this command will replace the command at the position specified in the "..automationType.." group.\n\n")
   
   pecho("The square brackets [] are just there to show where your entry should be. Do not put [ or ] in the command.\n")
   
-  pecho("\nExample:\n\tparthia automation Attack Rotation, 1 = attack rat, 0, 0\n")
+  pecho("\nExample:\n\tparthia "..automationType.." Attack Rotation, 1 = attack rat, 0, 0\n")
   pecho("\t/auto Attack Rotation, 1 = attack rat, 0, 0\n")
-  pecho("\t\tWould both update or create your 'Attack Rotation' automation group position 1.\n")
+  pecho("\t\tWould both update or create your 'Attack Rotation' "..automationType.." group position 1.\n")
   pecho("\t\tWith command 'attack rat'.\n")
   pecho("\t\tThe next command will occur when you receive the 'You are no longer busy' message.\n")
-  pecho("\t\tWether this command succeeds or fails automation will continue to the next command in this automation group.\n")
-  pecho("\n\tparthia automation Attack Rotation, 2 = slash rat, 0, 0\n")
+  pecho("\t\tWether this command succeeds or fails "..automationType.." will continue to the next command in this "..automationType.." group.\n")
+  pecho("\n\tparthia "..automationType.." Attack Rotation, 2 = slash rat, 0, 0\n")
   pecho("\t/auto Attack Rotation, 2 = slash rat, 0, 0\n")
-  pecho("\t\tWould both update or create your 'Attack Rotation' automation group position 2.\n")
+  pecho("\t\tWould both update or create your 'Attack Rotation' "..automationType.." group position 2.\n")
   pecho("\t\tWith command 'slash rat'.\n")
   pecho("\t\tThe next command will occur when you receive the 'You are no longer busy' message.\n")
-  pecho("\t\tWether this command succeeds or fails automation will continue to the next command in this automation group.\n")
+  pecho("\t\tWether this command succeeds or fails "..automationType.." will continue to the next command in this "..automationType.." group.\n")
   pecho("\tYou now have an attack rotation that will attack than slash a rat automatically.\n\n")
-  pecho("If you would like to use TEC target system, you will need to make macros. Than use a macro as the automation [command].\n")
-  pecho("There is no limit on the number of commands that can be in an automation group.\n")
-  pecho("When creating an automation group, remeber that when you call it you can have the entire group repeat a number of times or infinitely.\n\n")
+  pecho("If you would like to use TEC target system, you will need to make macros. Than use a macro as the "..automationType.." [command].\n")
+  pecho("There is no limit on the number of commands that can be in an "..automationType.." group.\n")
+  pecho("When creating an "..automationType.." group, remeber that when you call it you can have the entire group repeat a number of times or infinitely.\n\n")
   
-  pecho("Command Fomat:\n")
-  pecho("parthia automation [group name], [position number] = [command], [trigger]~ [repeat on fail], [insert]\n")
-  printCmdLine("parthia automation replace_with_your_group, 1 = replace_with_your_command, 0~ 0, 0")
+  pecho("Command Format:\n")
+  pecho("parthia "..automationType.." [group name], [position number] = [command], [trigger]~ [repeat on fail], [insert]\n")
+  printCmdLine("parthia "..automationType.." replace_with_your_group, 1 = replace_with_your_command, 0~ 0, 0")
 
 end -- function parthiaAutomationUpdateHelp()
 
 function parthiaAutomationTriggerHelp()
-  pecho("If trigger is 0, the next command will occur just after the 'You are no longer busy.' message appears.\n")
+  pecho("\nIf trigger is 0, the next command will occur just after the 'You are no longer busy.' message appears.\n")
   pecho("If trigger is a number the next command will occur after than many seconds.\n")
   pecho("If trigger is a message the next command will occur when that message is seen on screen.\n")
   pecho("\tMessage can be a plain text message you see on screen.\n")
@@ -9711,12 +9712,10 @@ function parthiaAutomationTriggerHelp()
   pecho("\t\tWhen using regex patterns keep in mind that tec parthia received text with html codes for the server.\n")
   pecho("\t\tFor example most text sent to parthia starts with a color code. So using ^ and $ will be difficult.\n")
   pecho("\t\tIf you would like to see how parthia receive text run ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug on&lt;reset&gt;.\n", 
-    [[setTECDebugMode(true)]], 
-    "Enable basic debug", true)
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia unfiltered text console", 
+    [[parthiaAutomationShowGroups("automation")]],
+    "parthia automation groups", true)
   pecho("\t\t\tThere will be a docked window you will need to drag out to view.\n")
-  pecho("\t\t\tPlease do not submit issues or requests involving the debuging system.\n")
-  pecho("\t\tUsing a plain text message with the &lt;color&gt; tag will work 99%.")
 end -- function parthiaAutomationTriggerHelp()</script>
 						<eventHandlerList />
 					</Script>
@@ -9790,7 +9789,40 @@ function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern, 
   
   return true
 
-end -- function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat)</script>
+end -- function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat)
+
+function parthiaInterruptCreateHelp()
+
+  pecho("\nThe command format to create or update an interrupt trigger is:\n")
+  pecho("\tparthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]\n")
+  pecho("parthia interrupt has a short name of /interrupt. It's format is the same.\n")
+  pecho("\t/interrupt [group name], [repeat], [call pattern]~ [first command trigger]\n\n")
+  
+  pecho("[group name] is a name for an automation group.\n")
+  pecho("\tIt can be a new or existing group name.\n")
+  pecho("\t[group name] can contain letters, numbers and spaces.\n")
+  pecho("\tIt can not contain special characters. It IS case sensitive.\n")
+  pecho("[repeat], is how many times this interrupt group should repeat before completing.\n")
+  pecho("[call pattern], is the text that will call the interrupt when it appears on the screen.\n")
+  pechoLink("\tFor trigger detail run or click: &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation triggers&lt;reset&gt;\n", 
+    [[parthiaAutomationTriggerHelp()]], 
+    "automations trigger help", true)
+  pecho("[first command trigger], is when the first command should be called.\n")
+  pechoLink("\tFor trigger detail run or click: &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt toggle&lt;reset&gt;\n", 
+    [[parthiaAutomationTriggerHelp()]], 
+    "automations trigger help", true)
+  
+  pecho("\nThe square brackets [] are just there to show where your entry should be. Do not put [ or ] in the command.\n")
+  
+  pecho("\nExample:\n\tparthia interrupt kill when unconcious, 1, falls unconcious~ 0\n")
+  pecho("\tWould create an interrupt that triggers when `falls unconcious` appears on the screen.\n")
+  pecho("\tThe first command in this interrupt group would be called when the `You are no longer busy.` message appears.\n")
+  
+  pecho("Command Format:\n")
+  pecho("parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]\n")
+  printCmdLine("parthia interrupt replace_with_your_group, 1, trigger_when_text_is_received~ 0")
+  
+end  -- function parthiaInterruptCreateHelp()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
@@ -9838,7 +9870,7 @@ end  -- parthiaAutomationStart(groupName, groupRepeat)
 function parthiaAutomationStartHelp()
 
   -- Show this commands help message
-  pecho("The command format to start an automation group or rotation is:\n")
+  pecho("\nThe command format to start an automation group or rotation is:\n")
   pecho("\tparthia automation [group name], [repeat]\n")
   pecho("parthia automation has a shot name of /auto. It's format is the same.\n")
   pecho("\t/auto [group name], [repeat]\n")
@@ -10231,27 +10263,52 @@ function parthiaAutomationHelp()
   pecho("\nAutomation in parthia is done by creating groups of commands. Than starting those groups. ")
   pecho("You can click or type in the commands below to learn more about creating, managing and starting automation groups.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation update", 
-  [[parthiaAutomationUpdateHelp()]],
-  "parthia automation update", true)
+    [[parthiaAutomationUpdateHelp()]],
+    "parthia automation update", true)
   pecho(", how to create or update automation groups.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation start", 
-  [[parthiaAutomationStartHelp()]],
-  "parthia automation start", true)
+    [[parthiaAutomationStartHelp()]],
+    "parthia automation start", true)
   pecho(", how to start an automation task.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation groups", 
-  [[parthiaAutomationShowGroups("automation")]],
-  "parthia automation groups", true)
+    [[parthiaAutomationShowGroups("automation")]],
+    "parthia automation groups", true)
   pecho(", view and manage automation groups you have made.\n")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia unfiltered text console", 
-  [[parthiaAutomationShowGroups("automation")]],
-  "parthia automation groups", true)
-  pecho(", opens a window showing text as the pattern system views it.\n")
   
+  pecho("\nInterrupts allow you interrupt your current action when a text pattern is view on screen.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt create", 
+    [[parthiaInterruptCreateHelp()]],
+    "parthia automation update", true)
+  pecho(", how to create or update automation groups.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt toggle", 
+    [[parthiaInterruptToggleHelp()]],
+    "parthia automation start", true)
+  pecho(", how to start an automation task.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt update", 
+    [[parthiaAutomationUpdateHelp("interrupt")]],
+    "parthia automation groups", true)
+  pecho(", create or update an interrupt.\n")
+  
+  pecho("\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia unfiltered text console", 
+    [[parthiaAutomationShowGroups("automation")]],
+    "parthia automation groups", true)
+  pecho(", opens a window showing text as the pattern system views it.\n")
+  local cmdToSend = [[UIManagerEnableWindow("Automation",true,true)]]
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable Automation", 
+    cmdToSend, --runs on click.
+    "Enable Automation window", true)
+  pecho(", opens a docked window with clickable links for your automation tasks.\n")
+  local cmdToSend = [[UIManagerEnableWindow("Interrupts",true,true)]]
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable Interrupts", 
+    cmdToSend, --runs on click.
+    "Enable Interrupts window", true)
+  pecho(", opens a docked window with clickable links for your automation tasks.\n")
   pecho("\n")
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Parthia automation tutorial video.", 
-  [[openUrl("https://youtu.be/snweHw9XI68")]], 
-  "youtube parthia automation tutorial", true)
+    [[openUrl("https://youtu.be/snweHw9XI68")]], 
+    "youtube parthia automation tutorial", true)
   pecho(", view a youtube tutorial video on parthia's automation system.\n")
   
   pecho("\n")
@@ -10725,7 +10782,21 @@ function parthiaAutomationInterruptToggleState(groupName)
   
   return True
 
-end  -- function parthiaAutomationInterruptToggleState()</script>
+end  -- function parthiaAutomationInterruptToggleState()
+
+function parthiaInterruptToggleHelp()
+  
+  pecho("\nThe command format to enable or disable an interrupt is:\n")
+  pecho("\tparthia interrupt toggle [group name]\n")
+  pecho("parthia interrupt has a short name of /interrupt. It's format is the same.\n")
+  pecho("\t/interrupt toggle [group name]\n\n")
+  
+  pecho("[group name] is a name for an automation group.\n")
+  pecho("\tIt can be a new or existing group name.\n")
+  pecho("\t[group name] can contain letters, numbers and spaces.\n")
+  pecho("\tIt can not contain special characters. It IS case sensitive.\n")
+  
+end -- function parthiaInterruptToggleHelp()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">

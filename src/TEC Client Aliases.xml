@@ -1455,14 +1455,6 @@ parthiaAutomationShowGroups("automationInterrupt", matches[2], true)</script>
 					</Alias>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>parthia interrupt toggle [groupName]</name>
-					<script>-- turns interrupts on or off
-parthiaAutomationInterruptToggleState(matches[2])</script>
-					<command></command>
-					<packageName></packageName>
-					<regex>parthia interrupt toggle\s+([a-zA-Z0-9\s+]+)$</regex>
-				</Alias>
-				<Alias isActive="yes" isFolder="no">
 					<name>parthia automation triggers</name>
 					<script>parthiaAutomationTriggerHelp()</script>
 					<command></command>
@@ -1484,6 +1476,51 @@ expandAlias("parthia automation "..tostring(matches[2]))
 					<command></command>
 					<packageName></packageName>
 					<regex>^/auto\s*$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia interrupt create</name>
+					<script>parthiaInterruptCreateHelp()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia interrupt create$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia interrupt toggle</name>
+					<script>parthiaInterruptToggleHelp()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia interrupt toggle$</regex>
+					<Alias isActive="yes" isFolder="no">
+						<name>parthia interrupt toggle [groupName]</name>
+						<script>-- turns interrupts on or off
+parthiaAutomationInterruptToggleState(matches[2])</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>parthia interrupt toggle\s+([a-zA-Z0-9\s+]+)$</regex>
+					</Alias>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia interrupt update</name>
+					<script>parthiaAutomationUpdateHelp("interrupt")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia interrupt update$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>/interrupt [command]</name>
+					<script>--create shorter version of parthia talk command
+expandAlias("parthia interrupt "..tostring(matches[2]))
+</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^/interrupt\s+(.*)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>/interrupt</name>
+					<script>expandAlias("parthia automation")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^/interrupt$</regex>
 				</Alias>
 			</AliasGroup>
 			<Alias isActive="yes" isFolder="no">
