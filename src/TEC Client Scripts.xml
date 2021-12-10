@@ -2927,9 +2927,9 @@ end --end function getTECdebugMode</script>
 --blue errors.
 function debugToDisplay(textMessage)
   textMessage = textMessage:gsub("%\n","") --remove new lines so they do not show in debug window.
-	if getTECDebugMode() then --Is debug mode on?
-		cecho("tecDebugWindow","\n"..textMessage) -- print message to screen
-	end --if debug mode if check
+  if getTECDebugMode() then --Is debug mode on?
+    cecho("tecDebugWindow","\n"..textMessage) -- print message to screen
+  end --if debug mode if check
 end --end displayToDebug function
 </script>
 					<eventHandlerList />
@@ -15763,6 +15763,8 @@ function interruptsWindowResize()
       .." interruptsWindowConsole Height: "..interruptsWindowConsole:get_height()
     )--end debugToDisplay
   end --end if display debug is enabled.
+  
+  refreshInterruptsWindow()  -- refresh the text in the window
 
 end --interruptsWindowResize()
 
@@ -15832,6 +15834,8 @@ function automationWindowResize()
       .." automationWindowConsole Height: "..automationWindowConsole:get_height()
     )--end debugToDisplay
   end --end if display debug is enabled.
+  
+  refreshAutomationWindow()  -- refresh the text in the window
 
 end --automationWindowResize()
 
