@@ -1150,8 +1150,8 @@ tecResetRoomCharacterWindow()
 tempTimer(.6,[[pecho("Please wait while parthia collects information about this character.")]]) --wait until after the notification message is displayed.
 parthiaPlayer.CurrentCharacter = { }
 local statsCollectionTimer = tempTimer(1.1, [[runStatsCollection(false)]])
-tempTimer(2.5, [[runSkillsCollection(false)]])
-tempTimer(3, [[pecho("Completed character information collection.\n")]])
+-- tempTimer(2.5, [[runSkillsCollection(false)]])
+tempTimer(2.1, [[pecho("Completed character information collection.\n")]])
 
 parthiaStopScripts() --stop all automation scripts</script>
 				<triggerType>0</triggerType>

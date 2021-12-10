@@ -9294,7 +9294,6 @@ How automation interupts are handled-------------------------------------------
       Make option to disable autoload
     help system
     aliases that have ~ in them, move the patterns to the end of the command
-    Windows for automation and interrupt groups
   
   Interupt groups are stored in tecsettings.automationInterrupts
   Triggers for interrupts are stored in tecSettings.automationInterruptTriggers
