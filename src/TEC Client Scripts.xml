@@ -129,6 +129,7 @@ end --function parthiaTalkFilter(message)</script>
       [[tecReportIssues()]],
       "Report issues or bugs", true)
     message = "Error function parthiaEcho, was sent a non string variable. Type sent was "..tostring(type(message))
+    cecho("&lt;red:&gt;"..message.."\n")
   else --message is a string, display it
     if not talkOnly then cecho(message) end
     if getParthiaTalk() or forceSpeech then --if parthia talk is enabled, or forceSpeech is set
