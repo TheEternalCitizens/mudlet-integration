@@ -1495,13 +1495,13 @@ selectCurrentLine() --select current line in main console.
 filteredLine , _ , _ = getSelection() --_ prevents the variable from being retained
 deselect() --unselect line in main.
 
+if not filteredLine then filteredLine = "" end --if nothing was in main make filteredLine empty.
+--Without this you will receive errors that filteredLine is nil.
+
 -- send the not yet filtered text to the unfiltered text window if it is enabled.
 if unfilteredTextWindowMode then
   cecho("Parthia Unfiltered Text Console","\n"..filteredLine)
 end  -- if unfilteredTextWindowMode then
-
-if not filteredLine then filteredLine = "" end --if nothing was in main make filteredLine empty.
---Without this you will receive errors that filteredLine is nil.
 
 --Replaces what is in brackets with what is in quotes
 filteredLine = string.gsub(filteredLine, [[&amp;lt;]], "&lt;")
