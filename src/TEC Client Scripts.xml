@@ -7331,22 +7331,11 @@ Handles refreshing the text in the interrupts window.
         [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[")]],
         "parthia "..automationTypeName.." groups "..groupName, true)
       
-      --Make a customized edit button for interrupts vs automations
-      if automationType == 'automationInterrupt' then
-      
-        cechoLink("automationWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
-        --parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]
-        [[printCmdLine("parthia interrupt ]]..groupName..[[, ]]..groupRepeat..[[, ]]..callPattern..[[~ ]]..firstCommandTrigger..[[")]],
+      -- Edit group button
+      cechoLink("automationWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
+        [[parthiaAutomationUpdateHelp();
+        printCmdLine("parthia automation ]]..groupName..[[, 1 = replace_with_your_command, 0, 0 &amp; 0")]],
         "fill command line with edit command for "..groupName, true)
-        
-      else  -- This is a standard automation
-      
-        -- Edit group button
-        cechoLink("automationWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
-          [[printCmdLine("parthia automation ]]..groupName..[[, 1 = replace_with_your_command, 0~ 0, 0")]],
-          "fill command line with edit command for "..groupName, true)
-      
-      end  -- if automationType == 'automationInterrupt' then
               
       -- Remove group button
       cechoLink("automationWindowConsole", "  &lt;:ansi_red&gt;Remove", 
@@ -9332,8 +9321,6 @@ How automation interupts are handled-------------------------------------------
   ToDo:
     interrupts auto load when not using welcome room character
       Make option to disable autoload
-    help system
-    aliases that have ~ in them, move the patterns to the end of the command
   
   Interupt groups are stored in tecsettings.automationInterrupts
   Triggers for interrupts are stored in tecSettings.automationInterruptTriggers
@@ -9653,9 +9640,9 @@ function parthiaAutomationUpdateHelp(automationType)
 
   -- Show this commands help message
   pecho("\nThe command format to create or update an "..automationType.." group is:\n")
-  pecho("\tparthia "..automationType.." [group name], [position number] = [command], [trigger]~ [repeat on fail], [insert]\n")
+  pecho("\tparthia "..automationType.." [group name], [position number] = [command], [repeat on fail], [insert] &amp; [trigger]\n")
   pecho("parthia "..automationType.." has a short name of /auto. It's format is the same.\n")
-  pecho("\t/auto [group name], [position number] = [command], [trigger]~ [repeat on fail], [insert]\n\n")
+  pecho("\t/auto [group name], [position number] = [command], [command], [repeat on fail], [insert] &amp; [trigger]\n\n")
   pecho("[group name] is a name for an "..automationType.." group.\n")
   pecho("\tIt can be a new or existing group name.\n")
   pecho("\t[group name] can contain letters, numbers and spaces.\n")
@@ -9699,8 +9686,8 @@ function parthiaAutomationUpdateHelp(automationType)
   pecho("When creating an "..automationType.." group, remeber that when you call it you can have the entire group repeat a number of times or infinitely.\n\n")
   
   pecho("Command Format:\n")
-  pecho("parthia "..automationType.." [group name], [position number] = [command], [trigger]~ [repeat on fail], [insert]\n")
-  printCmdLine("parthia "..automationType.." replace_with_your_group, 1 = replace_with_your_command, 0~ 0, 0")
+  pecho("parthia "..automationType.." [group name], [position number] = [command], [repeat on fail], [insert] &amp; [trigger]\n")
+  printCmdLine("parthia "..automationType.." replace_with_your_group, 1 = replace_with_your_command, 0, 0 &amp; 0")
 
 end -- function parthiaAutomationUpdateHelp()
 
@@ -9792,7 +9779,7 @@ function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern, 
   
     pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt update\n\n", 
         [[parthiaAutomationUpdateHelp("interrupt");
-        printCmdLine("parthia interrupt replace_with_your_group, 1 = replace_with_your_command, 0~ 0, 0")]],
+        printCmdLine("parthia interrupt ]]..groupName..[[, 1 = replace_with_your_command, 0, 0 &amp; 0")]],
         "Add commands to "..groupName, true)
   
   end  -- if newInterruptGroup then
@@ -10472,7 +10459,7 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
         -- provide an easy method to edit this group position
         pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Edit", 
         [[parthiaAutomationUpdateHelp("]]..automationTypeName..[[");
-        printCmdLine("parthia ]]..automationTypeName..[[ ]]..groupName..[[, ]]..groupPosition..[[ = ]]..automationCommand..[[, ]]..automationTrigger..[[~ ]]..repeatOnFail..[[, 0")]],
+        printCmdLine("parthia ]]..automationTypeName..[[ ]]..groupName..[[, ]]..groupPosition..[[ = ]]..automationCommand..[[, ]]..repeatOnFail..[[, 0 &amp; ]]..automationTrigger..[[")]],
         "change group position "..groupPosition.." for group "..groupName, true)
         
         -- Provide an easy method to remove this group.
@@ -10580,7 +10567,8 @@ function showAutomationGroupTableData(groupName, automationTypeName, automationT
       
         -- Edit group button
         pechoLink("  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
-          [[printCmdLine("parthia automation ]]..groupName..[[, 1 = replace_with_your_command, 0~ 0, 0")]],
+          [[parthiaAutomationUpdateHelp();
+          printCmdLine("parthia automation ]]..groupName..[[, 1 = replace_with_your_command, 0, 0 &amp; 0")]],
           "fill command line with edit command for "..groupName, true)
       
       end  -- if automationType == 'automationInterrupt' then
