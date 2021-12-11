@@ -1499,9 +1499,9 @@ if not filteredLine then filteredLine = "" end --if nothing was in main make fil
 --Without this you will receive errors that filteredLine is nil.
 
 -- send the not yet filtered text to the unfiltered text window if it is enabled.
-if unfilteredTextWindowMode then
+if unfilteredTextConsoleMode then
   cecho("Parthia Unfiltered Text Console","\n"..filteredLine)
-end  -- if unfilteredTextWindowMode then
+end  -- if unfilteredTextConsoleMode then
 
 --Replaces what is in brackets with what is in quotes
 filteredLine = string.gsub(filteredLine, [[&amp;lt;]], "&lt;")

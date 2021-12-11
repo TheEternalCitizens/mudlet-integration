@@ -516,7 +516,7 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   
   tecSettings.automationInterruptTriggers = {} --used to track interrupt triggers. groupName is the key, trigger ID is the value
   
-  unfilteredTextWindowMode = false  -- a snap out console window ( userWindow ) that shows unfiltered text from TEC
+  unfilteredTextConsoleMode = false  -- a snap out console window ( userWindow ) that shows unfiltered text from TEC
 
   if displayToScreen then pecho("Parthia settings set to default.\n") end
 
@@ -7372,10 +7372,10 @@ end  -- function refreshAutomationWindow()</script>
 function setUnfilteredTextConsole(mode)
 
   --Set mode to unfiltered text
-  unfilteredTextWindowMode = mode or false
+  unfilteredTextConsoleMode = mode or false
 
   -- create the window if enabling
-  if unfilteredTextWindowMode then
+  if unfilteredTextConsoleMode then
     
     openUserWindow("Parthia Unfiltered Text Console", true, false)
     
@@ -7384,12 +7384,16 @@ function setUnfilteredTextConsole(mode)
     -- add a scroll bar if user has scroll bars enabled.
     if tecSettings.showScrollBars then enableScrollBar("Parthia Unfiltered Text Console") end
     
+    unfilteredTextConsoleMode = true
+    
     pecho("Unfiltered text window opened.\n")
     
   -- remove the window if disabling
   else
   
     closeUserWindow("Parthia Unfiltered Text Console")
+    
+    unfilteredTextConsoleMode = false
     
     pecho("Closed unfiltered text Console.\n")
     
@@ -10309,7 +10313,7 @@ function parthiaAutomationHelp()
   
   pecho("\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia unfiltered text console", 
-    [[setUnfilteredTextConsole(true)]],
+    [[expandAlias("parthia unfiltered text console")]],
     "parthia automation groups", true)
   pecho(", opens a window showing text as the pattern system views it.\n")
   local cmdToSend = [[UIManagerEnableWindow("Automation",true,true)]]

@@ -1530,7 +1530,7 @@ Toggles the state of the unfiltered text window.
 ]]--
 
 -- if the window is currently enabled, disable it.
-if unfilteredTextWindowMode then
+if unfilteredTextConsoleMode then
   
   -- disable and close the console
   setUnfilteredTextConsole(false)
@@ -1541,9 +1541,9 @@ else
   -- enable and open the console
   setUnfilteredTextConsole(true)
   
-end  -- if unfilteredTextWindowMode then
+end  -- if unfilteredTextConsoleMode then
 
-return true</script>
+</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^parthia unfiltered text console$</regex>
