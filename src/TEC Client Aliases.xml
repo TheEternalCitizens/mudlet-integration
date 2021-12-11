@@ -1548,6 +1548,14 @@ return true</script>
 				<packageName></packageName>
 				<regex>^parthia unfiltered text console$</regex>
 			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>parthia refresh</name>
+				<script>guiChange()
+pecho("Windows refreshed.\n")</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^parthia refresh$</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Debug</name>

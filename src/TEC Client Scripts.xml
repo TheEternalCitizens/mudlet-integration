@@ -7245,22 +7245,11 @@ Handles refreshing the text in the interrupts window.
         [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[")]],
         "parthia "..automationTypeName.." groups "..groupName, true)
       
-      --Make a customized edit button for interrupts vs automations
-      if automationType == 'automationInterrupt' then
-      
-        cechoLink("interruptsWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
+      --Make a customized edit button for interrupts
+      cechoLink("interruptsWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
         --parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]
-        [[printCmdLine("parthia interrupt ]]..groupName..[[, ]]..groupRepeat..[[, ]]..callPattern..[[~ ]]..firstCommandTrigger..[[")]],
+        [[parthiaInterruptCreateHelp();printCmdLine("parthia interrupt ]]..groupName..[[, ]]..groupRepeat..[[, ]]..callPattern..[[~ ]]..firstCommandTrigger..[[")]],
         "fill command line with edit command for "..groupName, true)
-        
-      else  -- This is a standard automation
-      
-        -- Edit group button
-        cechoLink("interruptsWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
-          [[printCmdLine("parthia automation ]]..groupName..[[, 1 = replace_with_your_command, 0~ 0, 0")]],
-          "fill command line with edit command for "..groupName, true)
-      
-      end  -- if automationType == 'automationInterrupt' then
               
       -- Remove group button
       cechoLink("interruptsWindowConsole", "  &lt;:ansi_red&gt;Remove", 
@@ -7270,12 +7259,17 @@ Handles refreshing the text in the interrupts window.
       cecho("interruptsWindowConsole", "\n\n")
       
     end  -- for groupName tecSettings[automationType] do
+    
+    cechoLink("interruptsWindowConsole",
+      "&lt;:"..tecSettings.helpHighlightColor.."&gt;create new interrupt", 
+      [[parthiaInterruptCreateHelp()]],
+      "parthia automation groups", true)
 
 end  -- function refreshInterruptsWindow()</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>refreshAutomationWindow</name>
+					<name>refreshAutomationWindow()</name>
 					<packageName></packageName>
 					<script>function refreshAutomationWindow()
 --[[
@@ -7360,6 +7354,11 @@ Handles refreshing the text in the interrupts window.
       cecho("automationWindowConsole", "\n\n")
       
     end  -- for groupName tecSettings[automationType] do
+    
+    cechoLink("automationWindowConsole",
+      "&lt;:"..tecSettings.helpHighlightColor.."&gt;create new automation", 
+      [[parthiaAutomationUpdateHelp()]],
+      "parthia automation groups", true)
 
 end  -- function refreshAutomationWindow()</script>
 					<eventHandlerList />
@@ -9728,6 +9727,8 @@ Creates an automation interrupt group.
 
 function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern, firstCommandTrigger)
 
+  local newInterruptGroup = false  -- store if this is a new interrupt group
+
   -- Make certain groupRepeat is a number that is not zero.
   if not parthiaToBoolean(groupRepeat) then
     pecho('Repeat number (second argument in the command) can not be 0.')
@@ -9738,6 +9739,7 @@ function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern, 
   -- tecSettings.automation is created automatically when parthia starts.
   if not tecSettings.automationInterrupt[groupName] then
     pecho("Interrupt group "..groupName.." does not exist. Creating it now.\n")
+    newInterruptGroup = true
     tecSettings.automationInterrupt[groupName] = {}  -- Make the group name an empty dictionary
   else
     pecho("Automation interrupt group "..groupName.." updated.\n")
@@ -9777,6 +9779,17 @@ function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern, 
     pecho("\tNext command called when you see: 'You are no longer busy.'\n")
     
   end  -- if parthiaToBoolean(firstCommandTrigger) then
+  
+  if newInterruptGroup then
+  
+    pecho("\nIf you would like to add commands to this new interupt click or run: ")
+  
+    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt update\n\n", 
+        [[parthiaAutomationUpdateHelp("interrupt");
+        printCmdLine("parthia interrupt replace_with_your_group, 1 = replace_with_your_command, 0~ 0, 0")]],
+        "Add commands to "..groupName, true)
+  
+  end  -- if newInterruptGroup then
   
   -- Remind the user to save their chages
   dontForgetToSave()
@@ -10452,7 +10465,8 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
         
         -- provide an easy method to edit this group position
         pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Edit", 
-        [[printCmdLine("parthia ]]..automationTypeName..[[ ]]..groupName..[[, ]]..groupPosition..[[ = ]]..automationCommand..[[, ]]..automationTrigger..[[~ ]]..repeatOnFail..[[, 0")]],
+        [[parthiaAutomationUpdateHelp("]]..automationTypeName..[[");
+        printCmdLine("parthia ]]..automationTypeName..[[ ]]..groupName..[[, ]]..groupPosition..[[ = ]]..automationCommand..[[, ]]..automationTrigger..[[~ ]]..repeatOnFail..[[, 0")]],
         "change group position "..groupPosition.." for group "..groupName, true)
         
         -- Provide an easy method to remove this group.
@@ -10553,7 +10567,7 @@ function showAutomationGroupTableData(groupName, automationTypeName, automationT
       
         pechoLink("  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
         --parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]
-        [[printCmdLine("parthia interrupt ]]..groupName..[[, ]]..groupRepeat..[[, ]]..callPattern..[[~ ]]..firstCommandTrigger..[[")]],
+        [[parthiaInterruptCreateHelp();printCmdLine("parthia interrupt ]]..groupName..[[, ]]..groupRepeat..[[, ]]..callPattern..[[~ ]]..firstCommandTrigger..[[")]],
         "fill command line with edit command for "..groupName, true)
         
       else  -- This is a standard automation
