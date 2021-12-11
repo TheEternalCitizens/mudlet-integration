@@ -5486,7 +5486,9 @@ function UIManagerGUIframeThemes(displayToScreen)
   uiThemes.NiceHat.windows["TEC Map"] = "bottomright"
   uiThemes.NiceHat.windows["Settings"] = "bottomleft"
   uiThemes.NiceHat.windows["Macros"] = "bottomleft"
+  uiThemes.NiceHat.windows["Automation"] = "bottomleft"
   uiThemes.NiceHat.windows["Status"] = "bottom"
+  uiThemes.NiceHat.windows["Interrupts"] = "topleft"
   uiThemes.NiceHat.windows["Compass"] = "topleft"
   uiThemes.NiceHat.windows["Communications"] = "top"
   uiThemes.NiceHat.windows["Room Characters"] = "topright"
@@ -5555,7 +5557,7 @@ function UIManagerGUIframeThemes(displayToScreen)
 --PASTE ABOVE----------------------------------------
 
   --Set the default theme here
-  uiThemesDefaultLayout = uiThemes.orchil --set default theme here
+  uiThemesDefaultLayout = uiThemes.NiceHat --set default theme here
 
   --Load theme from save, or load a default theme if ther was no saved theme
   if UIManagerSettings.PlayersTheme then --if there is a PlayerTheme loaded from file.
