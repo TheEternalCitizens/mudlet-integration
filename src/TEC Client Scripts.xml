@@ -15068,8 +15068,9 @@ for _,v in pairs(tecCompass.dirs) do
   
   SetTooltip(tecCompass[v].name, "Go "..v.." ") --create hover tooltip for direction
   
-	--if tecCompass is clicked, go in that direction
-	tecCompass[v]:setClickCallback("tecCompass.click",v)  
+  --if tecCompass is clicked, go in that direction
+  tecCompass[v]:setClickCallback("tecCompass.click",v)  
+
 end --end loop through tecCompass.dirs
 
 --keeps the tecCompass square as the windows are adjusted.
@@ -15077,22 +15078,18 @@ function tecCompass.drawKeepSquare()
 
   --tecCompass.window:move(0,2) --small black break at top.
 
-	--if the width of the parent label is less than the height.
-	--Resize the background label itself keeping the width and height equal.
-	if tecCompass.window:get_width() &lt; tecCompass.window:get_height() then
-  	tecCompass.back:resize(tecCompass.window:get_width(), tecCompass.window:get_width())
-	end --en if width is less than height.
-	
-	--if the height of the parent label is less than the width.
-	--Resize the background label itself keeping the width and height equal.
-	if tecCompass.window:get_height() &lt; tecCompass.window:get_width() then
-  	tecCompass.back:resize(tecCompass.window:get_height(), tecCompass.window.height)
-	end --end if height is less than width
-  
-  if tecCompass.back:get_width() &lt; tecCompass.window:get_width() then
-    tecCompass.back:move((tecCompass.window:get_width() - tecCompass.back:get_width()) * .5)
-  end
-	
+  --if the width of the parent label is less than the height.
+  --Resize the background label itself keeping the width and height equal.
+  if tecCompass.window:get_width() &lt; tecCompass.window:get_height() then
+    tecCompass.back:resize(tecCompass.window:get_width(), tecCompass.window:get_width())
+  end --en if width is less than height.
+
+  --if the height of the parent label is less than the width.
+  --Resize the background label itself keeping the width and height equal.
+  if tecCompass.window:get_height() &lt; tecCompass.window:get_width() then
+    tecCompass.back:resize(tecCompass.window:get_height(), tecCompass.window.height)
+  end --end if height is less than width
+
 end --end function keep square.
 
 --Add the status bar to the screen. On the bottom
