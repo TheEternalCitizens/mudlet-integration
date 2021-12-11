@@ -9707,7 +9707,7 @@ function parthiaAutomationTriggerHelp()
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia unfiltered text console", 
     [[parthiaAutomationShowGroups("automation")]],
     "parthia automation groups", true)
-  pecho("\t\t\tThere will be a docked window you will need to drag out to view.\n")
+  pecho(", There will be a docked window you will need to drag out to view.\n")
 end -- function parthiaAutomationTriggerHelp()</script>
 						<eventHandlerList />
 					</Script>
