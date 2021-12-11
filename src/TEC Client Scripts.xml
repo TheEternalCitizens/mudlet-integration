@@ -5463,9 +5463,9 @@ function UIManagerGUIframeThemes(displayToScreen)
       tabHeight = tabsHeight, --tabs height
       tabStyle = tabsStyle, --Tabs stylesheet
       tabEchoStyle = tabsFontStyle, --text appearence in tabs
-      leftStartWidth = eighthW, --left border width
+      leftStartWidth = eighthW + 50, --left border width
       leftStartHeight = halfH, --Where top and bottom windows meet
-      rightStartWidth = quarterW, --Right border window
+      rightStartWidth = eighthW + 50, --Right border window
       rightStartHeight = halfH, --Where top and bottom windows meet
       topStartHeight = eighthH, --width of top
       bottomStartHeight = 50, --width of bottom
