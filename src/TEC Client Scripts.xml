@@ -582,15 +582,9 @@ function tecFileLoadSettings(displayToScreen)
   end --end if file exists else
   
   -- load automations data
-  parthiaAutomationLoad(displayToScreen)
-  --refresh the text on the interrupts window, only if the function has initialized
-  if refreshInterruptsWindow then
-    refreshInterruptsWindow()
-  end  -- if refreshInterruptsWindow then
-  -- Refresh the text in the automation window, only if the function has initialized
-  if refreshAutomationWindow then
-    refreshAutomationWindow()
-  end  -- if refreshAutomationWindow then
+  if parthiaAutomationLoad then
+    parthiaAutomationLoad(displayToScreen)
+  end  -- if parthiaAutomationLoad then
   
 end --function tecFileLoadSettings
 
@@ -10928,6 +10922,16 @@ end -- function parthiaAutomationSave(displayToScreen)</script>
   else --the save file does not exist
     if displayToScreen then pecho("[ Info ]  - No automations data file.\n") end
   end -- if io.exists(parthiaAutomationSavePath)
+  
+  --refresh the text on the interrupts window, only if the function has initialized
+  if refreshInterruptsWindow then
+    refreshInterruptsWindow()
+  end  -- if refreshInterruptsWindow then
+  
+  -- Refresh the text in the automation window, only if the function has initialized
+  if refreshAutomationWindow then
+    refreshAutomationWindow()
+  end  -- if refreshAutomationWindow then
 
 end -- function parthiaAutomationLoad(displayToScreen)</script>
 						<eventHandlerList />
@@ -16203,6 +16207,8 @@ end --if getHelpDevs()
 
 parthiaMap.config() --load default settings for mapping system
 parthiaMap.load() --load mapping data from file.
+
+parthiaAutomationLoad(displayToScreen)  -- Load automations data from file
 
 parthiaStopScripts(false) --make certain script triggers are not running on startup
 
