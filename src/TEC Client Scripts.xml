@@ -7206,15 +7206,15 @@ Handles refreshing the text in the interrupts window.
   local automationType = 'automationInterrupt'
   local automationTypeName = 'interrupt'
 
-  for groupName, _ in pairs(tecSettings[automationType]) do
+  for groupName, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]) do
     
       cecho("interruptsWindowConsole", groupName..":\n")
       
       -- collect variables from interrupts, on standard automations these would just be nil
-      local groupEnabled = tecSettings[automationType][groupName].enabled
-      local firstCommandTrigger = tecSettings[automationType][groupName].firstCommandTrigger
-      local groupRepeat = tecSettings[automationType][groupName].interruptRepeat
-      local callPattern = tecSettings[automationType][groupName].pattern
+      local groupEnabled = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled
+      local firstCommandTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].firstCommandTrigger
+      local groupRepeat = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].interruptRepeat
+      local callPattern = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].pattern
       
       -- Make a Start button for automation OR an enable disable button for interrupts
       if automationType == 'automationInterrupt' then
@@ -7226,7 +7226,7 @@ Handles refreshing the text in the interrupts window.
         if groupEnabled then
           toggleInterruptButtonColor = "ansi_green"
           toggleInterruptButtonState = "Active"
-        end  -- if tecSettings[automationType][groupName].enabled then
+        end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled then
         
         -- Display the button
         cechoLink("interruptsWindowConsole", "  &lt;:"..toggleInterruptButtonColor.."&gt;"..toggleInterruptButtonState,
@@ -7260,7 +7260,7 @@ Handles refreshing the text in the interrupts window.
       
       cecho("interruptsWindowConsole", "\n\n")
       
-    end  -- for groupName tecSettings[automationType] do
+    end  -- for groupName parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] do
     
     cechoLink("interruptsWindowConsole",
       "&lt;:"..tecSettings.helpHighlightColor.."&gt;create new interrupt", 
@@ -7290,15 +7290,15 @@ Handles refreshing the text in the interrupts window.
   local automationType = 'automation'
   local automationTypeName = 'automation'
 
-  for groupName, _ in pairs(tecSettings[automationType]) do
+  for groupName, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]) do
     
       cecho("automationWindowConsole", groupName..":\n")
       
       -- collect variables from interrupts, on standard automations these would just be nil
-      local groupEnabled = tecSettings[automationType][groupName].enabled
-      local firstCommandTrigger = tecSettings[automationType][groupName].firstCommandTrigger
-      local groupRepeat = tecSettings[automationType][groupName].interruptRepeat
-      local callPattern = tecSettings[automationType][groupName].pattern
+      local groupEnabled = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled
+      local firstCommandTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].firstCommandTrigger
+      local groupRepeat = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].interruptRepeat
+      local callPattern = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].pattern
       
       -- Make a Start button for automation OR an enable disable button for interrupts
       if automationType == 'automationInterrupt' then
@@ -7310,7 +7310,7 @@ Handles refreshing the text in the interrupts window.
         if groupEnabled then
           toggleInterruptButtonColor = "ansi_green"
           toggleInterruptButtonState = "Active"
-        end  -- if tecSettings[automationType][groupName].enabled then
+        end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled then
         
         -- Display the button
         cechoLink("automationWindowConsole", "  &lt;:"..toggleInterruptButtonColor.."&gt;"..toggleInterruptButtonState,
@@ -7344,7 +7344,7 @@ Handles refreshing the text in the interrupts window.
       
       cecho("automationWindowConsole", "\n\n")
       
-    end  -- for groupName tecSettings[automationType] do
+    end  -- for groupName parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] do
     
     cechoLink("automationWindowConsole",
       "&lt;:"..tecSettings.helpHighlightColor.."&gt;create new automation", 
@@ -9387,14 +9387,14 @@ How automation interupts are handled-------------------------------------------
   parthiaAutomationUpdate()
     add on an argument automationType automationType is "automation" or "automationInterrupt".
       To reflect parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt.
-    Any time parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation is set or called, use tecsettings[automationType] instead.
+    Any time parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation is set or called, use parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] instead.
     If the group does not exist
       if the automation type is interrupt
         prompt the user to create the interrupt group, repeat and pattern is required...
   parthiaAutomationShowGroups()
     add on an argument automationType automationType is "automation" or "automationInterrupt".
       To reflect parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt.
-    Any time parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation is set or called, use tecsettings[automationType] instead.
+    Any time parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation is set or called, use parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] instead.
   parthiaAutomationInterruptStop()
     parthiaAutomationInterruptRunning = false
     parthiaAutomationInterruptIterationCounter = 0
@@ -9419,7 +9419,7 @@ How automation interupts are handled-------------------------------------------
     else
       collect groupName and repeat from parthiaAutomationRunning
       set automationType to "automation"
-    Change all calls to parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation to tecsettings[automationType]
+    Change all calls to parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation to parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]
     if groupRepeat has been reached
       it automationType is automationInterrupt
         Call parthiaAutomationInterruptStop()
@@ -9434,7 +9434,7 @@ How automation interupts are handled-------------------------------------------
     else
       collect groupName and repeat from parthiaAutomationRunning
       set automationType to "automation"
-    Change all calls to parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation to tecsettings[automationType]
+    Change all calls to parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation to parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]
     If parthiaAutomationGroupPosition is being set to a value, anywhere in the function
       Use an if parthiaAutomationInterruptRunning
         if true
@@ -9536,16 +9536,16 @@ aliases---------------------------------------------------------------
 						<script>--[[
 Allows the user to update or create automation groups and group positions within.
   It makes certain the groupPosition passed is not a 0.
-  If the groupName passed does not exist in the tecSettings[automationType] table, it is added.
+  If the groupName passed does not exist in the parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] table, it is added.
   The command, seconds to wait and repeat on failure are added to that group.
   A message is presented to the user, and they are reminded to save.
 
 Scripts\Game Commands\auto\parthiaAutomationUpdate(parthiaCmdString)
   Makes certain the position number is possible, for lua arrays must be 1 or greater.
   Creates a new automation group if it does not already exist.
-    tecSettings[automationType][group name]
+    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][group name]
   Sets the command in the group
-    tecSettings[automationType][group name][position number] = {[command], [trigger], [repeat on fail]}
+    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][group name][position number] = {[command], [trigger], [repeat on fail]}
   Prompts user to save.
 ]]--
 
@@ -9564,9 +9564,9 @@ function parthiaAutomationUpdate(automationType, groupName, groupPosition,
   -- Due to the regex pattern that captured groupPosition it is impossible for it to be a negative number.
   -- No check for positive numbers only required.
   
-  -- if tecSettings[automationType][groupName] does not exist create it
-  -- tecSettings[automationType] is created automatically when parthia starts.
-  if not tecSettings[automationType][groupName] then
+  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] does not exist create it
+  -- parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] is created automatically when parthia starts.
+  if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
   
     -- this this is an interrupt prompt the user to create the interrupt first, pattern and repeat count is needed
     if automationType == "automationInterrupt" then
@@ -9574,11 +9574,11 @@ function parthiaAutomationUpdate(automationType, groupName, groupPosition,
       return true
     else -- this is a standard automation group
       pecho("Automation group "..groupName.." does not exist. Creating it now.\n")
-      tecSettings[automationType][groupName] = {}  -- Make the group name an empty dictionary
+      parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] = {}  -- Make the group name an empty dictionary
     end -- if automationType == "automationInterrupt" then
   else -- this group already exists, this is an update.
     pecho("Automation group "..groupName.." updated.\n")
-  end  -- END if not tecSettings[automationType][groupName] then
+  end  -- END if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
   
   -- a temp table to insert into the automations group name
   local positionTable = { 
@@ -9589,12 +9589,12 @@ function parthiaAutomationUpdate(automationType, groupName, groupPosition,
   
   -- if the user would like to insert rather than replace an entry
   if parthiaToBoolean(insert) then
-    table.insert(tecSettings[automationType][groupName], groupPosition, positionTable)
+    table.insert(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName], groupPosition, positionTable)
   else  -- The user would like to replace an entry.
     -- remove any possible previous entry
-    table.remove(tecSettings[automationType][groupName], groupPosition)
+    table.remove(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName], groupPosition)
     -- Save the group and settings passed by the user
-    table.insert(tecSettings[automationType][groupName], groupPosition, positionTable)
+    table.insert(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName], groupPosition, positionTable)
   end  -- if not parthiaToBoolean(insert)
 
   -- Show user the changes they made.
@@ -10029,11 +10029,11 @@ function parthiaAutomationCall()
   end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait then
 
   -- The command to run
-  local automationCommand = tecSettings[automationType][groupName][groupPosition].automationCommand
+  local automationCommand = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].automationCommand
   -- The delay before calling the next command
-  local automationTrigger = tecSettings[automationType][groupName][groupPosition].automationTrigger
+  local automationTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].automationTrigger
   -- If this command should repeat on failure
-  local repeatOnFail = tecSettings[automationType][groupName][groupPosition].repeatOnFail
+  local repeatOnFail = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].repeatOnFail
 
   -- This will be used in the if statement above that determins if automation should continue to the next command
   parthiaAutomationRepeatCmdOnFailure = parthiaToBoolean(repeatOnFail)
@@ -10185,12 +10185,12 @@ function parthiaAutomationIncreaseGroupIteration()
   local automationGroupKeySet = {}
   
   -- Gather all the keys for the group and sort them.
-  for key, _ in pairs(tecSettings[automationType][groupName]) do
+  for key, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]) do
     -- Do not insert pattern or interruptRepeat used on interrupt groups, only numrical keys
     if tonumber(key) then
       table.insert(automationGroupKeySet, key)
     end  -- if tonumber(key) then
-  end -- for key, _ in pairs(tecSettings[automationType][groupName]) do
+  end -- for key, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]) do
   
   -- Sort the table 
   table.sort(automationGroupKeySet)
@@ -10333,10 +10333,10 @@ end  -- function parthiaAutomationHelp()</script>
 						<name>parthiaAutomationShowGroups()</name>
 						<packageName></packageName>
 						<script>--[[
-Allows dynamic management of the tecSettings[automationType] group tables.
+Allows dynamic management of the parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] group tables.
 
 Example of group creation:
-  tecSettings[automationType][groupName][groupPosition] = { 
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition] = { 
                                         automationCommand = automationCommand,
                                         automationTrigger = tonumber(automationTrigger),
                                         repeatOnFail = tonumber(repeatOnFail)
@@ -10362,7 +10362,7 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
   if groupName then
   
     -- if the group exists show information about it or remove it if removeElement is truthy
-    if tecSettings[automationType][groupName] then
+    if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
   
       -- an element needs to be removed from an automation table.
       if removeElement then
@@ -10371,9 +10371,9 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
         if groupPosition then
           
           -- Verify this group position exists.
-          if tecSettings[automationType][groupName][groupPosition] then
+          if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition] then
             
-            tecSettings[automationType][groupName][groupPosition] = nil
+            parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition] = nil
             pecho("Postion "..groupPosition.." was removed from group "..groupName.."\n")
             pecho("If this was an accidental delition you can restore the position with:\n")
             pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia load", 
@@ -10396,17 +10396,17 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
             
             pecho("Position: "..groupPosition.." does not exist in group: "..groupName.."\n")
           
-          end  -- if tecSettings[automationType][groupName][groupPosition] then
+          end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition] then
         
         -- a group position was not specified, remove the entire group.
         else  
         
           -- If this is an active interrupt, disable it first to remove the trigger.
-          if tecSettings[automationType][groupName].enabled then
+          if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled then
             parthiaAutomationInterruptToggleState(groupName)
-          end  -- if tecSettings[automationType][groupName].enabled then
+          end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled then
           
-          tecSettings[automationType][groupName] = nil
+          parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] = nil
           pecho("Group "..groupName.." deleted.\n")
           pecho("If this was an accidental delition you can restore the group with:\n")
           pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia load", 
@@ -10433,16 +10433,16 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
       pecho("Automation group: "..groupName.."\n")
       
       -- Display data in the automation table.
-      showAutomationGroupTableData(groupName, automationTypeName, automationType, tecSettings[automationType][groupName])
+      showAutomationGroupTableData(groupName, automationTypeName, automationType, parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName])
       
       -- Create a temp table to show the human logical sorted version of this automation group.
       local sortedGroupNameTable = {}
-      for key, _ in pairs(tecSettings[automationType][groupName]) do
+      for key, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]) do
         -- Do not insert pattern or interruptRepeat used on interrupt groups, only numrical keys
         if tonumber(key) then
           table.insert(sortedGroupNameTable, key)
         end  -- if tonumber(key) then
-      end -- for _, value in pairs(tecSettings[automationType][groupName]) do
+      end -- for _, value in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]) do
       table.sort(sortedGroupNameTable)
       
       -- Loop through the sorted group.
@@ -10451,9 +10451,9 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
       for _, groupPosition in pairs(sortedGroupNameTable) do
         
         -- Collect variables from this automation group, at the correct position.
-        local automationCommand = tecSettings[automationType][groupName][groupPosition].automationCommand
-        local automationTrigger = tecSettings[automationType][groupName][groupPosition].automationTrigger
-        local repeatOnFail = tecSettings[automationType][groupName][groupPosition].repeatOnFail
+        local automationCommand = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].automationCommand
+        local automationTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].automationTrigger
+        local repeatOnFail = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].repeatOnFail
         
         -- Show the group position
         pecho("\tGroup Position: "..groupPosition..", ")
@@ -10491,28 +10491,28 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
         
         pecho("\t\tRepeat this command if it fails: "..tostring(parthiaToBoolean(repeatOnFail)).."\n")
         
-      end  -- for groupPosition, automationGroup in pairs(tecSettings[automationType][groupName]) do
+      end  -- for groupPosition, automationGroup in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]) do
       
     -- The automation group passed does not exist.
     else
       pecho("Automation group named ["..groupName.."] does not exist\n")
-    end  -- if tecSettings[automationType][groupName] then
+    end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
   
   -- No group name was provided show all the groups, but no details of each group until the link is clicked.
   else
     
     pecho("You can click a blue link below to start or show that group's information. You can click a red link to remove that group.\n\n")
     
-    for groupName, _ in pairs(tecSettings[automationType]) do
+    for groupName, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]) do
     
       pecho(groupName.."\n")
       
       -- Display data in the automation table.
-      showAutomationGroupTableData(groupName, automationTypeName, automationType, tecSettings[automationType][groupName])
+      showAutomationGroupTableData(groupName, automationTypeName, automationType, parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName])
       
       pecho("\n\n")
       
-    end  -- for groupName tecSettings[automationType] do
+    end  -- for groupName parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] do
     
   end  -- if groupName then
   

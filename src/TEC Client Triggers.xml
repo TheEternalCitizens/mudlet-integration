@@ -2310,7 +2310,7 @@ if parthiaAutomationRunning or parthiaAutomationInterruptRunning then
         if tonumber(key) then
           table.insert(automationGroupKeySet, key)
         end  -- if tonumber(key) then
-      end -- for key, _ in pairs(tecSettings[automationType][groupName]) do
+      end -- for key, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]) do
       
       -- Sort the table 
       table.sort(automationGroupKeySet)
