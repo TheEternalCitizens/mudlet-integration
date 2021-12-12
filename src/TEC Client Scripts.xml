@@ -548,9 +548,6 @@ function tecFileSaveSettings(displayToScreen)
 
   --display save to screen
   if displayToScreen then pecho("Client settings saved.\n") end
-  
-  -- save automations data to file
-  parthiaAutomationSave(displayToScreen)
 
 end --function tecFileSaveSettings(displayToScreen)</script>
 					<eventHandlerList />
@@ -608,6 +605,8 @@ end --function tecFileLoadSettings
   tecFileSaveSettings(displayToScreen)
   --Save display data to file. 
   UIManagerFileSave(displayToScreen)
+  -- save automations data to file
+  parthiaAutomationSave(displayToScreen)
 end --function tecClientSaveAll</script>
 					<eventHandlerList />
 				</Script>
