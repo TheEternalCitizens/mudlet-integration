@@ -2290,7 +2290,7 @@ if parthiaAutomationRunning or parthiaAutomationInterruptRunning then
     
     --collect group name and repeat from parthiaAutomationInterruptRunning
     groupName = parthiaAutomationInterruptRunning
-    groupRepeat = tecSettings.automationInterrupt[groupName].interruptRepeat
+    groupRepeat = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].interruptRepeat
     --collecct group position from the global interrupt variable
     groupPosition = parthiaAutomationInterruptGroupPosition
     
@@ -2301,7 +2301,7 @@ if parthiaAutomationRunning or parthiaAutomationInterruptRunning then
       local automationGroupKeySet = {}
       
       -- Gather all the keys for the group and sort them.
-      for key, _ in pairs(tecSettings.automationInterrupt[groupName]) do
+      for key, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName]) do
         -- Do not insert pattern or interruptRepeat used on interrupt groups, only numrical keys
         if tonumber(key) then
           table.insert(automationGroupKeySet, key)
@@ -2320,9 +2320,9 @@ if parthiaAutomationRunning or parthiaAutomationInterruptRunning then
     
     -- Check if this interrupt is called off of a timer or this trigger
     -- If automation trigger for this automation group is 0, automation is called by this trigger.
-    if not parthiaToBoolean(tecSettings.automationInterrupt[groupName][groupPosition].automationTrigger) then
+    if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName][groupPosition].automationTrigger) then
       parthiaAutomationCall()  -- Call the automation handler
-    end  -- if not parthiaToBoolean(tecSettings.automationInterrupt[groupName][groupPosition].automationTrigger) then
+    end  -- if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName][groupPosition].automationTrigger) then
     
   -- a standard automation task is running
   elseif parthiaAutomationRunning then

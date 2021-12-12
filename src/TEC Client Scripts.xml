@@ -9330,23 +9330,23 @@ parthiaAutomationSaveTable, is the dictionary that is saved to and loaded from.
 
 How automation interupts are handled-------------------------------------------
   
-  Interupt groups are stored in tecsettings.automationInterrupts
+  Interupt groups are stored in parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupts
   Triggers for interrupts are stored in parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterruptTriggers
     The key is the groupName, the value is the trigger ID.
     
   Interrupt Creation Logic:
     User runs aliase: parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]
       parthiaAutomationCreateInterruptGroup([group name], [repeat], [pattern], firstCommandTrigger) is called
-        tecSettings.automationInterrupt[groupName] is created
+        parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName] is created
           It has keys interruptRepeat, pattern and firstCommandTrigger created, with the values passed.
         A message is presented to the user.
   
   Interrupt Enable Logic:
     User toggles the interrupt to enabled with aliase 'parthia interrupt toggle [groupName]'
       parthiaAutomationInterruptToggleState(groupName) is called.
-        tecSettings.automationInterrupt[groupName] is enabled.
+        parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName] is enabled.
         parthiaCreateInterruptRegexTrigger(groupName) is called
-          Collects the pattern from tecSettings.automationInterrupt[groupName].pattern
+          Collects the pattern from parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].pattern
             converts &lt;color&gt; into html regex pattern
           a trigger is created that calls parthiaAutomationInterruptStart(groupName)
             The trigger has NO expireAfter value, it will fire infinite number of times.
@@ -9359,7 +9359,7 @@ How automation interupts are handled-------------------------------------------
         If parthiaAutomationRunning
           make parthiaAutomationPaused = parthiaAutomationRunning
           parthiaAutomationRunning = false ( because it is no longer running )
-        Collects the first command trigger from tecSettings.automationInterrupt[groupName].firstCommandTrigger
+        Collects the first command trigger from parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].firstCommandTrigger
         Determins how the first command in the interrupt group should be called.
           Than calls the first command in the interrupt group.
           
@@ -9368,7 +9368,7 @@ How automation interupts are handled-------------------------------------------
   
   Interrupt Disable Logic:
     parthiaAutomationInterruptToggleState is called.
-      tecSettings.automationInterrupt[groupName].enabled is set to false
+      parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled is set to false
       the regex trigger needs to be killed and removed from the parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterruptTriggers table
   
   Interrupt Deletion Logic:
@@ -9392,14 +9392,14 @@ How automation interupts are handled-------------------------------------------
       before returning control back.
   parthiaAutomationUpdate()
     add on an argument automationType automationType is "automation" or "automationInterrupt".
-      To reflect tecsettings.automation and tecsettings.automationInterrupt.
+      To reflect tecsettings.automation and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt.
     Any time tecsettings.automation is set or called, use tecsettings[automationType] instead.
     If the group does not exist
       if the automation type is interrupt
         prompt the user to create the interrupt group, repeat and pattern is required...
   parthiaAutomationShowGroups()
     add on an argument automationType automationType is "automation" or "automationInterrupt".
-      To reflect tecsettings.automation and tecsettings.automationInterrupt.
+      To reflect tecsettings.automation and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt.
     Any time tecsettings.automation is set or called, use tecsettings[automationType] instead.
   parthiaAutomationInterruptStop()
     parthiaAutomationInterruptRunning = false
@@ -9418,7 +9418,7 @@ How automation interupts are handled-------------------------------------------
       parthiaAutomationCall()
   parthiaAutomationCall()
     add local variable, automationType. automationType is "automation" or "automationInterrupt".
-      To reflect tecsettings.automation and tecsettings.automationInterrupt.
+      To reflect tecsettings.automation and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt.
     if parthiaAutomationInterruptRunning is truthy
       collect group name and repeat from parthiaAutomationInterruptRunning
       set automationType to "automationInterrupt"
@@ -9433,7 +9433,7 @@ How automation interupts are handled-------------------------------------------
         Do the code currently in the groupRepeat if statement.
   parthiaAutomationIncreaseGroupIteration()
     add local variable, automationType. automationType is "automation" or "automationInterrupt".
-      To reflect tecsettings.automation and tecsettings.automationInterrupt.
+      To reflect tecsettings.automation and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt.
     if parthiaAutomationInterruptRunning is truthy
       collect group name and repeat from parthiaAutomationInterruptRunning
       set automationType to "automationInterrupt"
@@ -9738,25 +9738,25 @@ function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern, 
   
   -- if tecSettings.automation[groupName] does not exist create it
   -- tecSettings.automation is created automatically when parthia starts.
-  if not tecSettings.automationInterrupt[groupName] then
+  if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName] then
     pecho("Interrupt group "..groupName.." does not exist. Creating it now.\n")
     newInterruptGroup = true
-    tecSettings.automationInterrupt[groupName] = {}  -- Make the group name an empty dictionary
+    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName] = {}  -- Make the group name an empty dictionary
   else
     pecho("Automation interrupt group "..groupName.." updated.\n")
   end  -- END if not tecSettings.automation[groupName] then
   
   
   -- set how many times this interrupt repeats
-  tecSettings.automationInterrupt[groupName].interruptRepeat = groupRepeat
-  tecSettings.automationInterrupt[groupName].pattern = pattern
-  tecSettings.automationInterrupt[groupName].firstCommandTrigger = firstCommandTrigger
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].interruptRepeat = groupRepeat
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].pattern = pattern
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].firstCommandTrigger = firstCommandTrigger
   
   -- if this interrupt was enabled, toggle it off than on to update it's pattern which may have changed
-  if tecSettings.automationInterrupt[groupName].enabled then
+  if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled then
     parthiaAutomationInterruptToggleState(groupName)  -- disable the interrupt
     parthiaAutomationInterruptToggleState(groupName)  -- enable the interrupt with the updates.
-  end  -- if tecSettings.automationInterrupt[groupName].enabled then
+  end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled then
   
   -- show information about the changes
   pecho("\t"..groupName.." will repeat "..groupRepeat.." times when called.\n")
@@ -9952,7 +9952,7 @@ function parthiaAutomationCall()
   if parthiaAutomationInterruptRunning then
     --collect group name and repeat from parthiaAutomationInterruptRunning
     groupName = parthiaAutomationInterruptRunning
-    groupRepeat = tecSettings.automationInterrupt[groupName].interruptRepeat
+    groupRepeat = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].interruptRepeat
     -- this is an interrupt task
     automationType = "automationInterrupt"
     -- setting this now, incase the previous task should repeat.
@@ -10168,7 +10168,7 @@ function parthiaAutomationIncreaseGroupIteration()
   if parthiaAutomationInterruptRunning then
     --collect group name and repeat from parthiaAutomationInterruptRunning
     groupName = parthiaAutomationInterruptRunning
-    groupRepeat = tecSettings.automationInterrupt[groupName].interruptRepeat
+    groupRepeat = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].interruptRepeat
     --collecct group position from the global interrupt variable
     groupPosition = parthiaAutomationInterruptGroupPosition
     automationType = "automationInterrupt"
@@ -10694,7 +10694,7 @@ function parthiaAutomationInterruptStart(groupName)
   debugToDisplay("parthiaAutomationInterruptStart, called with groupName: "..groupName)
 
   -- Make certain this automation group exists.
-  if not tecSettings.automationInterrupt[groupName] then
+  if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName] then
     pecho("\nAutomation interrupt group "..groupName.." does not exist. A full help message is above.\n\n")
     return false
   end -- if not tecSettings.automation[groupName] then
@@ -10715,7 +10715,7 @@ function parthiaAutomationInterruptStart(groupName)
   pecho("\nInterrupt "..groupName.." triggered.\n")
   
   -- collect the trigger that will call the first command for this interrupt
-  local firstCommandTrigger = tecSettings.automationInterrupt[groupName].firstCommandTrigger
+  local firstCommandTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].firstCommandTrigger
   
   debugToDisplay("parthiaAutomationInterruptStart, firstCommandTrigger: "..firstCommandTrigger)
 
@@ -10766,7 +10766,7 @@ disable needs to locate the regex trigger and remove it
 function parthiaAutomationInterruptToggleState(groupName)
 
   -- Make certain this interrupt group exists.
-  if not tecSettings.automationInterrupt[groupName] then
+  if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName] then
     pecho("\nAutomation interrupt group "..groupName.." does not exist. A full help message is above.\n\n")
     return false
   end -- if not tecSettings.automation[groupName] then
@@ -10774,10 +10774,10 @@ function parthiaAutomationInterruptToggleState(groupName)
   --toggle the state of this interrupt--------------------------
   
   -- The interrupt is enabled, so disable it
-  if tecSettings.automationInterrupt[groupName].enabled then
+  if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled then
     
     --disable the inteurrupt flag
-    tecSettings.automationInterrupt[groupName].enabled = false
+    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled = false
     
     -- kill the interrupt trigger and manage it's variables
     parthiaDeleteInterruptRegexTrigger(groupName)
@@ -10788,13 +10788,13 @@ function parthiaAutomationInterruptToggleState(groupName)
   else  -- the interrupt is disabled, so enable it
   
     -- enable the interrupt flag
-    tecSettings.automationInterrupt[groupName].enabled = true
+    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled = true
     
     -- create the regex trigger
     parthiaCreateInterruptRegexTrigger(groupName)
     
     pecho("Interrupt "..groupName.." is now enabled.\n")
-  end  -- if tecSettings.automationInterrupt[groupName].enabled then
+  end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled then
   
   -- Remind the user to save their chages
   dontForgetToSave()
@@ -10846,7 +10846,7 @@ References:
 
 function parthiaCreateInterruptRegexTrigger(groupName)
 
-  local pattern = tecSettings.automationInterrupt[groupName].pattern
+  local pattern = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].pattern
   
   --replace any instances of &lt;color&gt; and &lt;/color&gt; with useful regex codes.
   --modifiedPattern = pattern.gsub("&lt;color&gt;", [[&lt;\/font&gt;&lt;font color="#[A-Fa-f0-9]+"&gt;]])
