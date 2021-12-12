@@ -9331,7 +9331,7 @@ parthiaAutomationSaveTable, is the dictionary that is saved to and loaded from.
 How automation interupts are handled-------------------------------------------
   
   Interupt groups are stored in tecsettings.automationInterrupts
-  Triggers for interrupts are stored in tecSettings.automationInterruptTriggers
+  Triggers for interrupts are stored in parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterruptTriggers
     The key is the groupName, the value is the trigger ID.
     
   Interrupt Creation Logic:
@@ -9350,7 +9350,7 @@ How automation interupts are handled-------------------------------------------
             converts &lt;color&gt; into html regex pattern
           a trigger is created that calls parthiaAutomationInterruptStart(groupName)
             The trigger has NO expireAfter value, it will fire infinite number of times.
-          The trigger ID is stored in tecSettings.automationInterruptTriggers[groupName]
+          The trigger ID is stored in parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterruptTriggers[groupName]
   
   Interrupt trigger logic:
     The pattern from a trigger created with parthiaCreateInterruptRegexTrigger is found and the trigger is automatically called.
@@ -9369,7 +9369,7 @@ How automation interupts are handled-------------------------------------------
   Interrupt Disable Logic:
     parthiaAutomationInterruptToggleState is called.
       tecSettings.automationInterrupt[groupName].enabled is set to false
-      the regex trigger needs to be killed and removed from the tecSettings.automationInterruptTriggers table
+      the regex trigger needs to be killed and removed from the parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterruptTriggers table
   
   Interrupt Deletion Logic:
     User runs aliase parthia automation [name], delete
@@ -10831,11 +10831,11 @@ end -- function parthiaInterruptToggleHelp()</script>
 Purpose:
   Replaces &lt;color&gt; or &lt;/color&gt; with the regex pattern for html color codes TEC uses.
   Creates a single fire temp regex trigger using the updated pattern.
-  Stores the regex ID in global table tecSettings.automationInterruptTriggers
+  Stores the regex ID in global table parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterruptTriggers
   Returns the regex trigger id, of the trigger newly created.
 
 Variables:
-  tecSettings.automationInterruptTriggers, global saved table of triggers to create.
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterruptTriggers, global saved table of triggers to create.
   
 References:
   https://wiki.mudlet.org/w/Manual:Mudlet_Object_Functions#tempRegexTrigger
@@ -10857,7 +10857,7 @@ function parthiaCreateInterruptRegexTrigger(groupName)
   local triggerID = tempRegexTrigger(modifiedPattern, [[parthiaAutomationInterruptStart("]]..groupName..[[")]])
   
   -- Insert the trigger ID into the tracking table
-  tecSettings.automationInterruptTriggers[groupName] = triggerID
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterruptTriggers[groupName] = triggerID
   
   return triggerID
   
@@ -10872,7 +10872,7 @@ Purpose:
   Removes an intterpt trigger and flags it's variables off.
 
 Variables:
-  tecSettings.automationInterruptTriggers, global saved table of triggers to create.
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterruptTriggers, global saved table of triggers to create.
   
 ]]--
 
@@ -10880,13 +10880,13 @@ function parthiaDeleteInterruptRegexTrigger(groupName)
 
   debugToDisplay("parthiaDeleteInterruptRegexTrigger called with groupName: "..groupName)
   
-  if not tecSettings.automationInterruptTriggers[groupName] then
-    tecErrorNotification("parthiaDeleteInterruptRegexTrigger, could not find groupName in the tecSettings.automationInterruptTriggers table.")
+  if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterruptTriggers[groupName] then
+    tecErrorNotification("parthiaDeleteInterruptRegexTrigger, could not find groupName in the parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterruptTriggers table.")
     return false
-  end  -- if not tecSettings.automationInterruptTriggers[groupName] then
+  end  -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterruptTriggers[groupName] then
   
   -- Collect the trigger ID.
-  local triggerID = tecSettings.automationInterruptTriggers[groupName]
+  local triggerID = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterruptTriggers[groupName]
   
   debugToDisplay("parthiaDeleteInterruptRegexTrigger killing triggerID: "..triggerID)
   
@@ -10897,7 +10897,7 @@ function parthiaDeleteInterruptRegexTrigger(groupName)
   killTrigger(triggerID)
   
   -- remove the entry for the triggers dictionary.
-  tecSettings.automationInterruptTriggers[groupName] = nil
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterruptTriggers[groupName] = nil
   
   return true
   
