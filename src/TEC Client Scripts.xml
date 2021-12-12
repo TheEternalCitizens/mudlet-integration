@@ -516,11 +516,8 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   parthiaAutomation.automationInterrupt = {} --used to track automation interrupts.
   parthiaAutomation.automationInterruptTriggers = {} --used to track interrupt triggers. groupName is the key, trigger ID is the value
   
-  tecSettings.automation = {}  --Used to track automation groups.
-  
-  tecSettings.automationInterrupt = {} --used to track automation interrupts.
-  
-  tecSettings.automationInterruptTriggers = {} --used to track interrupt triggers. groupName is the key, trigger ID is the value
+  parthiaAutomationSaveTable = {}  -- table that stores all character specific saved automation data
+  parthiaAutomationSavePath = tecSettingsFolder.."AutomationData.lua"
   
   unfilteredTextConsoleMode = false  -- a snap out console window ( userWindow ) that shows unfiltered text from TEC
 
@@ -9324,8 +9321,9 @@ parthiaAutomationSaveTable, is the dictionary that is saved to and loaded from.
   parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation, is where automations are saved
   parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt, is where interrupts are saved
   parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterruptTriggers, is where interrupt triggers are saved
-parthiaAutomationSave(), function that saves the dictionary to file.
-parthiaAutomationLoad(), function that loads the dictionary from file.
+  parthiaAutomationSave(), function that saves the dictionary to file.
+  parthiaAutomationLoad(), function that loads the dictionary from file.
+  parthiaAutomationSavePath = tecSettingsFolder.."AutomationData.lua" -- Where data is stored
 
 How automation interupts are handled-------------------------------------------
   
@@ -10901,6 +10899,34 @@ function parthiaDeleteInterruptRegexTrigger(groupName)
   return true
   
 end  -- function parthiaCreateAutomationRegexTrigger(pattern)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationSave(displayToScreen)</name>
+						<packageName></packageName>
+						<script>-- Save automations and interrupts to file
+
+function parthiaAutomationSave(displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  parthiaTableSave(parthiaAutomationSaveTable, parthiaAutomationSavePath, false, displayToScreen)
+end -- function parthiaAutomationSave(displayToScreen)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationLoad(displayToScreen)</name>
+						<packageName></packageName>
+						<script>function parthiaAutomationLoad(displayToScreen)
+
+  displayToScreen = fuzzyBoolean(displayToScreen)
+
+  if io.exists(parthiaAutomationSavePath) then --if the file exists, load it.
+    table.load(parthiaAutomationSavePath, parthiaAutomationSaveTable)
+    if displayToScreen then pecho("[  OK  ]  - Parthia automations and interrupts successfully loaded from file.\n") end
+  else --the save file does not exist
+    if displayToScreen then pecho("[ Info ]  - No automations data file.\n") end
+  end -- if io.exists(parthiaAutomationSavePath)
+
+end -- function parthiaAutomationLoad(displayToScreen)</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
