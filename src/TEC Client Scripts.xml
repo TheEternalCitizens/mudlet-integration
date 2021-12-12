@@ -545,9 +545,12 @@ function tecFileSaveSettings(displayToScreen)
 
   --Save the table to file.
   table.save(tecSettingsFolder.."TECClientData.lua", tecSettings)
-	
-	--display save to screen
-	if displayToScreen then pecho("Client settings saved.\n") end
+
+  --display save to screen
+  if displayToScreen then pecho("Client settings saved.\n") end
+  
+  -- save automations data to file
+  parthiaAutomationSave(displayToScreen)
 
 end --function tecFileSaveSettings(displayToScreen)</script>
 					<eventHandlerList />
@@ -581,11 +584,12 @@ function tecFileLoadSettings(displayToScreen)
     end --if displayToScreen
   end --end if file exists else
   
+  -- load automations data
+  parthiaAutomationLoad(displayToScreen)
   --refresh the text on the interrupts window, only if the function has initialized
   if refreshInterruptsWindow then
     refreshInterruptsWindow()
   end  -- if refreshInterruptsWindow then
-  
   -- Refresh the text in the automation window, only if the function has initialized
   if refreshAutomationWindow then
     refreshAutomationWindow()
