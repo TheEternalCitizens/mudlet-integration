@@ -2335,9 +2335,9 @@ if parthiaAutomationRunning or parthiaAutomationInterruptRunning then
     
     -- Check if this automation is called off of a timer or this trigger
     -- If automation trigger for this automation group is 0, automation is called by this trigger.
-    if not parthiaToBoolean(tecSettings.automation[groupName][groupPosition].automationTrigger) then
+    if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].automationTrigger) then
       parthiaAutomationCall()  -- Call the automation handler
-    end  -- if not parthiaToBoolean(tecSettings.automation[groupName][groupPosition].automationTrigger) then
+    end  -- if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].automationTrigger) then
     
   end -- if parthiaAutomationInterruptRunning then
   

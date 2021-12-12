@@ -9392,15 +9392,15 @@ How automation interupts are handled-------------------------------------------
       before returning control back.
   parthiaAutomationUpdate()
     add on an argument automationType automationType is "automation" or "automationInterrupt".
-      To reflect tecsettings.automation and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt.
-    Any time tecsettings.automation is set or called, use tecsettings[automationType] instead.
+      To reflect parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt.
+    Any time parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation is set or called, use tecsettings[automationType] instead.
     If the group does not exist
       if the automation type is interrupt
         prompt the user to create the interrupt group, repeat and pattern is required...
   parthiaAutomationShowGroups()
     add on an argument automationType automationType is "automation" or "automationInterrupt".
-      To reflect tecsettings.automation and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt.
-    Any time tecsettings.automation is set or called, use tecsettings[automationType] instead.
+      To reflect parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt.
+    Any time parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation is set or called, use tecsettings[automationType] instead.
   parthiaAutomationInterruptStop()
     parthiaAutomationInterruptRunning = false
     parthiaAutomationInterruptIterationCounter = 0
@@ -9418,14 +9418,14 @@ How automation interupts are handled-------------------------------------------
       parthiaAutomationCall()
   parthiaAutomationCall()
     add local variable, automationType. automationType is "automation" or "automationInterrupt".
-      To reflect tecsettings.automation and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt.
+      To reflect parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt.
     if parthiaAutomationInterruptRunning is truthy
       collect group name and repeat from parthiaAutomationInterruptRunning
       set automationType to "automationInterrupt"
     else
       collect groupName and repeat from parthiaAutomationRunning
       set automationType to "automation"
-    Change all calls to tecsettings.automation to tecsettings[automationType]
+    Change all calls to parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation to tecsettings[automationType]
     if groupRepeat has been reached
       it automationType is automationInterrupt
         Call parthiaAutomationInterruptStop()
@@ -9433,14 +9433,14 @@ How automation interupts are handled-------------------------------------------
         Do the code currently in the groupRepeat if statement.
   parthiaAutomationIncreaseGroupIteration()
     add local variable, automationType. automationType is "automation" or "automationInterrupt".
-      To reflect tecsettings.automation and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt.
+      To reflect parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt.
     if parthiaAutomationInterruptRunning is truthy
       collect group name and repeat from parthiaAutomationInterruptRunning
       set automationType to "automationInterrupt"
     else
       collect groupName and repeat from parthiaAutomationRunning
       set automationType to "automation"
-    Change all calls to tecsettings.automation to tecsettings[automationType]
+    Change all calls to parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation to tecsettings[automationType]
     If parthiaAutomationGroupPosition is being set to a value, anywhere in the function
       Use an if parthiaAutomationInterruptRunning
         if true
@@ -9493,7 +9493,7 @@ Track command success----------------------------------------------------------
       This code has to be OUTSIDE the "if getHelpDevs()" block. Otherwise it would only work if help the devs was enabled.
       
 Functions---------------------------------------------------------
-  parthiaAutomationUpdate, handles updating or creating parthia automation groups. In the tecSettings.automation table.
+  parthiaAutomationUpdate, handles updating or creating parthia automation groups. In the parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation table.
   parthiaAutomationStart, starts an automation task.
   parthiaAutomationCall, calls an automation group position or command. Handles iteration to next command.
     Handles stopping automation if a repeat count was specified.
@@ -9501,14 +9501,14 @@ Functions---------------------------------------------------------
   parthiaAutomationIncreaseGroupIteration, increases the global groupPosition iterator to iterate to the next command in the
     automation group.
   parthiaAutomationHelp, a general help message for the automation system.
-  parthiaAutomationManageGroups, allows a dynamic method to manage groups in the tecSettings.automation tables.
+  parthiaAutomationManageGroups, allows a dynamic method to manage groups in the parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation tables.
   parthiaAutomationRegexTrigger, create a temp regex trigger with html color support.
       
 Variables---------------------------------------------------------
   parthiaLastCommandSuccess: records if the last command the player's character ran was successful.
-  tecSettings.automation = {}  # a dictionary to hold automation groups.
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation = {}  # a dictionary to hold automation groups.
     This is created automatically at every application startup via function Scripts\Variables Data Themese\Variables\tecClientReset()
-  tecSettings.automation.[group name][position number] = {[command], [seconds or 0], [repeat on fail]}
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation.[group name][position number] = {[command], [seconds or 0], [repeat on fail]}
     This will automatically get saved since it is in tecSettings.
   parthiaAutomationRunning: If automation is running it is set to ([group name], [repeat]), it is False if automation is not running
   parthiaAutomationPaused: Used to pause an active automation task during an interrupt automation task.
@@ -9736,15 +9736,15 @@ function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern, 
     return false
   end  --if not parthiaToBoolean(groupRepeat) then
   
-  -- if tecSettings.automation[groupName] does not exist create it
-  -- tecSettings.automation is created automatically when parthia starts.
+  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName] does not exist create it
+  -- parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation is created automatically when parthia starts.
   if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName] then
     pecho("Interrupt group "..groupName.." does not exist. Creating it now.\n")
     newInterruptGroup = true
     parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName] = {}  -- Make the group name an empty dictionary
   else
     pecho("Automation interrupt group "..groupName.." updated.\n")
-  end  -- END if not tecSettings.automation[groupName] then
+  end  -- END if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName] then
   
   
   -- set how many times this interrupt repeats
@@ -9860,11 +9860,11 @@ function parthiaAutomationStart(groupName, groupRepeat)
   end -- if parthiaAutomationRunning then
   
   -- Make certain this automation group exists.
-  if not tecSettings.automation[groupName] then
+  if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName] then
     parthiaAutomationStartHelp()
     pecho("\nAutomation group "..groupName.." does not exist. A full help message is above.\n\n")
     return false
-  end -- if not tecSettings.automation[groupName] then
+  end -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName] then
   
   -- Record that automation has started, record the group name and how many times the group should repeat
   parthiaAutomationRunning = { groupName = groupName, groupRepeat = groupRepeat }
@@ -10029,10 +10029,10 @@ function parthiaAutomationCall()
   -- collect additional data this function will need
   
   --convert old secondsToWait to custom triggers, they only would exist in a standard automation group.
-  if automationType == "automation" and tecSettings.automation[groupName][groupPosition].secondsToWait then
-    tecSettings.automation[groupName][groupPosition].automationTrigger = tecSettings.automation[groupName][groupPosition].secondsToWait
-    tecSettings.automation[groupName][groupPosition].secondsToWait = nil
-  end  -- if tecSettings.automation[groupName][groupPosition].secondsToWait then
+  if automationType == "automation" and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait then
+    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].automationTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait
+    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait = nil
+  end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait then
 
   -- The command to run
   local automationCommand = tecSettings[automationType][groupName][groupPosition].automationCommand
@@ -10142,7 +10142,7 @@ end -- function parthiaAutomationStop()</script>
 						<packageName></packageName>
 						<script>--[[
 Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
-    if tecSettings.automation.[group name] size is larger than 
+    if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation.[group name] size is larger than 
       Icrease parthiaAutomationGroupPosition by one
     else
       parthiaAutomationGroupPosition = false
@@ -10697,7 +10697,7 @@ function parthiaAutomationInterruptStart(groupName)
   if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName] then
     pecho("\nAutomation interrupt group "..groupName.." does not exist. A full help message is above.\n\n")
     return false
-  end -- if not tecSettings.automation[groupName] then
+  end -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName] then
   
   --Setting automation first run to true, so we can iterate through the automation group properly
   parthiaAutomationFirstRun = true
@@ -10769,7 +10769,7 @@ function parthiaAutomationInterruptToggleState(groupName)
   if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName] then
     pecho("\nAutomation interrupt group "..groupName.." does not exist. A full help message is above.\n\n")
     return false
-  end -- if not tecSettings.automation[groupName] then
+  end -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName] then
 
   --toggle the state of this interrupt--------------------------
   
