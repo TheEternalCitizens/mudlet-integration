@@ -511,6 +511,11 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   
   tecSettings.tipsEnabled = true --tell parthia to show misc tips while exploring game world.
   
+  parthiaAutomation = {}
+  parthiaAutomation.automation = {}  --Used to track automation groups.
+  parthiaAutomation.automationInterrupt = {} --used to track automation interrupts.
+  parthiaAutomation.automationInterruptTriggers = {} --used to track interrupt triggers. groupName is the key, trigger ID is the value
+  
   tecSettings.automation = {}  --Used to track automation groups.
   
   tecSettings.automationInterrupt = {} --used to track automation interrupts.
@@ -9306,22 +9311,23 @@ end --parthiaTalkSetvolume(volume, displayToScreen)
 					<packageName></packageName>
 					<script>--[[
 Codeless scripting.
-This is done by running a command to register you action in a script group.
-  /auto [group name], [position number] = [command], [seconds to wait or 0 for no longer busy], [repeat on fail], [insert]
-Example /auto Attack Rotation, 1 = slash &amp;lt;target&amp;gt;, 0, False /auto Attack Rotation, 2 = chop &amp;lt;target&amp;gt;, 0, False /auto Attack Rotation, 3 = jab &amp;lt;target&amp;gt;, 0, False
-  Would create a three attack rotation where you character would slash, chop than jab the target. Where if you failed at the attack you continue to the next action.
-Example /auto Heal Rotation, 1 = diagnose &amp;lt;target&amp;gt;, 0, True /auto Heal Rotation, 2 = bandage &amp;lt;target&amp;gt; with bandage, 0, True /auto Heal Rotation, 3 = cut bandage from &amp;lt;target&amp;gt;, 0, True
-  Would create a three healing rotation where you would diagnose, bandage and unbandage the targeted body part. Where if you fail at an action you continue to attempt it until you succeed.
-Than to run to rotation /auto [group name], [number of times, leave out for infinite]
-  Example /auto Heal Rotation to run the healing rotation an infinit  e number of times.
-  auto Heal Rotation, 10 to run the healing rotation group 10 times.
-Where the stop command stops you script.
+
+ToDo:
+  interrupts auto load when not using welcome room character
+    Make option to disable autoload
+  Interrupt and automation window refresh at user login
+  
+
+How automations an interrupts are saved----------------------------------------
+
+parthiaAutomationSaveTable, is the dictionary that is saved to and loaded from.
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation, is where automations are saved
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt, is where interrupts are saved
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterruptTriggers, is where interrupt triggers are saved
+parthiaAutomationSave(), function that saves the dictionary to file.
+parthiaAutomationLoad(), function that loads the dictionary from file.
 
 How automation interupts are handled-------------------------------------------
-
-  ToDo:
-    interrupts auto load when not using welcome room character
-      Make option to disable autoload
   
   Interupt groups are stored in tecsettings.automationInterrupts
   Triggers for interrupts are stored in tecSettings.automationInterruptTriggers
@@ -10514,6 +10520,10 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
     end  -- for groupName tecSettings[automationType] do
     
   end  -- if groupName then
+  
+  pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Add a command", 
+      [[parthiaAutomationUpdateHelp("]]..automationTypeName..[[")]],
+      "parthia automation groups", true)
   
 end  -- function parthiaAutomationShowGroups()
 
