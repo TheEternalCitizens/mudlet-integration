@@ -1153,11 +1153,7 @@ local statsCollectionTimer = tempTimer(1.1, [[runStatsCollection(false)]])
 -- tempTimer(2.5, [[runSkillsCollection(false)]])
 tempTimer(2.1, [[pecho("Completed character information collection.\n")]])
 
-parthiaStopScripts() --stop all automation scripts
-
--- refresh the automations and interrupts window
-refreshInterruptsWindow()
-refreshAutomationWindow()</script>
+parthiaStopScripts() --stop all automation scripts</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>

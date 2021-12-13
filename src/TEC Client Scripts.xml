@@ -9321,6 +9321,8 @@ parthiaAutomationSaveTable, is the dictionary that is saved to and loaded from.
   parthiaAutomationSave(), function that saves the dictionary to file.
   parthiaAutomationLoad(), function that loads the dictionary from file.
   parthiaAutomationSavePath = tecSettingsFolder.."AutomationData.lua" -- Where data is stored
+  parthiaAutomationCharacterCheck(), creates default automation data for current character, if no data exists.
+    called with setStatsCheckActive(), when setting the stats check to false
 
 How automation interupts are handled-------------------------------------------
   
@@ -10923,6 +10925,8 @@ end -- function parthiaAutomationSave(displayToScreen)</script>
     if displayToScreen then pecho("[ Info ]  - No automations data file.\n") end
   end -- if io.exists(parthiaAutomationSavePath)
   
+  parthiaAutomationCharacterCheck(displayToScreen)
+  
   --refresh the text on the interrupts window, only if the function has initialized
   if refreshInterruptsWindow then
     refreshInterruptsWindow()
@@ -10934,6 +10938,39 @@ end -- function parthiaAutomationSave(displayToScreen)</script>
   end  -- if refreshAutomationWindow then
 
 end -- function parthiaAutomationLoad(displayToScreen)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationCharacterCheck(displayToScreen)</name>
+						<packageName></packageName>
+						<script>-- used to create a default character entry in the automations save table.
+-- NOTE: this function is called in setStatsCheckActive, it will NOT show to screen during that call.
+
+function parthiaAutomationCharacterCheck(displayToScreen)
+  
+  -- If the current character does not have automations data, give it default data
+  local character = ""
+  if parthiaPlayer.CurrentCharacter.name then --if logged into a character account
+    character = parthiaPlayer.CurrentCharacter.name
+  else --if the stats command does not work, the player is in the welcome room
+    character = "Welcome Room ID"
+    parthiaPlayer.CurrentCharacter.name = character
+  end --if parthiaPlayer.CurrentCharacter.name
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  if not parthiaAutomationSaveTable[character] then --if this character does not exist in the automationsd save table.
+    parthiaAutomationSaveTable[character] = {}
+    parthiaAutomationSaveTable[character].automation = {}
+    parthiaAutomationSaveTable[character].automationInterrupt = {}
+    parthiaAutomationSaveTable[character].automationInterruptTriggers = {}
+    if displayToScreen then pecho("A character name of \""..character.."\", was not found in automations save file. Created defaults.") end
+    debugToDisplay("function parthiaMap.checkCharacter, created table for character \""..character.."\" in the parthiaMap.saveTable table.")
+  end --if not parthiaMap.saveTable[character]
+  
+  -- This is called automatically during chracter changes. Refreshing windows for that reason.
+  refreshInterruptsWindow()
+  refreshAutomationWindow()
+  
+end  -- function parthiaAutomationCharacterCheck(displayToScreen)</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
@@ -11119,7 +11156,10 @@ end --function getStatsCheckState()</script>
 					<Script isActive="yes" isFolder="no">
 						<name>setStatsCheckActive(mode)</name>
 						<packageName></packageName>
-						<script>function setStatsCheckActive(mode)
+						<script>-- enables and disables filtering of stats command to collect character data.
+--NOTE: echos are silenced when this check is active. So no troubleshooting messages will work unless sent to debug.
+
+function setStatsCheckActive(mode)
   mode = fuzzyBoolean(mode)
   statsFilter.checkActive = mode --a stats check is active
   if not statsFilter.checkActive then --if disabeling
@@ -11133,6 +11173,7 @@ end --function getStatsCheckState()</script>
         debugToDisplay("function setStatsCheckActive, CurrentCharacter."..variableName.." adjusted to ".."\""..parthiaPlayer.CurrentCharacter[variableName].."\"") 
       end --if type(variable) == "string"
     end --for pairs(parthiaPlayer.CurrentCharacter)
+    parthiaAutomationCharacterCheck()  -- Check if character has data in the automation's table
     parthiaMap.checkCharacter() --check where the character is. For when login occurs. It uses the character name, that is why it is here
   end --if not mode
 end --function setStatsCheckActive(mode)</script>
