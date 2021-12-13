@@ -515,9 +515,9 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   parthiaAutomation.automation = {}  --Used to track automation groups.
   parthiaAutomation.automationInterrupt = {} --used to track automation interrupts.
   parthiaAutomation.automationInterruptTriggers = {} --used to track interrupt triggers. groupName is the key, trigger ID is the value
-  
   parthiaAutomationSaveTable = {}  -- table that stores all character specific saved automation data
   parthiaAutomationSavePath = tecSettingsFolder.."AutomationData.lua"
+  parthiaAutomationIterationCounter = 0  -- counts the current standard automation task iteration
   
   unfilteredTextConsoleMode = false  -- a snap out console window ( userWindow ) that shows unfiltered text from TEC
 
