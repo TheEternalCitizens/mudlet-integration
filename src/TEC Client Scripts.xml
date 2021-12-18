@@ -547,7 +547,7 @@ function tecFileSaveSettings(displayToScreen)
   table.save(tecSettingsFolder.."TECClientData.lua", tecSettings)
 
   --display save to screen
-  if displayToScreen then pecho("Client settings saved.\n") end
+  if displayToScreen then pecho("\nClient settings saved.") end
 
 end --function tecFileSaveSettings(displayToScreen)</script>
 					<eventHandlerList />
@@ -5929,7 +5929,7 @@ end --function UIManagerEnableSide</script>
     tecErrorNotification("function UIManagerFileSave, UIManagerSettings table not present.")
   end --if UIManagerSettings
   
-  if displayToScreen then pecho("\nDisplay settings saved.\n") end
+  if displayToScreen then pecho("\nDisplay settings saved.") end
 end --function UIManagerFileSave</script>
 						<eventHandlerList />
 					</Script>
@@ -10909,7 +10909,22 @@ end  -- function parthiaCreateAutomationRegexTrigger(pattern)</script>
 
 function parthiaAutomationSave(displayToScreen)
   displayToScreen = fuzzyBoolean(displayToScreen)
-  parthiaTableSave(parthiaAutomationSaveTable, parthiaAutomationSavePath, false, displayToScreen)
+  local saveFailed = parthiaTableSave(parthiaAutomationSaveTable, parthiaAutomationSavePath, false)
+  
+  -- If the file save was successful show an image to display, error if the save failed.
+  if saveFailed then
+  
+    -- Display that an error occured.
+    tecErrorNotification("parthiaAutomationSave, failed to save to file: "..parthiaAutomationSavePath)
+
+  else
+
+    -- Display image to screen, if argument specifies to do so.
+    if displayToScreen then
+      pecho("\nAutomation &amp; interrupt data saved.")
+    end  -- if displayToScreen then
+
+  end  -- if saveFailed then
   
 end -- function parthiaAutomationSave(displayToScreen)</script>
 						<eventHandlerList />
