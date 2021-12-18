@@ -10224,6 +10224,8 @@ function parthiaAutomationIncreaseGroupIteration()
     if key == #automationGroupKeySet then
       -- set the group iterator to the first element in the groups command table
       setGlobalAutomationGroupPosition(automationGroupKeySet[1])
+      -- Set the local groupPosition also
+      groupPosition = automationGroupKeySet[1]
       -- Increase the automation rotation iterator by 1.
       setGlobalAutomationIterationCounter(iterationCounter + 1)
       debugToDisplay("\tincreased iterationCounter")
@@ -10231,7 +10233,7 @@ function parthiaAutomationIncreaseGroupIteration()
   
   end  -- for key, value in pairs(automationGroupKeySet) do
   
-  debugToDisplay("\tNext iterator: "..groupPosition)
+  debugToDisplay("\tNext group position: "..groupPosition)
   
   return groupPosition
 
@@ -10908,6 +10910,7 @@ end  -- function parthiaCreateAutomationRegexTrigger(pattern)</script>
 function parthiaAutomationSave(displayToScreen)
   displayToScreen = fuzzyBoolean(displayToScreen)
   parthiaTableSave(parthiaAutomationSaveTable, parthiaAutomationSavePath, false, displayToScreen)
+  
 end -- function parthiaAutomationSave(displayToScreen)</script>
 						<eventHandlerList />
 					</Script>

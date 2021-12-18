@@ -2314,7 +2314,7 @@ if parthiaAutomationRunning or parthiaAutomationInterruptRunning then
       -- Returning the lowest element in the  automation group
       groupPosition = automationGroupKeySet[1]
       
-      debugToDisplay("'You are no longer busy.' trigger groupPosition false, collected position: ")
+      debugToDisplay("'You are no longer busy.' trigger groupPosition false, collected position: "..groupPosition)
     
     end  -- if not groupPosition then
     
