@@ -754,7 +754,6 @@ elseif line == "&lt;hr&gt;" then
   end --if not statsFilter.displayToScreen
 elseif line == "&lt;/pre&gt;" then --end of stats command found.
   setStatsCheckActive(false)--disable stats filter, it is done
-  raiseEvent("sysWindowResizeEvent")  -- Needed to refresh the HP guage, without this it will blank out
   deleteLine() --Make is so line does not appear in main console.
 else --all other lines we will want to look for data to collect
   if line:match("^Name:") then --line starts with Name:

@@ -5484,14 +5484,15 @@ function UIManagerGUIframeThemes(displayToScreen)
   uiThemes.NiceHat.windows = { }
 
   uiThemes.NiceHat.windows["TEC Map"] = "bottomright"
-  uiThemes.NiceHat.windows["Settings"] = "bottomleft"
-  uiThemes.NiceHat.windows["Macros"] = "bottomleft"
   uiThemes.NiceHat.windows["Automation"] = "bottomleft"
+  uiThemes.NiceHat.windows["Settings"] = "bottomleft"
+  --uiThemes.NiceHat.windows["Macros"] = "bottomleft"
   uiThemes.NiceHat.windows["Status"] = "bottom"
-  uiThemes.NiceHat.windows["Interrupts"] = "topleft"
-  uiThemes.NiceHat.windows["Compass"] = "topleft"
+  --uiThemes.NiceHat.windows["Compass"] = "topleft"
   uiThemes.NiceHat.windows["Communications"] = "top"
-  uiThemes.NiceHat.windows["Room Characters"] = "topright"
+  --uiThemes.NiceHat.windows["Room Characters"] = "topright"
+  uiThemes.NiceHat.windows["Interrupts"] = "topleft"
+  uiThemes.NiceHat.windows["Multi Window"] = "topright"
   
   --control what sides are displayed.
   --true means the side will be displayed.
@@ -15844,7 +15845,7 @@ MultiWindow.status_bar = Geyser.Container:new({
   x="50%", y=0, width = "50%", height="100%", --position and size of container
 },MultiWindow.bottom)
 MultiWindow.hpbar = Geyser.Gauge:new({ --create HP bar
-  name="hpbar",
+  name="MultiWindow hpbar",
   x=0, y=0, width="100%", height="25%", --position and size of container
 },MultiWindow.status_bar)
 MultiWindow.hpbar.front.styleSheet = hpbar.frontStyleSheet
