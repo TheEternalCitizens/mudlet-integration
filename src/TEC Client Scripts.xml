@@ -16071,6 +16071,214 @@ UIManagerRegisterWindow(automationWindow)
 --automationWindowResize() --resize the Room Character window now</script>
 				<eventHandlerList />
 			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>compMacAndCharWindow</name>
+				<packageName></packageName>
+				<script>compMacAndCharWindow = compMacAndCharWindow or {}
+
+compMacAndCharWindow.back = Geyser.VBox:new({ name = "Room, Compass &amp; Macro", }) --Horizonal box to hold our compMacAndCharWindows.
+compMacAndCharWindow.back.GUIframeLocation = "topright" --set location for container in GUIframe.
+
+--compMacAndCharWindow.top = Geyser.VBox:new({ name = "compMacAndCharWindow.top", }, compMacAndCharWindow.back) --Vertical window break for the room characters windows
+
+--Create a window that is a copy of the Room Characters window.
+compMacAndCharWindow.roomCharacters = compMacAndCharWindow.roomCharacters or {} --create a table to hold roomCharters window
+compMacAndCharWindow.roomCharacters.back = Geyser.HBox:new({
+  name = "compMacAndCharWindow Room Characters",
+  }, compMacAndCharWindow.back)
+--compMacAndCharWindow.roomCharacters.back:setStyleSheet(labelsStyle) --set label for background
+compMacAndCharWindow.roomCharacters.console = Geyser.MiniConsole:new({ --Create the mini console that will hold the text.
+  name = "compMacAndCharWindow.roomCharacters.console",
+  x = 0, y = 0, width = "100%", height = "100%", --position and size of console
+  autoWrap = true, --allows text to wrap if too long
+  fontSize = getTECFont(), --in variables
+  font = getFont(), --get font type from main
+  --scrollBar = true,
+},compMacAndCharWindow.roomCharacters.back)
+compMacAndCharWindow.roomCharacters.console:raise()
+compMacAndCharWindow.roomCharacters.console:setColor(getBgColor()) --set miniconsoles to main consol BG color
+compMacAndCharWindow.roomCharacters.rightConsole = Geyser.MiniConsole:new({ --Create the mini console that will hold the text.
+  name = "compMacAndCharWindow.roomCharacters.rightConsole",
+   x = 0, y = 0, width = "100%", height = "100%", --position and size of console
+  autoWrap = true, --allows text to wrap if too long
+  fontSize = getTECFont(), --in variables
+  font = getFont(), --get font type from main
+  --scrollBar = true,
+},compMacAndCharWindow.roomCharacters.back)
+compMacAndCharWindow.roomCharacters.rightConsole:raise()
+compMacAndCharWindow.roomCharacters.rightConsole:setColor(getBgColor()) --set miniconsoles to main consol BG color
+
+--used to hold compass and the status bars aside eachother at the bottom of the compMacAndCharWindow
+--compMacAndCharWindow.bottom = Geyser.HBox:new({ name = "compMacAndCharWindow.Bottom", }, compMacAndCharWindow.back) --Vertical window break for the bottom of the window
+compMacAndCharWindow.bottom = Geyser.Container:new({ name = "compMacAndCharWindow.Bottom", }, compMacAndCharWindow.back) --Vertical window break for the bottom of the window
+
+--Create the compass in the compMacAndCharWindow
+compMacAndCharWindow.Compass = compMacAndCharWindow.Compass or { --table to hold compass
+  dirs = {"nw","n","ne","w","up","down","e","sw","s","se"}, --directions for the compass
+  } --end compMacAndCharWindow.Compass object declaration
+compMacAndCharWindow.Compass.window = Geyser.Container:new({ --container for compass
+  name = "compMacAndCharWindow.Compass",
+  x=0, y=0, width = "50%", height="100%", --position and size of container
+  },compMacAndCharWindow.bottom) --put the window in the HBox at the bottom of the compMacAndCharWindow
+compMacAndCharWindow.Compass.back = Geyser.Label:new({
+  name = "compMacAndCharWindow.Compass.back",
+  x = "0%", y = "0%", width = "100%", height = "100%", --position and size of background
+  },compMacAndCharWindow.Compass.window) --put the label into the Compass container
+--compMacAndCharWindow.Compass.back.styleSheet = getMudletHomeDir().. [[/imgs/backgrounds/old canvas.jpg]]
+compMacAndCharWindow.Compass.back.styleSheet = [[border-image: url("]]..tecSettings.images["compassBackground"].image..[[");]]
+compMacAndCharWindow.Compass.back:setStyleSheet(compMacAndCharWindow.Compass.back.styleSheet) --set the background label
+--compMacAndCharWindow.Compass.back:setStyleSheet(labelsStyle) --set the background label
+compMacAndCharWindow.Compass.overlay = Geyser.Label:new({
+  name = "compMacAndCharWindow.Compass.overlay",
+  x = "0%", y = "0%", width = "100%", height = "100%", --position and size of background
+  },compMacAndCharWindow.Compass.back) --put the label into the Compass container
+compMacAndCharWindow.Compass.overlay.styleSheet = [[border-image: url("]]..tecSettings.images["compassOverlay"].image..[[");]]
+compMacAndCharWindow.Compass.overlay:setStyleSheet(compMacAndCharWindow.Compass.overlay.styleSheet) --set the background label
+--compMacAndCharWindow.Compass.overlay:raise()
+compMacAndCharWindow.Compass.hbox = Geyser.HBox:new({ --container to make columns
+    name = "compMacAndCharWindow.Compass.box",
+    x = 0, y = 0, width = "100%", height = "100%", --position and size of container
+  },compMacAndCharWindow.Compass.back) --parent of this Hbox
+--create three rows of the compass
+compMacAndCharWindow.Compass.row1 = Geyser.VBox:new({name = "compMacAndCharWindow.Compass.row1",},compMacAndCharWindow.Compass.hbox)
+compMacAndCharWindow.Compass.row2 = Geyser.VBox:new({name = "compMacAndCharWindow.Compass.row2",},compMacAndCharWindow.Compass.hbox)
+compMacAndCharWindow.Compass.row3 = Geyser.VBox:new({name = "compMacAndCharWindow.Compass.row3",},compMacAndCharWindow.Compass.hbox)
+--Create labels for the compass
+compMacAndCharWindow.Compass.nw = Geyser.Label:new({ name = "compMacAndCharWindow.Compass.nw", },compMacAndCharWindow.Compass.row1)
+compMacAndCharWindow.Compass.w = Geyser.Label:new({ name = "compMacAndCharWindow.Compass.w", },compMacAndCharWindow.Compass.row1)
+compMacAndCharWindow.Compass.sw = Geyser.Label:new({ name = "compMacAndCharWindow.Compass.sw", },compMacAndCharWindow.Compass.row1)
+compMacAndCharWindow.Compass.n = Geyser.Label:new({ name = "compMacAndCharWindow.Compass.n", },compMacAndCharWindow.Compass.row2)
+compMacAndCharWindow.Compass.center = Geyser.VBox:new({ name = "compMacAndCharWindow.Compass.center", },compMacAndCharWindow.Compass.row2)
+compMacAndCharWindow.Compass.up = Geyser.Label:new({ name = "compMacAndCharWindow.Compass.up", },compMacAndCharWindow.Compass.center)
+compMacAndCharWindow.Compass.down = Geyser.Label:new({ name = "compMacAndCharWindow.Compass.down", },compMacAndCharWindow.Compass.center)
+compMacAndCharWindow.Compass.s = Geyser.Label:new({ name = "compMacAndCharWindow.Compass.s", },compMacAndCharWindow.Compass.row2)
+compMacAndCharWindow.Compass.ne = Geyser.Label:new({ name = "compMacAndCharWindow.Compass.ne", },compMacAndCharWindow.Compass.row3)
+compMacAndCharWindow.Compass.e = Geyser.Label:new({ name = "compMacAndCharWindow.Compass.e", },compMacAndCharWindow.Compass.row3)
+compMacAndCharWindow.Compass.se = Geyser.Label:new({ name = "compMacAndCharWindow.Compass.se", },compMacAndCharWindow.Compass.row3)
+compMacAndCharWindow.Compass.click = tecCompass.click --send the name of the 
+function compMacAndCharWindow.Compass.lit(name) --When a player can go in the direction, make the label an active image
+  if name == "up" or name == "down" then --if it is overlay for up or down label
+    compMacAndCharWindow.Compass[name]:setStyleSheet(tecCompass.styleSheetLitUpDown) --created a label with thick transparent border
+  else --if it is a direction other than up or down.
+    compMacAndCharWindow.Compass[name]:setStyleSheet([[background-color: "]]..tecSettings.compassDefaultHighlight..[[";]])
+  end --if name == "up" or name == "down"
+end --function compMacAndCharWindow.Compass.lit(name)
+--when the space should be unlit change it back to white.
+function compMacAndCharWindow.Compass.unlit(name) --When a player cannot go in the direction, make the label an active image
+  compMacAndCharWindow.Compass[name]:setStyleSheet([[background-color: "#00000000";]])
+end --function compMacAndCharWindow.Compass.unlit(name)
+for _,v in pairs(compMacAndCharWindow.Compass.dirs) do --loop through dirs table
+  SetTooltip(compMacAndCharWindow.Compass[v].name, "Go "..v.." ") --create hover tool tips
+  compMacAndCharWindow.Compass[v]:setStyleSheet([[background-color: "#00000000";]]) --blank the compass directions
+  compMacAndCharWindow.Compass[v]:setClickCallback("compMacAndCharWindow.Compass.click",v) --give each label an event to run the click function above.
+end --end loop through compMacAndCharWindow.Compass.dirs
+
+--create the window that holds the macros.
+compMacAndCharWindow.macroMenu = compMacAndCharWindow.macroMenu or {} --table to hold the windows variables
+compMacAndCharWindow.macroMenu.container = Geyser.Container:new({ name = "compMacAndCharWindow.Macros", }, compMacAndCharWindow.back)
+compMacAndCharWindow.macroMenu.back = Geyser.Label:new({ --Create a label that could be used as a background
+  name = "compMacAndCharWindow.macroMenu.back",    -- give it a unique name here
+  x="50%", y=0, width = "50%", height="100%", --position and size of container
+},compMacAndCharWindow.bottom)
+compMacAndCharWindow.macroMenu.back.styleSheet = [[border-image: url("]]..tecSettings.images["macroBackground"].image..[[");]]
+compMacAndCharWindow.macroMenu.back:setStyleSheet(compMacAndCharWindow.macroMenu.back.styleSheet)
+compMacAndCharWindow.macroMenu.box = Geyser.VBox:new({ --creates the verticle window breaks
+  name = "compMacAndCharWindow.macroMenu.box",
+  x = 0, y = 0, width = "100%", height = "100%"
+  }, compMacAndCharWindow.macroMenu.back) --end compMacAndCharWindow.macroMenu.box
+--Create the five rows of buttons
+compMacAndCharWindow.macroMenu.row1 = Geyser.HBox:new({
+  name = "compMacAndCharWindow.macroMenu.row1",
+  }, compMacAndCharWindow.macroMenu.box)
+compMacAndCharWindow.macroMenu.row2 = Geyser.HBox:new({
+  name = "compMacAndCharWindow.macroMenu.row2",
+  },compMacAndCharWindow.macroMenu.box)
+compMacAndCharWindow.macroMenu.row3 = Geyser.HBox:new({
+  name = "compMacAndCharWindow.macroMenu.row3",
+  }, compMacAndCharWindow.macroMenu.box)
+compMacAndCharWindow.macroMenu.row4 = Geyser.HBox:new({
+  name = "compMacAndCharWindow.macroMenu.row4",
+  }, compMacAndCharWindow.macroMenu.box)
+compMacAndCharWindow.macroMenu.row5 = Geyser.HBox:new({
+  name = "compMacAndCharWindow.macroMenu.row5",
+  }, compMacAndCharWindow.macroMenu.box)
+--create table to hold data for macro buttons.
+local tecMacroMappings = {
+  {
+    name = "fe1", --name of label that will be created. Will be passed to setClickCallBack function
+    label = "I", --What will be on the label
+    row = compMacAndCharWindow.macroMenu.row1, --the geyser box we want this label to go in
+  },
+  { name = "fe2", label = "II", row = compMacAndCharWindow.macroMenu.row1, },
+  { name = "fe3", label = "III", row = compMacAndCharWindow.macroMenu.row1, },
+  { name = "fe4", label = "IV", row = compMacAndCharWindow.macroMenu.row2, },
+  { name = "fe5", label = "V", row = compMacAndCharWindow.macroMenu.row2, },
+  { name = "fe6", label = "VI", row = compMacAndCharWindow.macroMenu.row2, },
+  { name = "fe7", label = "VII", row = compMacAndCharWindow.macroMenu.row3, },
+  { name = "fe8", label = "VIII", row = compMacAndCharWindow.macroMenu.row3, },
+  { name = "fe9", label = "IX", row = compMacAndCharWindow.macroMenu.row3, },
+  { name = "fe10", label = "X", row = compMacAndCharWindow.macroMenu.row4, },
+  { name = "fe11", label = "XI", row = compMacAndCharWindow.macroMenu.row4, },
+  { name = "fe12", label = "XII", row = compMacAndCharWindow.macroMenu.row4, },
+  { name = "fe13", label = "XIII", row = compMacAndCharWindow.macroMenu.row5, },
+  { name = "fe14", label = "XIV", row = compMacAndCharWindow.macroMenu.row5, },
+  { name = "fe15", label = "XV", row = compMacAndCharWindow.macroMenu.row5, },
+} --tecMacroMappings table
+--macroLabelStyle = labelsStyle --make a standard label for
+for _, tecMacroMap in pairs(tecMacroMappings) do --loop trough mappings table using data within
+  compMacAndCharWindow.macroMenu[tecMacroMap.name] = Geyser.Label:new({
+    name = "compMacAndCharWindow.macroMenu." .. tecMacroMap.name, --name label fe# so it is easy to pass
+    message = "&lt;center&gt;" .. tecMacroMap.label .. "&lt;/center&gt;", --puts roman numerals on label
+  }, tecMacroMap.row) --parent is gettings passed via mapping table row reference
+  local localMacroTooltip = "run macro "..tecMacroMap.name:match("(%d%d?)$").."  "
+  SetTooltip(compMacAndCharWindow.macroMenu[tecMacroMap.name].name, localMacroTooltip) --create hover tooltip
+  compMacAndCharWindow.macroMenu[tecMacroMap.name]:setClickCallback("onMacroClick", tecMacroMap.name)
+  compMacAndCharWindow.macroMenu[tecMacroMap.name].styleSheet = macroLabelStyle
+  compMacAndCharWindow.macroMenu[tecMacroMap.name]:setStyleSheet(macroLabelStyle)
+end --for pairs(tecMacroMappings)
+function onMacroClick(name) send(name, false) end --Create a click callback function
+
+--redraw windows within compMacAndCharWindow so they fill spaces properly
+function compMacAndCharWindow.redrawWindows()
+  local localcompMacAndCharWindowWidth = compMacAndCharWindow.back:get_width() --get width of entire Room, Compass &amp; Macro
+  local localcompMacAndCharWindowHeight = compMacAndCharWindow.back:get_height() --get width of entire Room, Compass &amp; Macro
+  local localCompassWidth = compMacAndCharWindow.Compass.window:get_width() --get the width of the window
+  local localCompassHeight = compMacAndCharWindow.Compass.window:get_height() --get the height of the window
+  local localcompMacAndCharWindowBottomHeight = compMacAndCharWindow.bottom:get_height() --get the height of the window
+  compMacAndCharWindow.lastResizeWidth = compMacAndCharWindow.lastResizeWidth or 0 --used to detect when a resize is needed
+  compMacAndCharWindow.lastResizeHeight = compMacAndCharWindow.lastResizeHeight or 0 --used to detect when a resize is needed
+  displayDebug("function compMacAndCharWindow.redrawWindows,\n\t"
+    .."CompassWidth "..localCompassWidth.." localCompassHeight "..localCompassHeight.." localcompMacAndCharWindowBottomHeight "..localcompMacAndCharWindowBottomHeight
+    .."\n\tlocalcompMacAndCharWindowWidth "..localcompMacAndCharWindowWidth.." compMacAndCharWindow.lastResizeWidth "..compMacAndCharWindow.lastResizeWidth
+    .."\n\tlocalcompMacAndCharWindowHeight "..localcompMacAndCharWindowHeight.." compMacAndCharWindow.lastResizeHeight "..compMacAndCharWindow.lastResizeHeight
+    .."\n")
+  --only run window resizing if it is needed.
+  if  localcompMacAndCharWindowWidth ~= compMacAndCharWindow.lastResizeWidth or  --if the compMacAndCharWindow has changed size since last run
+      localcompMacAndCharWindowHeight ~= compMacAndCharWindow.lastResizeHeight or --if the compMacAndCharWindow has changed size since last run
+      localCompassWidth ~= localCompassHeight then --if the compass is not square
+    localCompassHeight = localcompMacAndCharWindowBottomHeight --Record the height of the bottom of the Room, Compass &amp; Macro to resize compass with
+    if localCompassWidth &lt; localCompassHeight then --if the compass width is less than the height of the bottom portion of the compMacAndCharWindow
+      compMacAndCharWindow.Compass.window:resize(localCompassHeight, localCompassHeight) --make compass square, while widening it
+      localCompassWidth = localCompassHeight --make the width variable the same as height, used to resize status bar.
+    elseif localCompassWidth &gt; localCompassHeight then --if the compass width is more than the height of the bottom portion of the compMacAndCharWindow
+      compMacAndCharWindow.Compass.window:resize(localCompassHeight, localCompassHeight) --make compass square, while widening it
+      localCompassWidth = localCompassHeight --make the width variable the same as height, used to resize status bar.
+    end --if elseif window is not square
+    compMacAndCharWindow.status_bar:move(localCompassWidth) --move the status bar past the compass
+    compMacAndCharWindow.status_bar:resize(localcompMacAndCharWindowWidth - localCompassWidth) --changed the width to fill space to the right of the compass
+    resizeLabelText(compMacAndCharWindow.encumbrancebar, 14, "black", "cb") --resize text according to label's height
+    resizeLabelText(compMacAndCharWindow.hungerbar, 14, "black", "cb") --resize text according to label's height
+    resizeLabelText(compMacAndCharWindow.fatiguebar, 14, "black", "cb") --resize text according to label's height
+    resizeLabelText(compMacAndCharWindow.hpbar, 14, "black", "cb") --resize text according to label's height
+    compMacAndCharWindow.lastResizeWidth = localcompMacAndCharWindowWidth --record the current width, to only run resizing when needed
+    compMacAndCharWindow.lastResizeHeight = localcompMacAndCharWindowHeight --record the current height, to only run resizing when needed
+    displayDebug("Room, Compass &amp; Macro resize run.\n")
+  end --if not localcompMacAndCharWindowWidth == compMacAndCharWindow.lastResizeWidth or not localcompMacAndCharWindowHeight == compMacAndCharWindow.lastResizeHeight
+end --end function keep square.
+
+UIManagerRegisterWindow(compMacAndCharWindow.back) --send the window to the UI Manager</script>
+				<eventHandlerList />
+			</Script>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
 			<name>Events</name>
