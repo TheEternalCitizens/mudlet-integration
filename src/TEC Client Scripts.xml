@@ -5492,7 +5492,7 @@ function UIManagerGUIframeThemes(displayToScreen)
   uiThemes.NiceHat.windows["Communications"] = "top"
   --uiThemes.NiceHat.windows["Room Characters"] = "topright"
   uiThemes.NiceHat.windows["Interrupts"] = "topleft"
-  uiThemes.NiceHat.windows["Multi Window"] = "topright"
+  uiThemes.NiceHat.windows["Room, Compass &amp; Macro"] = "topright"
   
   --control what sides are displayed.
   --true means the side will be displayed.
