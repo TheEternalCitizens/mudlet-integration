@@ -596,14 +596,20 @@ elseif line:match("^%d+:") then --if line starts with "#: "
 		tecSettings.approachedCommandHelp[5],
 		tecSettings.approachedCommandHelp[6]}
     
-		--create a right clickable list with the characters full name.
-		hechoPopup(roomCharacters.rightConsole.name,
+    --create a right clickable list with the characters full name.
+    hechoPopup(roomCharacters.rightConsole.name,
       characterPrefix..tecSettings.ApproachedCharactersColor
       ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
       localApproachedCmdList,
       localApproachedCmdHelp, true)
     --create right clickable list for MultiWIndow roomCharacters console
     hechoPopup(MultiWindow.roomCharacters.rightConsole.name,
+      characterPrefix..tecSettings.ApproachedCharactersColor
+      ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
+      localApproachedCmdList,
+      localApproachedCmdHelp, true)
+    --create right clickable list for room compass and character console
+    hechoPopup(compMacAndCharWindow.roomCharacters.rightConsole.name,
       characterPrefix..tecSettings.ApproachedCharactersColor
       ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
       localApproachedCmdList,
@@ -637,25 +643,33 @@ elseif line:match("^%d+:") then --if line starts with "#: "
 		tecSettings.commandHelp[4],
 		tecSettings.commandHelp[5],
 		tecSettings.commandHelp[6]}
-		--characters that are not approached to the players
-		hechoPopup(roomCharacters.console.name,
+    --characters that are not approached to the players
+    hechoPopup(roomCharacters.console.name,
       characterPrefix..tecSettings.notApproachedCharacterColor
       ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
-		  localNotApproachedCmdList,
-		  localNotApproachedHelpList, true)
+      localNotApproachedCmdList,
+      localNotApproachedHelpList, true)
     hechoPopup(MultiWindow.roomCharacters.console.name,
       characterPrefix..tecSettings.notApproachedCharacterColor
       ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
-		  localNotApproachedCmdList,
-		  localNotApproachedHelpList, true)
+      localNotApproachedCmdList,
+      localNotApproachedHelpList, true)
+    hechoPopup(compMacAndCharWindow.roomCharacters.console.name,
+      characterPrefix..tecSettings.notApproachedCharacterColor
+      ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
+      localNotApproachedCmdList,
+      localNotApproachedHelpList, true)
     
     --new line only the left consoles or approached consoles
     echoLeftRoomCharacterWindows("\n")
-	end --end if else characterEnaged == "("
+  end --end if else characterEnaged == "("
   
+  -- Check if any of the character consoles need a scroll bar
   tecScrollBarCheck(roomCharacters.console.name) --check if a scroll bar is needed.
   tecScrollBarCheck(MultiWindow.roomCharacters.console.name)
   tecScrollBarCheck(MultiWindow.roomCharacters.rightConsole.name)
+  tecScrollBarCheck(compMacAndCharWindow.roomCharacters.rightConsole.name)
+  tecScrollBarCheck(compMacAndCharWindow.roomCharacters.console.name)
   
 	--Delete main's line if we are not displaying it to screen
   if not tecRoomObjects.displayToScreen then deleteLine() end

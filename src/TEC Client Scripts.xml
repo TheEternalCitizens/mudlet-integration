@@ -11064,6 +11064,7 @@ function echoLeftRoomCharacterWindows(message)
   --display messages to side of the screen
   hecho(roomCharacters.console.name,message) --send message or standard room character window
   hecho(MultiWindow.roomCharacters.console.name,message) --send message to room character multi window
+  hecho(compMacAndCharWindow.roomCharacters.console.name, message)
   displayDebug("function echoLeftRoomCharacterWindows, message: "..message)
 end --function echoLeftRoomCharacterWindows()</script>
 						<eventHandlerList />
@@ -11078,6 +11079,7 @@ end --function echoLeftRoomCharacterWindows()</script>
   --display messages to side of the screen
   hecho(roomCharacters.rightConsole.name,message) --send message or standard room character window
   hecho(MultiWindow.roomCharacters.rightConsole.name,message) --send message to room character multi window
+  hecho(compMacAndCharWindow.roomCharacters.rightConsole.name, message)
   displayDebug("function echoRightRoomCharacterWindows, message: "..message)
 end --function echoLeftRoomCharacterWindows()</script>
 						<eventHandlerList />
@@ -11090,6 +11092,8 @@ end --function echoLeftRoomCharacterWindows()</script>
   clearWindow(MultiWindow.roomCharacters.console.name) --clear left side of the MultiWindow room characters console
   clearWindow(MultiWindow.roomCharacters.rightConsole.name) --clear right side of standard room character window
   clearWindow(roomCharacters.rightConsole.name) --clear the right side of the multi window room characters console
+  clearWindow(compMacAndCharWindow.roomCharacters.console.name)  -- clear the left side of the compass macro and character, console
+  clearWindow(compMacAndCharWindow.roomCharacters.rightConsole.name)  -- clear the right side of the compass macro and character, console
   tecRoomObjects.refreshMessageDisplayed = false --tell Parthia refresh message has not been shown
 end --clearRoomCharacterWindow</script>
 						<eventHandlerList />
@@ -11105,6 +11109,9 @@ local function tecRoomCharRefreshMessage()
     [[runTECRoomObjectCheck()]],
     "Populate Room Character window.", true)
   cechoLink(MultiWindow.roomCharacters.rightConsole.name,"&lt;:maroon&gt;room check", 
+    [[runTECRoomObjectCheck()]],
+    "Populate Room Character window.", true)
+  cechoLink(compMacAndCharWindow.roomCharacters.rightConsole.name, "&lt;:maroon&gt;room check", 
     [[runTECRoomObjectCheck()]],
     "Populate Room Character window.", true)
   echoRightRoomCharacterWindows(" or press ctrl+r.\n")
@@ -11132,6 +11139,9 @@ function tecResetRoomCharacterWindow()
     [[runTECRoomObjectCheck()]],
     "Populate Room Character window.", true)
   cechoLink(MultiWindow.roomCharacters.rightConsole.name,"&lt;:maroon&gt;room check", 
+    [[runTECRoomObjectCheck()]],
+    "Populate Room Character window.", true)
+  cechoLink(compMacAndCharWindow.roomCharacters.rightConsole.name, "&lt;:maroon&gt;room check", 
     [[runTECRoomObjectCheck()]],
     "Populate Room Character window.", true)
   echoRightRoomCharacterWindows(" or pressing ctrl+r.\n")
@@ -16083,13 +16093,11 @@ compMacAndCharWindow.back.GUIframeLocation = "topright" --set location for conta
 
 --Create a window that is a copy of the Room Characters window.
 compMacAndCharWindow.roomCharacters = compMacAndCharWindow.roomCharacters or {} --create a table to hold roomCharters window
-compMacAndCharWindow.roomCharacters.back = Geyser.Container:new({
+compMacAndCharWindow.roomCharacters.back = Geyser.HBox:new({
   name = "compMacAndCharWindow Room Characters",
-  x=0, y=0, width = "100%", height="66%", --position and size of container
   }, compMacAndCharWindow.back)
 compMacAndCharWindow.roomCharacters.console = Geyser.MiniConsole:new({ --Create the mini console that will hold the text.
   name = "compMacAndCharWindow.roomCharacters.console",
-  x = 0, y = 0, width = "100%", height = "100%", --position and size of console
   autoWrap = true, --allows text to wrap if too long
   fontSize = getTECFont(), --in variables
   font = getFont(), --get font type from main
@@ -16099,7 +16107,6 @@ compMacAndCharWindow.roomCharacters.console:raise()
 compMacAndCharWindow.roomCharacters.console:setColor(getBgColor()) --set miniconsoles to main consol BG color
 compMacAndCharWindow.roomCharacters.rightConsole = Geyser.MiniConsole:new({ --Create the mini console that will hold the text.
   name = "compMacAndCharWindow.roomCharacters.rightConsole",
-  x = 0, y = 0, width = "100%", height = "100%", --position and size of console
   autoWrap = true, --allows text to wrap if too long
   fontSize = getTECFont(), --in variables
   font = getFont(), --get font type from main
@@ -16276,7 +16283,7 @@ function compMacAndCharWindow.redrawWindows()
     compMacAndCharWindow.macroMenu.container:move(localCompassWidth) --move the macro bar past the compass
     compMacAndCharWindow.macroMenu.container:resize(localcompMacAndCharWindowWidth - localCompassWidth, thirdHeight) --changed the width to fill space to the right of the compass
     -- Resize the room characters window to fill the empty space
-    compMacAndCharWindow.roomCharacters:resize(twoThirdHeight, localcompMacAndCharWindowWidth )
+    compMacAndCharWindow.roomCharacters.back:resize(twoThirdHeight, localcompMacAndCharWindowWidth )
     -- Record the changes
     compMacAndCharWindow.lastResizeWidth = localcompMacAndCharWindowWidth --record the current width, to only run resizing when needed
     compMacAndCharWindow.lastResizeHeight = localcompMacAndCharWindowHeight --record the current height, to only run resizing when needed
