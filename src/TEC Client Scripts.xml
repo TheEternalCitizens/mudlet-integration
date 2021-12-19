@@ -16083,10 +16083,10 @@ compMacAndCharWindow.back.GUIframeLocation = "topright" --set location for conta
 
 --Create a window that is a copy of the Room Characters window.
 compMacAndCharWindow.roomCharacters = compMacAndCharWindow.roomCharacters or {} --create a table to hold roomCharters window
-compMacAndCharWindow.roomCharacters.back = Geyser.HBox:new({
+compMacAndCharWindow.roomCharacters.back = Geyser.Container:new({
   name = "compMacAndCharWindow Room Characters",
+  x=0, y=0, width = "100%", height="66%", --position and size of container
   }, compMacAndCharWindow.back)
---compMacAndCharWindow.roomCharacters.back:setStyleSheet(labelsStyle) --set label for background
 compMacAndCharWindow.roomCharacters.console = Geyser.MiniConsole:new({ --Create the mini console that will hold the text.
   name = "compMacAndCharWindow.roomCharacters.console",
   x = 0, y = 0, width = "100%", height = "100%", --position and size of console
@@ -16099,7 +16099,7 @@ compMacAndCharWindow.roomCharacters.console:raise()
 compMacAndCharWindow.roomCharacters.console:setColor(getBgColor()) --set miniconsoles to main consol BG color
 compMacAndCharWindow.roomCharacters.rightConsole = Geyser.MiniConsole:new({ --Create the mini console that will hold the text.
   name = "compMacAndCharWindow.roomCharacters.rightConsole",
-   x = 0, y = 0, width = "100%", height = "100%", --position and size of console
+  x = 0, y = 0, width = "100%", height = "100%", --position and size of console
   autoWrap = true, --allows text to wrap if too long
   fontSize = getTECFont(), --in variables
   font = getFont(), --get font type from main
@@ -16108,16 +16108,17 @@ compMacAndCharWindow.roomCharacters.rightConsole = Geyser.MiniConsole:new({ --Cr
 compMacAndCharWindow.roomCharacters.rightConsole:raise()
 compMacAndCharWindow.roomCharacters.rightConsole:setColor(getBgColor()) --set miniconsoles to main consol BG color
 
---used to hold compass and the status bars aside eachother at the bottom of the compMacAndCharWindow
---compMacAndCharWindow.bottom = Geyser.HBox:new({ name = "compMacAndCharWindow.Bottom", }, compMacAndCharWindow.back) --Vertical window break for the bottom of the window
-compMacAndCharWindow.bottom = Geyser.Container:new({ name = "compMacAndCharWindow.Bottom", }, compMacAndCharWindow.back) --Vertical window break for the bottom of the window
+--used to hold compass and the macro bars aside eachother at the bottom of the compMacAndCharWindow
+compMacAndCharWindow.bottom = Geyser.HBox:new({ name = "compMacAndCharWindow.Bottom",
+  x=0, y=0, width = 0, height="33%", --position and size of container
+  }, compMacAndCharWindow.back) --Vertical window break for the bottom of the window
 
 --Create the compass in the compMacAndCharWindow
 compMacAndCharWindow.Compass = compMacAndCharWindow.Compass or { --table to hold compass
   dirs = {"nw","n","ne","w","up","down","e","sw","s","se"}, --directions for the compass
   } --end compMacAndCharWindow.Compass object declaration
 compMacAndCharWindow.Compass.window = Geyser.Container:new({ --container for compass
-  name = "compMacAndCharWindow.Compass",
+  name = "compMacAndCharWindow Compass",
   x=0, y=0, width = "50%", height="100%", --position and size of container
   },compMacAndCharWindow.bottom) --put the window in the HBox at the bottom of the compMacAndCharWindow
 compMacAndCharWindow.Compass.back = Geyser.Label:new({
@@ -16173,13 +16174,15 @@ for _,v in pairs(compMacAndCharWindow.Compass.dirs) do --loop through dirs table
   compMacAndCharWindow.Compass[v]:setClickCallback("compMacAndCharWindow.Compass.click",v) --give each label an event to run the click function above.
 end --end loop through compMacAndCharWindow.Compass.dirs
 
---create the window that holds the macros.
+--create Macro
 compMacAndCharWindow.macroMenu = compMacAndCharWindow.macroMenu or {} --table to hold the windows variables
-compMacAndCharWindow.macroMenu.container = Geyser.Container:new({ name = "compMacAndCharWindow.Macros", }, compMacAndCharWindow.back)
-compMacAndCharWindow.macroMenu.back = Geyser.Label:new({ --Create a label that could be used as a background
-  name = "compMacAndCharWindow.macroMenu.back",    -- give it a unique name here
+compMacAndCharWindow.macroMenu.container = Geyser.Container:new({ name = "compMacAndCharWindow.Macros",    -- give it a unique name here
   x="50%", y=0, width = "50%", height="100%", --position and size of container
 },compMacAndCharWindow.bottom)
+compMacAndCharWindow.macroMenu.back = Geyser.Label:new({ --Create a label that could be used as a background
+  name = "compMacAndCharWindow.macroMenu.back",
+  x = 0,y = 0, width = "100%", height = "100%" --Position and size of window
+  }, compMacAndCharWindow.macroMenu.container) --end of compMacAndCharWindow.macroMenu.back
 compMacAndCharWindow.macroMenu.back.styleSheet = [[border-image: url("]]..tecSettings.images["macroBackground"].image..[[");]]
 compMacAndCharWindow.macroMenu.back:setStyleSheet(compMacAndCharWindow.macroMenu.back.styleSheet)
 compMacAndCharWindow.macroMenu.box = Geyser.VBox:new({ --creates the verticle window breaks
@@ -16256,20 +16259,25 @@ function compMacAndCharWindow.redrawWindows()
   if  localcompMacAndCharWindowWidth ~= compMacAndCharWindow.lastResizeWidth or  --if the compMacAndCharWindow has changed size since last run
       localcompMacAndCharWindowHeight ~= compMacAndCharWindow.lastResizeHeight or --if the compMacAndCharWindow has changed size since last run
       localCompassWidth ~= localCompassHeight then --if the compass is not square
+    -- Force the compass and macro bars to be 1/3 the height of the window.
+    local thirdHeight = localcompMacAndCharWindowHeight * .33
+    if localcompMacAndCharWindowBottomHeight ~= thirdHeight then
+      localcompMacAndCharWindowBottomHeight = thirdHeight
+      twoThirdHeight = thirdHeight * 2
+    end  -- if localcompMacAndCharWindowBottomHeight &gt; thirdHeight then
+    -- Resize and move the bottom container holding the Macro and compass
+    compMacAndCharWindow.bottom:resize(localcompMacAndCharWindowBottomHeight, localcompMacAndCharWindowWidth)  -- resize the bottom pane to a 1/3 of the total window size
+    compMacAndCharWindow.bottom:move(0, twoThirdHeight )  -- Move the bottom to the bottom, rather than the middle.
     localCompassHeight = localcompMacAndCharWindowBottomHeight --Record the height of the bottom of the Room, Compass &amp; Macro to resize compass with
-    if localCompassWidth &lt; localCompassHeight then --if the compass width is less than the height of the bottom portion of the compMacAndCharWindow
-      compMacAndCharWindow.Compass.window:resize(localCompassHeight, localCompassHeight) --make compass square, while widening it
-      localCompassWidth = localCompassHeight --make the width variable the same as height, used to resize status bar.
-    elseif localCompassWidth &gt; localCompassHeight then --if the compass width is more than the height of the bottom portion of the compMacAndCharWindow
-      compMacAndCharWindow.Compass.window:resize(localCompassHeight, localCompassHeight) --make compass square, while widening it
-      localCompassWidth = localCompassHeight --make the width variable the same as height, used to resize status bar.
-    end --if elseif window is not square
-    compMacAndCharWindow.status_bar:move(localCompassWidth) --move the status bar past the compass
-    compMacAndCharWindow.status_bar:resize(localcompMacAndCharWindowWidth - localCompassWidth) --changed the width to fill space to the right of the compass
-    resizeLabelText(compMacAndCharWindow.encumbrancebar, 14, "black", "cb") --resize text according to label's height
-    resizeLabelText(compMacAndCharWindow.hungerbar, 14, "black", "cb") --resize text according to label's height
-    resizeLabelText(compMacAndCharWindow.fatiguebar, 14, "black", "cb") --resize text according to label's height
-    resizeLabelText(compMacAndCharWindow.hpbar, 14, "black", "cb") --resize text according to label's height
+    -- Change the size of the compass, to keep it square
+    compMacAndCharWindow.Compass.window:resize(localCompassHeight, localCompassHeight) --make compass square, while widening it
+    localCompassWidth = localCompassHeight --make the width variable the same as height, used to resize macro bar.
+    -- Resize the macro bar
+    compMacAndCharWindow.macroMenu.container:move(localCompassWidth) --move the macro bar past the compass
+    compMacAndCharWindow.macroMenu.container:resize(localcompMacAndCharWindowWidth - localCompassWidth, thirdHeight) --changed the width to fill space to the right of the compass
+    -- Resize the room characters window to fill the empty space
+    compMacAndCharWindow.roomCharacters:resize(twoThirdHeight, localcompMacAndCharWindowWidth )
+    -- Record the changes
     compMacAndCharWindow.lastResizeWidth = localcompMacAndCharWindowWidth --record the current width, to only run resizing when needed
     compMacAndCharWindow.lastResizeHeight = localcompMacAndCharWindowHeight --record the current height, to only run resizing when needed
     displayDebug("Room, Compass &amp; Macro resize run.\n")
@@ -16327,6 +16335,9 @@ function guiChange()
   end --if UIManagerSettings[intteruptsWindow.name]
   if UIManagerSettings[automationWindow.name] then --if window exists chek if it is enabled
    if not UIManagerSettings[automationWindow.name].disabled then automationWindowResize() end--resize the Room Character window now
+  end --if UIManagerSettings[intteruptsWindow.name]
+  if UIManagerSettings[compMacAndCharWindow.back.name] then --if window exists chek if it is enabled
+   if not UIManagerSettings[compMacAndCharWindow.back.name].disabled then compMacAndCharWindow.redrawWindows() end--resize the Room Character window now
   end --if UIManagerSettings[intteruptsWindow.name]
 end --end function guiChange
 
