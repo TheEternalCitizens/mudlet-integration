@@ -15341,7 +15341,7 @@ function tecMapdrawKeepSquare()
 	
   local exitWarningFontStyle = [[&lt;center&gt;&lt;p style="font-size:]]
     ..tecSettings.tecTabsFontSize..[[px; color:gray"&gt;]]
-	echo(mapRoom[150].name,exitWarningFontStyle.."Map exits may be misaligned until you walk.")
+	echo(mapRoom[150].name,exitWarningFontStyle.."Walk to realign exits.")
   mapRoom[150]:resize(tecMap_back:get_width(), (tecMap:get_height() * .1))
   mapRoom[150]:setStyleSheet(labelsStyle)
   mapRoom[150]:move(0,0)
