@@ -10498,6 +10498,19 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
         
       end  -- for groupPosition, automationGroup in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]) do
       
+  --Get the last value in this automation's group position, than add one onto it, for the group position in Add a command message.
+  local nextGroupPosition = 1
+  if #sortedGroupNameTable &gt; 0 then  -- As long as the automation has group positions
+    local lastGroupPosition = sortedGroupNameTable[#sortedGroupNameTable]
+    nextGroupPosition = lastGroupPosition + 1
+  end  -- if sortedGroupNameTable then
+  
+  -- Show an Add a command help message if none has been shown
+  pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Add a command", 
+      [[parthiaAutomationUpdateHelp("]]..automationTypeName..[[");
+        printCmdLine("parthia ]]..automationTypeName..[[ ]]..groupName..[[, ]]..nextGroupPosition..[[ = replace_with_your_command, 0, 0 &amp; 0")]],
+      "Add a command to this "..automationTypeName, true)
+      
     -- The automation group passed does not exist.
     else
       pecho("Automation group named ["..groupName.."] does not exist\n")
@@ -10520,10 +10533,6 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
     end  -- for groupName parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] do
     
   end  -- if groupName then
-  
-  pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Add a command", 
-      [[parthiaAutomationUpdateHelp("]]..automationTypeName..[[")]],
-      "parthia automation groups", true)
   
 end  -- function parthiaAutomationShowGroups()
 
