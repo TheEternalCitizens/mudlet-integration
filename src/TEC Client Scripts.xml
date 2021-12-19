@@ -9312,18 +9312,19 @@ ToDo:
     Make option to disable autoload
   Interrupt and automation window refresh at user login
   
+How automations are imported and exported--------------------------------------  
 
 How automations an interrupts are saved----------------------------------------
 
-parthiaAutomationSaveTable, is the dictionary that is saved to and loaded from.
-  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation, is where automations are saved
-  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt, is where interrupts are saved
-  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterruptTriggers, is where interrupt triggers are saved
-  parthiaAutomationSave(), function that saves the dictionary to file.
-  parthiaAutomationLoad(), function that loads the dictionary from file.
-  parthiaAutomationSavePath = tecSettingsFolder.."AutomationData.lua" -- Where data is stored
-  parthiaAutomationCharacterCheck(), creates default automation data for current character, if no data exists.
-    called with setStatsCheckActive(), when setting the stats check to false
+  parthiaAutomationSaveTable, is the dictionary that is saved to and loaded from.
+    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation, is where automations are saved
+    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt, is where interrupts are saved
+    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterruptTriggers, is where interrupt triggers are saved
+    parthiaAutomationSave(), function that saves the dictionary to file.
+    parthiaAutomationLoad(), function that loads the dictionary from file.
+    parthiaAutomationSavePath = tecSettingsFolder.."AutomationData.lua" -- Where data is stored
+    parthiaAutomationCharacterCheck(), creates default automation data for current character, if no data exists.
+      called with setStatsCheckActive(), when setting the stats check to false
 
 How automation interupts are handled-------------------------------------------
   
