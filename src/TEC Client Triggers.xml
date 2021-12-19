@@ -250,9 +250,11 @@ for direction, show in string.gmatch( line, ",?(%a+),(%a+)" ) do
   
   if show == "show" then --if the direction should be shown.
     MultiWindow.Compass.lit(direction) --show the direction as active in the MultiWindow compass
+    compMacAndCharWindow.Compass.lit(direction)  -- Show the direction as active in the Room, Compass &amp; Macro window
     tecCompass.lit(direction) --show the direction as active in the standard tec compass
   else --if the compass direction should be inactive
     MultiWindow.Compass.unlit(direction) --show the direction as inactive in the MultiWindow compass
+    compMacAndCharWindow.Compass.unlit(direction)  -- Show the direction as inactive in the Room, Compass &amp; Macro window
     tecCompass.unlit(direction) --show the direction as inactive in the standard tec compass
   end --if show == "show"
 end --for string.gmatch( line, ",?(%a+),(%a+)" )</script>
