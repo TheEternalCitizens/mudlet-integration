@@ -9313,25 +9313,24 @@ ToDo:
   interrupts auto load when not using welcome room character
     Make option to disable autoload
   Interrupt and automation window refresh at user login
-  
+
 How automations are imported and exported--------------------------------------  
   functions
     parthiaAutomationExport
     parthiaAutomationImport
-    parthiaInterruptExport
-    parthiaInterruptImport
-    
+
   Aliases:
     parthia automation export [group name]
     parthia interrupt export [group name]
     parthia automation import [group name]
     parthia interrupt import [group name]
       Running any of these without a group name lists the directory the files are saved in.
-  
+
   Use tecOpenDirectory(path), to create a command to open the users folder.
-  
-  automationDataFolder, the folder where automations are saved.
-  interruptDataFolder, the folder where interrupts are saved.
+
+  Variables: 
+    automationDataFolder, the folder where automations are saved.
+    interruptDataFolder, the folder where interrupts are saved.
 
 How automations an interrupts are saved----------------------------------------
 
@@ -9346,11 +9345,11 @@ How automations an interrupts are saved----------------------------------------
       called with setStatsCheckActive(), when setting the stats check to false
 
 How automation interupts are handled-------------------------------------------
-  
+
   Interupt groups are stored in parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupts
   Triggers for interrupts are stored in parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterruptTriggers
     The key is the groupName, the value is the trigger ID.
-    
+
   Interrupt Creation Logic:
     User runs aliase: parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]
       parthiaAutomationCreateInterruptGroup([group name], [repeat], [pattern], firstCommandTrigger) is called
@@ -11063,7 +11062,10 @@ function parthiaAutomationExport(automationType, groupName, displayToScreen)
   
   -- Verify the automation exists, stop if it does not
   if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
-    pecho(automationTypeName.." '"..groupName.."' does not exist.")
+    if displayToScreen then
+      pecho(automationTypeName.." '"..groupName.."' does not exist.")
+    end  -- if displayToScreen then
+    debugToDisplay("\tgroupName does not exist.")
     return false  -- stop the function
   end  -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
   
@@ -11075,12 +11077,16 @@ function parthiaAutomationExport(automationType, groupName, displayToScreen)
   local autoTable = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
   parthiaTableSave(autoTable, autoFilePath, true)
   
-  pecho(automationTypeName.." '"..groupName.."' saved successful.\n")
-  pecho("\tTo: "..autoFilePath.."\n")
-  pecho("If you would like to share this group open the directory with: ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open", 
-    [[tecOpenDirectory(]]..autoFolder..[[)]], 
-    "Open "..automationTypeName.." folder", true)
+  -- Display completion message if displayToScreen is truthy.
+  if displayToScreen then
+    pecho(automationTypeName.." '"..groupName.."' exported successful.\n")
+    pecho("\tTo: "..autoFilePath.."\n")
+    pecho("If you would like to share this group open the directory with: ")
+    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open", 
+      [[tecOpenDirectory(]]..autoFolder..[[)]], 
+      "Open "..automationTypeName.." folder", true)
+  end  -- if displayToScreen then
+    
   return true  -- function ran successfully
   
 end  -- function parthiaAutomationExport(groupName)</script>
