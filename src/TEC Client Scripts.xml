@@ -518,6 +518,8 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   parthiaAutomationSaveTable = {}  -- table that stores all character specific saved automation data
   parthiaAutomationSavePath = tecSettingsFolder.."AutomationData.lua"
   parthiaAutomationIterationCounter = 0  -- counts the current standard automation task iteration
+  automationDataFolder = getMudletHomeDir().."\/Automation Data\/"
+  interruptDataFolder = getMudletHomeDir().."\/Interrupt Data\/"
   
   unfilteredTextConsoleMode = false  -- a snap out console window ( userWindow ) that shows unfiltered text from TEC
 
@@ -9313,6 +9315,23 @@ ToDo:
   Interrupt and automation window refresh at user login
   
 How automations are imported and exported--------------------------------------  
+  functions
+    parthiaAutomationExport
+    parthiaAutomationImport
+    parthiaInterruptExport
+    parthiaInterruptImport
+    
+  Aliases:
+    parthia automation export [group name]
+    parthia interrupt export [group name]
+    parthia automation import [group name]
+    parthia interrupt import [group name]
+      Running any of these without a group name lists the directory the files are saved in.
+  
+  Use tecOpenDirectory(path), to create a command to open the users folder.
+  
+  automationDataFolder, the folder where automations are saved.
+  interruptDataFolder, the folder where interrupts are saved.
 
 How automations an interrupts are saved----------------------------------------
 
@@ -11000,6 +11019,71 @@ function parthiaAutomationCharacterCheck(displayToScreen)
   refreshAutomationWindow()
   
 end  -- function parthiaAutomationCharacterCheck(displayToScreen)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationExport(groupName)</name>
+						<packageName></packageName>
+						<script>-- Exports automations to file
+
+function parthiaAutomationExport(automationType, groupName, displayToScreen)
+  
+  debugToDisplay("parthiaAutomationExport, called")
+  debugToDisplay("\tautomationType: "..automationType)
+  debugToDisplay("\tgroupName: "..groupName)
+  
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  
+  local characterName = parthiaPlayer.CurrentCharacter.name
+  debugToDisplay("\tcharacterName: "..characterName)
+  
+  -- Get where the automation folder is
+  local autoFolder = automationDataFolder  -- default to automation
+  if automationType == "automationInterrupt" then  -- if it is an interrupt change the folder.
+    autoFolder = interruptDataFolder
+  end  -- if automationType == "interrupt" then
+  debugToDisplay("\tautoFolder: "..autoFolder)
+  
+  -- Collect logical names for automation types
+  local automationTypeName = "automation"
+  if automationType == "automationInterrupt" then
+    automationTypeName = "interrupt"
+  end  -- if automationType == "automationInterrupt" then
+  debugToDisplay("\tautomationTypeName: "..automationTypeName)
+  
+  -- If it does not exist, make the automation folder
+  local autoFolderExist = lfs.chdir(autoFolder) -- Attempt to change to the automation directory
+  if not autoFolderExist then -- if the automation folder does not exist
+    debugToDisplay("\tautoFolder does not exist.")
+    local profileFolderExists = lfs.chdir(getMudletHomeDir()) -- Attempt to change to the user's profile directory.
+    if profileFolderExists then --The mudlet folder exists
+      lfs.mkdir(autoFolder)  -- make the automation folder
+    end --if profileFolderExists
+  end  -- if not autoFolderExist then
+  
+  -- Verify the automation exists, stop if it does not
+  if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
+    pecho(automationTypeName.." '"..groupName.."' does not exist.")
+    return false  -- stop the function
+  end  -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
+  
+  -- Set the full path and name of the file to save to
+  local autoFilePath = autoFolder..groupName..".json"
+  debugToDisplay("\tautoFilePath: "..autoFilePath)
+  
+  -- Save the automation to file.
+  local autoTable = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
+  parthiaTableSave(autoTable, autoFilePath, true)
+  
+  pecho(automationTypeName.." '"..groupName.."' saved successful.\n")
+  pecho("\tTo: "..autoFilePath.."\n")
+  pecho("If you would like to share this group open the directory with: ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open", 
+    [[tecOpenDirectory(]]..autoFolder..[[)]], 
+    "Open "..automationTypeName.." folder", true)
+  return true  -- function ran successfully
+  
+end  -- function parthiaAutomationExport(groupName)</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>

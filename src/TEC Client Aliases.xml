@@ -991,7 +991,7 @@ dontForgetToSave() --remind the player to save their changes.</script>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia help developers open</name>
-					<script></script>
+					<script>tecOpenDirectory(helpDevDataFolder)</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia help developers open$</regex>
@@ -1491,6 +1491,20 @@ expandAlias("parthia interrupt "..tostring(matches[2]))
 					<command></command>
 					<packageName></packageName>
 					<regex>^/interrupt$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation export [group name]</name>
+					<script>parthiaAutomationExport("automation", matches[2], true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia automation export\s*(.*)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia interrupt export [group name]</name>
+					<script>parthiaAutomationExport("automationInterrupt", matches[2], true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia interrupt export\s*(.*)$</regex>
 				</Alias>
 			</AliasGroup>
 			<Alias isActive="yes" isFolder="no">
