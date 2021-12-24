@@ -1520,6 +1520,20 @@ expandAlias("parthia interrupt "..tostring(matches[2]))
 					<packageName></packageName>
 					<regex>^parthia interrupt import\s*(.*)$</regex>
 				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation open</name>
+					<script>tecOpenDirectory(automationDataFolder)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia automation open$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia interrupt open</name>
+					<script>tecOpenDirectory(interruptDataFolder)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia interrupt open$</regex>
+				</Alias>
 			</AliasGroup>
 			<Alias isActive="yes" isFolder="no">
 				<name>parthia unfiltered text console</name>

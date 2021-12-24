@@ -10305,26 +10305,43 @@ function parthiaAutomationHelp()
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation groups", 
     [[parthiaAutomationShowGroups("automation")]],
     "parthia automation groups", true)
-  pecho(", view and manage automation groups you have made.\n")
+  pecho(", view and manage existing automation groups.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation import", 
+    [[parthiaAutomationImport("automation", "", true)]],
+    "parthia automation import", true)
+  pecho(", how to import automations from file.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation export", 
+    [[parthiaAutomationExport("automation", "", true)]],
+    "parthia automation export", true)
+  pecho(", how to export automations to file.\n")
   
-  pecho("\nInterrupts allow you interrupt your current action when a text pattern is view on screen.\n")
+  pecho("\nInterrupts allow you to automatically interrupt your current action when a text pattern is view on screen.\n")
   pecho("When an interrupt interrupts an automated task, the automated task will resume when the interrupt completes.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt create", 
     [[parthiaInterruptCreateHelp()]],
     "parthia automation update", true)
-  pecho(", how to create or update automation groups.\n")
+  pecho(", how to create or update an interrupt start trigger.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt toggle", 
     [[parthiaInterruptToggleHelp()]],
-    "parthia automation start", true)
-  pecho(", how to start an automation task.\n")
+    "parthia interrupt toggle", true)
+  pecho(", enable or disable an interrupt.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt update", 
     [[parthiaAutomationUpdateHelp("interrupt")]],
-    "parthia automation groups", true)
-  pecho(", create or update an interrupt.\n")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation groups", 
+    "parthia interrupt update", true)
+  pecho(", how to create or update interrupt groups.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt groups", 
     [[parthiaAutomationShowGroups("interrupt")]],
-    "parthia automation groups", true)
-  pecho(", view and manage interrupt groups you have made.\n")
+    "parthia interrupt groups", true)
+  pecho(", view and manage existing interrupt groups.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt import", 
+    [[parthiaAutomationImport("automationInterrupt", "", true)]],
+    "parthia interrupt import", true)
+  pecho(", how to import interrupts from file.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt export", 
+    [[parthiaAutomationExport("automationInterrupt", "", true)]],
+    "parthia interrupt export", true)
+  pecho(", how to export interrupts to file.\n")
   
   pecho("\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia unfiltered text console", 
@@ -10343,7 +10360,7 @@ function parthiaAutomationHelp()
   pecho(", opens a docked window with clickable links for your interrupt tasks.\n")
   pecho("\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Parthia automation tutorial video.", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Parthia automation tutorial video", 
     [[openUrl("https://youtu.be/snweHw9XI68")]], 
     "youtube parthia automation tutorial", true)
   pecho(", view a youtube tutorial video on parthia's automation system.\n")
@@ -11038,8 +11055,8 @@ local function listAutomationGroups(automationType, automationTypeName, autoFold
   end  -- for groupName, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]) do
 
   -- Display a command to save files to the automation directory
-  pecho("\nIf you would get files from the "..automationTypeName.." data folder run, ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open", 
+  pecho("If you would get files from the "..automationTypeName.." data folder run, ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open\n\n", 
     [[tecOpenDirectory("]]..autoFolder..[[")]], 
     "Open "..automationTypeName.." folder", true)
 
@@ -11151,8 +11168,8 @@ local function listAutomationFiles(autoFolder, automationTypeName)
   end  -- for _, file in ipairs(autoImportableFiles) do
   
   -- Display a command to save files to the automation directory
-  pecho("\nIf you would copy files to the "..automationTypeName.." data folder: ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open", 
+  pecho("If you would like to copy files to the "..automationTypeName.." data folder, ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open\n\n", 
     [[tecOpenDirectory("]]..autoFolder..[[")]], 
     "Open "..automationTypeName.." folder", true)
 
