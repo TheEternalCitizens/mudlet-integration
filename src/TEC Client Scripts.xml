@@ -11021,7 +11021,7 @@ end  -- function parthiaAutomationCharacterCheck(displayToScreen)</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
-						<name>parthiaAutomationExport(groupName)</name>
+						<name>parthiaAutomationExport(automationType, groupName, displayToScreen)</name>
 						<packageName></packageName>
 						<script>-- Exports automations to file
 
@@ -11070,12 +11070,12 @@ function parthiaAutomationExport(automationType, groupName, displayToScreen)
   end  -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
   
   -- Set the full path and name of the file to save to
-  local autoFilePath = autoFolder..groupName..".json"
+  local autoFilePath = autoFolder..groupName..".lua"
   debugToDisplay("\tautoFilePath: "..autoFilePath)
   
   -- Save the automation to file.
   local autoTable = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
-  parthiaTableSave(autoTable, autoFilePath, true)
+  parthiaTableSave(autoTable, autoFilePath, false)
   
   -- Display completion message if displayToScreen is truthy.
   if displayToScreen then
@@ -11090,6 +11090,64 @@ function parthiaAutomationExport(automationType, groupName, displayToScreen)
   return true  -- function ran successfully
   
 end  -- function parthiaAutomationExport(groupName)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationImport(automationType, groupName, displayToScreen)</name>
+						<packageName></packageName>
+						<script>-- Imports automation data from file
+
+function parthiaAutomationImport(automationType, groupName, displayToScreen)
+  
+  debugToDisplay("parthiaAutomationImport, called")
+  debugToDisplay("\tautomationType: "..automationType)
+  debugToDisplay("\tgroupName: "..groupName)
+  
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  
+  local characterName = parthiaPlayer.CurrentCharacter.name
+  debugToDisplay("\tcharacterName: "..characterName)
+  
+  -- Get where the automation folder is
+  local autoFolder = automationDataFolder  -- default to automation
+  if automationType == "automationInterrupt" then  -- if it is an interrupt change the folder.
+    autoFolder = interruptDataFolder
+  end  -- if automationType == "interrupt" then
+  debugToDisplay("\tautoFolder: "..autoFolder)
+  
+  -- create the full path and file name to be imported.
+  local autoImportFilePath = autoFolder..groupName..".lua"
+  debugToDisplay("\tautoImportFilePath: "..autoImportFilePath)
+  
+  -- Collect logical names for automation types
+  local automationTypeName = "automation"
+  if automationType == "automationInterrupt" then
+    automationTypeName = "interrupt"
+  end  -- if automationType == "automationInterrupt" then
+  debugToDisplay("\tautomationTypeName: "..automationTypeName)
+  
+  -- Prepared the automation table for import
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] = {}
+  
+  -- Get a reference of the automation table to be updated
+  local autoTable = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
+  
+  -- Import the file
+  if io.exists(autoImportFilePath) then --if the file exists, load it.
+    debugToDisplay("\tautoImportFilePath exists.")
+    table.load(autoImportFilePath, autoTable)
+    if displayToScreen then pecho("Imported "..groupName..".\n") end
+    --Refresh the automation windows
+    refreshInterruptsWindow()
+    refreshAutomationWindow()
+    -- Remind the user to save changes
+    DontForgetToSave()
+  else --the save file does not exist
+    if displayToScreen then pecho("Could not file file: "..autoImportFilePath.."\n") end
+  end -- if io.exists(parthiaAutomationSavePath)
+  
+ 
+end  -- function parthiaAutomationImport(automationType, groupName, displayToScreen)</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>

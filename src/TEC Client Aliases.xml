@@ -1500,11 +1500,25 @@ expandAlias("parthia interrupt "..tostring(matches[2]))
 					<regex>^parthia automation export\s*(.*)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation import [group name]</name>
+					<script>parthiaAutomationImport("automation", matches[2], true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia automation import\s*(.*)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
 					<name>parthia interrupt export [group name]</name>
 					<script>parthiaAutomationExport("automationInterrupt", matches[2], true)</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia interrupt export\s*(.*)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia interrupt import [group name]</name>
+					<script>parthiaAutomationImport("automationInterrupt", matches[2], true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia interrupt import\s*(.*)$</regex>
 				</Alias>
 			</AliasGroup>
 			<Alias isActive="yes" isFolder="no">
