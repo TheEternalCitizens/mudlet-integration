@@ -11153,6 +11153,30 @@ function parthiaAutomationImport(automationType, groupName, displayToScreen)
   end  -- if automationType == "automationInterrupt" then
   debugToDisplay("\tautomationTypeName: "..automationTypeName)
   
+  -- if no groupName was provided, show a list of automations to import
+  if not groupName or groupName == "" then
+  
+    -- if specified to display a message to screen
+    if displayToScreen then
+      
+      -- Display a help message
+      pecho("Importable "..automationTypeName.."s are:\n")
+      -- Show a list of clickable commands to import the automation
+      listAutomationFiles(autoFolder, automationTypeName)
+      
+      return true
+      
+    -- Not specified to display a message to screen, throw a warning.
+    else
+    
+      tecWarningNotification("parthiaAutomationImport, groupName and displayToScreen were not provided.")
+    
+      return false
+      
+    end  -- if displayToScreen then
+    
+  end  -- if not groupName then
+  
   -- Import the file
   if io.exists(autoImportFilePath) then --if the file exists, load it.
     debugToDisplay("\tautoImportFilePath exists.")
@@ -11182,6 +11206,7 @@ function parthiaAutomationImport(automationType, groupName, displayToScreen)
     
   end -- if io.exists(parthiaAutomationSavePath)
   
+  return true
  
 end  -- function parthiaAutomationImport(automationType, groupName, displayToScreen)</script>
 						<eventHandlerList />
