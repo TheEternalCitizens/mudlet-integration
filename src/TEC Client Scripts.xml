@@ -11025,6 +11025,26 @@ end  -- function parthiaAutomationCharacterCheck(displayToScreen)</script>
 						<packageName></packageName>
 						<script>-- Exports automations to file
 
+local function listAutomationGroups(automationType, automationTypeName, autoFolder)
+
+  for groupName, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]) do
+  
+    -- Display a clickable command to import this automation file
+    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." export "..groupName, 
+      [[expandAlias("]].."parthia "..automationTypeName.." export "..groupName..[[")]],
+      "Export "..groupName, true)
+    pecho(", to export "..automationTypeName.." "..groupName..".\n")
+  
+  end  -- for groupName, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]) do
+
+  -- Display a command to save files to the automation directory
+  pecho("\nIf you would get files from the "..automationTypeName.." data folder run, ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open", 
+    [[tecOpenDirectory("]]..autoFolder..[[")]], 
+    "Open "..automationTypeName.." folder", true)
+
+end  -- local function listAutomationGroups()
+
 function parthiaAutomationExport(automationType, groupName, displayToScreen)
   
   debugToDisplay("parthiaAutomationExport, called")
@@ -11062,11 +11082,25 @@ function parthiaAutomationExport(automationType, groupName, displayToScreen)
   
   -- Verify the automation exists, stop if it does not
   if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
+    
     if displayToScreen then
-      pecho(automationTypeName.." '"..groupName.."' does not exist.")
+      
+      -- If a groupName was passed, tell the user it does not exists.
+      if not groupName == "" then
+        pecho(automationTypeName.." '"..groupName.."' does not exist.\n")
+      end  -- if not groupName or groupName == "" then
+      
+      -- Tell the user how to export automations
+      pecho("To export your automations to file run:\n")
+      listAutomationGroups(automationType, automationTypeName, autoFolder)
+      
     end  -- if displayToScreen then
+    
+    
     debugToDisplay("\tgroupName does not exist.")
+    
     return false  -- stop the function
+    
   end  -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
   
   -- Set the full path and name of the file to save to
