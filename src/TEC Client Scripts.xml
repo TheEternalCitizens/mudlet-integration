@@ -11143,7 +11143,12 @@ function parthiaAutomationImport(automationType, groupName, displayToScreen)
     refreshInterruptsWindow()
     refreshAutomationWindow()
   else --the save file does not exist
-    if displayToScreen then pecho("Could not file file: "..autoImportFilePath.."\n") end
+    debugToDisplay("\tautoImportFilePath does not exists.")
+    if displayToScreen then
+      pecho("Could not file file: "..autoImportFilePath.."\n")
+      local autoImportableFiles = parthiaFileList(autoFolder)
+      for 
+    end  -- if displayToScreen then
   end -- if io.exists(parthiaAutomationSavePath)
   
  
