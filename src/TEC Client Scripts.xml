@@ -7266,9 +7266,18 @@ Handles refreshing the text in the interrupts window.
     end  -- for groupName parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] do
     
     cechoLink("interruptsWindowConsole",
-      "&lt;:"..tecSettings.helpHighlightColor.."&gt;create new interrupt", 
+      "&lt;:"..tecSettings.helpHighlightColor.."&gt;create an interrupt\n\n", 
       [[parthiaInterruptCreateHelp()]],
       "parthia automation groups", true)
+      
+    cechoLink("interruptsWindowConsole",
+      "&lt;:"..tecSettings.helpHighlightColor.."&gt;import an interrupt\n", 
+      [[parthiaAutomationImport("automationInterrupt", "", true)]],
+      "parthia interrupt import", true)
+    cechoLink("interruptsWindowConsole",
+      "&lt;:"..tecSettings.helpHighlightColor.."&gt;export an interrupt", 
+      [[parthiaAutomationExport("automationInterrupt", "", true)]],
+      "parthia interrupt export", true)
 
 end  -- function refreshInterruptsWindow()</script>
 					<eventHandlerList />
@@ -7350,9 +7359,18 @@ Handles refreshing the text in the interrupts window.
     end  -- for groupName parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] do
     
     cechoLink("automationWindowConsole",
-      "&lt;:"..tecSettings.helpHighlightColor.."&gt;create new automation", 
+      "&lt;:"..tecSettings.helpHighlightColor.."&gt;create an automation\n\n", 
       [[parthiaAutomationUpdateHelp()]],
       "parthia automation groups", true)
+      
+    cechoLink("automationWindowConsole",
+      "&lt;:"..tecSettings.helpHighlightColor.."&gt;import an automation\n", 
+      [[parthiaAutomationImport("automation", "", true)]],
+      "parthia automation import", true)
+    cechoLink("automationWindowConsole",
+      "&lt;:"..tecSettings.helpHighlightColor.."&gt;export an automation", 
+      [[parthiaAutomationExport("automation", "", true)]],
+      "parthia automation export", true)
 
 end  -- function refreshAutomationWindow()</script>
 					<eventHandlerList />
@@ -11056,13 +11074,16 @@ local function listAutomationGroups(automationType, automationTypeName, autoFold
 
   -- Display a command to save files to the automation directory
   pecho("If you would get files from the "..automationTypeName.." data folder run, ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open\n\n", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open\n", 
     [[tecOpenDirectory("]]..autoFolder..[[")]], 
     "Open "..automationTypeName.." folder", true)
 
 end  -- local function listAutomationGroups()
 
 function parthiaAutomationExport(automationType, groupName, displayToScreen)
+  
+  -- Put a new line before display text, if displaying the screen is specified
+  if displayToScreen then pecho('\n') end
   
   debugToDisplay("parthiaAutomationExport, called")
   debugToDisplay("\tautomationType: "..automationType)
@@ -11169,13 +11190,16 @@ local function listAutomationFiles(autoFolder, automationTypeName)
   
   -- Display a command to save files to the automation directory
   pecho("If you would like to copy files to the "..automationTypeName.." data folder, ")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open\n\n", 
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open\n", 
     [[tecOpenDirectory("]]..autoFolder..[[")]], 
     "Open "..automationTypeName.." folder", true)
 
 end  -- local function listAutomationFiles(autoFolder, automationTypeName)
 
 function parthiaAutomationImport(automationType, groupName, displayToScreen)
+  
+  -- Put a new line before display text, if displaying the screen is specified
+  if displayToScreen then pecho('\n') end
   
   debugToDisplay("parthiaAutomationImport, called")
   debugToDisplay("\tautomationType: "..automationType)
