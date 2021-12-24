@@ -11126,22 +11126,22 @@ function parthiaAutomationImport(automationType, groupName, displayToScreen)
   end  -- if automationType == "automationInterrupt" then
   debugToDisplay("\tautomationTypeName: "..automationTypeName)
   
-  -- Prepared the automation table for import
-  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] = {}
-  
-  -- Get a reference of the automation table to be updated
-  local autoTable = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
-  
   -- Import the file
   if io.exists(autoImportFilePath) then --if the file exists, load it.
     debugToDisplay("\tautoImportFilePath exists.")
+    -- Prepared the automation table for import
+    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] = {}
+    -- Get a reference of the automation table to be updated
+    local autoTable = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
+    -- Import the data to the table
     table.load(autoImportFilePath, autoTable)
-    if displayToScreen then pecho("Imported "..groupName..".\n") end
-    --Refresh the automation windows
+    if displayToScreen then
+      pecho("Imported "..groupName..".\n")
+      DontForgetToSave()  -- Remind the user to save changes
+    end  -- if displayToScreen then
+    -- Refresh the automation windows
     refreshInterruptsWindow()
     refreshAutomationWindow()
-    -- Remind the user to save changes
-    DontForgetToSave()
   else --the save file does not exist
     if displayToScreen then pecho("Could not file file: "..autoImportFilePath.."\n") end
   end -- if io.exists(parthiaAutomationSavePath)
