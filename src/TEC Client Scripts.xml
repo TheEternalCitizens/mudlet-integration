@@ -11083,7 +11083,7 @@ function parthiaAutomationExport(automationType, groupName, displayToScreen)
     pecho("\tTo: "..autoFilePath.."\n")
     pecho("If you would like to share this group open the directory with: ")
     pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open", 
-      [[tecOpenDirectory(]]..autoFolder..[[)]], 
+      [[tecOpenDirectory("]]..autoFolder..[[")]], 
       "Open "..automationTypeName.." folder", true)
   end  -- if displayToScreen then
     
@@ -11096,6 +11096,33 @@ end  -- function parthiaAutomationExport(groupName)</script>
 						<name>parthiaAutomationImport(automationType, groupName, displayToScreen)</name>
 						<packageName></packageName>
 						<script>-- Imports automation data from file
+
+local function listAutomationFiles(autoFolder, automationTypeName)
+
+  -- Import a list of importable automation files.
+  local autoImportableFiles = parthiaFileList(autoFolder)
+  
+  -- loop through all the automation files.
+  for _, file in ipairs(autoImportableFiles) do
+  
+    -- Remove the lua file extensions from the name.
+    local fileName = string.gsub(file, "%.lua", "")
+    
+    -- Display a clickable command to import this automation file
+    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." import "..fileName, 
+      [[expandAlias("]].."parthia "..automationTypeName.." import "..fileName..[[")]],
+      "Import "..fileName, true)
+    pecho(", to import "..automationTypeName.." "..fileName..".\n")
+    
+  end  -- for _, file in ipairs(autoImportableFiles) do
+  
+  -- Display a command to save files to the automation directory
+  pecho("\nIf you would copy files to the "..automationTypeName.." data folder: ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open", 
+    [[tecOpenDirectory("]]..autoFolder..[[")]], 
+    "Open "..automationTypeName.." folder", true)
+
+end  -- local function listAutomationFiles(autoFolder, automationTypeName)
 
 function parthiaAutomationImport(automationType, groupName, displayToScreen)
   
@@ -11137,18 +11164,22 @@ function parthiaAutomationImport(automationType, groupName, displayToScreen)
     table.load(autoImportFilePath, autoTable)
     if displayToScreen then
       pecho("Imported "..groupName..".\n")
-      DontForgetToSave()  -- Remind the user to save changes
+      dontForgetToSave()  -- Remind the user to save changes
     end  -- if displayToScreen then
     -- Refresh the automation windows
     refreshInterruptsWindow()
     refreshAutomationWindow()
   else --the save file does not exist
+    
     debugToDisplay("\tautoImportFilePath does not exists.")
+    
+    -- Display a help message to screen if specified to do so.
     if displayToScreen then
-      pecho("Could not file file: "..autoImportFilePath.."\n")
-      local autoImportableFiles = parthiaFileList(autoFolder)
-      for 
+      pecho("\nCould not find "..automationTypeName.." file: "..autoImportFilePath..".\n")
+      -- List the files in the automation folder and suggest a command to run for import
+      listAutomationFiles(autoFolder, automationTypeName)
     end  -- if displayToScreen then
+    
   end -- if io.exists(parthiaAutomationSavePath)
   
  
