@@ -11129,7 +11129,7 @@ function parthiaAutomationExport(automationType, groupName, displayToScreen)
       end  -- if not groupName or groupName == "" then
       
       -- Tell the user how to export automations
-      pecho("To export your automations to file run:\n")
+      pecho("To export your automations to file click or run:\n")
       listAutomationGroups(automationType, automationTypeName, autoFolder)
       
     end  -- if displayToScreen then
@@ -11235,7 +11235,7 @@ function parthiaAutomationImport(automationType, groupName, displayToScreen)
     if displayToScreen then
       
       -- Display a help message
-      pecho("Importable "..automationTypeName.."s are:\n")
+      pecho("To import an "..automationTypeName.." from file click or run:\n")
       -- Show a list of clickable commands to import the automation
       listAutomationFiles(autoFolder, automationTypeName)
       
