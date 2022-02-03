@@ -9752,7 +9752,7 @@ function parthiaAutomationTriggerHelp()
   pecho("\t\tFor example most text sent to parthia starts with a color code. So using ^ and $ will be difficult.\n")
   pecho("\t\tIf you would like to see how parthia receive text run ")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia unfiltered text console", 
-    [[parthiaAutomationShowGroups("automation")]],
+    [[expandAlias("parthia unfiltered text console")]],
     "parthia automation groups", true)
   pecho(", There will be a docked window you will need to drag out to view.\n")
 end -- function parthiaAutomationTriggerHelp()</script>
