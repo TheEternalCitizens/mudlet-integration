@@ -117,7 +117,12 @@ end --function parthiaTalkFilter(message)</script>
 		<Script isActive="yes" isFolder="no">
 			<name>pecho(message, talkOnly, forceSpeech)</name>
 			<packageName></packageName>
-			<script>function parthiaEcho(message, talkOnly, forceSpeech)
+			<script>--[[
+Controls sending text to console and text to speech system.
+parthiaEcho has a global reference pecho.
+]]--
+
+function parthiaEcho(message, talkOnly, forceSpeech)
   talkOnly = fuzzyBoolean(talkOnly) --only speak do not show to screen
   forceSpeech = fuzzyBoolean(forceSpeech) --Speak even if parthia talk is disabled, for parthia talk thoughts and parthia talk speech
   if not type(message) == "string" then --if the message variable is not a string
@@ -16799,7 +16804,15 @@ parthiaSetDiscordID() --inform discord what game the logged in player is playing
 				<Script isActive="yes" isFolder="no">
 					<name>UIManager</name>
 					<packageName></packageName>
-					<script>UIManagerFileLoad(true) --load display settings from file.
+					<script>--[[
+  This script is automatically called on application startup.
+  
+  It controls loading UI theme and settings from file or default settings if no file is in place.
+  It will refresh any text consoles.
+  Lastly it will check if scrolls bars should be enabled or disabled and control if they are shown.
+]]--
+
+UIManagerFileLoad(true) --load display settings from file.
 UIManagerSetTheme("PlayersTheme", false) --load windows into display
 tecRefreshSettingsWindow() --Refreshes text in settings window.
 refreshAutomationWindow()  -- refresh text in the Automation window
