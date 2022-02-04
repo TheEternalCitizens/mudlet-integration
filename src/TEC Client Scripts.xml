@@ -11080,6 +11080,9 @@ function parthiaAutomationCharacterCheck(displayToScreen)
   refreshInterruptsWindow()
   refreshAutomationWindow()
   
+  -- Create RegEx triggers for interrupts that are enabled.
+  parthiaAutomationResumeInterrupts()
+  
 end  -- function parthiaAutomationCharacterCheck(displayToScreen)</script>
 						<eventHandlerList />
 					</Script>
@@ -11327,6 +11330,50 @@ function parthiaAutomationImport(automationType, groupName, displayToScreen)
   return true
  
 end  -- function parthiaAutomationImport(automationType, groupName, displayToScreen)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationResumeInterrupts()</name>
+						<packageName></packageName>
+						<script>--[[
+This function resumes interrupts after they have all been removed.
+The intended use for this is resuming interrupts after logging into a character.
+]]--
+
+function parthiaAutomationResumeInterrupts()
+--[[
+
+-- If this is an interrupt, and it is enabled, create it's RegEx trigger.
+    if automationTypeName == "interrupt" then
+      -- If the interrupt is enabled.
+      if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled then
+        -- create the regex trigger
+        parthiaCreateInterruptRegexTrigger(groupName)
+      end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled then
+    end  -- if automationTypeName == "interrupt" then
+]]--
+debugToDisplay("parthiaAutomationResumeInterrupts, starting import.")
+  
+  -- Loop through all the interrupts
+  for groupName, interruptTable in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt) do
+    
+    debugToDisplay("\tgroupName: "..groupName..", enabled: "..tostring(interruptTable.enabled).."\n")
+    
+    -- If this interrupt is enabled, create a RegEx trigger for it.
+    if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled then
+      
+      debugToDisplay("\t\tCreating regex trigger.")
+      
+      -- create the regex trigger
+      parthiaCreateInterruptRegexTrigger(groupName)
+      
+    end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled then
+    
+    debugToDisplay("\t\tCompleted, "..groupName)
+    
+  end  -- for groupName, interruptTable in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt) do
+  
+end  -- function parthiaAutomationResumeInterrupts()</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
