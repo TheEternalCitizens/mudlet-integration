@@ -9986,6 +9986,10 @@ function parthiaAutomationCall()
   local groupPosition = false
   -- How many times this automation group has repeated
   local iterationCounter = 0
+  -- Set parthiaAutomationInterruptIterationCounter to 0 if it has been initialized yet
+  if parthiaAutomationInterruptIterationCounter == nil then
+    parthiaAutomationInterruptIterationCounter = 0
+  end  -- if parthiaAutomationInterruptIterationCounter == nil then
   
   -- Now create the local variables collecting from global variables of the automation type being run.
   if parthiaAutomationInterruptRunning then
