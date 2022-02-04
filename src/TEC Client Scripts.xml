@@ -9732,6 +9732,11 @@ function parthiaAutomationUpdateHelp(automationType)
   pecho("There is no limit on the number of commands that can be in an "..automationType.." group.\n")
   pecho("When creating an "..automationType.." group, remeber that when you call it you can have the entire group repeat a number of times or infinitely.\n\n")
   
+  pecho("For a tutorial video on making an Automation Group go to ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/rCHHD866J3I\n\n", 
+    [[openUrl("https://www.youtube.com/watch?v=rCHHD866J3I&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps&amp;index=2")]], 
+    "youtube parthia automation tutorial", true)
+  
   pecho("Command Format:\n")
   pecho("parthia "..automationType.." [group name], [position number] = [command], [repeat on fail], [insert] &amp; [trigger]\n")
   printCmdLine("parthia "..automationType.." replace_with_your_group, 1 = replace_with_your_command, 0, 0 &amp; 0")
@@ -9741,20 +9746,26 @@ end -- function parthiaAutomationUpdateHelp()
 function parthiaAutomationTriggerHelp()
   pecho("\nIf trigger is 0, the next command will occur just after the 'You are no longer busy.' message appears.\n")
   pecho("If trigger is a number the next command will occur after than many seconds.\n")
-  pecho("If trigger is a message the next command will occur when that message is seen on screen.\n")
-  pecho("\tMessage can be a plain text message you see on screen.\n")
-  pecho("\tIf there is a color change that occurs in your message you can surround the colored text with\n")
-  pecho("\t\tThis is a message you want to trigger off with &lt;color&gt;colored text&lt;/color&gt;.\n")
-  pecho("\t\tThe color of the text does not matter, always use &lt;color&gt;.\n")
-  pecho("\tADVANCED USERS: Message triggers support regex characters.\n")
-  pecho("\t\tThis allows for a very versitle trigger. You have to be willing to learn how to use regex patterns for this.\n")
-  pecho("\t\tWhen using regex patterns keep in mind that tec parthia received text with html codes for the server.\n")
-  pecho("\t\tFor example most text sent to parthia starts with a color code. So using ^ and $ will be difficult.\n")
+  pecho("If trigger is text the next command will occur when that text is seen on screen.\n")
+  pecho("\tThe text trigger pattern has to be how Parthia receives the text.\n")
   pecho("\t\tIf you would like to see how parthia receive text run ")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia unfiltered text console", 
     [[expandAlias("parthia unfiltered text console")]],
     "parthia automation groups", true)
-  pecho("\n\t\t\tThere will be a docked window you will need to drag out to view.\n")
+  pecho("\n\t\t\tThere will be a docked window you will need to drag out and resize to view.\n")
+  pecho("\tIf there is a color change that occurs in text you can surround the colored text with &lt;color&gt; and &lt;/color&gt;\n")
+  pecho("\t\tFor example if you wanted the trigger to occur when the words 'A rat' appear on the screen with any color.\n")
+  pecho("\t\t\tUse: '&lt;color&gt;colored text&lt;/color&gt;'\n")
+  pecho("\t\t\tWithout the quotes.\n")
+  pecho("\tADVANCED USERS: Message triggers support regex characters.\n")
+  pecho("\t\tThis allows for a very versitle trigger. You have to be willing to learn how to use regex patterns for this.\n")
+  pecho("\t\tWhen using regex patterns keep in mind that tec parthia received text with html codes for the server.\n")
+  pecho("\t\tFor example most text sent to parthia starts with a color code. So using ^ and $ will be difficult.\n")
+  pecho("A tutorial video on Parthia's trigger and call patters can be found at ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/JVsgRNT6YLo", 
+    [[openUrl("https://www.youtube.com/watch?v=JVsgRNT6YLo&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps&amp;index=4")]], 
+    "youtube parthia automation tutorial", true)
+  
 end -- function parthiaAutomationTriggerHelp()</script>
 						<eventHandlerList />
 					</Script>
@@ -9870,6 +9881,11 @@ function parthiaInterruptCreateHelp()
   pecho("\nExample:\n\tparthia interrupt kill when unconcious, 1, falls unconcious~ 0\n")
   pecho("\tWould create an interrupt that triggers when `falls unconcious` appears on the screen.\n")
   pecho("\tThe first command in this interrupt group would be called when the `You are no longer busy.` message appears.\n")
+  
+  pecho("\nFor a tutorial video on making an Interrupt and Interrupt Automation Group go to ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/8n9vycwod1U\n\n", 
+    [[openUrl("https://youtu.be/8n9vycwod1U")]], 
+    "youtube parthia automation tutorial", true)
   
   pecho("Command Format:\n")
   pecho("parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]\n")
@@ -10391,9 +10407,9 @@ function parthiaAutomationHelp()
   pecho("\n")
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Parthia automation tutorial video", 
-    [[openUrl("https://youtu.be/snweHw9XI68")]], 
+    [[openUrl("https://www.youtube.com/watch?v=DXDuhQGlPwI&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps")]], 
     "youtube parthia automation tutorial", true)
-  pecho(", view a youtube tutorial video on parthia's automation system.\n")
+  pecho(", view tutorial videos on parthia's automation system.\n")
   
   pecho("\n")
   
