@@ -11282,20 +11282,35 @@ function parthiaAutomationImport(automationType, groupName, displayToScreen)
   
   -- Import the file
   if io.exists(autoImportFilePath) then --if the file exists, load it.
+    
     debugToDisplay("\tautoImportFilePath exists.")
+    
     -- Prepared the automation table for import
     parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] = {}
+    
     -- Get a reference of the automation table to be updated
     local autoTable = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
+    
     -- Import the data to the table
     table.load(autoImportFilePath, autoTable)
     if displayToScreen then
       pecho("Imported "..groupName..".\n")
       dontForgetToSave()  -- Remind the user to save changes
     end  -- if displayToScreen then
+    
+    -- If this is an interrupt, and it is enabled, create it's RegEx trigger.
+    if automationTypeName == "interrupt" then
+      -- If the interrupt is enabled.
+      if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled then
+        -- create the regex trigger
+        parthiaCreateInterruptRegexTrigger(groupName)
+      end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled then
+    end  -- if automationTypeName == "interrupt" then
+    
     -- Refresh the automation windows
     refreshInterruptsWindow()
     refreshAutomationWindow()
+  
   else --the save file does not exist
     
     debugToDisplay("\tautoImportFilePath does not exists.")
