@@ -11080,6 +11080,8 @@ function parthiaAutomationCharacterCheck(displayToScreen)
   refreshInterruptsWindow()
   refreshAutomationWindow()
   
+  -- Clean up RegEx triggers used by a previous ID
+  parthiaAutomationCleanRegExTriggers()
   -- Create RegEx triggers for interrupts that are enabled.
   parthiaAutomationResumeInterrupts()
   
@@ -11381,7 +11383,22 @@ end  -- function parthiaAutomationResumeInterrupts()</script>
 						<packageName></packageName>
 						<script>--[[
 Cleans out or deletes RegEx triggers in use by the automation system.
-]]--</script>
+]]--
+
+function parthiaAutomationCleanRegExTriggers()
+
+  debugToDisplay("parthiaAutomationCleanRegExTriggers, started")
+  
+  for groupName, _ in pairs(parthiaAutomation.automationInterruptTriggers) do
+    
+    debugToDisplay("\tDeleteing left over trigger for group: "..groupName)
+    
+    -- Delete the trigger and the data used to track it.
+    parthiaDeleteInterruptRegexTrigger(groupName)
+    
+  end -- for groupName, _ in paris(parthiaAutomation.automationInterruptTriggers) do
+
+end  -- function parthiaAutomationCleanRegExTriggers()</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
