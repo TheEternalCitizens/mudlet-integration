@@ -10360,7 +10360,6 @@ function parthiaAutomationHelp()
     [[parthiaAutomationShowGroups("interrupt")]],
     "parthia interrupt groups", true)
   pecho(", view and manage existing interrupt groups.\n")
-  
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt import", 
     [[parthiaAutomationImport("automationInterrupt", "", true)]],
     "parthia interrupt import", true)
@@ -10371,6 +10370,10 @@ function parthiaAutomationHelp()
   pecho(", how to export interrupts to file.\n")
   
   pecho("\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation triggers&lt;reset&gt;", 
+    [[parthiaAutomationTriggerHelp()]], 
+    "automations trigger help", true)
+  pecho(", how to create patterns for automation triggers.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia unfiltered text console", 
     [[expandAlias("parthia unfiltered text console")]],
     "parthia automation groups", true)
