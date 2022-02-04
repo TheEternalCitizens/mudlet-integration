@@ -9332,11 +9332,6 @@ end --parthiaTalkSetvolume(volume, displayToScreen)
 					<script>--[[
 Codeless scripting.
 
-ToDo:
-  interrupts auto load when not using welcome room character
-    Make option to disable autoload
-  Interrupt and automation window refresh at user login
-
 How automations are imported and exported--------------------------------------  
   functions
     parthiaAutomationExport
