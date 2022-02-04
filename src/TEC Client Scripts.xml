@@ -117,7 +117,12 @@ end --function parthiaTalkFilter(message)</script>
 		<Script isActive="yes" isFolder="no">
 			<name>pecho(message, talkOnly, forceSpeech)</name>
 			<packageName></packageName>
-			<script>function parthiaEcho(message, talkOnly, forceSpeech)
+			<script>--[[
+Controls sending text to console and text to speech system.
+parthiaEcho has a global reference pecho.
+]]--
+
+function parthiaEcho(message, talkOnly, forceSpeech)
   talkOnly = fuzzyBoolean(talkOnly) --only speak do not show to screen
   forceSpeech = fuzzyBoolean(forceSpeech) --Speak even if parthia talk is disabled, for parthia talk thoughts and parthia talk speech
   if not type(message) == "string" then --if the message variable is not a string
@@ -129,6 +134,7 @@ end --function parthiaTalkFilter(message)</script>
       [[tecReportIssues()]],
       "Report issues or bugs", true)
     message = "Error function parthiaEcho, was sent a non string variable. Type sent was "..tostring(type(message))
+    cecho("&lt;red:&gt;"..message.."\n")
   else --message is a string, display it
     if not talkOnly then cecho(message) end
     if getParthiaTalk() or forceSpeech then --if parthia talk is enabled, or forceSpeech is set
@@ -510,9 +516,19 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   
   tecSettings.tipsEnabled = true --tell parthia to show misc tips while exploring game world.
   
-  tecSettings.automation = {}  --Used to track automation groups.
+  parthiaAutomation = {}
+  parthiaAutomation.automation = {}  --Used to track automation groups.
+  parthiaAutomation.automationInterrupt = {} --used to track automation interrupts.
+  parthiaAutomation.automationInterruptTriggers = {} --used to track interrupt triggers. groupName is the key, trigger ID is the value
+  parthiaAutomationSaveTable = {}  -- table that stores all character specific saved automation data
+  parthiaAutomationSavePath = tecSettingsFolder.."AutomationData.lua"
+  parthiaAutomationIterationCounter = 0  -- counts the current standard automation task iteration
+  automationDataFolder = getMudletHomeDir().."\/Automation Data\/"
+  interruptDataFolder = getMudletHomeDir().."\/Interrupt Data\/"
+  
+  unfilteredTextConsoleMode = false  -- a snap out console window ( userWindow ) that shows unfiltered text from TEC
 
-	if displayToScreen then pecho("Parthia settings set to default.\n") end
+  if displayToScreen then pecho("Parthia settings set to default.\n") end
 
 end --function tecClientReset()
 </script>
@@ -536,9 +552,9 @@ function tecFileSaveSettings(displayToScreen)
 
   --Save the table to file.
   table.save(tecSettingsFolder.."TECClientData.lua", tecSettings)
-	
-	--display save to screen
-	if displayToScreen then pecho("Client settings saved.\n") end
+
+  --display save to screen
+  if displayToScreen then pecho("\nClient settings saved.") end
 
 end --function tecFileSaveSettings(displayToScreen)</script>
 					<eventHandlerList />
@@ -552,25 +568,30 @@ end --function tecFileSaveSettings(displayToScreen)</script>
 --successfull
 function tecFileLoadSettings(displayToScreen)
   local tecTmpSettingsTable = {}
-	--Set the location and name of file.	
-	local path = tecSettingsFolder.."TECClientData.lua"
-	path = path:gsub("\\","/")
-	--If the file does not exist let the user know.
+  --Set the location and name of file.
+  local path = tecSettingsFolder.."TECClientData.lua"
+  path = path:gsub("\\","/")
+  --If the file does not exist let the user know.
   if not io.exists(path) then 
-		cecho("tecDebugWindow","tecFileLoadSettings: "..path.." file doesn't exist.") --TEC debug screen
-		--debugc("tecFileLoadSettings: "..path.." file doesn't exist.") --mudlets debug screen
-		if displayToScreen then
+    cecho("tecDebugWindow","tecFileLoadSettings: "..path.." file doesn't exist.") --TEC debug screen
+    --debugc("tecFileLoadSettings: "..path.." file doesn't exist.") --mudlets debug screen
+    if displayToScreen then
       pecho("[ Info ]  - No settings file. Parthia using default settings.\n")
     end
-	return --kill the function before real errors occur
-	else
+  return --kill the function before real errors occur
+  else
     table.load(path, tecTmpSettingsTable) --Load the settings in from file
     --Load settings from file updating default settings where different.
     tecSettings = table.update(tecSettings, tecTmpSettingsTable)
     if displayToScreen then 
       pecho("[  OK  ]  - Parthia settings successfully loaded from file.\n") 
     end --if displayToScreen
-	end --end if file exists else
+  end --end if file exists else
+  
+  -- load automations data
+  if parthiaAutomationLoad then
+    parthiaAutomationLoad(displayToScreen)
+  end  -- if parthiaAutomationLoad then
   
 end --function tecFileLoadSettings
 
@@ -585,6 +606,8 @@ end --function tecFileLoadSettings
   tecFileSaveSettings(displayToScreen)
   --Save display data to file. 
   UIManagerFileSave(displayToScreen)
+  -- save automations data to file
+  parthiaAutomationSave(displayToScreen)
 end --function tecClientSaveAll</script>
 					<eventHandlerList />
 				</Script>
@@ -2868,25 +2891,25 @@ Debug like functions:
 --triggers system to send debug information to it.
 
 function setTECDebugMode(tectmpSetDebug)
-	
-	--Set debug mode
-	tecSettings.tecDebugMode = tectmpSetDebug or false
-	
-	if tecSettings.tecDebugMode then --if enabling debug
-		openUserWindow("tecDebugWindow")
-		--saveWindowLayout() --save floating miniconsole locations
-		--loadWindowLayout() --load previously save miniconsole position.
-		--tecDebugWindow:addScrollbars(parent, "Vertical")
+
+  --Set debug mode
+  tecSettings.tecDebugMode = tectmpSetDebug or false
+
+  if tecSettings.tecDebugMode then --if enabling debug
+    openUserWindow("tecDebugWindow")
+    --saveWindowLayout() --save floating miniconsole locations
+    --loadWindowLayout() --load previously save miniconsole position.
+    --tecDebugWindow:addScrollbars(parent, "Vertical")
     if tecSettings.showScrollBars then enableScrollBar("tecDebugWindow") end
-		pecho("Debug mode enabled.\n")
-	else --else disabling debug
-		pecho("Debug mode disabled.\n")
-		setTECDisplayDebugMode(tectmpSetDebug)
-		setTECMapDebugMode(tectmpSetDebug)
-		setTECTimerDebugMode(tectmpSetDebug)
+    pecho("Debug mode enabled.\n")
+  else --else disabling debug
+    pecho("Debug mode disabled.\n")
+    setTECDisplayDebugMode(tectmpSetDebug)
+    setTECMapDebugMode(tectmpSetDebug)
+    setTECTimerDebugMode(tectmpSetDebug)
     closeUserWindow("tecDebugWindow")
-	end -- if tectmpSetDebug
-	
+  end -- if tectmpSetDebug
+
 end --end function setTecDebugMode</script>
 					<eventHandlerList />
 				</Script>
@@ -2913,9 +2936,9 @@ end --end function getTECdebugMode</script>
 --blue errors.
 function debugToDisplay(textMessage)
   textMessage = textMessage:gsub("%\n","") --remove new lines so they do not show in debug window.
-	if getTECDebugMode() then --Is debug mode on?
-		cecho("tecDebugWindow","\n"..textMessage) -- print message to screen
-	end --if debug mode if check
+  if getTECDebugMode() then --Is debug mode on?
+    cecho("tecDebugWindow","\n"..textMessage) -- print message to screen
+  end --if debug mode if check
 end --end displayToDebug function
 </script>
 					<eventHandlerList />
@@ -5229,12 +5252,12 @@ function UIManagerEnableWindow(objectName, mode, displayToScreen)
         for windowName, window in pairs(tecGeyserWindows) do--loop through containers
             --make commandfor cechoLink
             local cmdToSend = [[UIManagerEnableWindow("]]..windowName..[[",true,true)]]
-            pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable "..windowName, 
+            pechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable "..windowName, 
               cmdToSend, --runs on click.
               "Enable "..windowName.." window", true)
             pecho(", ")
         end --for pairs(tecGeyserWindows)
-        pecho("and ")
+        pecho("\n\tand ")
           pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable all",
               [[UIManagerEnableWindow("all",true,true)]], --runs on click.
               "Enable all windows", true)
@@ -5244,12 +5267,12 @@ function UIManagerEnableWindow(objectName, mode, displayToScreen)
         for windowName, window in pairs(tecGeyserWindows) do--loop through containers
             --make commandfor cechoLink
             local cmdToSend = [[UIManagerEnableWindow("]]..windowName..[[",false,true)]]
-            pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window disable "..windowName, 
+            pechoLink("\n\t&lt;:"..tecSettings.helpHighlightColor.."&gt;display window disable "..windowName, 
               cmdToSend, --runs on click.
               "Disable "..windowName.." window", true)
             pecho(", ")
         end --for pairs(tecGeyserWindows)
-        pecho("and ")
+        pecho("\n\tand ")
           pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window disable all",
               [[UIManagerEnableWindow("all",false,true)]], --runs on click.
               "Disable all windows", true)
@@ -5447,9 +5470,9 @@ function UIManagerGUIframeThemes(displayToScreen)
       tabHeight = tabsHeight, --tabs height
       tabStyle = tabsStyle, --Tabs stylesheet
       tabEchoStyle = tabsFontStyle, --text appearence in tabs
-      leftStartWidth = eighthW, --left border width
+      leftStartWidth = eighthW + 60, --left border width
       leftStartHeight = halfH, --Where top and bottom windows meet
-      rightStartWidth = quarterW, --Right border window
+      rightStartWidth = eighthW + 50, --Right border window
       rightStartHeight = halfH, --Where top and bottom windows meet
       topStartHeight = eighthH, --width of top
       bottomStartHeight = 50, --width of bottom
@@ -5468,12 +5491,15 @@ function UIManagerGUIframeThemes(displayToScreen)
   uiThemes.NiceHat.windows = { }
 
   uiThemes.NiceHat.windows["TEC Map"] = "bottomright"
+  uiThemes.NiceHat.windows["Automation"] = "bottomleft"
   uiThemes.NiceHat.windows["Settings"] = "bottomleft"
-  uiThemes.NiceHat.windows["Macros"] = "bottomleft"
+  --uiThemes.NiceHat.windows["Macros"] = "bottomleft"
   uiThemes.NiceHat.windows["Status"] = "bottom"
-  uiThemes.NiceHat.windows["Compass"] = "topleft"
+  --uiThemes.NiceHat.windows["Compass"] = "topleft"
   uiThemes.NiceHat.windows["Communications"] = "top"
-  uiThemes.NiceHat.windows["Room Characters"] = "topright"
+  --uiThemes.NiceHat.windows["Room Characters"] = "topright"
+  uiThemes.NiceHat.windows["Interrupts"] = "topleft"
+  uiThemes.NiceHat.windows["Room, Compass &amp; Macro"] = "topright"
   
   --control what sides are displayed.
   --true means the side will be displayed.
@@ -5539,7 +5565,7 @@ function UIManagerGUIframeThemes(displayToScreen)
 --PASTE ABOVE----------------------------------------
 
   --Set the default theme here
-  uiThemesDefaultLayout = uiThemes.orchil --set default theme here
+  uiThemesDefaultLayout = uiThemes.NiceHat --set default theme here
 
   --Load theme from save, or load a default theme if ther was no saved theme
   if UIManagerSettings.PlayersTheme then --if there is a PlayerTheme loaded from file.
@@ -5911,7 +5937,7 @@ end --function UIManagerEnableSide</script>
     tecErrorNotification("function UIManagerFileSave, UIManagerSettings table not present.")
   end --if UIManagerSettings
   
-  if displayToScreen then pecho("\nDisplay settings saved.\n") end
+  if displayToScreen then pecho("\nDisplay settings saved.") end
 end --function UIManagerFileSave</script>
 						<eventHandlerList />
 					</Script>
@@ -6168,7 +6194,7 @@ function parthiaSetFatigueGauges(fatigue)
     fatiguebar:setValue(fatigue,100) --set bar on screen
     MultiWindow.fatiguebar:setValue(fatigue,100) --set bar in the MultiWindow
   end --if fatigue
-end --function parthiaSetHPBars(health, maxHealth)</script>
+end --function parthiaSetFatigueGauges(fatigue)</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
@@ -7112,14 +7138,9 @@ end --function parthiaDrawMapExits()</script>
 				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>Settings Window</name>
+				<name>Console Window</name>
 				<packageName></packageName>
-				<script>-------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external scripts --
--------------------------------------------------
-</script>
+				<script></script>
 				<eventHandlerList />
 				<Script isActive="yes" isFolder="no">
 					<name>tecRefreshSettingsWindow()</name>
@@ -7171,6 +7192,233 @@ end --function parthiaDrawMapExits()</script>
 end --function tecRefreshSettingsWindow
 
 </script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>refreshInterruptsWindow()</name>
+					<packageName></packageName>
+					<script>function refreshInterruptsWindow()
+--[[
+Handles refreshing the text in the interrupts window.
+]]--
+
+  -- If the interrupt window does not exists, stop this function
+  if UIManagerSettings[intteruptsWindow.name] then --if window exists chek if it is enabled
+   if UIManagerSettings[intteruptsWindow.name].disabled then
+    return true
+   end  -- if UIManagerSettings[intteruptsWindow.name].disabled then
+  end --if UIManagerSettings[intteruptsWindow.name]
+
+  clearWindow("interruptsWindowConsole")
+
+  local automationType = 'automationInterrupt'
+  local automationTypeName = 'interrupt'
+
+  for groupName, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]) do
+    
+      cecho("interruptsWindowConsole", groupName..":\n")
+      
+      -- collect variables from interrupts, on standard automations these would just be nil
+      local groupEnabled = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled
+      local firstCommandTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].firstCommandTrigger
+      local groupRepeat = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].interruptRepeat
+      local callPattern = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].pattern
+      
+      -- Make a Start button for automation OR an enable disable button for interrupts
+      if automationType == 'automationInterrupt' then
+        
+        local toggleInterruptButtonColor = "ansi_red"
+        local toggleInterruptButtonState = "Inactive"
+        
+        -- This intterrupt is currently enabled. Set the color to standard blue
+        if groupEnabled then
+          toggleInterruptButtonColor = "ansi_green"
+          toggleInterruptButtonState = "Active"
+        end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled then
+        
+        -- Display the button
+        cechoLink("interruptsWindowConsole", "  &lt;:"..toggleInterruptButtonColor.."&gt;"..toggleInterruptButtonState,
+                  [[expandAlias("parthia interrupt toggle ]]..groupName..[[")]],
+                  "Click to toggle "..groupName.." on or off", true)
+                  --parthia interrupt toggle [groupName]
+        
+      else  -- This is a standard automation group
+        
+        cechoLink("interruptsWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Start", 
+          [[expandAlias("parthia ]]..automationTypeName..[[ ]]..groupName..[[, 0")]],
+          "parthia "..automationTypeName.." "..groupName..", 0", true)
+          
+      end  -- if automationType == 'automationInterrupt' then
+        
+      -- Show group button
+      cechoLink("interruptsWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Show", 
+        [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[")]],
+        "parthia "..automationTypeName.." groups "..groupName, true)
+      
+      --Make a customized edit button for interrupts
+      cechoLink("interruptsWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
+        --parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]
+        [[parthiaInterruptCreateHelp();printCmdLine("parthia interrupt ]]..groupName..[[, ]]..groupRepeat..[[, ]]..callPattern..[[~ ]]..firstCommandTrigger..[[")]],
+        "fill command line with edit command for "..groupName, true)
+              
+      -- Remove group button
+      cechoLink("interruptsWindowConsole", "  &lt;:ansi_red&gt;Remove", 
+        [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[, delete")]],
+        "parthia "..automationTypeName.." groups "..groupName..", delete", true)
+      
+      cecho("interruptsWindowConsole", "\n\n")
+      
+    end  -- for groupName parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] do
+    
+    cechoLink("interruptsWindowConsole",
+      "&lt;:"..tecSettings.helpHighlightColor.."&gt;create an interrupt\n\n", 
+      [[parthiaInterruptCreateHelp()]],
+      "parthia automation groups", true)
+      
+    cechoLink("interruptsWindowConsole",
+      "&lt;:"..tecSettings.helpHighlightColor.."&gt;import an interrupt\n", 
+      [[parthiaAutomationImport("automationInterrupt", "", true)]],
+      "parthia interrupt import", true)
+    cechoLink("interruptsWindowConsole",
+      "&lt;:"..tecSettings.helpHighlightColor.."&gt;export an interrupt", 
+      [[parthiaAutomationExport("automationInterrupt", "", true)]],
+      "parthia interrupt export", true)
+
+end  -- function refreshInterruptsWindow()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>refreshAutomationWindow()</name>
+					<packageName></packageName>
+					<script>function refreshAutomationWindow()
+--[[
+Handles refreshing the text in the interrupts window.
+]]--
+
+  -- If the automation window does not exists, stop this function
+  if UIManagerSettings[automationWindow.name] then --if window exists chek if it is enabled
+   if UIManagerSettings[automationWindow.name].disabled then
+    return true
+   end  -- if UIManagerSettings[automationWindow.name].disabled then
+  end --if UIManagerSettings[automationWindow.name]
+
+  clearWindow("automationWindowConsole")
+
+  local automationType = 'automation'
+  local automationTypeName = 'automation'
+
+  for groupName, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]) do
+    
+      cecho("automationWindowConsole", groupName..":\n")
+      
+      -- collect variables from interrupts, on standard automations these would just be nil
+      local groupEnabled = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled
+      local firstCommandTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].firstCommandTrigger
+      local groupRepeat = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].interruptRepeat
+      local callPattern = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].pattern
+      
+      -- Make a Start button for automation OR an enable disable button for interrupts
+      if automationType == 'automationInterrupt' then
+        
+        local toggleInterruptButtonColor = "ansi_red"
+        local toggleInterruptButtonState = "Inactive"
+        
+        -- This intterrupt is currently enabled. Set the color to standard blue
+        if groupEnabled then
+          toggleInterruptButtonColor = "ansi_green"
+          toggleInterruptButtonState = "Active"
+        end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled then
+        
+        -- Display the button
+        cechoLink("automationWindowConsole", "  &lt;:"..toggleInterruptButtonColor.."&gt;"..toggleInterruptButtonState,
+                  [[expandAlias("parthia interrupt toggle ]]..groupName..[[")]],
+                  "Click to toggle "..groupName.." on or off", true)
+                  --parthia interrupt toggle [groupName]
+        
+      else  -- This is a standard automation group
+        
+        cechoLink("automationWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Start", 
+          [[expandAlias("parthia ]]..automationTypeName..[[ ]]..groupName..[[, 0")]],
+          "parthia "..automationTypeName.." "..groupName..", 0", true)
+          
+      end  -- if automationType == 'automationInterrupt' then
+        
+      -- Show group button
+      cechoLink("automationWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Show", 
+        [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[")]],
+        "parthia "..automationTypeName.." groups "..groupName, true)
+      
+      -- Edit group button
+      cechoLink("automationWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
+        [[parthiaAutomationUpdateHelp();
+        printCmdLine("parthia automation ]]..groupName..[[, 1 = replace_with_your_command, 0, 0 &amp; 0")]],
+        "fill command line with edit command for "..groupName, true)
+              
+      -- Remove group button
+      cechoLink("automationWindowConsole", "  &lt;:ansi_red&gt;Remove", 
+        [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[, delete")]],
+        "parthia "..automationTypeName.." groups "..groupName..", delete", true)
+      
+      cecho("automationWindowConsole", "\n\n")
+      
+    end  -- for groupName parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] do
+    
+    cechoLink("automationWindowConsole",
+      "&lt;:"..tecSettings.helpHighlightColor.."&gt;create an automation\n\n", 
+      [[parthiaAutomationUpdateHelp()]],
+      "parthia automation groups", true)
+      
+    cechoLink("automationWindowConsole",
+      "&lt;:"..tecSettings.helpHighlightColor.."&gt;import an automation\n", 
+      [[parthiaAutomationImport("automation", "", true)]],
+      "parthia automation import", true)
+    cechoLink("automationWindowConsole",
+      "&lt;:"..tecSettings.helpHighlightColor.."&gt;export an automation", 
+      [[parthiaAutomationExport("automation", "", true)]],
+      "parthia automation export", true)
+
+end  -- function refreshAutomationWindow()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>setUnfilteredTextConsole(mode)</name>
+					<packageName></packageName>
+					<script>--opens an unfiltered text window.
+--triggers system to send raw text to the unfiltered text window
+
+function setUnfilteredTextConsole(mode)
+
+  --Set mode to unfiltered text
+  unfilteredTextConsoleMode = mode or false
+
+  -- create the window if enabling
+  if unfilteredTextConsoleMode then
+    
+    openUserWindow("Parthia Unfiltered Text Console", true, false)
+    
+    enableHorizontalScrollBar("Parthia Unfiltered Text Console")
+    
+    -- add a scroll bar if user has scroll bars enabled.
+    if tecSettings.showScrollBars then enableScrollBar("Parthia Unfiltered Text Console") end
+    
+    unfilteredTextConsoleMode = true
+    
+    pecho("Unfiltered text window opened.\n")
+    
+  -- remove the window if disabling
+  else
+  
+    closeUserWindow("Parthia Unfiltered Text Console")
+    
+    unfilteredTextConsoleMode = false
+    
+    pecho("Closed unfiltered text Console.\n")
+    
+  end -- if mode
+  
+  return true
+
+end -- function setUnfilteredTextConsole(mode)</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -9083,16 +9331,183 @@ end --parthiaTalkSetvolume(volume, displayToScreen)
 					<packageName></packageName>
 					<script>--[[
 Codeless scripting.
-This is done by running a command to register you action in a script group.
-  /auto [group name], [position number] = [command], [seconds to wait or 0 for no longer busy, [repeat on fail]
-Example /auto Attack Rotation, 1 = slash &amp;lt;target&amp;gt;, 0, False /auto Attack Rotation, 2 = chop &amp;lt;target&amp;gt;, 0, False /auto Attack Rotation, 3 = jab &amp;lt;target&amp;gt;, 0, False
-  Would create a three attack rotation where you character would slash, chop than jab the target. Where if you failed at the attack you continue to the next action.
-Example /auto Heal Rotation, 1 = diagnose &amp;lt;target&amp;gt;, 0, True /auto Heal Rotation, 2 = bandage &amp;lt;target&amp;gt; with bandage, 0, True /auto Heal Rotation, 3 = cut bandage from &amp;lt;target&amp;gt;, 0, True
-  Would create a three healing rotation where you would diagnose, bandage and unbandage the targeted body part. Where if you fail at an action you continue to attempt it until you succeed.
-Than to run to rotation /auto [group name], [number of times, leave out for infinite]
-  Example /auto Heal Rotation to run the healing rotation an infinit  e number of times.
-  auto Heal Rotation, 10 to run the healing rotation group 10 times.
-Where the stop command stops you script.
+
+How automations are imported and exported--------------------------------------  
+  functions
+    parthiaAutomationExport
+    parthiaAutomationImport
+
+  Aliases:
+    parthia automation export [group name]
+    parthia interrupt export [group name]
+    parthia automation import [group name]
+    parthia interrupt import [group name]
+      Running any of these without a group name lists the directory the files are saved in.
+
+  Use tecOpenDirectory(path), to create a command to open the users folder.
+
+  Variables: 
+    automationDataFolder, the folder where automations are saved.
+    interruptDataFolder, the folder where interrupts are saved.
+
+How automations an interrupts are saved----------------------------------------
+
+  parthiaAutomationSaveTable, is the dictionary that is saved to and loaded from.
+    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation, is where automations are saved
+    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt, is where interrupts are saved
+    parthiaAutomation.automationInterruptTriggers, is where interrupt triggers are saved
+    parthiaAutomationSave(), function that saves the dictionary to file.
+    parthiaAutomationLoad(), function that loads the dictionary from file.
+    parthiaAutomationSavePath = tecSettingsFolder.."AutomationData.lua" -- Where data is stored
+    parthiaAutomationCharacterCheck(), creates default automation data for current character, if no data exists.
+      called with setStatsCheckActive(), when setting the stats check to false
+
+How automation interupts are handled-------------------------------------------
+
+  Interupt groups are stored in parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupts
+  Triggers for interrupts are stored in parthiaAutomation.automationInterruptTriggers
+    The key is the groupName, the value is the trigger ID.
+
+  Interrupt Creation Logic:
+    User runs aliase: parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]
+      parthiaAutomationCreateInterruptGroup([group name], [repeat], [pattern], firstCommandTrigger) is called
+        parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName] is created
+          It has keys interruptRepeat, pattern and firstCommandTrigger created, with the values passed.
+        A message is presented to the user.
+  
+  Interrupt Enable Logic:
+    User toggles the interrupt to enabled with aliase 'parthia interrupt toggle [groupName]'
+      parthiaAutomationInterruptToggleState(groupName) is called.
+        parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName] is enabled.
+        parthiaCreateInterruptRegexTrigger(groupName) is called
+          Collects the pattern from parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].pattern
+            converts &lt;color&gt; into html regex pattern
+          a trigger is created that calls parthiaAutomationInterruptStart(groupName)
+            The trigger has NO expireAfter value, it will fire infinite number of times.
+          The trigger ID is stored in parthiaAutomation.automationInterruptTriggers[groupName]
+  
+  Interrupt trigger logic:
+    The pattern from a trigger created with parthiaCreateInterruptRegexTrigger is found and the trigger is automatically called.
+      parthiaAutomationInterruptStart(groupName) is called
+        parthiaAutomationInterruptRunning global variable is set to groupName
+        If parthiaAutomationRunning
+          make parthiaAutomationPaused = parthiaAutomationRunning
+          parthiaAutomationRunning = false ( because it is no longer running )
+        Collects the first command trigger from parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].firstCommandTrigger
+        Determins how the first command in the interrupt group should be called.
+          Than calls the first command in the interrupt group.
+          
+  Interrupt stop logic:
+    parthiaAutomationCall
+  
+  Interrupt Disable Logic:
+    parthiaAutomationInterruptToggleState is called.
+      parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled is set to false
+      the regex trigger needs to be killed and removed from the parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterruptTriggers table
+  
+  Interrupt Deletion Logic:
+    User runs aliase parthia automation [name], delete
+      Check if the interrupt is currently active
+        if yes turn it off with parthiaAutomationInterruptToggleState
+      parthiaAutomationShowGroups() is called with the group name and deletion switch. Deleting the group
+  
+  Aliases
+    create an interupt group.
+    change an interrupt group
+      Change existing aliases, they will need to pass automationType to parthiaAutomationUpdate
+    parthia automation interrupt groups
+      To show interrupt groups.
+      Send parthiaAutomationShowGroups the "automationInterrupt" as the automationType argument.
+    
+    to enable an automation
+  parthiaAutomationCreateInterruptGroup()
+    Creates the table for the group specified.
+    Reserves element "interruptRepeat" for how many times this interrupt group should repeat
+      before returning control back.
+  parthiaAutomationUpdate()
+    add on an argument automationType automationType is "automation" or "automationInterrupt".
+      To reflect parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt.
+    Any time parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation is set or called, use parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] instead.
+    If the group does not exist
+      if the automation type is interrupt
+        prompt the user to create the interrupt group, repeat and pattern is required...
+  parthiaAutomationShowGroups()
+    add on an argument automationType automationType is "automation" or "automationInterrupt".
+      To reflect parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt.
+    Any time parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation is set or called, use parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] instead.
+  parthiaAutomationInterruptStop()
+    parthiaAutomationInterruptRunning = false
+    parthiaAutomationInterruptIterationCounter = 0
+    parthiaAutomationInterruptGroupPosition = false
+    if an automation task was paused, unpause it now.
+      parthiaAutomationRunning = parthiaAutomationPaused
+      parthiaAutomationPaused = false
+  parthiaAutomationInterruptStart(groupName)
+    -- starts an interrupt
+    Make certain the interrupt group exists
+    Set parthiaAutomationFirstRun to true
+    set parthiaAutomationInterruptRunning
+    echo that an interrupt has occured.
+    if not parthiaAutomationRunning  -- If automation is running parthiaAutomationCall will be called automatically.
+      parthiaAutomationCall()
+  parthiaAutomationCall()
+    add local variable, automationType. automationType is "automation" or "automationInterrupt".
+      To reflect parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt.
+    if parthiaAutomationInterruptRunning is truthy
+      collect group name and repeat from parthiaAutomationInterruptRunning
+      set automationType to "automationInterrupt"
+    else
+      collect groupName and repeat from parthiaAutomationRunning
+      set automationType to "automation"
+    Change all calls to parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation to parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]
+    if groupRepeat has been reached
+      it automationType is automationInterrupt
+        Call parthiaAutomationInterruptStop()
+      else
+        Do the code currently in the groupRepeat if statement.
+  parthiaAutomationIncreaseGroupIteration()
+    add local variable, automationType. automationType is "automation" or "automationInterrupt".
+      To reflect parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt.
+    if parthiaAutomationInterruptRunning is truthy
+      collect group name and repeat from parthiaAutomationInterruptRunning
+      set automationType to "automationInterrupt"
+    else
+      collect groupName and repeat from parthiaAutomationRunning
+      set automationType to "automation"
+    Change all calls to parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation to parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]
+    If parthiaAutomationGroupPosition is being set to a value, anywhere in the function
+      Use an if parthiaAutomationInterruptRunning
+        if true
+          Instead set parthiaAutomationInterruptGroupPosition
+        else
+          set parthiaAutomationGroupPosition as normal
+    If parthiaAutomationIterationCounter is being interrated
+      Use an if parthiaAutomationInterruptRunning
+          if true
+            iterate parthiaAutomationInterruptIterationCounter
+          else
+            iterate parthiaAutomationIterationCounter
+  parthiaAutomationInterruptToggleState
+    Toggles the enabled disabled state of an interrupt.
+    Creates a regex trigger if 
+  trigger 'You are no longer busy.'
+    the if statement needs to have an or parthiaAutomationInterruptRunning.
+      So it triggers when only an interrupt is active.
+
+How command calls are handled---------------------------------------------------
+  Default method or 0 as the automation group position is created triggers off the 'You are no longer busy.' regex trigger.
+  Timed commands are called by a temp timer after the time specified has passed.
+    temp timer is created in pathiaAutomationCall()
+  Commands with cutom patterns are triggered off of a temp regex trigger.
+    The trigger is created in parthiaAutomationCall() using function parthiaCreateAutomationRegexTrigger()
+    
+  Execution flow is:
+    parthiaAutomationStart, prepares the automation to occur an calls parthiaAutomationCall
+    parthiaAutomationCall:
+      Cleans up variables between runs.
+      Finds if automation should iterate to the next command or repeat the previous.
+      Calls the command.
+      If need be, creates a timer or trigger to call the next command
 
 Track command success----------------------------------------------------------
   Triggers\Game Events\player involved in an action
@@ -9112,7 +9527,7 @@ Track command success----------------------------------------------------------
       This code has to be OUTSIDE the "if getHelpDevs()" block. Otherwise it would only work if help the devs was enabled.
       
 Functions---------------------------------------------------------
-  parthiaAutomationUpdate, handles updating or creating parthia automation groups. In the tecSettings.automation table.
+  parthiaAutomationUpdate, handles updating or creating parthia automation groups. In the parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation table.
   parthiaAutomationStart, starts an automation task.
   parthiaAutomationCall, calls an automation group position or command. Handles iteration to next command.
     Handles stopping automation if a repeat count was specified.
@@ -9120,15 +9535,17 @@ Functions---------------------------------------------------------
   parthiaAutomationIncreaseGroupIteration, increases the global groupPosition iterator to iterate to the next command in the
     automation group.
   parthiaAutomationHelp, a general help message for the automation system.
-  parthiaAutomationManageGroups, allows a dynamic method to manage groups in the tecSettings.automation tables.
+  parthiaAutomationManageGroups, allows a dynamic method to manage groups in the parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation tables.
+  parthiaAutomationRegexTrigger, create a temp regex trigger with html color support.
       
 Variables---------------------------------------------------------
   parthiaLastCommandSuccess: records if the last command the player's character ran was successful.
-  tecSettings.automation = {}  # a dictionary to hold automation groups.
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation = {}  # a dictionary to hold automation groups.
     This is created automatically at every application startup via function Scripts\Variables Data Themese\Variables\tecClientReset()
-  tecSettings.automation.[group name][position number] = {[command], [seconds or 0], [repeat on fail]}
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation.[group name][position number] = {[command], [seconds or 0], [repeat on fail]}
     This will automatically get saved since it is in tecSettings.
   parthiaAutomationRunning: If automation is running it is set to ([group name], [repeat]), it is False if automation is not running
+  parthiaAutomationPaused: Used to pause an active automation task during an interrupt automation task.
   parthiaAutomationGroupPosition: a number, noting what command in array is going to be run
     This must be set to one on client startup.
   parthiaAutomationIterationCounter: Keeps track of how many times the group of commands has iterated.
@@ -9138,6 +9555,10 @@ Variables---------------------------------------------------------
   parthiaAutomationTimerID: The ID for any time created if the user specified a seconds variable on automation group entry creation.
     Collected in parthiaAutomationCall, and is set to false at the start of that method also.
   parthiaAutomationRepeatCmdOnFailure, records if the last command run requires repeating on failure.
+  parthiaAutomationRegexTriggerID, global variable, used to store the automation regex trigger's ID.
+  parthiaAutomationInterruptRunning, the group name of a current interrupt or false if no interrupt is active.
+  parthiaAutomationInterruptIterationCounter, keeps track of how many times the group of commands has run for a interrupt.
+  parthiaAutomationInterruptGroupPosition, The group position that interrupt automation last run.
     
 Triggers-----------------------------------------------------------
   Triggers\Game Events\You are no longer busy.
@@ -9150,25 +9571,29 @@ aliases---------------------------------------------------------------
 ]]--</script>
 					<eventHandlerList />
 					<Script isActive="yes" isFolder="no">
-						<name>parthiaAutomationUpdate(groupName, positionNumber, command, seconds, repeatOnFail)</name>
+						<name>parthiaAutomationUpdate(automationType, groupName, positionNumber, command, seconds, repeatOnFail, insert)</name>
 						<packageName></packageName>
 						<script>--[[
 Allows the user to update or create automation groups and group positions within.
   It makes certain the groupPosition passed is not a 0.
-  If the groupName passed does not exist in the tecSettings.automation table, it is added.
+  If the groupName passed does not exist in the parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] table, it is added.
   The command, seconds to wait and repeat on failure are added to that group.
   A message is presented to the user, and they are reminded to save.
 
 Scripts\Game Commands\auto\parthiaAutomationUpdate(parthiaCmdString)
   Makes certain the position number is possible, for lua arrays must be 1 or greater.
   Creates a new automation group if it does not already exist.
-    tecSettings.automation.[group name]
+    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][group name]
   Sets the command in the group
-    tecSettings.automation.[group name][position number] = {[command], [seconds or 0], [repeat on fail]}
+    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][group name][position number] = {[command], [trigger], [repeat on fail]}
   Prompts user to save.
 ]]--
 
-function parthiaAutomationUpdate(groupName, groupPosition, automationCommand, secondsToWait, repeatOnFail)
+function parthiaAutomationUpdate(automationType, groupName, groupPosition,
+                                 automationCommand, automationTrigger, repeatOnFail, insert)
+  
+  -- Give insert a default value
+  if not insert then insert = false end
   
   -- Make certain groupPosition is a number that is not zero.
   if not parthiaToBoolean(groupPosition) then
@@ -9179,81 +9604,289 @@ function parthiaAutomationUpdate(groupName, groupPosition, automationCommand, se
   -- Due to the regex pattern that captured groupPosition it is impossible for it to be a negative number.
   -- No check for positive numbers only required.
   
-  -- if tecSettings.automation[groupName] does not exist create it
-  -- tecSettings.automation is created automatically when parthia starts.
-  if not tecSettings.automation[groupName] then
-    pecho("Automation group "..groupName.." does not exist. Creating it now.\n")
-    tecSettings.automation[groupName] = {}  -- Make the group name an empty dictionary
-  end  -- END if not tecSettings.automation[groupName] then
+  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] does not exist create it
+  -- parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] is created automatically when parthia starts.
+  if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
   
-  -- Save the group and settings passed by the user
-  tecSettings.automation[groupName][groupPosition] = { 
-                                        automationCommand = automationCommand,
-                                        secondsToWait = tonumber(secondsToWait),
-                                        repeatOnFail = tonumber(repeatOnFail)
-                                      }
+    -- this this is an interrupt prompt the user to create the interrupt first, pattern and repeat count is needed
+    if automationType == "automationInterrupt" then
+      pecho("Automation Interrupts must first be created with the parthia interrupt command first.")
+      return true
+    else -- this is a standard automation group
+      pecho("Automation group "..groupName.." does not exist. Creating it now.\n")
+      parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] = {}  -- Make the group name an empty dictionary
+    end -- if automationType == "automationInterrupt" then
+  else -- this group already exists, this is an update.
+    pecho("Automation group "..groupName.." updated.\n")
+  end  -- END if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
+  
+  -- a temp table to insert into the automations group name
+  local positionTable = { 
+                          automationCommand = automationCommand,
+                          automationTrigger = automationTrigger,
+                          repeatOnFail = tonumber(repeatOnFail)
+                        }  -- END local positionTable
+  
+  -- if the user would like to insert rather than replace an entry
+  if parthiaToBoolean(insert) then
+    table.insert(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName], groupPosition, positionTable)
+  else  -- The user would like to replace an entry.
+    -- remove any possible previous entry
+    table.remove(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName], groupPosition)
+    -- Save the group and settings passed by the user
+    table.insert(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName], groupPosition, positionTable)
+  end  -- if not parthiaToBoolean(insert)
 
   -- Show user the changes they made.
-  pecho("Automation group "..groupName.." updated.\nYour update is:")
-  pecho("\n\tIn position: "..groupPosition)
+  pecho("\tIn position: "..groupPosition)
   pecho("\n\tAutomation Command: "..automationCommand)
-  pecho("\n\tSeconds to wait: "..secondsToWait)
   pecho("\n\tRepeat on fail: "..repeatOnFail.."\n")
+  
+  -- Show when the first command is done
+  if parthiaToBoolean(automationTrigger) then
+  
+    --Attempt to convert the trigger to a number
+    timedTrigger = tonumber(automationTrigger)  -- If it is not a number automationDelay will be null
+
+    --If this custom trigger is a time trigger create a temp timer.
+    if timedTrigger then
+      pecho("\tSeconds to wait before calling next command: "..automationTrigger.."\n")
+    else -- this is a custom trigger
+      pecho("\tNext command called when you see: '"..automationTrigger.."'\n")
+    end  -- if timedTrigger then
+
+  else -- the trigger is not a custom trigger
+  
+    pecho("\tNext command called when you see: 'You are no longer busy.'\n")
+    
+  end  -- if parthiaToBoolean(automationTrigger) then
                                         
   -- Remind the user to save their chages
   dontForgetToSave()
   
+  --refresh the text on the interrupts window
+  refreshInterruptsWindow()
+  
+  -- Refresh the text in the automation window
+  refreshAutomationWindow()
+  
   return true  --function executed without error
   
-end  -- function parthiaAutomationUpdate(groupName, groupPosition, automationCommand, secondsToWait, repeatOnFail])
+end  -- function parthiaAutomationUpdate(automationType, groupName, groupPosition, automationCommand, secondsToWait, repeatOnFail])
 
 -- create a help message on how to update parthia automation
-function parthiaAutomationUpdateHelp()
+function parthiaAutomationUpdateHelp(automationType)
 
+  automationType = automationType or "automation"
   -- parthia automation [group name], [position number] = [command], [seconds or 0], [repeat on fail]
 
   -- Show this commands help message
-  pecho("The command format to create or update an automation group is:\n")
-  pecho("\tparthia automation [group name], [position number] = [command], [seconds], [repeat on fail]\n")
-  pecho("parthia automation has a short name of /auto. It's format is the same.\n")
-  pecho("\t/auto [group name], [position number] = [command], [seconds or 0], [repeat on fail]\n\n")
+  pecho("\nThe command format to create or update an "..automationType.." group is:\n")
+  pecho("\tparthia "..automationType.." [group name], [position number] = [command], [repeat on fail], [insert] &amp; [trigger]\n")
+  pecho("parthia "..automationType.." has a short name of /auto. It's format is the same.\n")
+  pecho("\t/auto [group name], [position number] = [command], [command], [repeat on fail], [insert] &amp; [trigger]\n\n")
+  pecho("[group name] is a name for an "..automationType.." group.\n")
+  pecho("\tIt can be a new or existing group name.\n")
+  pecho("\t[group name] can contain letters, numbers and spaces.\n")
+  pecho("\tIt can not contain special characters. It IS case sensitive.\n")
+  pecho("[position number], is the command's position in the "..automationType.." group.\n")
+  pecho("\tOnly numbers are supported as position number.\n")
+  pecho("[command] is the command you would like to be run. A command can contain letters numbers and &lt; &gt;.\n")
+  pecho("[trigger] is the delay before attempting the next command.\n")
+  pecho("\tIf trigger is 0, the next command will occur just after the 'You are no longer busy.' message appears.\n")
+  pecho("\tIf trigger is a number the next command will occur after than many seconds.\n")
+  pecho("\tIf trigger is a message the next command is called when that message is seen on screen.\n")
+  pechoLink("\tRun &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation triggers&lt;reset&gt;, for help on custom automation triggers.\n", 
+    [[parthiaAutomationTriggerHelp()]], 
+    "automations trigger help", true)
+  pecho("[repeat on fail], can be 1 or 0.\n")
+  pecho("\tIf repeat on fail is 1, this command will repeat until it succeeds.\n")
+  pecho("\tIf repeat on fails is 0, the automation system will always continue to the next command in your "..automationType.." group.\n")
+  pecho("[insert], can be 1 for yes or 0 for no.\n")
+  pecho("\tOptional argument, default is 0\n")
+  pecho("\tIf insert is 1, this command will be inserted into the "..automationType.." group at the position specified. ")
+  pecho("Moving all other commands up a position (if required).\n")
+  pecho("\tIf insert is 0, this command will replace the command at the position specified in the "..automationType.." group.\n\n")
+  
+  pecho("The square brackets [] are just there to show where your entry should be. Do not put [ or ] in the command.\n")
+  
+  pecho("\nExample:\n\tparthia "..automationType.." Attack Rotation, 1 = attack rat, 0, 0\n")
+  pecho("\t/auto Attack Rotation, 1 = attack rat, 0, 0\n")
+  pecho("\t\tWould both update or create your 'Attack Rotation' "..automationType.." group position 1.\n")
+  pecho("\t\tWith command 'attack rat'.\n")
+  pecho("\t\tThe next command will occur when you receive the 'You are no longer busy' message.\n")
+  pecho("\t\tWether this command succeeds or fails "..automationType.." will continue to the next command in this "..automationType.." group.\n")
+  pecho("\n\tparthia "..automationType.." Attack Rotation, 2 = slash rat, 0, 0\n")
+  pecho("\t/auto Attack Rotation, 2 = slash rat, 0, 0\n")
+  pecho("\t\tWould both update or create your 'Attack Rotation' "..automationType.." group position 2.\n")
+  pecho("\t\tWith command 'slash rat'.\n")
+  pecho("\t\tThe next command will occur when you receive the 'You are no longer busy' message.\n")
+  pecho("\t\tWether this command succeeds or fails "..automationType.." will continue to the next command in this "..automationType.." group.\n")
+  pecho("\tYou now have an attack rotation that will attack than slash a rat automatically.\n\n")
+  pecho("If you would like to use TEC target system, you will need to make macros. Than use a macro as the "..automationType.." [command].\n")
+  pecho("There is no limit on the number of commands that can be in an "..automationType.." group.\n")
+  pecho("When creating an "..automationType.." group, remeber that when you call it you can have the entire group repeat a number of times or infinitely.\n\n")
+  
+  pecho("For a tutorial video on making an Automation Group go to ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/rCHHD866J3I\n\n", 
+    [[openUrl("https://www.youtube.com/watch?v=rCHHD866J3I&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps&amp;index=2")]], 
+    "youtube parthia automation tutorial", true)
+  
+  pecho("Command Format:\n")
+  pecho("parthia "..automationType.." [group name], [position number] = [command], [repeat on fail], [insert] &amp; [trigger]\n")
+  printCmdLine("parthia "..automationType.." replace_with_your_group, 1 = replace_with_your_command, 0, 0 &amp; 0")
+
+end -- function parthiaAutomationUpdateHelp()
+
+function parthiaAutomationTriggerHelp()
+  pecho("\nIf trigger is 0, the next command will occur just after the 'You are no longer busy.' message appears.\n")
+  pecho("If trigger is a number the next command will occur after than many seconds.\n")
+  pecho("If trigger is text the next command will occur when that text is seen on screen.\n")
+  pecho("\tThe text trigger pattern has to be how Parthia receives the text.\n")
+  pecho("\t\tIf you would like to see how parthia receive text run ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia unfiltered text console", 
+    [[expandAlias("parthia unfiltered text console")]],
+    "parthia automation groups", true)
+  pecho("\n\t\t\tThere will be a docked window you will need to drag out and resize to view.\n")
+  pecho("\tIf there is a color change that occurs in text you can surround the colored text with &lt;color&gt; and &lt;/color&gt;\n")
+  pecho("\t\tFor example if you wanted the trigger to occur when the words 'A rat' appear on the screen with any color.\n")
+  pecho("\t\t\tUse: '&lt;color&gt;colored text&lt;/color&gt;'\n")
+  pecho("\t\t\tWithout the quotes.\n")
+  pecho("\tADVANCED USERS: Message triggers support regex characters.\n")
+  pecho("\t\tThis allows for a very versitle trigger. You have to be willing to learn how to use regex patterns for this.\n")
+  pecho("\t\tWhen using regex patterns keep in mind that tec parthia received text with html codes for the server.\n")
+  pecho("\t\tFor example most text sent to parthia starts with a color code. So using ^ and $ will be difficult.\n")
+  pecho("A tutorial video on Parthia's trigger and call patters can be found at ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/JVsgRNT6YLo", 
+    [[openUrl("https://www.youtube.com/watch?v=JVsgRNT6YLo&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps&amp;index=4")]], 
+    "youtube parthia automation tutorial", true)
+  
+end -- function parthiaAutomationTriggerHelp()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern, firstCommandTrigger)</name>
+						<packageName></packageName>
+						<script>--[[
+Creates an automation interrupt group.
+]]--
+
+function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern, firstCommandTrigger)
+
+  local newInterruptGroup = false  -- store if this is a new interrupt group
+
+  -- Make certain groupRepeat is a number that is not zero.
+  if not parthiaToBoolean(groupRepeat) then
+    pecho('Repeat number (second argument in the command) can not be 0.')
+    return false
+  end  --if not parthiaToBoolean(groupRepeat) then
+  
+  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName] does not exist create it
+  -- parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation is created automatically when parthia starts.
+  if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName] then
+    pecho("Interrupt group "..groupName.." does not exist. Creating it now.\n")
+    newInterruptGroup = true
+    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName] = {}  -- Make the group name an empty dictionary
+  else
+    pecho("Automation interrupt group "..groupName.." updated.\n")
+  end  -- END if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName] then
+  
+  
+  -- set how many times this interrupt repeats
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].interruptRepeat = groupRepeat
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].pattern = pattern
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].firstCommandTrigger = firstCommandTrigger
+  
+  -- if this interrupt was enabled, toggle it off than on to update it's pattern which may have changed
+  if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled then
+    parthiaAutomationInterruptToggleState(groupName)  -- disable the interrupt
+    parthiaAutomationInterruptToggleState(groupName)  -- enable the interrupt with the updates.
+  end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled then
+  
+  -- show information about the changes
+  pecho("\t"..groupName.." will repeat "..groupRepeat.." times when called.\n")
+  pecho("\tCall pattern: "..pattern.."\n")
+  
+  -- Show when the first command is done
+  if parthiaToBoolean(firstCommandTrigger) then
+  
+    --Attempt to convert the trigger to a number
+    timedTrigger = tonumber(firstCommandTrigger)  -- If it is not a number automationDelay will be null
+
+    --If this custom trigger is a time trigger create a temp timer.
+    if timedTrigger then
+      pecho("\tSeconds to wait before calling next command: "..firstCommandTrigger.."\n")
+    else -- this is a custom trigger
+      pecho("\tNext command called when you see: '"..firstCommandTrigger.."'\n")
+    end  -- if timedTrigger then
+
+  else -- the trigger is not a custom trigger
+  
+    pecho("\tNext command called when you see: 'You are no longer busy.'\n")
+    
+  end  -- if parthiaToBoolean(firstCommandTrigger) then
+  
+  if newInterruptGroup then
+  
+    pecho("\nIf you would like to add commands to this new interupt click or run: ")
+  
+    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt update\n\n", 
+        [[parthiaAutomationUpdateHelp("interrupt");
+        printCmdLine("parthia interrupt ]]..groupName..[[, 1 = replace_with_your_command, 0, 0 &amp; 0")]],
+        "Add commands to "..groupName, true)
+  
+  end  -- if newInterruptGroup then
+  
+  -- Remind the user to save their chages
+  dontForgetToSave()
+  
+  --refresh the text on the interrupts window
+  refreshInterruptsWindow()
+  
+  -- Refresh the text in the automation window
+  refreshAutomationWindow()
+  
+  return true
+
+end -- function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat)
+
+function parthiaInterruptCreateHelp()
+
+  pecho("\nThe command format to create or update an interrupt trigger is:\n")
+  pecho("\tparthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]\n")
+  pecho("parthia interrupt has a short name of /interrupt. It's format is the same.\n")
+  pecho("\t/interrupt [group name], [repeat], [call pattern]~ [first command trigger]\n\n")
+  
   pecho("[group name] is a name for an automation group.\n")
   pecho("\tIt can be a new or existing group name.\n")
   pecho("\t[group name] can contain letters, numbers and spaces.\n")
   pecho("\tIt can not contain special characters. It IS case sensitive.\n")
-  pecho("[position number], is the command's position in the automation group.\n")
-  pecho("\tOnly numbers are supported as position number.\n")
-  pecho("[command] is the command you would like to be run. A command can contain letters numbers and &lt; &gt;.\n")
-  pecho("[seconds] is the delay in seconds before attempting the next command.\n")
-  pecho("\tIf seconds is 0, the next command will occur just after the 'You are no longer busy.' message appears.\n")
-  pecho("[repeat on fail], can be 1 or 0.\n")
-  pecho("\tIf repeat on fail is 1, this command will repeat until it succeeds.\n")
-  pecho("\tIf repeat on fails is 0, the automation system will always continue to the next command in your automation group.\n\n")
+  pecho("[repeat], is how many times this interrupt group should repeat before completing.\n")
+  pecho("[call pattern], is the text that will call the interrupt when it appears on the screen.\n")
+  pechoLink("\tFor trigger detail run or click: &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation triggers&lt;reset&gt;\n", 
+    [[parthiaAutomationTriggerHelp()]], 
+    "automations trigger help", true)
+  pecho("[first command trigger], is when the first command should be called.\n")
+  pechoLink("\tFor trigger detail run or click: &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation triggers&lt;reset&gt;\n", 
+    [[parthiaAutomationTriggerHelp()]], 
+    "automations trigger help", true)
   
-  pecho("The square brackets [] are just there to show where your entry should be. Do not put [ or ] in the command.\n")
-  pecho("\nExample:\n\tparthia automation Attack Rotation, 1 = attack &lt;target&gt;, 0, 0\n")
-  pecho("\t/auto Attack Rotation, 1 = attack &lt;target&gt;, 0, 0\n")
-  pecho("\t\tWould both update or create your 'Attack Rotation' automation group position 1.\n")
-  pecho("\t\tWith command 'attack &lt;target&gt;'.\n")
-  pecho("\t\tThe next command will occur when you receive the 'You are no longer busy' message.\n")
-  pecho("\t\tWether this command succeeds or fails automation will continue to the next command in this automation group.\n")
-  pecho("\n\tparthia automation Attack Rotation, 2 = slash &lt;target&gt;, 0, 0\n")
-  pecho("\t/auto Attack Rotation, 2 = slash &lt;target&gt;, 0, 0\n")
-  pecho("\t\tWould both update or create your 'Attack Rotation' automation group position 2.\n")
-  pecho("\t\tWith command 'flash &lt;target&gt;'.\n")
-  pecho("\t\tThe next command will occur when you receive the 'You are no longer busy' message.\n")
-  pecho("\t\tWether this command succeeds or fails automation will continue to the next command in this automation group.\n")
-  pecho("\nIf you were to run the two commands above. You now have an attack rotation that will attack than slash a target automatically.\n")
-  pecho("There is no limit on the number of commands that can be in an automation group.\n")
-  pecho("When creating an automation group, remeber that when you call it you can have the entire group repeat a number of times or infinitely.\n\n")
+  pecho("\nThe square brackets [] are just there to show where your entry should be. Do not put [ or ] in the command.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation", 
-  [[parthiaAutomationHelp()]],
-  "parthia automation", true)
-  pecho(", help for the automation system.\n")
-  printCmdLine("parthia automation replace_with_your_group, 1 = replace_with_your_command, 0, 0")
-
-end -- function parthiaAutomationUpdateHelp()</script>
+  pecho("\nExample:\n\tparthia interrupt kill when unconcious, 1, falls unconcious~ 0\n")
+  pecho("\tWould create an interrupt that triggers when `falls unconcious` appears on the screen.\n")
+  pecho("\tThe first command in this interrupt group would be called when the `You are no longer busy.` message appears.\n")
+  
+  pecho("\nFor a tutorial video on making an Interrupt and Interrupt Automation Group go to ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/8n9vycwod1U\n\n", 
+    [[openUrl("https://youtu.be/8n9vycwod1U")]], 
+    "youtube parthia automation tutorial", true)
+  
+  pecho("Command Format:\n")
+  pecho("parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]\n")
+  printCmdLine("parthia interrupt replace_with_your_group, 1, trigger_when_text_is_received~ 0")
+  
+end  -- function parthiaInterruptCreateHelp()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
@@ -9277,11 +9910,11 @@ function parthiaAutomationStart(groupName, groupRepeat)
   end -- if parthiaAutomationRunning then
   
   -- Make certain this automation group exists.
-  if not tecSettings.automation[groupName] then
+  if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName] then
     parthiaAutomationStartHelp()
     pecho("\nAutomation group "..groupName.." does not exist. A full help message is above.\n\n")
     return false
-  end -- if not tecSettings.automation[groupName] then
+  end -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName] then
   
   -- Record that automation has started, record the group name and how many times the group should repeat
   parthiaAutomationRunning = { groupName = groupName, groupRepeat = groupRepeat }
@@ -9301,7 +9934,7 @@ end  -- parthiaAutomationStart(groupName, groupRepeat)
 function parthiaAutomationStartHelp()
 
   -- Show this commands help message
-  pecho("The command format to start an automation group or rotation is:\n")
+  pecho("\nThe command format to start an automation group or rotation is:\n")
   pecho("\tparthia automation [group name], [repeat]\n")
   pecho("parthia automation has a shot name of /auto. It's format is the same.\n")
   pecho("\t/auto [group name], [repeat]\n")
@@ -9332,19 +9965,21 @@ end  -- function parthiaAutomationStartHelp()</script>
 					<Script isActive="yes" isFolder="no">
 						<name>parthiaAutomationCall()</name>
 						<packageName></packageName>
-						<script>--[[
+						<script>
+--[[
 Scripts\Game Commands\auto\parthiaAutomationCall()
   collects groupName and groupRepeat from global variable parthiaAutomation
   It than creates a local groupPosition set to false
   parthiaAutomationTimerID is set to false
+  if a custom automation trigger exists kill it, set the trigger ID variable to false
   Group position iteration is than handled through a series of i elseif staments where parthiaAutomationIncreaseGroupIteration
     is called if iteration is needed. The groupPosition is set by parthiaAutomationIncreaseGroupIteration or just stays at false
     If iteration is not needed groupPosition is set to parthiaAutomationGroupPosition
   Automation is than stopped if groupRepeat is set and is greater than parthiaAutomationIterationCounter
-  automationCommand, secondsToWait and repeatOnFail is collected from the proper group and group position for this automation command
+  automationCommand, automationTrigger and repeatOnFail is collected from the proper group and group position for this automation command
   parthiaAutomationRepeatCmdOnFailure is set to parthiaToBoolean(repeatOnFail)
   parthiaLastCommandSuccess is set to false, incase the command about to be run has no success chance message.
-  if secondsToWait is not 0, than a timer is set to call the next command.
+  if automationTrigger is not 0, than a timer is set to call the next command.
   The automation command is sent to the server
   parthiaAutomationFirstRun is set to false
   debug message is sent to debug
@@ -9353,72 +9988,160 @@ Scripts\Game Commands\auto\parthiaAutomationCall()
 
 function parthiaAutomationCall()
   
-  -- Get required variables for this function.  
-  local groupName = parthiaAutomationRunning["groupName"]  -- the name of this automation group
-  local groupRepeat = parthiaAutomationRunning["groupRepeat"]  -- How many times this group automation should repeat
-  
-  -- Will be used to record what position in the automation group should be called.
+  -- Set local variables
+  local groupName = false  -- the name of this automation group
+  local groupRepeat = false  -- How many times this group automation should repeat
+  -- This is a standard automation task.
+  local automationType = "automation"
+  -- setting this now, incase the previous task should repeat.
   local groupPosition = false
+  -- How many times this automation group has repeated
+  local iterationCounter = 0
+  -- Set parthiaAutomationInterruptIterationCounter to 0 if it has been initialized yet
+  if parthiaAutomationInterruptIterationCounter == nil then
+    parthiaAutomationInterruptIterationCounter = 0
+  end  -- if parthiaAutomationInterruptIterationCounter == nil then
+  
+  -- Now create the local variables collecting from global variables of the automation type being run.
+  if parthiaAutomationInterruptRunning then
+    --collect group name and repeat from parthiaAutomationInterruptRunning
+    groupName = parthiaAutomationInterruptRunning
+    groupRepeat = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].interruptRepeat
+    -- this is an interrupt task
+    automationType = "automationInterrupt"
+    -- setting this now, incase the previous task should repeat.
+    groupPosition = parthiaAutomationInterruptGroupPosition
+    -- How many times this interrupt group has repeated
+    iterationCounter = parthiaAutomationInterruptIterationCounter
+  else  -- this is a standard automation task collect from that table instead.
+    -- Get required variables for this function.  
+    groupName = parthiaAutomationRunning["groupName"]  -- the name of this automation group
+    groupRepeat = parthiaAutomationRunning["groupRepeat"]  -- How many times this group automation should repeat
+    automationType = "automation"  -- This is a standard automation task.
+    -- setting this now, incase the previous task should repeat.
+    groupPosition = parthiaAutomationGroupPosition
+    -- How many times this automation group has repeated
+    iterationCounter = parthiaAutomationIterationCounter
+  end -- if parthiaAutomationInterruptRunning then
+  
+  -- display debugging messages
+  debugToDisplay("parthiaAutomationCall post set local variables:")
+  debugToDisplay("\tgroupName: "..groupName.." groupRepeat: "..groupRepeat)
+  debugToDisplay("\tautomationType: "..automationType.." groupPosition: "..
+                 tostring(groupPosition).." iterationCounter: "..tostring(iterationCounter))
+  
   -- Blank out the timer ID it is no longer needed
   parthiaAutomationTimerID = false
+  
+  -- if a custom automation trigger exists, kill it.
+  if parthiaAutomationRegexTriggerID then
+    killTrigger(parthiaAutomationRegexTriggerID)
+    parthiaAutomationRegexTriggerID = false
+  end  -- if parthiaAutomationRegexTriggerID then
   
   -- Iterate to the next command if it is required.
   --if this is the fist run of this automation task, initialize variables.
   if parthiaAutomationFirstRun then
+    debugToDisplay("\tAutomation first run, calling iteration.")
     groupPosition = parthiaAutomationIncreaseGroupIteration()  -- set the iterator
     parthiaLastCommandSuccess = false  -- There was no last command so set this to false
   -- Always iterate to the next command if repeatOnFail is false, and this is NOT the first run out this automation group
-  elseif not parthiaAutomationRepeatCmdOnFailure then  
+  elseif not parthiaAutomationRepeatCmdOnFailure then
+    debugToDisplay("\trepeatOnFailure is false, calling iteration")
     groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
   -- It repeatOnFail is true and the last command was successfull iterate
   elseif parthiaAutomationRepeatCmdOnFailure and parthiaLastCommandSuccess then
+    debugToDisplay("\trepeatOnFailure is true, last command was successful.")
     groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
-  -- The group position should not change
-  else
-    groupPosition = parthiaAutomationGroupPosition
   end  -- if parthiaAutomationFirstRun
+  
+  -- Update the iteration counter
+  if parthiaAutomationInterruptRunning then
+    iterationCounter = parthiaAutomationInterruptIterationCounter
+  else  -- this is a standard automation task collect from that table instead.
+    iterationCounter = parthiaAutomationIterationCounter
+  end -- if parthiaAutomationInterruptRunning then
+  
+  --send debugging messages
+  debugToDisplay("parthiaAutomationCall post Iteration variables post iteration:")
+  debugToDisplay("\tgroupPosition: "..tostring(groupPosition).." iterationCounter: "..tostring(iterationCounter))
   
   -- stop this automation loop if user specified a group repeat and it has been reached.
   if parthiaToBoolean(groupRepeat) then  -- Only check if a group repeat was specified.
-    if parthiaAutomationIterationCounter &gt;= tonumber(groupRepeat) then  -- this has iterated more than group repeat specified
-      pecho("Automation task complete.")
-      parthiaAutomationStop()  -- Stop automation.
+    if iterationCounter &gt;= tonumber(groupRepeat) then  -- this has iterated more than group repeat specified
+      if automationType == "automationInterrupt" then
+        pecho("\nInterrupt "..groupName.." completed.\n")
+        parthiaAutomationInterruptStop()
+      else
+        pecho("\nAutomation task "..groupName.." complete.\n")
+        parthiaAutomationStop()  -- Stop automation.
+      end -- if automationType == "automationInterrupt" then
       return true  -- stop current automation call also.
     end  -- if parthiaAutomationIterationCounter &gt; tonumber(groupRepeat) then
   end -- if parthiaToBoolean(groupRepeat) then
   
   -- collect additional data this function will need
-  -- The command to run
-  local automationCommand = tecSettings.automation[groupName][groupPosition].automationCommand
-  -- How many seconds to run before the next command
-  local secondsToWait = tecSettings.automation[groupName][groupPosition].secondsToWait
-  -- If this command should repeat on failure
-  local repeatOnFail = tecSettings.automation[groupName][groupPosition].repeatOnFail
   
+  --convert old secondsToWait to custom triggers, they only would exist in a standard automation group.
+  if automationType == "automation" and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait then
+    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].automationTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait
+    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait = nil
+  end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait then
+
+  -- The command to run
+  local automationCommand = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].automationCommand
+  -- The delay before calling the next command
+  local automationTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].automationTrigger
+  -- If this command should repeat on failure
+  local repeatOnFail = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].repeatOnFail
+
   -- This will be used in the if statement above that determins if automation should continue to the next command
   parthiaAutomationRepeatCmdOnFailure = parthiaToBoolean(repeatOnFail)
   
   -- In case user is sending command that has no success chance reset parthiaLastCommandSuccess
   parthiaLastCommandSuccess = false
   
-  -- If the user specified seconds to wait before conducting the next command
-  -- Set a timer for the next command.
-  if parthiaToBoolean(secondsToWait) then
+  --Determine how the next command should be called
+  --Determine when the current command should be called ( To avoid the 1 command a second limit )
   
-    -- create timer to call this function here
-    parthiaAutomationTimerID = tempTimer(secondsToWait, [[parthiaAutomationCall()]])
+  -- If the user specified a custom trigger
+  if parthiaToBoolean(automationTrigger) then
     
-  end  -- if parthiaToBoolean(secondsToWait) then
+    --Attempt to convert the trigger to a number
+    timedTrigger = tonumber(automationTrigger)  -- If it is not a number automationDelay will be null
+
+    --If this custom trigger is a time trigger create a temp timer.
+    if timedTrigger then
+      
+      -- send the command
+      send(automationCommand)
+      
+      -- create timer to call this function again
+      parthiaAutomationTimerID = tempTimer(timedTrigger, [[parthiaAutomationCall()]])
+      
+    else  -- This trigger is a message based trigger. Create a regex trigger.
+      
+      -- send the command on a delay to avoid the 1 command per second limit
+      tempTimer(1, [[send("]]..automationCommand..[[")]])
+      
+      -- Wait for the current line check to end. Otherwise we will enter a creation loop and mudlet will crash
+      tempTimer(1, [[parthiaCreateAutomationRegexTrigger("]]..automationTrigger..[[")]])
+      
+    end  -- if timedTrigger then
   
-  -- send the command
-  send(automationCommand)
+  else -- The user did not specify a custom trigger.
+  
+    -- send the command
+    send(automationCommand)
+    
+  end  -- if parthiaToBoolean(automationTrigger) then
+  
+  --Clean up
   
   -- record that the first run of this automation group has completed.
   parthiaAutomationFirstRun = false
   
   debugToDisplay("parthiaAutomationCall completed successfully.")
-  
-  return true
 
 end -- function parthiaAutomationCall()</script>
 						<eventHandlerList />
@@ -9430,6 +10153,7 @@ end -- function parthiaAutomationCall()</script>
 Scripts\Game Commands\auto\parthiaAutomationStop()
     Sets a number of global variables to default.
     Stop any automation timer if one exists.
+    Arop automation trigger if one exists.
     Displays message to user if specified to.
     Returns true
 ]]--
@@ -9443,11 +10167,20 @@ function parthiaAutomationStop(displayToScreen)
   parthiaLastCommandSuccess = false
   parthiaAutomationRepeatCmdOnFailure = false
   
-  --If a timer exists and is waiting to fire. End it now.
+  -- Stop any running interrupts
+  parthiaAutomationInterruptStop()
+  
+  -- If a timer exists and is waiting to fire. End it now.
   if parthiaAutomationTimerID then
     killTimer(parthiaAutomationTimerID)
     parthiaAutomationTimerID = false  -- Set the timer ID to false it is no longer needed.
   end  -- if parthiaAutomationTimerID then
+  
+  -- if a custom automation trigger exists, kill it.
+  if parthiaAutomationRegexTriggerID then
+    killTrigger(parthiaAutomationRegexTriggerID)
+    parthiaAutomationRegexTriggerID = false
+  end  -- if parthiaAutomationRegexTriggerID then
   
   if displayToScreen then
     pecho("\nAutomation stopped.\n\n")
@@ -9463,7 +10196,7 @@ end -- function parthiaAutomationStop()</script>
 						<packageName></packageName>
 						<script>--[[
 Scripts\Game Commands\auto\parthiaAutomationIncreaseGroupIteration()
-    if tecSettings.automation.[group name] size is larger than 
+    if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation.[group name] size is larger than 
       Icrease parthiaAutomationGroupPosition by one
     else
       parthiaAutomationGroupPosition = false
@@ -9477,55 +10210,112 @@ Keys in the automation group name may not be in order or correctly sequenced.
 
 function parthiaAutomationIncreaseGroupIteration()
 
-  -- Get required variables for this function.
-  groupName = parthiaAutomationRunning["groupName"]
-  groupRepeat = parthiaAutomationRunning["groupRepeat"]
+  debugToDisplay("ParthiaAutomationIncreaseGroupIteration called.")
+
+  -- Set local variables this function will use.
+  local groupName = false
+  local groupRepeat = 1
+  local groupPosition = false
+  local iterationCounter = 0
+  
+  -- Now create the local variables collecting from global variables of the automation type being run.
+  if parthiaAutomationInterruptRunning then
+    --collect group name and repeat from parthiaAutomationInterruptRunning
+    groupName = parthiaAutomationInterruptRunning
+    groupRepeat = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].interruptRepeat
+    --collecct group position from the global interrupt variable
+    groupPosition = parthiaAutomationInterruptGroupPosition
+    automationType = "automationInterrupt"
+    iterationCounter = parthiaAutomationInterruptIterationCounter
+  else  -- a standard automation task is running, collect from it.
+    -- collect group name and repeat from standard automation task
+    groupName = parthiaAutomationRunning["groupName"]
+    groupRepeat = parthiaAutomationRunning["groupRepeat"]
+    -- collect group position from the global variable
+    groupPosition = parthiaAutomationGroupPosition
+    automationType = "automation"
+    iterationCounter = parthiaAutomationIterationCounter
+  end -- if parthiaAutomationInterruptRunning then
+  
+  debugToDisplay("\tgroupName: "..groupName.." groupRepeat: "..groupRepeat)
+  debugToDisplay("\tautomationType: "..automationType.." groupPosition: "..
+                 tostring(groupPosition).." iterationCounter: "..tostring(iterationCounter))
   
   --used to collect all keys in this automation group.
   local automationGroupKeySet = {}
   
   -- Gather all the keys for the group and sort them.
-  --tecSettings.automation[groupName]
-  for key, _ in pairs(tecSettings.automation[groupName]) do
-    table.insert(automationGroupKeySet, key)
-  end -- for key, _ in pairs(tecSettings.automation[groupName]) do
+  for key, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]) do
+    -- Do not insert pattern or interruptRepeat used on interrupt groups, only numrical keys
+    if tonumber(key) then
+      table.insert(automationGroupKeySet, key)
+    end  -- if tonumber(key) then
+  end -- for key, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]) do
   
   -- Sort the table 
   table.sort(automationGroupKeySet)
   
   -- if the iterator does not exist this means this is the first run of this automation group.
-  if not parthiaAutomationGroupPosition then
+  if not groupPosition then
+    debugToDisplay("\tgroupPosition is false setting it to first element in group.")
     -- Returning the lowest element in the  automation group
-    parthiaAutomationGroupPosition = automationGroupKeySet[1]
-    return parthiaAutomationGroupPosition
-  end  -- if not parthiaAutomationGroupPosition then
+    groupPosition = automationGroupKeySet[1]
+    -- Set the global variables also
+    setGlobalAutomationGroupPosition(groupPosition)
+    return groupPosition
+  end  -- if not groupPosition then
   
   -- find the next highest logical key in the automation group's table
   for key, value in pairs(automationGroupKeySet) do
     
     -- if the value from the automationGroupKeySet is larger than the current command iteration
     -- This is the next iteration in our automation group.
-    if tonumber(value) &gt; tonumber(parthiaAutomationGroupPosition) then
-      parthiaAutomationGroupPosition = value
+    if tonumber(value) &gt; tonumber(groupPosition) then
+      setGlobalAutomationGroupPosition(value)
+      groupPosition = value
+      debugToDisplay("\tgroupPosition increased to next element.")
       break  -- stop the loop
-    end  -- if key &gt;= parthiaAutomationGroupPosition then
+    end  -- if tonumber(value) &gt; tonumber(groupPosition) then
     
     -- Check if we are about to iterate past the automationGroupKeySet
     -- Set the automations iterator to the first element in this automation groups sequence
     if key == #automationGroupKeySet then
       -- set the group iterator to the first element in the groups command table
-      parthiaAutomationGroupPosition = automationGroupKeySet[1]
+      setGlobalAutomationGroupPosition(automationGroupKeySet[1])
+      -- Set the local groupPosition also
+      groupPosition = automationGroupKeySet[1]
       -- Increase the automation rotation iterator by 1.
-      parthiaAutomationIterationCounter = parthiaAutomationIterationCounter + 1
+      setGlobalAutomationIterationCounter(iterationCounter + 1)
+      debugToDisplay("\tincreased iterationCounter")
     end -- if key == #automationGroupKeySet
   
   end  -- for key, value in pairs(automationGroupKeySet) do
   
-  debugToDisplay("parthiaAutomationIncreaseGroupIteration() Next iterator: "..parthiaAutomationGroupPosition)
+  debugToDisplay("\tNext group position: "..groupPosition)
   
-  return parthiaAutomationGroupPosition
+  return groupPosition
 
-end  --function parthiaAutomationIncreaseGroupIteration()</script>
+end  --function parthiaAutomationIncreaseGroupIteration()
+
+function setGlobalAutomationIterationCounter(value)
+  --[[ Sets global automation iterators ]]--
+  -- This is an interrupt automation task
+  if parthiaAutomationInterruptRunning then
+    parthiaAutomationInterruptIterationCounter = value
+  else  -- This is a standard automation task
+    parthiaAutomationIterationCounter = value
+  end  -- if parthiaAutomationInterruptRunning then
+end  -- function setGlobalAutomationIterationCounter(value)
+
+function setGlobalAutomationGroupPosition(value)
+  --[[ Sets the global automation iterators ]]--
+  -- This is an interrupt automation task
+  if parthiaAutomationInterruptRunning then
+    parthiaAutomationInterruptGroupPosition = value
+  else  -- This is a standard automation task
+    parthiaAutomationGroupPosition = value
+  end  -- if parthiaAutomationInterruptRunning then
+end -- local function setIterators()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
@@ -9543,24 +10333,78 @@ function parthiaAutomationHelp()
   pecho("\nAutomation in parthia is done by creating groups of commands. Than starting those groups. ")
   pecho("You can click or type in the commands below to learn more about creating, managing and starting automation groups.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation update", 
-  [[parthiaAutomationUpdateHelp()]],
-  "parthia automation update", true)
+    [[parthiaAutomationUpdateHelp()]],
+    "parthia automation update", true)
   pecho(", how to create or update automation groups.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation start", 
-  [[parthiaAutomationStartHelp()]],
-  "parthia automation start", true)
+    [[parthiaAutomationStartHelp()]],
+    "parthia automation start", true)
   pecho(", how to start an automation task.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation groups", 
-  [[parthiaAutomationShowGroups()]],
-  "parthia automation groups", true)
-  pecho(", view and manage automation groups you have made.\n")
+    [[parthiaAutomationShowGroups("automation")]],
+    "parthia automation groups", true)
+  pecho(", view and manage existing automation groups.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation import", 
+    [[parthiaAutomationImport("automation", "", true)]],
+    "parthia automation import", true)
+  pecho(", how to import automations from file.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation export", 
+    [[parthiaAutomationExport("automation", "", true)]],
+    "parthia automation export", true)
+  pecho(", how to export automations to file.\n")
+  
+  pecho("\nInterrupts allow you to automatically interrupt your current action when a text pattern is view on screen.\n")
+  pecho("When an interrupt interrupts an automated task, the automated task will resume when the interrupt completes.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt create", 
+    [[parthiaInterruptCreateHelp()]],
+    "parthia automation update", true)
+  pecho(", how to create or update an interrupt start trigger.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt toggle", 
+    [[parthiaInterruptToggleHelp()]],
+    "parthia interrupt toggle", true)
+  pecho(", enable or disable an interrupt.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt update", 
+    [[parthiaAutomationUpdateHelp("interrupt")]],
+    "parthia interrupt update", true)
+  pecho(", how to create or update interrupt groups.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt groups", 
+    [[parthiaAutomationShowGroups("interrupt")]],
+    "parthia interrupt groups", true)
+  pecho(", view and manage existing interrupt groups.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt import", 
+    [[parthiaAutomationImport("automationInterrupt", "", true)]],
+    "parthia interrupt import", true)
+  pecho(", how to import interrupts from file.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt export", 
+    [[parthiaAutomationExport("automationInterrupt", "", true)]],
+    "parthia interrupt export", true)
+  pecho(", how to export interrupts to file.\n")
   
   pecho("\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation triggers&lt;reset&gt;", 
+    [[parthiaAutomationTriggerHelp()]], 
+    "automations trigger help", true)
+  pecho(", how to create patterns for automation triggers.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia unfiltered text console", 
+    [[expandAlias("parthia unfiltered text console")]],
+    "parthia automation groups", true)
+  pecho(", opens a window showing text as the pattern system views it.\n")
+  local cmdToSend = [[UIManagerEnableWindow("Automation",true,true)]]
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable Automation", 
+    cmdToSend, --runs on click.
+    "Enable Automation window", true)
+  pecho(", opens a docked window with clickable links for your automation tasks.\n")
+  local cmdToSend = [[UIManagerEnableWindow("Interrupts",true,true)]]
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable Interrupts", 
+    cmdToSend, --runs on click.
+    "Enable Interrupts window", true)
+  pecho(", opens a docked window with clickable links for your interrupt tasks.\n")
+  pecho("\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Parthia automation tutorial video.", 
-  [[openUrl("https://youtu.be/snweHw9XI68")]], 
-  "youtube parthia automation tutorial", true)
-  pecho(", view a youtube tutorial video on parthia's automation system..\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Parthia automation tutorial video", 
+    [[openUrl("https://www.youtube.com/watch?v=DXDuhQGlPwI&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps")]], 
+    "youtube parthia automation tutorial", true)
+  pecho(", view tutorial videos on parthia's automation system.\n")
   
   pecho("\n")
   
@@ -9571,23 +10415,36 @@ end  -- function parthiaAutomationHelp()</script>
 						<name>parthiaAutomationShowGroups()</name>
 						<packageName></packageName>
 						<script>--[[
-Allows dynamic management of the tecSettings.automation group tables.
+Allows dynamic management of the parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] group tables.
 
 Example of group creation:
-  tecSettings.automation[groupName][groupPosition] = { 
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition] = { 
                                         automationCommand = automationCommand,
-                                        secondsToWait = tonumber(secondsToWait),
+                                        automationTrigger = tonumber(automationTrigger),
                                         repeatOnFail = tonumber(repeatOnFail)
                                       }
 ]]--
 
-function parthiaAutomationShowGroups(groupName, removeElement, groupPosition)
+function parthiaAutomationShowGroups(automationType, groupName, removeElement, groupPosition)
+
+  debugToDisplay("parthiaAutomationShowGroups:")
+  debugToDisplay("\tautomationType, "..automationType)
+  debugToDisplay("\tgroupName, "..tostring(groupName))
+  debugToDisplay("\tremoveElement, "..tostring(removeElement))
+  debugToDisplay("\tgroupPosition, "..tostring(groupPosition))
+  
+  -- Create a variable to use in template commands and command calls
+  local automationTypeName = 'automation'
+  if automationType == 'automationInterrupt' then automationTypeName = 'interrupt' end
+  
+  --convert groupPosition to a number
+  local groupPosition = tonumber(groupPosition)
   
   --show information on the group name provided.
   if groupName then
   
-    -- removeGroup is false, show the group.
-    if tecSettings.automation[groupName] then
+    -- if the group exists show information about it or remove it if removeElement is truthy
+    if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
   
       -- an element needs to be removed from an automation table.
       if removeElement then
@@ -9596,9 +10453,9 @@ function parthiaAutomationShowGroups(groupName, removeElement, groupPosition)
         if groupPosition then
           
           -- Verify this group position exists.
-          if tecSettings.automation[groupName][groupPosition] then
+          if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition] then
             
-            tecSettings.automation[groupName][groupPosition] = nil
+            parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition] = nil
             pecho("Postion "..groupPosition.." was removed from group "..groupName.."\n")
             pecho("If this was an accidental delition you can restore the position with:\n")
             pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia load", 
@@ -9610,17 +10467,28 @@ function parthiaAutomationShowGroups(groupName, removeElement, groupPosition)
             --remind the user to save
             dontForgetToSave()
             
+            --refresh the text on the interrupts window
+            refreshInterruptsWindow()
+  
+            -- Refresh the text in the automation window
+            refreshAutomationWindow()
+            
           -- the group position does not exist.
           else
             
             pecho("Position: "..groupPosition.." does not exist in group: "..groupName.."\n")
           
-          end  -- if tecSettings.automation[groupName][groupPosition] then
+          end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition] then
         
         -- a group position was not specified, remove the entire group.
         else  
+        
+          -- If this is an active interrupt, disable it first to remove the trigger.
+          if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled then
+            parthiaAutomationInterruptToggleState(groupName)
+          end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled then
           
-          tecSettings.automation[groupName] = nil
+          parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] = nil
           pecho("Group "..groupName.." deleted.\n")
           pecho("If this was an accidental delition you can restore the group with:\n")
           pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia load", 
@@ -9632,20 +10500,31 @@ function parthiaAutomationShowGroups(groupName, removeElement, groupPosition)
           --remind the user to save
           dontForgetToSave()
           
+          --refresh the text on the interrupts window
+          refreshInterruptsWindow()
+  
+          -- Refresh the text in the automation window
+          refreshAutomationWindow()
+          
         end  -- if groupPosition
         
         return true  -- make certain this function stops.
         
       end  -- if removeGroup then
   
-    
       pecho("Automation group: "..groupName.."\n")
+      
+      -- Display data in the automation table.
+      showAutomationGroupTableData(groupName, automationTypeName, automationType, parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName])
       
       -- Create a temp table to show the human logical sorted version of this automation group.
       local sortedGroupNameTable = {}
-      for key, _ in pairs(tecSettings.automation[groupName]) do
-        table.insert(sortedGroupNameTable, key)
-      end -- for _, value in pairs(tecSettings.automation[groupName]) do
+      for key, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]) do
+        -- Do not insert pattern or interruptRepeat used on interrupt groups, only numrical keys
+        if tonumber(key) then
+          table.insert(sortedGroupNameTable, key)
+        end  -- if tonumber(key) then
+      end -- for _, value in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]) do
       table.sort(sortedGroupNameTable)
       
       -- Loop through the sorted group.
@@ -9653,70 +10532,868 @@ function parthiaAutomationShowGroups(groupName, removeElement, groupPosition)
       -- This is what allows the function to show this group in a numerical order. Not the order it was created in.
       for _, groupPosition in pairs(sortedGroupNameTable) do
         
+        -- Collect variables from this automation group, at the correct position.
+        local automationCommand = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].automationCommand
+        local automationTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].automationTrigger
+        local repeatOnFail = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].repeatOnFail
+        
         -- Show the group position
         pecho("\tGroup Position: "..groupPosition..", ")
-        -- Provide an easy method to remove this group.
-        pechoLink("\t&lt;:maroon&gt;Remove "..groupName.." position "..groupPosition, 
-        [[expandAlias("parthia automation groups ]]..groupName..[[, delete ]]..groupPosition..[[")]],
-        "parthia automation groups "..groupName..", delete "..groupPosition, true)
         
-        -- Collect variables from this automation group, at the correct position.
-        local automationCommand = tecSettings.automation[groupName][groupPosition].automationCommand
-        local secondsToWait = tecSettings.automation[groupName][groupPosition].secondsToWait
-        local repeatOnFail = tecSettings.automation[groupName][groupPosition].repeatOnFail
+        -- provide an easy method to edit this group position
+        pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Edit", 
+        [[parthiaAutomationUpdateHelp("]]..automationTypeName..[[");
+        printCmdLine("parthia ]]..automationTypeName..[[ ]]..groupName..[[, ]]..groupPosition..[[ = ]]..automationCommand..[[, ]]..repeatOnFail..[[, 0 &amp; ]]..automationTrigger..[[")]],
+        "change group position "..groupPosition.." for group "..groupName, true)
+        
+        -- Provide an easy method to remove this group.
+        pechoLink("\t&lt;:ansi_red&gt;Remove", 
+        [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[, delete ]]..groupPosition..[[")]],
+        "delete group position "..groupPosition.." for group "..groupName, true)
         
         pecho("\n\t\tCommand called: "..automationCommand.."\n")
-        if parthiaToBoolean(secondsToWait) then
-          pecho("\t\tSeconds to wait before calling next command: "..secondsToWait.."\n")
-        else
-          pecho("\t\tNext command called when you see 'You are no longer busy.'.\n")
-        end  -- if parthiaToBoolean(automationGroup.secondsToWait) then
+        
+        if parthiaToBoolean(automationTrigger) then
+        
+          --Attempt to convert the trigger to a number
+          timedTrigger = tonumber(automationTrigger)  -- If it is not a number automationDelay will be null
+      
+          --If this custom trigger is a time trigger create a temp timer.
+          if timedTrigger then
+            pecho("\t\tSeconds to wait before calling next command: "..automationTrigger.."\n")
+          else -- this is a custom trigger
+            pecho("\t\tNext command called when you see: '"..automationTrigger.."'\n")
+          end  -- if timedTrigger then
+
+        else -- the trigger is not a custom trigger
+        
+          pecho("\t\tNext command called when you see: 'You are no longer busy.'\n")
+          
+        end  -- if parthiaToBoolean(automationGroup.automationTrigger) then
+        
         pecho("\t\tRepeat this command if it fails: "..tostring(parthiaToBoolean(repeatOnFail)).."\n")
-      end  -- for groupPosition, automationGroup in pairs(tecSettings.automation[groupName]) do
+        
+      end  -- for groupPosition, automationGroup in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]) do
+      
+  --Get the last value in this automation's group position, than add one onto it, for the group position in Add a command message.
+  local nextGroupPosition = 1
+  if #sortedGroupNameTable &gt; 0 then  -- As long as the automation has group positions
+    local lastGroupPosition = sortedGroupNameTable[#sortedGroupNameTable]
+    nextGroupPosition = lastGroupPosition + 1
+  end  -- if sortedGroupNameTable then
+  
+  -- Show an Add a command help message if none has been shown
+  pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Add a command", 
+      [[parthiaAutomationUpdateHelp("]]..automationTypeName..[[");
+        printCmdLine("parthia ]]..automationTypeName..[[ ]]..groupName..[[, ]]..nextGroupPosition..[[ = replace_with_your_command, 0, 0 &amp; 0")]],
+      "Add a command to this "..automationTypeName, true)
       
     -- The automation group passed does not exist.
     else
       pecho("Automation group named ["..groupName.."] does not exist\n")
-    end  -- if tecSettings.automation[groupName] then
+    end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
   
   -- No group name was provided show all the groups, but no details of each group until the link is clicked.
   else
-  
-    -- Will hold how long the longest group name is.
-    local longestGroupNameSize = 0
-    -- Collect the longest group name
-    for groupName, _ in pairs(tecSettings.automation) do
-      if #groupName &gt; longestGroupNameSize then
-        longestGroupNameSize = #groupName
-      end  --if #groupName &gt; longestGroupNameSize then
-    end  -- for groupName, _ in pairs(tecSettings.automation) do
     
-    pecho("You can click a blue link below to start or show that group's information. You can click a red link to remove that group.\n")
+    pecho("You can click a blue link below to start or show that group's information. You can click a red link to remove that group.\n\n")
     
-    for groupName, _ in pairs(tecSettings.automation) do
+    for groupName, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]) do
     
-      --create spacing so ann the columns are spaced evenly.
-      local namePaddingSize = longestGroupNameSize - #groupName
-      local namePadding = ''
-      for i=1, namePaddingSize, 1 do
-        namePadding = namePadding.." "
-      end  -- for i=1, namePaddingSize, 1 do
+      pecho(groupName.."\n")
       
-      pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Start: "..groupName..namePadding, 
-      [[expandAlias("parthia automation ]]..groupName..[[, 0")]],
-      "parthia automation "..groupName..", 0", true)
-      pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Show: "..groupName..namePadding, 
-      [[expandAlias("parthia automation groups ]]..groupName..[[")]],
-      "parthia automation groups "..groupName, true)
-      pechoLink("\t&lt;:maroon&gt;Remove: "..groupName.."\n", 
-      [[expandAlias("parthia automation groups ]]..groupName..[[, delete")]],
-      "parthia automation groups "..groupName..", delete", true)
-      pecho("\n")
-    end  -- for groupName tecSettings.automation do
+      -- Display data in the automation table.
+      showAutomationGroupTableData(groupName, automationTypeName, automationType, parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName])
+      
+      pecho("\n\n")
+      
+    end  -- for groupName parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] do
     
   end  -- if groupName then
   
-end  -- function parthiaAutomationShowGroups()</script>
+end  -- function parthiaAutomationShowGroups()
+
+function showAutomationGroupTableData(groupName, automationTypeName, automationType, groupTable)
+
+-- collect variables from interrupts, on standard automations these would just be nil
+      local groupEnabled = groupTable.enabled
+      local firstCommandTrigger = groupTable.firstCommandTrigger
+      local groupRepeat = groupTable.interruptRepeat
+      local callPattern = groupTable.pattern
+      
+      -- Make a Start button for automation OR an enable disable button for interrupts
+      if automationType == 'automationInterrupt' then
+        
+        local toggleInterruptButtonColor = "ansi_red"
+        local toggleInterruptButtonState = "Inactive"
+        
+        -- This intterrupt is currently enabled. Set the color to standard blue
+        if groupEnabled then
+          toggleInterruptButtonColor = "ansi_green"
+          toggleInterruptButtonState = "Active  "
+        end  -- if groupTable.enabled then
+        
+        -- Display the button
+        pechoLink("  &lt;:"..toggleInterruptButtonColor.."&gt;Toggle: "..toggleInterruptButtonState,
+                  [[expandAlias("parthia interrupt toggle ]]..groupName..[[")]],
+                  "parthia interrupt toggle "..groupName, true)
+                  --parthia interrupt toggle [groupName]
+        
+      else  -- This is a standard automation group
+        
+        pechoLink("  &lt;:"..tecSettings.helpHighlightColor.."&gt;Start", 
+          [[expandAlias("parthia ]]..automationTypeName..[[ ]]..groupName..[[, 0")]],
+          "parthia "..automationTypeName.." "..groupName..", 0", true)
+          
+      end  -- if automationType == 'automationInterrupt' then
+        
+      -- Show group button
+      pechoLink("  &lt;:"..tecSettings.helpHighlightColor.."&gt;Show", 
+        [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[")]],
+        "parthia "..automationTypeName.." groups "..groupName, true)
+      
+      --Make a customized edit button for interrupts vs automations
+      if automationType == 'automationInterrupt' then
+      
+        pechoLink("  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
+        --parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]
+        [[parthiaInterruptCreateHelp();printCmdLine("parthia interrupt ]]..groupName..[[, ]]..groupRepeat..[[, ]]..callPattern..[[~ ]]..firstCommandTrigger..[[")]],
+        "fill command line with edit command for "..groupName, true)
+        
+      else  -- This is a standard automation
+      
+        -- Edit group button
+        pechoLink("  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
+          [[parthiaAutomationUpdateHelp();
+          printCmdLine("parthia automation ]]..groupName..[[, 1 = replace_with_your_command, 0, 0 &amp; 0")]],
+          "fill command line with edit command for "..groupName, true)
+      
+      end  -- if automationType == 'automationInterrupt' then
+              
+      -- Remove group button
+      pechoLink("  &lt;:ansi_red&gt;Remove\n", 
+        [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[, delete")]],
+        "parthia "..automationTypeName.." groups "..groupName..", delete", true)
+        
+      -- Show interrupt specific data
+      if automationType == 'automationInterrupt' then
+        
+        pecho("  Call pattern: `"..callPattern.."`\n")
+        pecho("  Group repeat: "..groupRepeat.."\n")
+        
+        -- Show when the first command is done
+        if parthiaToBoolean(firstCommandTrigger) then
+        
+          --Attempt to convert the trigger to a number
+          timedTrigger = tonumber(firstCommandTrigger)  -- If it is not a number automationDelay will be null
+      
+          --If this custom trigger is a time trigger create a temp timer.
+          if timedTrigger then
+            pecho("  Seconds to wait before calling next command: "..firstCommandTrigger.."\n")
+          else -- this is a custom trigger
+            pecho("  Next command called when you see: '"..firstCommandTrigger.."'\n")
+          end  -- if timedTrigger then
+
+        else -- the trigger is not a custom trigger
+        
+          pecho("  Next command called when you see: 'You are no longer busy.'\n")
+          
+        end  -- if parthiaToBoolean(firstCommandTrigger) then
+      
+      end  -- if automationType == 'automationInterrupt' then
+
+end  -- local function showAutomationGroupTableData(groupTable)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaCreateAutomationRegexTrigger(pattern)</name>
+						<packageName></packageName>
+						<script>--[[
+Purpose:
+  Replaces &lt;color&gt; or &lt;/color&gt; with the regex pattern for html color codes TEC uses.
+  Creates a single fire temp regex trigger using the updated pattern.
+  Stores the regex ID in global variable parthiaAutomationRegexTriggerID.
+  Returns the regex trigger id.
+
+Variables:
+  pattern, is the regex pattern passed from the automation group.
+  parthiaAutomationRegexTriggerID, global variable, used to store the automation regex trigger's ID.
+  
+References:
+  https://wiki.mudlet.org/w/Manual:Mudlet_Object_Functions#tempRegexTrigger
+  
+  A standard colored message:
+    &lt;/font&gt;&lt;font color="#0020ff"&gt;arch marked 'VI'&lt;/font&gt;&lt;font color="#000000"&gt; 
+]]--
+
+function parthiaCreateAutomationRegexTrigger(pattern)
+  
+  --replace any instances of &lt;color&gt; and &lt;/color&gt; with useful regex codes.
+  --modifiedPattern = pattern.gsub("&lt;color&gt;", [[&lt;\/font&gt;&lt;font color="#[A-Fa-f0-9]+"&gt;]])
+  modifiedPattern = string.gsub(pattern, "&lt;color&gt;", [[&lt;\/font&gt;&lt;font color="#[A-Fa-f0-9]+"&gt;]])
+  modifiedPattern = string.gsub(modifiedPattern, "&lt;/color&gt;", [[&lt;\/font&gt;&lt;font color="#[A-Fa-f0-9]+"&gt;]])
+  
+  -- create the regex trigger
+  parthiaAutomationRegexTriggerID = tempRegexTrigger(modifiedPattern, [[parthiaAutomationCall()]], 1)
+  
+  return parthiaAutomationRegexTriggerID
+  
+end  -- function parthiaCreateAutomationRegexTrigger(pattern)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationInterruptStop()</name>
+						<packageName></packageName>
+						<script>--[[
+Stop the currently running interrupt automation task.
+]]--
+
+function parthiaAutomationInterruptStop()
+
+  parthiaAutomationInterruptRunning = false
+  parthiaAutomationInterruptIterationCounter = 0
+  parthiaAutomationInterruptGroupPosition = false
+  
+  -- if an automation task was paused, unpause it now.
+  if parthiaAutomationPaused then
+    parthiaAutomationRunning = parthiaAutomationPaused
+    parthiaAutomationPaused = false
+  end --if parthiaAutomationPaused then
+  
+  debugToDisplay("parthiaAutomationInterruptStop completed succesfully.")
+  
+  return true
+  
+end -- function parthiaAutomationInterruptStop()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationInterruptStart(groupName)</name>
+						<packageName></packageName>
+						<script>--[[
+Call or start an interrupt autmation task.
+]]--
+
+function parthiaAutomationInterruptStart(groupName)
+
+  debugToDisplay("parthiaAutomationInterruptStart, called with groupName: "..groupName)
+
+  -- Make certain this automation group exists.
+  if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName] then
+    pecho("\nAutomation interrupt group "..groupName.." does not exist. A full help message is above.\n\n")
+    return false
+  end -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName] then
+  
+  --Setting automation first run to true, so we can iterate through the automation group properly
+  parthiaAutomationFirstRun = true
+  
+  -- Setting the interrupt running variable, to keep track of this interrupt
+  parthiaAutomationInterruptRunning = groupName
+  
+  -- if automation is running, pause it.
+  if parthiaAutomationRunning then
+    parthiaAutomationPaused = parthiaAutomationRunning
+    parthiaAutomationRunning = false
+  end  -- if parthiaAutomationRunning then
+
+  -- message the player that this interrupt occured.
+  pecho("\nInterrupt "..groupName.." triggered.\n")
+  
+  -- collect the trigger that will call the first command for this interrupt
+  local firstCommandTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].firstCommandTrigger
+  
+  debugToDisplay("parthiaAutomationInterruptStart, firstCommandTrigger: "..firstCommandTrigger)
+
+  -- If automation is not currently running we have to start it to run this interrupt.
+  if parthiaToBoolean(firstCommandTrigger) then
+    
+    --Attempt to convert the trigger to a number
+    timedTrigger = tonumber(firstCommandTrigger)  -- If it is not a number automationDelay will be null
+
+    --If this custom trigger is a time trigger create a temp timer.
+    if timedTrigger then
+    
+      debugToDisplay("parthiaAutomationInterruptStart, timed trigger")
+      
+      -- create timer to call this function again
+      parthiaAutomationTimerID = tempTimer(timedTrigger, [[parthiaAutomationCall()]])
+      
+    else  -- This trigger is a message based trigger. Create a regex trigger.
+      
+      debugToDisplay("parthiaAutomationInterruptStart, regex trigger")
+      
+      -- Wait for the current line check to end. Otherwise we will enter a creation loop and mudlet will crash
+      tempTimer(1, [[parthiaCreateAutomationRegexTrigger("]]..firstCommandTrigger..[[")]])
+      
+    end  -- if timedTrigger then
+    
+  else -- this triggers when "You are no longer busy." is called.
+  
+    debugToDisplay("parthiaAutomationInterruptStart, 'You are no longer busy.' trigger.")
+    
+  end  -- if parthiaToBoolean(firstCommandTrigger) then
+  
+  -- If the user set the first command trigger to 0, parthiaAutomationCall will be called when 'You are no longer busy.' trigger triggers.
+    
+end -- function parthiaAutomationInterruptStart(groupName)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationInterruptToggleState(groupName)</name>
+						<packageName></packageName>
+						<script>--[[
+Enables or disables an interrupt.
+
+enabled needs to create the regex trigger
+disable needs to locate the regex trigger and remove it
+]]--
+
+function parthiaAutomationInterruptToggleState(groupName)
+
+  -- Make certain this interrupt group exists.
+  if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName] then
+    pecho("\nAutomation interrupt group "..groupName.." does not exist. A full help message is above.\n\n")
+    return false
+  end -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName] then
+
+  --toggle the state of this interrupt--------------------------
+  
+  -- The interrupt is enabled, so disable it
+  if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled then
+    
+    --disable the inteurrupt flag
+    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled = false
+    
+    -- kill the interrupt trigger and manage it's variables
+    parthiaDeleteInterruptRegexTrigger(groupName)
+    
+    -- Message the player
+    pecho("Interrupt "..groupName.." is now disabled.\n")
+    
+  else  -- the interrupt is disabled, so enable it
+  
+    -- enable the interrupt flag
+    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled = true
+    
+    -- create the regex trigger
+    parthiaCreateInterruptRegexTrigger(groupName)
+    
+    pecho("Interrupt "..groupName.." is now enabled.\n")
+  end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled then
+  
+  -- Remind the user to save their chages
+  dontForgetToSave()
+  
+  --refresh the text on the interrupts window
+  refreshInterruptsWindow()
+  
+  -- Refresh the text in the automation window
+  refreshAutomationWindow()
+  
+  return True
+
+end  -- function parthiaAutomationInterruptToggleState()
+
+function parthiaInterruptToggleHelp()
+  
+  pecho("\nThe command format to enable or disable an interrupt is:\n")
+  pecho("\tparthia interrupt toggle [group name]\n")
+  pecho("parthia interrupt has a short name of /interrupt. It's format is the same.\n")
+  pecho("\t/interrupt toggle [group name]\n\n")
+  
+  pecho("[group name] is a name for an automation group.\n")
+  pecho("\tIt can be a new or existing group name.\n")
+  pecho("\t[group name] can contain letters, numbers and spaces.\n")
+  pecho("\tIt can not contain special characters. It IS case sensitive.\n")
+  
+end -- function parthiaInterruptToggleHelp()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaCreateInterruptRegexTrigger(pattern)</name>
+						<packageName></packageName>
+						<script>--[[
+Purpose:
+  Replaces &lt;color&gt; or &lt;/color&gt; with the regex pattern for html color codes TEC uses.
+  Creates a single fire temp regex trigger using the updated pattern.
+  Stores the regex ID in global table parthiaAutomation.automationInterruptTriggers
+  Returns the regex trigger id, of the trigger newly created.
+
+Variables:
+  parthiaAutomation.automationInterruptTriggers, global saved table of triggers to create.
+  
+References:
+  https://wiki.mudlet.org/w/Manual:Mudlet_Object_Functions#tempRegexTrigger
+  
+  A standard colored message:
+    &lt;/font&gt;&lt;font color="#0020ff"&gt;arch marked 'VI'&lt;/font&gt;&lt;font color="#000000"&gt; 
+]]--
+
+function parthiaCreateInterruptRegexTrigger(groupName)
+
+  local pattern = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].pattern
+  
+  --replace any instances of &lt;color&gt; and &lt;/color&gt; with useful regex codes.
+  --modifiedPattern = pattern.gsub("&lt;color&gt;", [[&lt;\/font&gt;&lt;font color="#[A-Fa-f0-9]+"&gt;]])
+  modifiedPattern = string.gsub(pattern, "&lt;color&gt;", [[&lt;\/font&gt;&lt;font color="#[A-Fa-f0-9]+"&gt;]])
+  modifiedPattern = string.gsub(modifiedPattern, "&lt;/color&gt;", [[&lt;\/font&gt;&lt;font color="#[A-Fa-f0-9]+"&gt;]])
+  
+  -- create the regex trigger
+  local triggerID = tempRegexTrigger(modifiedPattern, [[parthiaAutomationInterruptStart("]]..groupName..[[")]])
+  
+  -- Insert the trigger ID into the tracking table
+  parthiaAutomation.automationInterruptTriggers[groupName] = triggerID
+  
+  return triggerID
+  
+end  -- function parthiaCreateAutomationRegexTrigger(pattern)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaDeleteInterruptRegexTrigger(pattern)</name>
+						<packageName></packageName>
+						<script>--[[
+Purpose:
+  Removes an intterpt trigger and flags it's variables off.
+
+Variables:
+  parthiaAutomation.automationInterruptTriggers, global saved table of triggers to create.
+  
+]]--
+
+function parthiaDeleteInterruptRegexTrigger(groupName)
+
+  debugToDisplay("parthiaDeleteInterruptRegexTrigger called with groupName: "..groupName)
+  
+  if not parthiaAutomation.automationInterruptTriggers[groupName] then
+    tecErrorNotification("parthiaDeleteInterruptRegexTrigger, could not find groupName in the parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterruptTriggers table.")
+    return false
+  end  -- if not parthiaAutomation.automationInterruptTriggers[groupName] then
+  
+  -- Collect the trigger ID.
+  local triggerID = parthiaAutomation.automationInterruptTriggers[groupName]
+  
+  debugToDisplay("parthiaDeleteInterruptRegexTrigger killing triggerID: "..triggerID)
+  
+  -- disable the trigger, deleting ONLY will result in the trigger being called one time.
+  disableTrigger(triggerID)
+  
+  -- kill the trigger
+  killTrigger(triggerID)
+  
+  -- remove the entry for the triggers dictionary.
+  parthiaAutomation.automationInterruptTriggers[groupName] = nil
+  
+  return true
+  
+end  -- function parthiaCreateAutomationRegexTrigger(pattern)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationSave(displayToScreen)</name>
+						<packageName></packageName>
+						<script>-- Save automations and interrupts to file
+
+function parthiaAutomationSave(displayToScreen)
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  local saveFailed = parthiaTableSave(parthiaAutomationSaveTable, parthiaAutomationSavePath, false)
+  
+  -- If the file save was successful show an image to display, error if the save failed.
+  if saveFailed then
+  
+    -- Display that an error occured.
+    tecErrorNotification("parthiaAutomationSave, failed to save to file: "..parthiaAutomationSavePath)
+
+  else
+
+    -- Display image to screen, if argument specifies to do so.
+    if displayToScreen then
+      pecho("\nAutomation &amp; interrupt data saved.")
+    end  -- if displayToScreen then
+
+  end  -- if saveFailed then
+  
+end -- function parthiaAutomationSave(displayToScreen)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationLoad(displayToScreen)</name>
+						<packageName></packageName>
+						<script>function parthiaAutomationLoad(displayToScreen)
+
+  displayToScreen = fuzzyBoolean(displayToScreen)
+
+  if io.exists(parthiaAutomationSavePath) then --if the file exists, load it.
+    table.load(parthiaAutomationSavePath, parthiaAutomationSaveTable)
+    if displayToScreen then pecho("[  OK  ]  - Parthia automations and interrupts successfully loaded from file.\n") end
+  else --the save file does not exist
+    if displayToScreen then pecho("[ Info ]  - No automations data file.\n") end
+  end -- if io.exists(parthiaAutomationSavePath)
+  
+  parthiaAutomationCharacterCheck(displayToScreen)
+  
+  --refresh the text on the interrupts window, only if the function has initialized
+  if refreshInterruptsWindow then
+    refreshInterruptsWindow()
+  end  -- if refreshInterruptsWindow then
+  
+  -- Refresh the text in the automation window, only if the function has initialized
+  if refreshAutomationWindow then
+    refreshAutomationWindow()
+  end  -- if refreshAutomationWindow then
+
+end -- function parthiaAutomationLoad(displayToScreen)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationCharacterCheck(displayToScreen)</name>
+						<packageName></packageName>
+						<script>-- used to create a default character entry in the automations save table.
+-- NOTE: this function is called in setStatsCheckActive, it will NOT show to screen during that call.
+
+function parthiaAutomationCharacterCheck(displayToScreen)
+  
+  -- If the current character does not have automations data, give it default data
+  local character = ""
+  if parthiaPlayer.CurrentCharacter.name then --if logged into a character account
+    character = parthiaPlayer.CurrentCharacter.name
+  else --if the stats command does not work, the player is in the welcome room
+    character = "Welcome Room ID"
+    parthiaPlayer.CurrentCharacter.name = character
+  end --if parthiaPlayer.CurrentCharacter.name
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  if not parthiaAutomationSaveTable[character] then --if this character does not exist in the automationsd save table.
+    parthiaAutomationSaveTable[character] = {}
+    parthiaAutomationSaveTable[character].automation = {}
+    parthiaAutomationSaveTable[character].automationInterrupt = {}
+    parthiaAutomationSaveTable[character].automationInterruptTriggers = {}
+    if displayToScreen then pecho("A character name of \""..character.."\", was not found in automations save file. Created defaults.") end
+    debugToDisplay("function parthiaMap.checkCharacter, created table for character \""..character.."\" in the parthiaMap.saveTable table.")
+  end --if not parthiaMap.saveTable[character]
+  
+  -- This is called automatically during chracter changes. Refreshing windows for that reason.
+  refreshInterruptsWindow()
+  refreshAutomationWindow()
+  
+  -- Clean up RegEx triggers used by a previous ID
+  parthiaAutomationCleanRegExTriggers()
+  -- Create RegEx triggers for interrupts that are enabled.
+  parthiaAutomationResumeInterrupts()
+  
+end  -- function parthiaAutomationCharacterCheck(displayToScreen)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationExport(automationType, groupName, displayToScreen)</name>
+						<packageName></packageName>
+						<script>-- Exports automations to file
+
+local function listAutomationGroups(automationType, automationTypeName, autoFolder)
+
+  for groupName, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]) do
+  
+    -- Display a clickable command to import this automation file
+    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." export "..groupName, 
+      [[expandAlias("]].."parthia "..automationTypeName.." export "..groupName..[[")]],
+      "Export "..groupName, true)
+    pecho(", to export "..automationTypeName.." "..groupName..".\n")
+  
+  end  -- for groupName, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]) do
+
+  -- Display a command to save files to the automation directory
+  pecho("If you would get files from the "..automationTypeName.." data folder run, ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open\n", 
+    [[tecOpenDirectory("]]..autoFolder..[[")]], 
+    "Open "..automationTypeName.." folder", true)
+
+end  -- local function listAutomationGroups()
+
+function parthiaAutomationExport(automationType, groupName, displayToScreen)
+  
+  -- Put a new line before display text, if displaying the screen is specified
+  if displayToScreen then pecho('\n') end
+  
+  debugToDisplay("parthiaAutomationExport, called")
+  debugToDisplay("\tautomationType: "..automationType)
+  debugToDisplay("\tgroupName: "..groupName)
+  
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  
+  local characterName = parthiaPlayer.CurrentCharacter.name
+  debugToDisplay("\tcharacterName: "..characterName)
+  
+  -- Get where the automation folder is
+  local autoFolder = automationDataFolder  -- default to automation
+  if automationType == "automationInterrupt" then  -- if it is an interrupt change the folder.
+    autoFolder = interruptDataFolder
+  end  -- if automationType == "interrupt" then
+  debugToDisplay("\tautoFolder: "..autoFolder)
+  
+  -- Collect logical names for automation types
+  local automationTypeName = "automation"
+  if automationType == "automationInterrupt" then
+    automationTypeName = "interrupt"
+  end  -- if automationType == "automationInterrupt" then
+  debugToDisplay("\tautomationTypeName: "..automationTypeName)
+  
+  -- If it does not exist, make the automation folder
+  local autoFolderExist = lfs.chdir(autoFolder) -- Attempt to change to the automation directory
+  if not autoFolderExist then -- if the automation folder does not exist
+    debugToDisplay("\tautoFolder does not exist.")
+    local profileFolderExists = lfs.chdir(getMudletHomeDir()) -- Attempt to change to the user's profile directory.
+    if profileFolderExists then --The mudlet folder exists
+      lfs.mkdir(autoFolder)  -- make the automation folder
+    end --if profileFolderExists
+  end  -- if not autoFolderExist then
+  
+  -- Verify the automation exists, stop if it does not
+  if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
+    
+    if displayToScreen then
+      
+      -- If a groupName was passed, tell the user it does not exists.
+      if not groupName == "" then
+        pecho(automationTypeName.." '"..groupName.."' does not exist.\n")
+      end  -- if not groupName or groupName == "" then
+      
+      -- Tell the user how to export automations
+      pecho("To export your automations to file click or run:\n")
+      listAutomationGroups(automationType, automationTypeName, autoFolder)
+      
+    end  -- if displayToScreen then
+    
+    
+    debugToDisplay("\tgroupName does not exist.")
+    
+    return false  -- stop the function
+    
+  end  -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
+  
+  -- Set the full path and name of the file to save to
+  local autoFilePath = autoFolder..groupName..".lua"
+  debugToDisplay("\tautoFilePath: "..autoFilePath)
+  
+  -- Save the automation to file.
+  local autoTable = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
+  parthiaTableSave(autoTable, autoFilePath, false)
+  
+  -- Display completion message if displayToScreen is truthy.
+  if displayToScreen then
+    pecho(automationTypeName.." '"..groupName.."' exported successful.\n")
+    pecho("\tTo: "..autoFilePath.."\n")
+    pecho("If you would like to share this group open the directory with: ")
+    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open", 
+      [[tecOpenDirectory("]]..autoFolder..[[")]], 
+      "Open "..automationTypeName.." folder", true)
+  end  -- if displayToScreen then
+    
+  return true  -- function ran successfully
+  
+end  -- function parthiaAutomationExport(groupName)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationImport(automationType, groupName, displayToScreen)</name>
+						<packageName></packageName>
+						<script>-- Imports automation data from file
+
+local function listAutomationFiles(autoFolder, automationTypeName)
+
+  -- Import a list of importable automation files.
+  local autoImportableFiles = parthiaFileList(autoFolder)
+  
+  -- loop through all the automation files.
+  for _, file in ipairs(autoImportableFiles) do
+  
+    -- Remove the lua file extensions from the name.
+    local fileName = string.gsub(file, "%.lua", "")
+    
+    -- Display a clickable command to import this automation file
+    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." import "..fileName, 
+      [[expandAlias("]].."parthia "..automationTypeName.." import "..fileName..[[")]],
+      "Import "..fileName, true)
+    pecho(", to import "..automationTypeName.." "..fileName..".\n")
+    
+  end  -- for _, file in ipairs(autoImportableFiles) do
+  
+  -- Display a command to save files to the automation directory
+  pecho("If you would like to copy files to the "..automationTypeName.." data folder, ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open\n", 
+    [[tecOpenDirectory("]]..autoFolder..[[")]], 
+    "Open "..automationTypeName.." folder", true)
+
+end  -- local function listAutomationFiles(autoFolder, automationTypeName)
+
+function parthiaAutomationImport(automationType, groupName, displayToScreen)
+  
+  -- Put a new line before display text, if displaying the screen is specified
+  if displayToScreen then pecho('\n') end
+  
+  debugToDisplay("parthiaAutomationImport, called")
+  debugToDisplay("\tautomationType: "..automationType)
+  debugToDisplay("\tgroupName: "..groupName)
+  
+  displayToScreen = fuzzyBoolean(displayToScreen)
+  
+  local characterName = parthiaPlayer.CurrentCharacter.name
+  debugToDisplay("\tcharacterName: "..characterName)
+  
+  -- Get where the automation folder is
+  local autoFolder = automationDataFolder  -- default to automation
+  if automationType == "automationInterrupt" then  -- if it is an interrupt change the folder.
+    autoFolder = interruptDataFolder
+  end  -- if automationType == "interrupt" then
+  debugToDisplay("\tautoFolder: "..autoFolder)
+  
+  -- create the full path and file name to be imported.
+  local autoImportFilePath = autoFolder..groupName..".lua"
+  debugToDisplay("\tautoImportFilePath: "..autoImportFilePath)
+  
+  -- Collect logical names for automation types
+  local automationTypeName = "automation"
+  if automationType == "automationInterrupt" then
+    automationTypeName = "interrupt"
+  end  -- if automationType == "automationInterrupt" then
+  debugToDisplay("\tautomationTypeName: "..automationTypeName)
+  
+  -- if no groupName was provided, show a list of automations to import
+  if not groupName or groupName == "" then
+  
+    -- if specified to display a message to screen
+    if displayToScreen then
+      
+      -- Display a help message
+      pecho("To import an "..automationTypeName.." from file click or run:\n")
+      -- Show a list of clickable commands to import the automation
+      listAutomationFiles(autoFolder, automationTypeName)
+      
+      return true
+      
+    -- Not specified to display a message to screen, throw a warning.
+    else
+    
+      tecWarningNotification("parthiaAutomationImport, groupName and displayToScreen were not provided.")
+    
+      return false
+      
+    end  -- if displayToScreen then
+    
+  end  -- if not groupName then
+  
+  -- Import the file
+  if io.exists(autoImportFilePath) then --if the file exists, load it.
+    
+    debugToDisplay("\tautoImportFilePath exists.")
+    
+    -- Prepared the automation table for import
+    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] = {}
+    
+    -- Get a reference of the automation table to be updated
+    local autoTable = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
+    
+    -- Import the data to the table
+    table.load(autoImportFilePath, autoTable)
+    if displayToScreen then
+      pecho("Imported "..groupName..".\n")
+      dontForgetToSave()  -- Remind the user to save changes
+    end  -- if displayToScreen then
+    
+    -- If this is an interrupt, and it is enabled, create it's RegEx trigger.
+    if automationTypeName == "interrupt" then
+      -- If the interrupt is enabled.
+      if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled then
+        -- create the regex trigger
+        parthiaCreateInterruptRegexTrigger(groupName)
+      end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled then
+    end  -- if automationTypeName == "interrupt" then
+    
+    -- Refresh the automation windows
+    refreshInterruptsWindow()
+    refreshAutomationWindow()
+  
+  else --the save file does not exist
+    
+    debugToDisplay("\tautoImportFilePath does not exists.")
+    
+    -- Display a help message to screen if specified to do so.
+    if displayToScreen then
+      pecho("\nCould not find "..automationTypeName.." file: "..autoImportFilePath..".\n")
+      -- List the files in the automation folder and suggest a command to run for import
+      listAutomationFiles(autoFolder, automationTypeName)
+    end  -- if displayToScreen then
+    
+  end -- if io.exists(parthiaAutomationSavePath)
+  
+  return true
+ 
+end  -- function parthiaAutomationImport(automationType, groupName, displayToScreen)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationResumeInterrupts()</name>
+						<packageName></packageName>
+						<script>--[[
+This function resumes interrupts after they have all been removed.
+The intended use for this is resuming interrupts after logging into a character.
+]]--
+
+function parthiaAutomationResumeInterrupts()
+--[[
+
+-- If this is an interrupt, and it is enabled, create it's RegEx trigger.
+    if automationTypeName == "interrupt" then
+      -- If the interrupt is enabled.
+      if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled then
+        -- create the regex trigger
+        parthiaCreateInterruptRegexTrigger(groupName)
+      end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled then
+    end  -- if automationTypeName == "interrupt" then
+]]--
+debugToDisplay("parthiaAutomationResumeInterrupts, starting import.")
+  
+  -- Loop through all the interrupts
+  for groupName, interruptTable in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt) do
+    
+    debugToDisplay("\tgroupName: "..groupName..", enabled: "..tostring(interruptTable.enabled).."\n")
+    
+    -- If this interrupt is enabled, create a RegEx trigger for it.
+    if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled then
+      
+      debugToDisplay("\t\tCreating regex trigger.")
+      
+      -- create the regex trigger
+      parthiaCreateInterruptRegexTrigger(groupName)
+      
+    end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].enabled then
+    
+    debugToDisplay("\t\tCompleted, "..groupName)
+    
+  end  -- for groupName, interruptTable in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt) do
+  
+end  -- function parthiaAutomationResumeInterrupts()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationCleanRegExTriggers()</name>
+						<packageName></packageName>
+						<script>--[[
+Cleans out or deletes RegEx triggers in use by the automation system.
+]]--
+
+function parthiaAutomationCleanRegExTriggers()
+
+  debugToDisplay("parthiaAutomationCleanRegExTriggers, started")
+  
+  for groupName, _ in pairs(parthiaAutomation.automationInterruptTriggers) do
+    
+    debugToDisplay("\tDeleteing left over trigger for group: "..groupName)
+    
+    -- Delete the trigger and the data used to track it.
+    parthiaDeleteInterruptRegexTrigger(groupName)
+    
+  end -- for groupName, _ in paris(parthiaAutomation.automationInterruptTriggers) do
+
+end  -- function parthiaAutomationCleanRegExTriggers()</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
@@ -9791,6 +11468,7 @@ function echoLeftRoomCharacterWindows(message)
   --display messages to side of the screen
   hecho(roomCharacters.console.name,message) --send message or standard room character window
   hecho(MultiWindow.roomCharacters.console.name,message) --send message to room character multi window
+  hecho(compMacAndCharWindow.roomCharacters.console.name, message)
   displayDebug("function echoLeftRoomCharacterWindows, message: "..message)
 end --function echoLeftRoomCharacterWindows()</script>
 						<eventHandlerList />
@@ -9805,6 +11483,7 @@ end --function echoLeftRoomCharacterWindows()</script>
   --display messages to side of the screen
   hecho(roomCharacters.rightConsole.name,message) --send message or standard room character window
   hecho(MultiWindow.roomCharacters.rightConsole.name,message) --send message to room character multi window
+  hecho(compMacAndCharWindow.roomCharacters.rightConsole.name, message)
   displayDebug("function echoRightRoomCharacterWindows, message: "..message)
 end --function echoLeftRoomCharacterWindows()</script>
 						<eventHandlerList />
@@ -9817,6 +11496,8 @@ end --function echoLeftRoomCharacterWindows()</script>
   clearWindow(MultiWindow.roomCharacters.console.name) --clear left side of the MultiWindow room characters console
   clearWindow(MultiWindow.roomCharacters.rightConsole.name) --clear right side of standard room character window
   clearWindow(roomCharacters.rightConsole.name) --clear the right side of the multi window room characters console
+  clearWindow(compMacAndCharWindow.roomCharacters.console.name)  -- clear the left side of the compass macro and character, console
+  clearWindow(compMacAndCharWindow.roomCharacters.rightConsole.name)  -- clear the right side of the compass macro and character, console
   tecRoomObjects.refreshMessageDisplayed = false --tell Parthia refresh message has not been shown
 end --clearRoomCharacterWindow</script>
 						<eventHandlerList />
@@ -9832,6 +11513,9 @@ local function tecRoomCharRefreshMessage()
     [[runTECRoomObjectCheck()]],
     "Populate Room Character window.", true)
   cechoLink(MultiWindow.roomCharacters.rightConsole.name,"&lt;:maroon&gt;room check", 
+    [[runTECRoomObjectCheck()]],
+    "Populate Room Character window.", true)
+  cechoLink(compMacAndCharWindow.roomCharacters.rightConsole.name, "&lt;:maroon&gt;room check", 
     [[runTECRoomObjectCheck()]],
     "Populate Room Character window.", true)
   echoRightRoomCharacterWindows(" or press ctrl+r.\n")
@@ -9859,6 +11543,9 @@ function tecResetRoomCharacterWindow()
     [[runTECRoomObjectCheck()]],
     "Populate Room Character window.", true)
   cechoLink(MultiWindow.roomCharacters.rightConsole.name,"&lt;:maroon&gt;room check", 
+    [[runTECRoomObjectCheck()]],
+    "Populate Room Character window.", true)
+  cechoLink(compMacAndCharWindow.roomCharacters.rightConsole.name, "&lt;:maroon&gt;room check", 
     [[runTECRoomObjectCheck()]],
     "Populate Room Character window.", true)
   echoRightRoomCharacterWindows(" or pressing ctrl+r.\n")
@@ -9902,7 +11589,10 @@ end --function getStatsCheckState()</script>
 					<Script isActive="yes" isFolder="no">
 						<name>setStatsCheckActive(mode)</name>
 						<packageName></packageName>
-						<script>function setStatsCheckActive(mode)
+						<script>-- enables and disables filtering of stats command to collect character data.
+--NOTE: echos are silenced when this check is active. So no troubleshooting messages will work unless sent to debug.
+
+function setStatsCheckActive(mode)
   mode = fuzzyBoolean(mode)
   statsFilter.checkActive = mode --a stats check is active
   if not statsFilter.checkActive then --if disabeling
@@ -9916,6 +11606,7 @@ end --function getStatsCheckState()</script>
         debugToDisplay("function setStatsCheckActive, CurrentCharacter."..variableName.." adjusted to ".."\""..parthiaPlayer.CurrentCharacter[variableName].."\"") 
       end --if type(variable) == "string"
     end --for pairs(parthiaPlayer.CurrentCharacter)
+    parthiaAutomationCharacterCheck()  -- Check if character has data in the automation's table
     parthiaMap.checkCharacter() --check where the character is. For when login occurs. It uses the character name, that is why it is here
   end --if not mode
 end --function setStatsCheckActive(mode)</script>
@@ -10217,8 +11908,9 @@ function sortCombatActions(stringToCheck)
     end --if getHelpDevs()
     
   --if the attack is one the player is using
-  elseif  stringToCheck:match("%] You") or 
-          stringToCheck:match(", you") then
+  elseif  stringToCheck:match("%] You") or -- common action echo
+          stringToCheck:match(", you") -- common action echo
+          then
           
     -- record if this command was successful or not.
     parthiaLastCommandSuccess = commandSuccessful(stringToCheck)
@@ -13882,8 +15574,9 @@ for _,v in pairs(tecCompass.dirs) do
   
   SetTooltip(tecCompass[v].name, "Go "..v.." ") --create hover tooltip for direction
   
-	--if tecCompass is clicked, go in that direction
-	tecCompass[v]:setClickCallback("tecCompass.click",v)  
+  --if tecCompass is clicked, go in that direction
+  tecCompass[v]:setClickCallback("tecCompass.click",v)  
+
 end --end loop through tecCompass.dirs
 
 --keeps the tecCompass square as the windows are adjusted.
@@ -13891,22 +15584,18 @@ function tecCompass.drawKeepSquare()
 
   --tecCompass.window:move(0,2) --small black break at top.
 
-	--if the width of the parent label is less than the height.
-	--Resize the background label itself keeping the width and height equal.
-	if tecCompass.window:get_width() &lt; tecCompass.window:get_height() then
-  	tecCompass.back:resize(tecCompass.window:get_width(), tecCompass.window:get_width())
-	end --en if width is less than height.
-	
-	--if the height of the parent label is less than the width.
-	--Resize the background label itself keeping the width and height equal.
-	if tecCompass.window:get_height() &lt; tecCompass.window:get_width() then
-  	tecCompass.back:resize(tecCompass.window:get_height(), tecCompass.window.height)
-	end --end if height is less than width
-  
-  if tecCompass.back:get_width() &lt; tecCompass.window:get_width() then
-    tecCompass.back:move((tecCompass.window:get_width() - tecCompass.back:get_width()) * .5)
-  end
-	
+  --if the width of the parent label is less than the height.
+  --Resize the background label itself keeping the width and height equal.
+  if tecCompass.window:get_width() &lt; tecCompass.window:get_height() then
+    tecCompass.back:resize(tecCompass.window:get_width(), tecCompass.window:get_width())
+  end --en if width is less than height.
+
+  --if the height of the parent label is less than the width.
+  --Resize the background label itself keeping the width and height equal.
+  if tecCompass.window:get_height() &lt; tecCompass.window:get_width() then
+    tecCompass.back:resize(tecCompass.window:get_height(), tecCompass.window.height)
+  end --end if height is less than width
+
 end --end function keep square.
 
 --Add the status bar to the screen. On the bottom
@@ -14056,7 +15745,7 @@ function tecMapdrawKeepSquare()
 	
   local exitWarningFontStyle = [[&lt;center&gt;&lt;p style="font-size:]]
     ..tecSettings.tecTabsFontSize..[[px; color:gray"&gt;]]
-	echo(mapRoom[150].name,exitWarningFontStyle.."Map exits may be misaligned until you walk.")
+	echo(mapRoom[150].name,exitWarningFontStyle.."Walk to realign exits.")
   mapRoom[150]:resize(tecMap_back:get_width(), (tecMap:get_height() * .1))
   mapRoom[150]:setStyleSheet(labelsStyle)
   mapRoom[150]:move(0,0)
@@ -14570,7 +16259,7 @@ MultiWindow.status_bar = Geyser.Container:new({
   x="50%", y=0, width = "50%", height="100%", --position and size of container
 },MultiWindow.bottom)
 MultiWindow.hpbar = Geyser.Gauge:new({ --create HP bar
-  name="hpbar",
+  name="MultiWindow hpbar",
   x=0, y=0, width="100%", height="25%", --position and size of container
 },MultiWindow.status_bar)
 MultiWindow.hpbar.front.styleSheet = hpbar.frontStyleSheet
@@ -14655,6 +16344,362 @@ end --end function keep square.
 UIManagerRegisterWindow(MultiWindow.back) --send the window to the UI Manager</script>
 				<eventHandlerList />
 			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>Interrupts Window</name>
+				<packageName></packageName>
+				<script>intteruptsWindow = Geyser.Container:new({
+  name = "Interrupts",    -- give it a unique name here
+  x=0, y=0,                   
+  width = 0, height=0, 
+})
+
+--box that will store the miniconsoles
+interruptsWindowBack = Geyser.Label:new({
+  name = "interruptsWindowBack",
+  x = 0, --horizontal position
+  y = 0, --adjusted for tabs
+  width = "100%",
+  height = "100%"
+},intteruptsWindow)
+
+interruptsWindowBack:setStyleSheet(labelsStyle) --set to default label style
+
+--This are the miniconsoles that will hold the text
+interruptsWindowConsole = Geyser.MiniConsole:new({
+  name = "interruptsWindowConsole",
+  x = 0, --%horizontally position in parent
+  y = 0, --%vertical position in parent
+  width = "100%", --% of parent
+  height = "100%", --% of parent
+  autoWrap = true, --allows text to wrap if too long
+  fontSize = getTECFont(), --in variables
+  font = getFont(), --get font type from main
+  --scrollBar = true,
+},interruptsWindowBack)
+interruptsWindowConsole:setColor(getBgColor()) --set miniconsoles to main consol BG color
+interruptsWindowConsole:raise()
+
+function interruptsWindowResize()
+
+  --Resize the back label by 6. We want a 3px border around the entire window
+  interruptsWindowBack:resize(tostring(intteruptsWindow:get_width() - 0)
+    , tostring(intteruptsWindow:get_height() - 0))
+  interruptsWindowBack:move (0, 0) --left and top borders
+
+  --Resize the room character window by 6. We want a 3px border around the entire window
+  interruptsWindowConsole:resize(tostring(interruptsWindowBack:get_width() - 0)
+    , tostring(interruptsWindowBack:get_height() - 0))
+  interruptsWindowConsole:move (0, 0) --left and top borders
+  
+  tecScrollBarCheck("interruptsWindowConsole") --Checks if a scroll bar is needed.
+
+  if getTECDisplayDebugMode() then --if display debug mode is on
+    debugToDisplay("Room Character Window,"
+      .." interruptsWindowBack width: "..interruptsWindowBack:get_width()
+      .." interruptsWindowBack Height: "..interruptsWindowBack:get_height()
+      .." interruptsWindowConsole Width: "..interruptsWindowConsole:get_width()
+      .." interruptsWindowConsole Height: "..interruptsWindowConsole:get_height()
+    )--end debugToDisplay
+  end --end if display debug is enabled.
+  
+  refreshInterruptsWindow()  -- refresh the text in the window
+
+end --interruptsWindowResize()
+
+--set location for container in GUIframe.
+intteruptsWindow.GUIframeLocation = "topleft"
+--add cobntainer to UI manager.
+UIManagerRegisterWindow(intteruptsWindow)
+
+--tecRefreshSettingsWindow() --Refreshes text in settings window.
+--interruptsWindowResize() --resize the Room Character window now</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>Automation Window</name>
+				<packageName></packageName>
+				<script>automationWindow = Geyser.Container:new({
+  name = "Automation",    -- give it a unique name here
+  x=0, y=0,                   
+  width = 0, height=0, 
+})
+
+--box that will store the miniconsoles
+automationWindowBack = Geyser.Label:new({
+  name = "automationWindowBack",
+  x = 0, --horizontal position
+  y = 0, --adjusted for tabs
+  width = "100%",
+  height = "100%"
+},automationWindow)
+
+automationWindowBack:setStyleSheet(labelsStyle) --set to default label style
+
+--This are the miniconsoles that will hold the text
+automationWindowConsole = Geyser.MiniConsole:new({
+  name = "automationWindowConsole",
+  x = 0, --%horizontally position in parent
+  y = 0, --%vertical position in parent
+  width = "100%", --% of parent
+  height = "100%", --% of parent
+  autoWrap = true, --allows text to wrap if too long
+  fontSize = getTECFont(), --in variables
+  font = getFont(), --get font type from main
+  --scrollBar = true,
+},automationWindowBack)
+automationWindowConsole:setColor(getBgColor()) --set miniconsoles to main consol BG color
+automationWindowConsole:raise()
+
+function automationWindowResize()
+
+  --Resize the back label by 6. We want a 3px border around the entire window
+  automationWindowBack:resize(tostring(automationWindow:get_width() - 0)
+    , tostring(automationWindow:get_height() - 0))
+  automationWindowBack:move (0, 0) --left and top borders
+
+  --Resize the room character window by 6. We want a 3px border around the entire window
+  automationWindowConsole:resize(tostring(automationWindowBack:get_width() - 0)
+    , tostring(automationWindowBack:get_height() - 0))
+  automationWindowConsole:move (0, 0) --left and top borders
+  
+  tecScrollBarCheck("automationWindowConsole") --Checks if a scroll bar is needed.
+
+  if getTECDisplayDebugMode() then --if display debug mode is on
+    debugToDisplay("Room Character Window,"
+      .." automationWindowBack width: "..automationWindowBack:get_width()
+      .." automationWindowBack Height: "..automationWindowBack:get_height()
+      .." automationWindowConsole Width: "..automationWindowConsole:get_width()
+      .." automationWindowConsole Height: "..automationWindowConsole:get_height()
+    )--end debugToDisplay
+  end --end if display debug is enabled.
+  
+  refreshAutomationWindow()  -- refresh the text in the window
+
+end --automationWindowResize()
+
+--set location for container in GUIframe.
+automationWindow.GUIframeLocation = "bottomleft"
+--add cobntainer to UI manager.
+UIManagerRegisterWindow(automationWindow)
+
+--automationWindowResize() --resize the Room Character window now</script>
+				<eventHandlerList />
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>compMacAndCharWindow</name>
+				<packageName></packageName>
+				<script>compMacAndCharWindow = compMacAndCharWindow or {}
+
+compMacAndCharWindow.back = Geyser.VBox:new({ name = "Room, Compass &amp; Macro", }) --Horizonal box to hold our compMacAndCharWindows.
+compMacAndCharWindow.back.GUIframeLocation = "topright" --set location for container in GUIframe.
+
+--compMacAndCharWindow.top = Geyser.VBox:new({ name = "compMacAndCharWindow.top", }, compMacAndCharWindow.back) --Vertical window break for the room characters windows
+
+--Create a window that is a copy of the Room Characters window.
+compMacAndCharWindow.roomCharacters = compMacAndCharWindow.roomCharacters or {} --create a table to hold roomCharters window
+compMacAndCharWindow.roomCharacters.back = Geyser.HBox:new({
+  name = "compMacAndCharWindow Room Characters",
+  }, compMacAndCharWindow.back)
+compMacAndCharWindow.roomCharacters.console = Geyser.MiniConsole:new({ --Create the mini console that will hold the text.
+  name = "compMacAndCharWindow.roomCharacters.console",
+  x = 0, y = 0, width = "100%", height = "100%", --position and size of console
+  autoWrap = true, --allows text to wrap if too long
+  fontSize = getTECFont(), --in variables
+  font = getFont(), --get font type from main
+  --scrollBar = true,
+},compMacAndCharWindow.roomCharacters.back)
+compMacAndCharWindow.roomCharacters.console:raise()
+compMacAndCharWindow.roomCharacters.console:setColor(getBgColor()) --set miniconsoles to main consol BG color
+compMacAndCharWindow.roomCharacters.rightConsole = Geyser.MiniConsole:new({ --Create the mini console that will hold the text.
+  name = "compMacAndCharWindow.roomCharacters.rightConsole",
+  x = 0, y = 0, width = "100%", height = "100%", --position and size of console
+  autoWrap = true, --allows text to wrap if too long
+  fontSize = getTECFont(), --in variables
+  font = getFont(), --get font type from main
+  --scrollBar = true,
+},compMacAndCharWindow.roomCharacters.back)
+compMacAndCharWindow.roomCharacters.rightConsole:raise()
+compMacAndCharWindow.roomCharacters.rightConsole:setColor(getBgColor()) --set miniconsoles to main consol BG color
+
+--used to hold compass and the macro bars aside eachother at the bottom of the compMacAndCharWindow
+compMacAndCharWindow.bottom = Geyser.HBox:new({ name = "compMacAndCharWindow.Bottom",
+  x=0, y=0, width = 0, height="33%", --position and size of container
+  }, compMacAndCharWindow.back) --Vertical window break for the bottom of the window
+
+--Create the compass in the compMacAndCharWindow
+compMacAndCharWindow.Compass = compMacAndCharWindow.Compass or { --table to hold compass
+  dirs = {"nw","n","ne","w","up","down","e","sw","s","se"}, --directions for the compass
+  } --end compMacAndCharWindow.Compass object declaration
+compMacAndCharWindow.Compass.window = Geyser.Container:new({ --container for compass
+  name = "compMacAndCharWindow Compass",
+  x=0, y=0, width = "50%", height="100%", --position and size of container
+  },compMacAndCharWindow.bottom) --put the window in the HBox at the bottom of the compMacAndCharWindow
+compMacAndCharWindow.Compass.back = Geyser.Label:new({
+  name = "compMacAndCharWindow.Compass.back",
+  x = "0%", y = "0%", width = "100%", height = "100%", --position and size of background
+  },compMacAndCharWindow.Compass.window) --put the label into the Compass container
+--compMacAndCharWindow.Compass.back.styleSheet = getMudletHomeDir().. [[/imgs/backgrounds/old canvas.jpg]]
+compMacAndCharWindow.Compass.back.styleSheet = [[border-image: url("]]..tecSettings.images["compassBackground"].image..[[");]]
+compMacAndCharWindow.Compass.back:setStyleSheet(compMacAndCharWindow.Compass.back.styleSheet) --set the background label
+--compMacAndCharWindow.Compass.back:setStyleSheet(labelsStyle) --set the background label
+compMacAndCharWindow.Compass.overlay = Geyser.Label:new({
+  name = "compMacAndCharWindow.Compass.overlay",
+  x = "0%", y = "0%", width = "100%", height = "100%", --position and size of background
+  },compMacAndCharWindow.Compass.back) --put the label into the Compass container
+compMacAndCharWindow.Compass.overlay.styleSheet = [[border-image: url("]]..tecSettings.images["compassOverlay"].image..[[");]]
+compMacAndCharWindow.Compass.overlay:setStyleSheet(compMacAndCharWindow.Compass.overlay.styleSheet) --set the background label
+--compMacAndCharWindow.Compass.overlay:raise()
+compMacAndCharWindow.Compass.hbox = Geyser.HBox:new({ --container to make columns
+    name = "compMacAndCharWindow.Compass.box",
+    x = 0, y = 0, width = "100%", height = "100%", --position and size of container
+  },compMacAndCharWindow.Compass.back) --parent of this Hbox
+--create three rows of the compass
+compMacAndCharWindow.Compass.row1 = Geyser.VBox:new({name = "compMacAndCharWindow.Compass.row1",},compMacAndCharWindow.Compass.hbox)
+compMacAndCharWindow.Compass.row2 = Geyser.VBox:new({name = "compMacAndCharWindow.Compass.row2",},compMacAndCharWindow.Compass.hbox)
+compMacAndCharWindow.Compass.row3 = Geyser.VBox:new({name = "compMacAndCharWindow.Compass.row3",},compMacAndCharWindow.Compass.hbox)
+--Create labels for the compass
+compMacAndCharWindow.Compass.nw = Geyser.Label:new({ name = "compMacAndCharWindow.Compass.nw", },compMacAndCharWindow.Compass.row1)
+compMacAndCharWindow.Compass.w = Geyser.Label:new({ name = "compMacAndCharWindow.Compass.w", },compMacAndCharWindow.Compass.row1)
+compMacAndCharWindow.Compass.sw = Geyser.Label:new({ name = "compMacAndCharWindow.Compass.sw", },compMacAndCharWindow.Compass.row1)
+compMacAndCharWindow.Compass.n = Geyser.Label:new({ name = "compMacAndCharWindow.Compass.n", },compMacAndCharWindow.Compass.row2)
+compMacAndCharWindow.Compass.center = Geyser.VBox:new({ name = "compMacAndCharWindow.Compass.center", },compMacAndCharWindow.Compass.row2)
+compMacAndCharWindow.Compass.up = Geyser.Label:new({ name = "compMacAndCharWindow.Compass.up", },compMacAndCharWindow.Compass.center)
+compMacAndCharWindow.Compass.down = Geyser.Label:new({ name = "compMacAndCharWindow.Compass.down", },compMacAndCharWindow.Compass.center)
+compMacAndCharWindow.Compass.s = Geyser.Label:new({ name = "compMacAndCharWindow.Compass.s", },compMacAndCharWindow.Compass.row2)
+compMacAndCharWindow.Compass.ne = Geyser.Label:new({ name = "compMacAndCharWindow.Compass.ne", },compMacAndCharWindow.Compass.row3)
+compMacAndCharWindow.Compass.e = Geyser.Label:new({ name = "compMacAndCharWindow.Compass.e", },compMacAndCharWindow.Compass.row3)
+compMacAndCharWindow.Compass.se = Geyser.Label:new({ name = "compMacAndCharWindow.Compass.se", },compMacAndCharWindow.Compass.row3)
+compMacAndCharWindow.Compass.click = tecCompass.click --send the name of the 
+function compMacAndCharWindow.Compass.lit(name) --When a player can go in the direction, make the label an active image
+  if name == "up" or name == "down" then --if it is overlay for up or down label
+    compMacAndCharWindow.Compass[name]:setStyleSheet(tecCompass.styleSheetLitUpDown) --created a label with thick transparent border
+  else --if it is a direction other than up or down.
+    compMacAndCharWindow.Compass[name]:setStyleSheet([[background-color: "]]..tecSettings.compassDefaultHighlight..[[";]])
+  end --if name == "up" or name == "down"
+end --function compMacAndCharWindow.Compass.lit(name)
+--when the space should be unlit change it back to white.
+function compMacAndCharWindow.Compass.unlit(name) --When a player cannot go in the direction, make the label an active image
+  compMacAndCharWindow.Compass[name]:setStyleSheet([[background-color: "#00000000";]])
+end --function compMacAndCharWindow.Compass.unlit(name)
+for _,v in pairs(compMacAndCharWindow.Compass.dirs) do --loop through dirs table
+  SetTooltip(compMacAndCharWindow.Compass[v].name, "Go "..v.." ") --create hover tool tips
+  compMacAndCharWindow.Compass[v]:setStyleSheet([[background-color: "#00000000";]]) --blank the compass directions
+  compMacAndCharWindow.Compass[v]:setClickCallback("compMacAndCharWindow.Compass.click",v) --give each label an event to run the click function above.
+end --end loop through compMacAndCharWindow.Compass.dirs
+
+--create Macro
+compMacAndCharWindow.macroMenu = compMacAndCharWindow.macroMenu or {} --table to hold the windows variables
+compMacAndCharWindow.macroMenu.container = Geyser.Container:new({ name = "compMacAndCharWindow.Macros",    -- give it a unique name here
+  x="50%", y=0, width = "50%", height="100%", --position and size of container
+},compMacAndCharWindow.bottom)
+compMacAndCharWindow.macroMenu.back = Geyser.Label:new({ --Create a label that could be used as a background
+  name = "compMacAndCharWindow.macroMenu.back",
+  x = 0,y = 0, width = "100%", height = "100%" --Position and size of window
+  }, compMacAndCharWindow.macroMenu.container) --end of compMacAndCharWindow.macroMenu.back
+compMacAndCharWindow.macroMenu.back.styleSheet = [[border-image: url("]]..tecSettings.images["macroBackground"].image..[[");]]
+compMacAndCharWindow.macroMenu.back:setStyleSheet(compMacAndCharWindow.macroMenu.back.styleSheet)
+compMacAndCharWindow.macroMenu.box = Geyser.VBox:new({ --creates the verticle window breaks
+  name = "compMacAndCharWindow.macroMenu.box",
+  x = 0, y = 0, width = "100%", height = "100%"
+  }, compMacAndCharWindow.macroMenu.back) --end compMacAndCharWindow.macroMenu.box
+--Create the five rows of buttons
+compMacAndCharWindow.macroMenu.row1 = Geyser.HBox:new({
+  name = "compMacAndCharWindow.macroMenu.row1",
+  }, compMacAndCharWindow.macroMenu.box)
+compMacAndCharWindow.macroMenu.row2 = Geyser.HBox:new({
+  name = "compMacAndCharWindow.macroMenu.row2",
+  },compMacAndCharWindow.macroMenu.box)
+compMacAndCharWindow.macroMenu.row3 = Geyser.HBox:new({
+  name = "compMacAndCharWindow.macroMenu.row3",
+  }, compMacAndCharWindow.macroMenu.box)
+compMacAndCharWindow.macroMenu.row4 = Geyser.HBox:new({
+  name = "compMacAndCharWindow.macroMenu.row4",
+  }, compMacAndCharWindow.macroMenu.box)
+compMacAndCharWindow.macroMenu.row5 = Geyser.HBox:new({
+  name = "compMacAndCharWindow.macroMenu.row5",
+  }, compMacAndCharWindow.macroMenu.box)
+--create table to hold data for macro buttons.
+local tecMacroMappings = {
+  {
+    name = "fe1", --name of label that will be created. Will be passed to setClickCallBack function
+    label = "I", --What will be on the label
+    row = compMacAndCharWindow.macroMenu.row1, --the geyser box we want this label to go in
+  },
+  { name = "fe2", label = "II", row = compMacAndCharWindow.macroMenu.row1, },
+  { name = "fe3", label = "III", row = compMacAndCharWindow.macroMenu.row1, },
+  { name = "fe4", label = "IV", row = compMacAndCharWindow.macroMenu.row2, },
+  { name = "fe5", label = "V", row = compMacAndCharWindow.macroMenu.row2, },
+  { name = "fe6", label = "VI", row = compMacAndCharWindow.macroMenu.row2, },
+  { name = "fe7", label = "VII", row = compMacAndCharWindow.macroMenu.row3, },
+  { name = "fe8", label = "VIII", row = compMacAndCharWindow.macroMenu.row3, },
+  { name = "fe9", label = "IX", row = compMacAndCharWindow.macroMenu.row3, },
+  { name = "fe10", label = "X", row = compMacAndCharWindow.macroMenu.row4, },
+  { name = "fe11", label = "XI", row = compMacAndCharWindow.macroMenu.row4, },
+  { name = "fe12", label = "XII", row = compMacAndCharWindow.macroMenu.row4, },
+  { name = "fe13", label = "XIII", row = compMacAndCharWindow.macroMenu.row5, },
+  { name = "fe14", label = "XIV", row = compMacAndCharWindow.macroMenu.row5, },
+  { name = "fe15", label = "XV", row = compMacAndCharWindow.macroMenu.row5, },
+} --tecMacroMappings table
+--macroLabelStyle = labelsStyle --make a standard label for
+for _, tecMacroMap in pairs(tecMacroMappings) do --loop trough mappings table using data within
+  compMacAndCharWindow.macroMenu[tecMacroMap.name] = Geyser.Label:new({
+    name = "compMacAndCharWindow.macroMenu." .. tecMacroMap.name, --name label fe# so it is easy to pass
+    message = "&lt;center&gt;" .. tecMacroMap.label .. "&lt;/center&gt;", --puts roman numerals on label
+  }, tecMacroMap.row) --parent is gettings passed via mapping table row reference
+  local localMacroTooltip = "run macro "..tecMacroMap.name:match("(%d%d?)$").."  "
+  SetTooltip(compMacAndCharWindow.macroMenu[tecMacroMap.name].name, localMacroTooltip) --create hover tooltip
+  compMacAndCharWindow.macroMenu[tecMacroMap.name]:setClickCallback("onMacroClick", tecMacroMap.name)
+  compMacAndCharWindow.macroMenu[tecMacroMap.name].styleSheet = macroLabelStyle
+  compMacAndCharWindow.macroMenu[tecMacroMap.name]:setStyleSheet(macroLabelStyle)
+end --for pairs(tecMacroMappings)
+function onMacroClick(name) send(name, false) end --Create a click callback function
+
+--redraw windows within compMacAndCharWindow so they fill spaces properly
+function compMacAndCharWindow.redrawWindows()
+  local localcompMacAndCharWindowWidth = compMacAndCharWindow.back:get_width() --get width of entire Room, Compass &amp; Macro
+  local localcompMacAndCharWindowHeight = compMacAndCharWindow.back:get_height() --get width of entire Room, Compass &amp; Macro
+  local localCompassWidth = compMacAndCharWindow.Compass.window:get_width() --get the width of the window
+  local localCompassHeight = compMacAndCharWindow.Compass.window:get_height() --get the height of the window
+  local localcompMacAndCharWindowBottomHeight = compMacAndCharWindow.bottom:get_height() --get the height of the window
+  compMacAndCharWindow.lastResizeWidth = compMacAndCharWindow.lastResizeWidth or 0 --used to detect when a resize is needed
+  compMacAndCharWindow.lastResizeHeight = compMacAndCharWindow.lastResizeHeight or 0 --used to detect when a resize is needed
+  displayDebug("function compMacAndCharWindow.redrawWindows,\n\t"
+    .."CompassWidth "..localCompassWidth.." localCompassHeight "..localCompassHeight.." localcompMacAndCharWindowBottomHeight "..localcompMacAndCharWindowBottomHeight
+    .."\n\tlocalcompMacAndCharWindowWidth "..localcompMacAndCharWindowWidth.." compMacAndCharWindow.lastResizeWidth "..compMacAndCharWindow.lastResizeWidth
+    .."\n\tlocalcompMacAndCharWindowHeight "..localcompMacAndCharWindowHeight.." compMacAndCharWindow.lastResizeHeight "..compMacAndCharWindow.lastResizeHeight
+    .."\n")
+  --only run window resizing if it is needed.
+  if  localcompMacAndCharWindowWidth ~= compMacAndCharWindow.lastResizeWidth or  --if the compMacAndCharWindow has changed size since last run
+      localcompMacAndCharWindowHeight ~= compMacAndCharWindow.lastResizeHeight or --if the compMacAndCharWindow has changed size since last run
+      localCompassWidth ~= localCompassHeight then --if the compass is not square
+    -- Force the compass and macro bars to be 1/3 the height of the window.
+    local thirdHeight = localcompMacAndCharWindowHeight * .33
+    local twoThirdHeight = thirdHeight * 2
+    if localcompMacAndCharWindowBottomHeight ~= thirdHeight then
+      localcompMacAndCharWindowBottomHeight = thirdHeight
+    end  -- if localcompMacAndCharWindowBottomHeight &gt; thirdHeight then
+    -- Resize and move the bottom container holding the Macro and compass
+    compMacAndCharWindow.bottom:resize(localcompMacAndCharWindowBottomHeight, localcompMacAndCharWindowWidth)  -- resize the bottom pane to a 1/3 of the total window size
+    compMacAndCharWindow.bottom:move(0, twoThirdHeight )  -- Move the bottom to the bottom, rather than the middle.
+    localCompassHeight = localcompMacAndCharWindowBottomHeight --Record the height of the bottom of the Room, Compass &amp; Macro to resize compass with
+    -- Change the size of the compass, to keep it square
+    compMacAndCharWindow.Compass.window:resize(localCompassHeight, localCompassHeight) --make compass square, while widening it
+    localCompassWidth = localCompassHeight --make the width variable the same as height, used to resize macro bar.
+    -- Resize the macro bar
+    compMacAndCharWindow.macroMenu.container:move(localCompassWidth) --move the macro bar past the compass
+    compMacAndCharWindow.macroMenu.container:resize(localcompMacAndCharWindowWidth - localCompassWidth, thirdHeight) --changed the width to fill space to the right of the compass
+    -- Resize the room characters window
+    compMacAndCharWindow.roomCharacters.back:resize(localcompMacAndCharWindowWidth, twoThirdHeight)
+    -- Record the changes
+    compMacAndCharWindow.lastResizeWidth = localcompMacAndCharWindowWidth --record the current width, to only run resizing when needed
+    compMacAndCharWindow.lastResizeHeight = localcompMacAndCharWindowHeight --record the current height, to only run resizing when needed
+    displayDebug("Room, Compass &amp; Macro resize run.\n")
+  end --if not localcompMacAndCharWindowWidth == compMacAndCharWindow.lastResizeWidth or not localcompMacAndCharWindowHeight == compMacAndCharWindow.lastResizeHeight
+end --end function keep square.
+
+UIManagerRegisterWindow(compMacAndCharWindow.back) --send the window to the UI Manager</script>
+				<eventHandlerList />
+			</Script>
 		</ScriptGroup>
 		<ScriptGroup isActive="yes" isFolder="yes">
 			<name>Events</name>
@@ -14677,27 +16722,36 @@ UIManagerRegisterWindow(MultiWindow.back) --send the window to the UI Manager</s
 --If I Recall the last event would not occur.
 
 function guiChange()
-	setMainWindowAutoWrap() --adjusts word wrap for main window.
-	if getTECDisplayDebugMode() then geyserDebug() end --if displaydebug is on
+  setMainWindowAutoWrap() --adjusts word wrap for main window.
+  if getTECDisplayDebugMode() then geyserDebug() end --if displaydebug is on
   --only resize windows managed by UIManager if they are enabled
-	if UIManagerSettings[tecCompass.window.name] then --if window exists chek if it is enabled
+  if UIManagerSettings[tecCompass.window.name] then --if window exists chek if it is enabled
     if not UIManagerSettings[tecCompass.window.name].disabled then tecCompass.drawKeepSquare() end --Keep the windowed compass square
   end --if UIManagerSettings[tecCompass.window.name]
   if UIManagerSettings[MultiWindow.back.name] then --if window exists chek if it is enabled
     if not UIManagerSettings[MultiWindow.back.name].disabled then MultiWindow.redrawWindows() end--keep the compass in the multi window square
   end --if UIManagerSettings[MultiWindow.back.name]
   if UIManagerSettings[tecMap.name] then --if window exists chek if it is enabled
-	 if not UIManagerSettings[tecMap.name].disabled then tecMapdrawKeepSquare() end --resize map
+   if not UIManagerSettings[tecMap.name].disabled then tecMapdrawKeepSquare() end --resize map
   end --if UIManagerSettings[tecMap.name]
   if UIManagerSettings[tecComWindows.container.name] then --if window exists chek if it is enabled
-	 if not UIManagerSettings[tecComWindows.container.name].disabled then tecComWindowResize() end --resize commmunications window
+   if not UIManagerSettings[tecComWindows.container.name].disabled then tecComWindowResize() end --resize commmunications window
   end --if UIManagerSettings[tecComWindows.container.name]
   if UIManagerSettings[tecSettingsBar.name] then --if window exists chek if it is enabled
-	 if not UIManagerSettings[tecSettingsBar.name].disabled then tecSettingsWindowResize() end--resize the Room Character window now
+   if not UIManagerSettings[tecSettingsBar.name].disabled then tecSettingsWindowResize() end--resize the Room Character window now
   end --if UIManagerSettings[tecSettingsBar.name]
   if UIManagerSettings[status_bar.name] then --if window exists chek if it is enabled
-	 if not UIManagerSettings[status_bar.name].disabled then resizeStatusWindow() end--resize the status bar window
+   if not UIManagerSettings[status_bar.name].disabled then resizeStatusWindow() end--resize the status bar window
   end --if UIManagerSettings[status_bar]
+  if UIManagerSettings[intteruptsWindow.name] then --if window exists chek if it is enabled
+   if not UIManagerSettings[intteruptsWindow.name].disabled then interruptsWindowResize() end--resize the Room Character window now
+  end --if UIManagerSettings[intteruptsWindow.name]
+  if UIManagerSettings[automationWindow.name] then --if window exists chek if it is enabled
+   if not UIManagerSettings[automationWindow.name].disabled then automationWindowResize() end--resize the Room Character window now
+  end --if UIManagerSettings[intteruptsWindow.name]
+  if UIManagerSettings[compMacAndCharWindow.back.name] then --if window exists chek if it is enabled
+   if not UIManagerSettings[compMacAndCharWindow.back.name].disabled then compMacAndCharWindow.redrawWindows() end--resize the Room Character window now
+  end --if UIManagerSettings[intteruptsWindow.name]
 end --end function guiChange
 
 --whenever event sysWindowReizeEvent occurs run setMainWindowAutowrap.
@@ -14846,6 +16900,8 @@ end --if getHelpDevs()
 parthiaMap.config() --load default settings for mapping system
 parthiaMap.load() --load mapping data from file.
 
+parthiaAutomationLoad(displayToScreen)  -- Load automations data from file
+
 parthiaStopScripts(false) --make certain script triggers are not running on startup
 
 parthiaSetDiscordID() --inform discord what game the logged in player is playing.</script>
@@ -14853,10 +16909,21 @@ parthiaSetDiscordID() --inform discord what game the logged in player is playing
 				<Script isActive="yes" isFolder="no">
 					<name>UIManager</name>
 					<packageName></packageName>
-					<script>UIManagerFileLoad(true) --load display settings from file.
+					<script>--[[
+  This script is automatically called on application startup.
+  
+  It controls loading UI theme and settings from file or default settings if no file is in place.
+  It will refresh any text consoles.
+  Lastly it will check if scrolls bars should be enabled or disabled and control if they are shown.
+]]--
+
+UIManagerFileLoad(true) --load display settings from file.
 UIManagerSetTheme("PlayersTheme", false) --load windows into display
 tecRefreshSettingsWindow() --Refreshes text in settings window.
+refreshAutomationWindow()  -- refresh text in the Automation window
+refreshInterruptsWindow()  -- Refresh text in the interrupts window.
 tecResetRoomCharacterWindow() --fill room characters window with text
+
 
 --Enable or disable scroll bars. Dependant on user preference.
 tecSetScrollBars(tecSettings.showScrollBars, false)</script>

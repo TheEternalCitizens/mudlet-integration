@@ -250,9 +250,11 @@ for direction, show in string.gmatch( line, ",?(%a+),(%a+)" ) do
   
   if show == "show" then --if the direction should be shown.
     MultiWindow.Compass.lit(direction) --show the direction as active in the MultiWindow compass
+    compMacAndCharWindow.Compass.lit(direction)  -- Show the direction as active in the Room, Compass &amp; Macro window
     tecCompass.lit(direction) --show the direction as active in the standard tec compass
   else --if the compass direction should be inactive
     MultiWindow.Compass.unlit(direction) --show the direction as inactive in the MultiWindow compass
+    compMacAndCharWindow.Compass.unlit(direction)  -- Show the direction as inactive in the Room, Compass &amp; Macro window
     tecCompass.unlit(direction) --show the direction as inactive in the standard tec compass
   end --if show == "show"
 end --for string.gmatch( line, ",?(%a+),(%a+)" )</script>
@@ -596,14 +598,20 @@ elseif line:match("^%d+:") then --if line starts with "#: "
 		tecSettings.approachedCommandHelp[5],
 		tecSettings.approachedCommandHelp[6]}
     
-		--create a right clickable list with the characters full name.
-		hechoPopup(roomCharacters.rightConsole.name,
+    --create a right clickable list with the characters full name.
+    hechoPopup(roomCharacters.rightConsole.name,
       characterPrefix..tecSettings.ApproachedCharactersColor
       ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
       localApproachedCmdList,
       localApproachedCmdHelp, true)
     --create right clickable list for MultiWIndow roomCharacters console
     hechoPopup(MultiWindow.roomCharacters.rightConsole.name,
+      characterPrefix..tecSettings.ApproachedCharactersColor
+      ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
+      localApproachedCmdList,
+      localApproachedCmdHelp, true)
+    --create right clickable list for room compass and character console
+    hechoPopup(compMacAndCharWindow.roomCharacters.rightConsole.name,
       characterPrefix..tecSettings.ApproachedCharactersColor
       ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
       localApproachedCmdList,
@@ -637,25 +645,33 @@ elseif line:match("^%d+:") then --if line starts with "#: "
 		tecSettings.commandHelp[4],
 		tecSettings.commandHelp[5],
 		tecSettings.commandHelp[6]}
-		--characters that are not approached to the players
-		hechoPopup(roomCharacters.console.name,
+    --characters that are not approached to the players
+    hechoPopup(roomCharacters.console.name,
       characterPrefix..tecSettings.notApproachedCharacterColor
       ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
-		  localNotApproachedCmdList,
-		  localNotApproachedHelpList, true)
+      localNotApproachedCmdList,
+      localNotApproachedHelpList, true)
     hechoPopup(MultiWindow.roomCharacters.console.name,
       characterPrefix..tecSettings.notApproachedCharacterColor
       ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
-		  localNotApproachedCmdList,
-		  localNotApproachedHelpList, true)
+      localNotApproachedCmdList,
+      localNotApproachedHelpList, true)
+    hechoPopup(compMacAndCharWindow.roomCharacters.console.name,
+      characterPrefix..tecSettings.notApproachedCharacterColor
+      ..tecRoomObjects.characters[tecRoomObjects.lc].."_",
+      localNotApproachedCmdList,
+      localNotApproachedHelpList, true)
     
     --new line only the left consoles or approached consoles
     echoLeftRoomCharacterWindows("\n")
-	end --end if else characterEnaged == "("
+  end --end if else characterEnaged == "("
   
+  -- Check if any of the character consoles need a scroll bar
   tecScrollBarCheck(roomCharacters.console.name) --check if a scroll bar is needed.
   tecScrollBarCheck(MultiWindow.roomCharacters.console.name)
   tecScrollBarCheck(MultiWindow.roomCharacters.rightConsole.name)
+  tecScrollBarCheck(compMacAndCharWindow.roomCharacters.rightConsole.name)
+  tecScrollBarCheck(compMacAndCharWindow.roomCharacters.console.name)
   
 	--Delete main's line if we are not displaying it to screen
   if not tecRoomObjects.displayToScreen then deleteLine() end
@@ -753,7 +769,7 @@ elseif line == "&lt;hr&gt;" then
     disableTrigger("&lt;hr&gt;") --disable seporator trigger so it is not drawn
   end --if not statsFilter.displayToScreen
 elseif line == "&lt;/pre&gt;" then --end of stats command found.
-	setStatsCheckActive(false)--disable stats filter, it is done
+  setStatsCheckActive(false)--disable stats filter, it is done
   deleteLine() --Make is so line does not appear in main console.
 else --all other lines we will want to look for data to collect
   if line:match("^Name:") then --line starts with Name:
@@ -1150,8 +1166,8 @@ tecResetRoomCharacterWindow()
 tempTimer(.6,[[pecho("Please wait while parthia collects information about this character.")]]) --wait until after the notification message is displayed.
 parthiaPlayer.CurrentCharacter = { }
 local statsCollectionTimer = tempTimer(1.1, [[runStatsCollection(false)]])
-tempTimer(2.5, [[runSkillsCollection(false)]])
-tempTimer(3, [[pecho("Completed character information collection.\n")]])
+-- tempTimer(2.5, [[runSkillsCollection(false)]])
+tempTimer(2.1, [[pecho("Completed character information collection.\n")]])
 
 parthiaStopScripts() --stop all automation scripts</script>
 				<triggerType>0</triggerType>
@@ -1497,6 +1513,11 @@ deselect() --unselect line in main.
 
 if not filteredLine then filteredLine = "" end --if nothing was in main make filteredLine empty.
 --Without this you will receive errors that filteredLine is nil.
+
+-- send the not yet filtered text to the unfiltered text window if it is enabled.
+if unfilteredTextConsoleMode then
+  cecho("Parthia Unfiltered Text Console","\n"..filteredLine)
+end  -- if unfilteredTextConsoleMode then
 
 --Replaces what is in brackets with what is in quotes
 filteredLine = string.gsub(filteredLine, [[&amp;lt;]], "&lt;")
@@ -2102,7 +2123,7 @@ text to trigger on &lt;/font&gt;&lt;font color="#00CD20"&gt;[Success: 5, Roll: 7
 ]]--
 
 --if player has help devs or they are running the automation system.
-if getHelpDevs() or parthiaAutomationRunning then
+if getHelpDevs() or parthiaAutomationRunning or parthiaAutomationInterruptRunning then
   sortActions() --sort and collects actions into Help The Devs tables
 end --if getHelpDevs()</script>
 				<triggerType>0</triggerType>
@@ -2266,27 +2287,76 @@ end --if parthiaMap.getEnabled()
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>You are no longer busy.</name>
-				<script>--[[
+				<script> --[[
 Patter example: &lt;/font&gt;&lt;font color="#ff9b00"&gt;You are no longer busy.&lt;/font&gt;&lt;/font&gt;
-
-Triggers\Game Events\You are no longer busy.
-    Pattern: "&lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are no longer busy%.&lt;/font&gt;&lt;/font&gt;"
-    if parthiaAutomationRunning is truthy
-      Call Scripts\Game Commands\automation\parthiaAutomationCall()
-      
-      parthiaAutomationRunning = { groupName = groupName, groupRepeat = groupRepeat }
 ]]--
 
 -- Handle automation tasks.
 -- Check if automation is running
-if parthiaAutomationRunning then
+if parthiaAutomationRunning or parthiaAutomationInterruptRunning then
   debugToDisplay("pathiaAutomation trigger You are no longer busy called.")
-  groupName = parthiaAutomationRunning["groupName"]
-  -- Check if this automation is called off of a timer or this trigger
-  -- If seconds to wait for this automation group is 0, automation is called by this trigger.
-  if not parthiaToBoolean(tecSettings.automation[groupName][parthiaAutomationGroupPosition].secondsToWait) then
-    parthiaAutomationCall()  -- Call the automation handler
-  end  -- if not parthiaToBoolean(tecSettings.automation[groupName][parthiaAutomationGroupPosition].secondsToWait) then
+  
+  -- Set local variables this function will use.
+  local groupName = false
+  local groupRepeat = 1
+  local groupPosition = false
+  
+  -- An interrupt automation is running, it is the mmmain priority
+  if parthiaAutomationInterruptRunning then
+    
+    --collect group name and repeat from parthiaAutomationInterruptRunning
+    groupName = parthiaAutomationInterruptRunning
+    groupRepeat = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].interruptRepeat
+    --collecct group position from the global interrupt variable
+    groupPosition = parthiaAutomationInterruptGroupPosition
+    
+    -- if groupPosition is not yet set, collect it now.
+    if not groupPosition then
+    
+      --used to collect all keys in this automation group.
+      local automationGroupKeySet = {}
+      
+      -- Gather all the keys for the group and sort them.
+      for key, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName]) do
+        -- Do not insert pattern or interruptRepeat used on interrupt groups, only numrical keys
+        if tonumber(key) then
+          table.insert(automationGroupKeySet, key)
+        end  -- if tonumber(key) then
+      end -- for key, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]) do
+      
+      -- Sort the table 
+      table.sort(automationGroupKeySet)
+      
+      -- Returning the lowest element in the  automation group
+      groupPosition = automationGroupKeySet[1]
+      
+      debugToDisplay("'You are no longer busy.' trigger groupPosition false, collected position: "..groupPosition)
+    
+    end  -- if not groupPosition then
+    
+    -- Check if this interrupt is called off of a timer or this trigger
+    -- If automation trigger for this automation group is 0, automation is called by this trigger.
+    if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName][groupPosition].automationTrigger) then
+      parthiaAutomationCall()  -- Call the automation handler
+    end  -- if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName][groupPosition].automationTrigger) then
+    
+  -- a standard automation task is running
+  elseif parthiaAutomationRunning then
+    
+    -- collect group name and repeat from standard automation task
+    groupName = parthiaAutomationRunning["groupName"]
+    groupRepeat = parthiaAutomationRunning["groupRepeat"]
+    -- collect group position from the global variable
+    groupPosition = parthiaAutomationGroupPosition
+    
+    -- Check if this automation is called off of a timer or this trigger
+    -- If automation trigger for this automation group is 0, automation is called by this trigger.
+    if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].automationTrigger) then
+      parthiaAutomationCall()  -- Call the automation handler
+    end  -- if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].automationTrigger) then
+    
+  end -- if parthiaAutomationInterruptRunning then
+  
 end -- if parthiaAutomationRunning then</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>

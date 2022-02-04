@@ -11,7 +11,10 @@
 			<name>ctrl+r -&gt; Room Check</name>
 			<packageName></packageName>
 			<script>--Check room for characters and fill the room character window.
-runTECRoomObjectCheck()</script>
+runTECRoomObjectCheck()
+refreshInterruptsWindow()
+refreshAutomationWindow()
+tecRefreshSettingsWindow()</script>
 			<command></command>
 			<keyCode>82</keyCode>
 			<keyModifier>67108864</keyModifier>
