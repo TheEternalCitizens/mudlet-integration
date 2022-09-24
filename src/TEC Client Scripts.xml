@@ -9398,7 +9398,9 @@ How automation interupts are handled-------------------------------------------
           Than calls the first command in the interrupt group.
           
   Interrupt stop logic:
-    parthiaAutomationCall
+    parthiaInterruptStop, called flags interrupt variables accordingly.
+      If automation was running previous to the interrupt parthiaInterruptStop flags automation variables to resume.
+      If automation should be resumed after the interrupt is stopped parthiaInterruptStop returns True
   
   Interrupt Disable Logic:
     parthiaAutomationInterruptToggleState is called.
@@ -10070,13 +10072,25 @@ function parthiaAutomationCall()
   if parthiaToBoolean(groupRepeat) then  -- Only check if a group repeat was specified.
     if iterationCounter &gt;= tonumber(groupRepeat) then  -- this has iterated more than group repeat specified
       if automationType == "automationInterrupt" then
+        
         pecho("\nInterrupt "..groupName.." completed.\n")
-        parthiaAutomationInterruptStop()
+        
+        -- Stop the interrupt system
+        local continueAutomation = parthiaAutomationInterruptStop()
+        
+        -- 
+        if not continueAutomation then
+        
+          return true
+        
+        end  -- if not continueAutomation
+        
+      -- This is a standard automation task.
       else
         pecho("\nAutomation task "..groupName.." complete.\n")
-        parthiaAutomationStop()  -- Stop automation.
+        parthiaAutomationStop()  -- Stop automation loop.
+        return true  -- stop current automation call also.
       end -- if automationType == "automationInterrupt" then
-      return true  -- stop current automation call also.
     end  -- if parthiaAutomationIterationCounter &gt; tonumber(groupRepeat) then
   end -- if parthiaToBoolean(groupRepeat) then
   
@@ -10746,6 +10760,9 @@ end  -- function parthiaCreateAutomationRegexTrigger(pattern)</script>
 						<packageName></packageName>
 						<script>--[[
 Stop the currently running interrupt automation task.
+
+Returns:
+  True if automation should resume after the interrupt is stopped.
 ]]--
 
 function parthiaAutomationInterruptStop()
@@ -10756,13 +10773,21 @@ function parthiaAutomationInterruptStop()
   
   -- if an automation task was paused, unpause it now.
   if parthiaAutomationPaused then
+    
+    --  Set the automation variables back to running state.
     parthiaAutomationRunning = parthiaAutomationPaused
     parthiaAutomationPaused = false
+  
+    debugToDisplay("parthiaAutomationInterruptStop completed succesfully, automation resume return true sent.")
+    
+    -- Return true, showing that standard automation should be called.
+    return true
+    
   end --if parthiaAutomationPaused then
   
   debugToDisplay("parthiaAutomationInterruptStop completed succesfully.")
   
-  return true
+  return false
   
 end -- function parthiaAutomationInterruptStop()</script>
 						<eventHandlerList />
