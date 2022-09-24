@@ -9515,6 +9515,10 @@ Track command success----------------------------------------------------------
   Triggers\Game Events\player involved in an action
     Triggers when player is involved in an action
     calls Scripts\Actions\sortActions()
+  Triggers\Game Evenets\You will be busy for
+    Sets parthiaLastCommandSuccess to false. To not that the command did not run.
+  Triggers\Game Evenets\You are in the middle of something.
+    Sets parthiaLastCommandSuccess to false. To not that the command did not run.
   Scripts\Actions\sortActions() 
       Determins if the action is combat or non combat than calls
       If it is a combat action: Scripts\Actions\sortCombatActions() is called
