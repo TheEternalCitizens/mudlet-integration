@@ -2030,6 +2030,13 @@ parthiaStopScripts(true) --stop all automation scripts, display message to scree
 			<packageName></packageName>
 			<regex>^(?i)stop\s*$</regex>
 		</Alias>
+		<Alias isActive="yes" isFolder="no">
+			<name>All Commands</name>
+			<script>-- This triggers on any command.</script>
+			<command></command>
+			<packageName></packageName>
+			<regex></regex>
+		</Alias>
 	</AliasPackage>
 	<ActionPackage />
 	<ScriptPackage />

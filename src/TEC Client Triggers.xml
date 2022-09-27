@@ -2148,7 +2148,17 @@ end --if getHelpDevs()</script>
 				<script>if parthiaMap.getEnabled() then --if player is using parthiaMap
   parthiaMap.directionWalked = false --direction the player has walked
   mapDebug("trigger You are in the middle of something., possible failed movement found set parthiaMap.directionWalked to false.")
-end --if parthiaMap.getEnabled()</script>
+end --if parthiaMap.getEnabled()
+
+-- If an interrupt is currently running and the interrupt has been set to repeat if it fails.
+-- Tell the system the last interrupt command failed.
+local groupName = parthiaAutomationInterruptRunning
+local groupPosition = parthiaAutomationInterruptGroupPosition
+local repeatInterruptOnFail = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName][groupPosition].repeatOnFail
+if parthiaAutomationInterruptRunning and repeatInterruptOnFail then
+  -- Tell the interrupt system that the last command failed.
+  parthiaInterruptCommandSuccess = false
+end  -- if parthiaAutomationInterruptRunning</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -2164,6 +2174,39 @@ end --if parthiaMap.getEnabled()</script>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>3</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>You will be busy for</name>
+				<script>if parthiaMap.getEnabled() then --if player is using parthiaMap
+  parthiaMap.directionWalked = false --direction the player has walked
+  mapDebug("trigger You are in the middle of something., possible failed movement found set parthiaMap.directionWalked to false.")
+end --if parthiaMap.getEnabled()
+
+-- If an interrupt is currently running and the interrupt has been set to repeat if it fails.
+-- Tell the system the last interrupt command failed.
+local groupName = parthiaAutomationInterruptRunning
+local groupPosition = parthiaAutomationInterruptGroupPosition
+local repeatInterruptOnFail = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName][groupPosition].repeatOnFail
+if parthiaAutomationInterruptRunning and repeatInterruptOnFail then
+  -- Tell the interrupt system that the last command failed.
+  parthiaInterruptCommandSuccess = false
+end  -- if parthiaAutomationInterruptRunning</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>You will be busy for</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">

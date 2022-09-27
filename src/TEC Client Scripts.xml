@@ -9412,6 +9412,22 @@ How automation interupts are handled-------------------------------------------
       Check if the interrupt is currently active
         if yes turn it off with parthiaAutomationInterruptToggleState
       parthiaAutomationShowGroups() is called with the group name and deletion switch. Deleting the group
+      
+  Intterupt call again if character was busy logic:
+    Variable parthiaInterruptCommandSuccess is false if the `you are busy` messages appear.
+	    This variable informs parthia that it needs to run the interrupt again.
+    Triggers\Game Evenets\You will be busy for
+      If an interrupt is running and the interrupt command is set to repeat on command failure
+        Sets parthiaInterruptCommandSuccess to false. To note that the interrupt command did not run.
+    Triggers\Game Evenets\You are in the middle of something.
+      If an interrupt is running and the interrupt command is set to repeat on command failure
+        Sets parthiaInterruptCommandSuccess to false. To note that the interrupt command did not run.
+    scripts\automation\parthiaAutomationInterruptStop
+      Sets parthiaInterruptCommandSuccess to true, the system assumes the command was a success.
+    scripts\automation\parthiaAutomationInterruptStart
+      Sets parthiaInterruptCommandSuccess to true, the system assumes the command was a success.
+    script\automation\parthiaAutomationCall
+      Sets parthiaInterruptCommandSuccess to true, the system assumes the command was a success.
   
   Aliases
     create an interupt group.
@@ -9515,10 +9531,6 @@ Track command success----------------------------------------------------------
   Triggers\Game Events\player involved in an action
     Triggers when player is involved in an action
     calls Scripts\Actions\sortActions()
-  Triggers\Game Evenets\You will be busy for
-    Sets parthiaLastCommandSuccess to false. To not that the command did not run.
-  Triggers\Game Evenets\You are in the middle of something.
-    Sets parthiaLastCommandSuccess to false. To not that the command did not run.
   Scripts\Actions\sortActions() 
       Determins if the action is combat or non combat than calls
       If it is a combat action: Scripts\Actions\sortCombatActions() is called
@@ -10063,7 +10075,12 @@ function parthiaAutomationCall()
   
   -- Update the iteration counter
   if parthiaAutomationInterruptRunning then
-    iterationCounter = parthiaAutomationInterruptIterationCounter
+    --Increase iterator if the interrupt command was a success.
+    if parthiaInterruptCommandSuccess then
+      iterationCounter = parthiaAutomationInterruptIterationCounter
+    end -- parthiaInterruptCommandSuccess
+    -- set parthiaInterruptCommandSuccess to default state of true
+    parthiaInterruptCommandSuccess = true
   else  -- this is a standard automation task collect from that table instead.
     iterationCounter = parthiaAutomationIterationCounter
   end -- if parthiaAutomationInterruptRunning then
@@ -10781,6 +10798,9 @@ function parthiaAutomationInterruptStop()
     --  Set the automation variables back to running state.
     parthiaAutomationRunning = parthiaAutomationPaused
     parthiaAutomationPaused = false
+    
+    -- set arthiaInterruptCommandSuccess to default state of true
+    arthiaInterruptCommandSuccess = true
   
     debugToDisplay("parthiaAutomationInterruptStop completed succesfully, automation resume return true sent.")
     
@@ -10815,6 +10835,9 @@ function parthiaAutomationInterruptStart(groupName)
   
   --Setting automation first run to true, so we can iterate through the automation group properly
   parthiaAutomationFirstRun = true
+  
+  -- Set arthiaInterruptCommandSuccess to default state of true
+  arthiaInterruptCommandSuccess = true
   
   -- Setting the interrupt running variable, to keep track of this interrupt
   parthiaAutomationInterruptRunning = groupName
