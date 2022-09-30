@@ -10093,19 +10093,22 @@ function parthiaAutomationCall()
   if parthiaToBoolean(groupRepeat) then  -- Only check if a group repeat was specified.
     if iterationCounter &gt;= tonumber(groupRepeat) then  -- this has iterated more than group repeat specified
       if automationType == "automationInterrupt" then
-        
         pecho("\nInterrupt "..groupName.." completed.\n")
-        
         -- Stop the interrupt system
         local continueAutomation = parthiaAutomationInterruptStop()
-        
-        -- 
+        -- There is no need to continue automation so stop now
         if not continueAutomation then
-        
           return true
-        
         end  -- if not continueAutomation
-        
+        -- Since automation needs to continue after this. Gather data from the running automation
+        -- Get required variables for this function.  
+        groupName = parthiaAutomationRunning["groupName"]  -- the name of this automation group
+        groupRepeat = parthiaAutomationRunning["groupRepeat"]  -- How many times this group automation should repeat
+        automationType = "automation"  -- This is a standard automation task.
+        -- setting this now, incase the previous task should repeat.
+        groupPosition = parthiaAutomationGroupPosition
+        -- How many times this automation group has repeated
+        iterationCounter = parthiaAutomationIterationCounter
       -- This is a standard automation task.
       else
         pecho("\nAutomation task "..groupName.." complete.\n")
@@ -12009,6 +12012,12 @@ end --function sortCombatActions(stringToCheck)</script>
 end --function sortNonCombatActions</script>
 						<eventHandlerList />
 					</Script>
+				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>CustomCollection</name>
+					<packageName></packageName>
+					<script></script>
+					<eventHandlerList />
 				</ScriptGroup>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
