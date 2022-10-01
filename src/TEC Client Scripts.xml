@@ -527,6 +527,8 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   interruptDataFolder = getMudletHomeDir().."\/Interrupt Data\/"
   
   unfilteredTextConsoleMode = false  -- a snap out console window ( userWindow ) that shows unfiltered text from TEC
+  
+  parthiaCollect = {}  -- Used to hold data functions other misc for the collection system.
 
   if displayToScreen then pecho("Parthia settings set to default.\n") end
 
@@ -11461,9 +11463,9 @@ Commands to assist with data collection.
 
 Useage:
   `parthia collect NAME = REGEXSTRING`: To do a standard data collection.
-  `parthia collecttime NAME = REGEXSTRING`: Collects line with the REGEXSTRING in it.
-    With `=#` at the end. Where the number is the number of seconds it took for `You are no longer busy`
-    to appear after the string was found.
+  `parthia collecttime NAME = REGEXSTRING~0 OR REGEXSTRING`: Collects line with the first REGEXSTRING in it.
+    With `=#` at the end. Where the number is the number of seconds it took for the second regexstring to appear
+    The ~0, means it will time until the `You are no longer busy.` message appears, rather than the second regex string
   `parthia collect NAME = export`: to export to a directory on the computer.
   `parthia collect open export`: to open the export directory.
     
@@ -11474,10 +11476,29 @@ Desired functions:
     The line must collect to a table that matches the same of the collection.
   Have ability to collect the time. Than time when 'You are no longer busy.' appears.
   Has to export to a file.
+  Has to have a clickable interface like parthia automation
     
 
 ]]--</script>
 					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaCollect.CreateCollection()</name>
+						<packageName></packageName>
+						<script>--[[
+
+  Creates the data store for a collection.
+
+]]--
+
+function parthiaCollect.CreateCollection(name, timed)
+
+  --name, is the name of the collection
+  --timed, is if the collection should record how long before a second message appears
+
+
+end  -- function parthiaCollect.CreateCollection</script>
+						<eventHandlerList />
+					</Script>
 				</ScriptGroup>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
