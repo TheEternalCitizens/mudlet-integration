@@ -11452,6 +11452,33 @@ end  -- function parthiaAutomationCleanRegExTriggers()</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>collect</name>
+					<packageName></packageName>
+					<script>--[[
+
+Commands to assist with data collection.
+
+Useage:
+  `parthia collect NAME = REGEXSTRING`: To do a standard data collection.
+  `parthia collecttime NAME = REGEXSTRING`: Collects line with the REGEXSTRING in it.
+    With `=#` at the end. Where the number is the number of seconds it took for `You are no longer busy`
+    to appear after the string was found.
+  `parthia collect NAME = export`: to export to a directory on the computer.
+  `parthia collect open export`: to open the export directory.
+    
+    
+
+Desired functions:
+  Collect an entire line when a regex string is found in it.
+    The line must collect to a table that matches the same of the collection.
+  Have ability to collect the time. Than time when 'You are no longer busy.' appears.
+  Has to export to a file.
+    
+
+]]--</script>
+					<eventHandlerList />
+				</ScriptGroup>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>data collection</name>
@@ -12012,12 +12039,6 @@ end --function sortCombatActions(stringToCheck)</script>
 end --function sortNonCombatActions</script>
 						<eventHandlerList />
 					</Script>
-				</ScriptGroup>
-				<ScriptGroup isActive="yes" isFolder="yes">
-					<name>CustomCollection</name>
-					<packageName></packageName>
-					<script></script>
-					<eventHandlerList />
 				</ScriptGroup>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
