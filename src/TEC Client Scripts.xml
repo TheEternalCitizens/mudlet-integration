@@ -11478,11 +11478,21 @@ Desired functions:
   Has to export to a file.
   Has to have a clickable interface like parthia automation
     
+    
+Outline
+  parthiaCollect, table to save all the collection functions and data.
+  parthiaCollect.collections, table to save all the data being collected
+    parthiaCollect.collections[parthiaPlayer.CurrentCharacter.name], a table to store collections for a username
+      collections[name].collectPattern, the regex pattern that when found informs mudlet to collect the line.
+      collections[name].endPattern, false if no timer, 0 if timer end is `no longer busy`
+        a string for a regex pattern end
+  parthiaColllect.UpdateCollection, function to create or update collections on a player.
+    
 
 ]]--</script>
 					<eventHandlerList />
 					<Script isActive="yes" isFolder="no">
-						<name>parthiaCollect.CreateCollection()</name>
+						<name>parthiaCollect.UpdateCollection()</name>
 						<packageName></packageName>
 						<script>--[[
 
@@ -11490,13 +11500,19 @@ Desired functions:
 
 ]]--
 
-function parthiaCollect.CreateCollection(name, timed)
+function parthiaCollect.UpdateCollection(name, collectPattern, endPattern)
 
-  --name, is the name of the collection
-  --timed, is if the collection should record how long before a second message appears
+  --name, is the name of the collection.
+  --collectPattern, the regex pattern that determins the line to collect.
+  --endPattern, when to end timing collection.
+  
+  -- If endPattern is 0 or a string, this is a timed collection and a timer will need to be created.
+  local timed
 
+  --if the collection does not already exist. Create it now.
+  
 
-end  -- function parthiaCollect.CreateCollection</script>
+end  -- function parthiaCollect.UpdateCollection</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
