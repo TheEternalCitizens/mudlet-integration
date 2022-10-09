@@ -10206,6 +10206,7 @@ function parthiaAutomationStop(displayToScreen)
   parthiaAutomationFirstRun = true
   parthiaLastCommandSuccess = false
   parthiaAutomationRepeatCmdOnFailure = false
+  parthiaAutomationPaused = false
   
   -- Stop any running interrupts
   parthiaAutomationInterruptStop()
@@ -12226,7 +12227,7 @@ function parthiaStopScripts(displayToScreen)
   if parthiaGetWaitForDrover() then parthiaSetWaitForDrover(false, displayToScreen) end --if running, disable waiting for drover script
   
   -- stop automation scripts
-  if parthiaAutomationRunning then
+  if parthiaAutomationRunning or parthiaAutomationPaused or parthiaAutomationInterruptRunning then
     parthiaAutomationStop(displayToScreen)
   end -- if parthiaAutomationRunning then
 
