@@ -2143,7 +2143,7 @@ end --if getHelpDevs()</script>
 					<integer>0</integer>
 				</regexCodePropertyList>
 			</Trigger>
-			<Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>You are in the middle of something.</name>
 				<script>if parthiaMap.getEnabled() then --if player is using parthiaMap
   parthiaMap.directionWalked = false --direction the player has walked
@@ -2492,7 +2492,12 @@ end --if parthiaMap.getEnabled()</script>
 			<regexCodePropertyList />
 			<TriggerGroup isActive="no" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>Courses 4 Part</name>
-				<script>if line:match([[&lt;/font&gt;&lt;font color=%"#%x+%"&gt;You are on a wide, grassy field. Little divots across the turf indicate that one or several horses have run across it at some point, perhaps in cavalry practice. The short grass is barely two inches high, and looks to be meticulously kept that way. Jutting from the ground is a brightly glowing lantern hanging from a pole. &lt;/font&gt;]]) then
+				<script>--[[
+Old style no color in room push
+&lt;/font&gt;You see a small yard enclosed within high, thick brick walls and without vegetation. The floor is completely covered in fine sand. The ceiling is open to the elements.  &lt;/font&gt;
+]]--
+
+if line:match([[&lt;/font&gt;.*You are on a wide, grassy field. Little divots across the turf indicate that one or several horses have run across it at some point, perhaps in cavalry practice. The short grass is barely two inches high, and looks to be meticulously kept that way. Jutting from the ground is a brightly glowing lantern hanging from a pole. &lt;/font&gt;]]) then
   if courses.lookRan then 
     tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go south")]])
@@ -2515,11 +2520,11 @@ elseif line:match("^You have a feeling this course has no more to offer you at t
 elseif line:match("^You must be standing.$") then
   deleteLine() --remove line from main console. line variable remains unchanged.
   tempTimer(1, [[send("stand")]])
-elseif line:match("&lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are no longer busy%.&lt;/font&gt;&lt;/font&gt;") then
+elseif line:match("&lt;/font&gt;.*You are no longer busy%.&lt;/font&gt;&lt;/font&gt;") then
   tempTimer(1, [[send("go south")]])
 elseif line:match("^You arrive at a mud pit. ") then
   tempTimer(1, [[send("jump rope")]])
-elseif line:match([[   &lt;/font&gt;&lt;font color=%"#%x+%"&gt;You approach the start of a training course. This challenge is a muddy pit with a beam erected over it. Swinging from the beam is a muddy rope. It looks as though you have to jump at the rope to swing across the pit.  &lt;/font&gt;]]) then
+elseif line:match([[   &lt;/font&gt;.*You approach the start of a training course. This challenge is a muddy pit with a beam erected over it. Swinging from the beam is a muddy rope. It looks as though you have to jump at the rope to swing across the pit.  &lt;/font&gt;]]) then
   if courses.lookRan then
     tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("jump rope")]])
@@ -2528,7 +2533,7 @@ elseif line:match([[   &lt;/font&gt;&lt;font color=%"#%x+%"&gt;You approach the 
   end
 elseif line:match([[^You arrive at a path through swinging weights. ]]) then
   tempTimer(1, [[send("go path")]])
-elseif line:match([[&lt;/font&gt;&lt;font color=%"#%x+%"&gt;This is the second test on this training course. Here you must test your agility by going along a path that has heavy bags of sand swinging across it. The object is to not get hit.  &lt;/font&gt;$]]) then
+elseif line:match([[&lt;/font&gt;.*This is the second test on this training course. Here you must test your agility by going along a path that has heavy bags of sand swinging across it. The object is to not get hit.  &lt;/font&gt;$]]) then
   if courses.lookRan then
     tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go path")]])
@@ -2537,7 +2542,7 @@ elseif line:match([[&lt;/font&gt;&lt;font color=%"#%x+%"&gt;This is the second t
   end --if courses.lookRan
 elseif line:match([[^You arrive at a circular track. ]]) then
   tempTimer(1, [[send("go track")]])
-elseif line:match([[&lt;/font&gt;&lt;font color=%"#%x+%"&gt;This third training area involves a circular track that has a pole spinning around it. You must go along the track, running laps and stay in front of the pole or it will knock you flat.  &lt;/font&gt;$]]) then
+elseif line:match([[&lt;/font&gt;.*This third training area involves a circular track that has a pole spinning around it. You must go along the track, running laps and stay in front of the pole or it will knock you flat.  &lt;/font&gt;$]]) then
   if courses.lookRan then
     tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go track")]])
@@ -2546,7 +2551,7 @@ elseif line:match([[&lt;/font&gt;&lt;font color=%"#%x+%"&gt;This third training 
   end --if courses.lookRan
 elseif line:match([[^You arrive at a bed of hot coals. ]]) then
   tempTimer(1, [[send("go coal")]])
-elseif line:match([[&lt;/font&gt;&lt;font color=%"#%x+%"&gt;This place is the last test on this course. You must prove your willpower by walking across the bed of hot coals.  &lt;/font&gt;$]]) then
+elseif line:match([[&lt;/font&gt;.*This place is the last test on this course. You must prove your willpower by walking across the bed of hot coals.  &lt;/font&gt;$]]) then
   if courses.lookRan then
     tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go coal")]])
@@ -2602,11 +2607,11 @@ elseif line:match("^You have a feeling this course has no more to offer you at t
 elseif line:match("^You must be standing.$") then
   deleteLine() --remove line from main console. line variable remains unchanged.
   tempTimer(1, [[send("stand")]])
-elseif line:match("&lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are no longer busy%.&lt;/font&gt;&lt;/font&gt;") then
+elseif line:match("&lt;/font&gt;.*You are no longer busy%.&lt;/font&gt;&lt;/font&gt;") then
   tempTimer(1, [[send("go east")]])
 elseif line:match("^You arrive at a climbing wall. ") then
   tempTimer(1, [[send("climb rope")]])
-elseif line:match("&lt;/font&gt;&lt;font color=\"#%x+\"&gt;This is the first part of this training course. There is a tall wall here. The wall has a rope attached to it and the only way to proceed is to climb the rope.  &lt;/font&gt;$") then
+elseif line:match("&lt;/font&gt;.*This is the first part of this training course. There is a tall wall here. The wall has a rope attached to it and the only way to proceed is to climb the rope.  &lt;/font&gt;$") then
   if courses.lookRan or courses.notFourPart then
     tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("climb rope")]])
@@ -2615,7 +2620,7 @@ elseif line:match("&lt;/font&gt;&lt;font color=\"#%x+\"&gt;This is the first par
   end --if courses.lookRan
 elseif line:match("^You arrive at a pool. ") then
   tempTimer(1, [[send("go plank")]])
-elseif line:match("&lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are at the second part of this training course. There is a pool here with several planks across it. You must be perceptive and go across the one that doesn't swivel.  &lt;/font&gt;$") then
+elseif line:match("&lt;/font&gt;.*You are at the second part of this training course. There is a pool here with several planks across it. You must be perceptive and go across the one that doesn't swivel.  &lt;/font&gt;$") then
   if courses.lookRan or courses.notFourPart then 
     tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go plank")]])
@@ -2624,7 +2629,7 @@ elseif line:match("&lt;/font&gt;&lt;font color=\"#%x+\"&gt;You are at the second
   end --if courses.lookRan
 elseif line:match("^You arrive at a dropping pole. ") then
   tempTimer(1, [[send("go path")]])
-elseif line:match("&lt;/font&gt;&lt;font color=\"#%x+\"&gt;This is the last obstacle in this section of the training field. Before you is a path which goes underneath a rapidly descending beam. You need to run along the path and use your speed to get under the beam before it hits you.  &lt;/font&gt;$") then
+elseif line:match("&lt;/font&gt;.*This is the last obstacle in this section of the training field. Before you is a path which goes underneath a rapidly descending beam. You need to run along the path and use your speed to get under the beam before it hits you.  &lt;/font&gt;$") then
   if courses.lookRan or courses.notFourPart then
     tempTimer(.25, [[pecho("You begin to run the course.\nType stop to stop running courses.\n")]])
     tempTimer(1, [[send("go path")]])
