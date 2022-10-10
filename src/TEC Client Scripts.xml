@@ -7,6 +7,32 @@
 	<ActionPackage />
 	<ScriptPackage>
 		<Script isActive="yes" isFolder="no">
+			<name>ReleaseNotes</name>
+			<packageName></packageName>
+			<script>--[[
+
+Winter 2022 - 2023
+
+  Minor bugfix: characters completing an interrupt would not automatically resume their last running automation.
+  
+  Minor bugfix: players running very old accounts that do not have the colored text patterns sent out for all standard room messages could not use the run courses command. This has been fixed.
+  
+  Improvement: Made the choice to have the stop command stop all automation types that are currently running.
+  
+  Improvement: When clicking the create an interrupt or create an automation command the messages have been made consideraly shorted. So people may actually read them now.
+  
+Not completed yet:
+
+  Major improvement: In hunting grounds that have a single entry and exit point. Add the ability for Parthia Maps to automatically move to the top of its tab. It displays the current hunting ground you are on. Though with an image that looks like an over the top view of the hunting ground. As you move it tracks movement as standard mudlet mapping feature does. Intended for beginer hunting grounds for now. Could add features like fog of war later.
+
+  Improvement: Add automations and interrupts to their data folders. Allowing for prepackaged automations that people can import directly on installation.
+
+  Major improvement: add the ability to collect game data via regex triggers. For example when an attack is dodged, you could record each attack of the desired type ( when it was dodged ) and review what dodge dodged it. You could record stat improvements. Gleams. Really endless options. Just restricted to regex triggers. For text should fit anyones needs.
+
+]]--</script>
+			<eventHandlerList />
+		</Script>
+		<Script isActive="yes" isFolder="no">
 			<name>fuzzyBoolean(bool)</name>
 			<packageName></packageName>
 			<script>-- Provided by demonnic
