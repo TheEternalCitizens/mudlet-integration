@@ -7367,7 +7367,7 @@ Handles refreshing the text in the interrupts window.
     
     cechoLink("automationWindowConsole",
       "&lt;:"..tecSettings.helpHighlightColor.."&gt;create an automation\n\n", 
-      [[parthiaAutomationUpdateHelp()]],
+      [[parthiaAutomationUpdateHelpBrief()]],
       "parthia automation groups", true)
       
     cechoLink("automationWindowConsole",
@@ -9749,7 +9749,7 @@ function parthiaAutomationUpdateHelp(automationType)
   
   pecho("For a tutorial video on making an Automation Group go to ")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/rCHHD866J3I\n\n", 
-    [[openUrl("https://www.youtube.com/watch?v=rCHHD866J3I&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps&amp;index=2")]], 
+    [[parthiaAutomationUpdateHelp("automation")]], 
     "youtube parthia automation tutorial", true)
   
   pecho("Command Format:\n")
@@ -9781,7 +9781,31 @@ function parthiaAutomationTriggerHelp()
     [[openUrl("https://www.youtube.com/watch?v=JVsgRNT6YLo&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps&amp;index=4")]], 
     "youtube parthia automation tutorial", true)
   
-end -- function parthiaAutomationTriggerHelp()</script>
+end -- function parthiaAutomationTriggerHelp()
+
+
+function parthiaAutomationUpdateHelpBrief()
+
+  automationType = automationType or "automation"
+  -- parthia automation [group name], [position number] = [command], [seconds or 0], [repeat on fail]
+  
+  pecho("\n\nAutomation creation tutorial options:\n\n")
+
+  pecho("\tFor a text tutorial on making an Automation Group click or enter ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation update\n\n", 
+    [[parthiaAutomationUpdateHelp("automation")]], 
+    "text tutorial on creating an automation", true)
+  
+  pecho("For a tutorial video on making an Automation Group go to ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/rCHHD866J3I\n\n", 
+    [[openUrl("https://www.youtube.com/watch?v=rCHHD866J3I&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps&amp;index=2")]], 
+    "youtube parthia automation tutorial", true)
+  
+  pecho("Command Format:\n")
+  pecho("parthia "..automationType.." [group name], [position number] = [command], [repeat on fail], [insert] &amp; [trigger]\n")
+  printCmdLine("parthia "..automationType.." replace_with_your_group, 1 = replace_with_your_command, 0, 0 &amp; 0")
+
+end -- function parthiaAutomationUpdateHelp()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
@@ -9913,7 +9937,7 @@ function parthiaInterruptCreateHelpBrief()
 
   pecho("\nInterrupt Creation tutorial options:\n\n")
 
-  pecho("\n\tFor a text tutorial click or enter ")
+  pecho("\tFor a text tutorial click or enter ")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt create\n\n", 
     [[parthiaInterruptCreateHelp()]], 
     "interrupt creation text tutorial", true)
