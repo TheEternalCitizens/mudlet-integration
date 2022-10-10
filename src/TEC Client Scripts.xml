@@ -7274,7 +7274,7 @@ Handles refreshing the text in the interrupts window.
     
     cechoLink("interruptsWindowConsole",
       "&lt;:"..tecSettings.helpHighlightColor.."&gt;create an interrupt\n\n", 
-      [[parthiaInterruptCreateHelp()]],
+      [[parthiaInterruptCreateHelpBrief()]],
       "parthia automation groups", true)
       
     cechoLink("interruptsWindowConsole",
@@ -9906,7 +9906,28 @@ function parthiaInterruptCreateHelp()
   pecho("parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]\n")
   printCmdLine("parthia interrupt replace_with_your_group, 1, trigger_when_text_is_received~ 0")
   
-end  -- function parthiaInterruptCreateHelp()</script>
+end  -- function parthiaInterruptCreateHelp()
+
+
+function parthiaInterruptCreateHelpBrief()
+
+  pecho("\nInterrupt Creation tutorial options:\n\n")
+
+  pecho("\n\tFor a text tutorial click or enter ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt create\n\n", 
+    [[parthiaInterruptCreateHelp()]], 
+    "interrupt creation text tutorial", true)
+  
+  pecho("\n\tFor a tutorial video on making an Interrupt and Interrupt Automation Group go to ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/8n9vycwod1U\n\n", 
+    [[openUrl("https://youtu.be/8n9vycwod1U")]], 
+    "youtube parthia automation tutorial", true)
+  
+  pecho("Command Format:\n\n")
+  pecho("\tparthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]\n")
+  printCmdLine("parthia interrupt replace_with_your_group, 1, trigger_when_text_is_received~ 0")
+  
+end  -- parthiaInterruptCreateHelpbrief()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
