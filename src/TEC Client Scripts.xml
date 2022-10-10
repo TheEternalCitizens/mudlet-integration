@@ -9414,22 +9414,6 @@ How automation interupts are handled-------------------------------------------
       Check if the interrupt is currently active
         if yes turn it off with parthiaAutomationInterruptToggleState
       parthiaAutomationShowGroups() is called with the group name and deletion switch. Deleting the group
-      
-  Intterupt call again if character was busy logic:
-    Variable parthiaInterruptCommandSuccess is false if the `you are busy` messages appear.
-	    This variable informs parthia that it needs to run the interrupt again.
-    Triggers\Game Evenets\You will be busy for
-      If an interrupt is running and the interrupt command is set to repeat on command failure
-        Sets parthiaInterruptCommandSuccess to false. To note that the interrupt command did not run.
-    Triggers\Game Evenets\You are in the middle of something.
-      If an interrupt is running and the interrupt command is set to repeat on command failure
-        Sets parthiaInterruptCommandSuccess to false. To note that the interrupt command did not run.
-    scripts\automation\parthiaAutomationInterruptStop
-      Sets parthiaInterruptCommandSuccess to true, the system assumes the command was a success.
-    scripts\automation\parthiaAutomationInterruptStart
-      Sets parthiaInterruptCommandSuccess to true, the system assumes the command was a success.
-    script\automation\parthiaAutomationCall
-      Sets parthiaInterruptCommandSuccess to true, the system assumes the command was a success.
   
   Aliases
     create an interupt group.
@@ -10122,12 +10106,7 @@ function parthiaAutomationCall()
   
   -- Update the iteration counter
   if parthiaAutomationInterruptRunning then
-    --Increase iterator if the interrupt command was a success.
-    if parthiaInterruptCommandSuccess then
-      iterationCounter = parthiaAutomationInterruptIterationCounter
-    end -- parthiaInterruptCommandSuccess
-    -- set parthiaInterruptCommandSuccess to default state of true
-    parthiaInterruptCommandSuccess = true
+    iterationCounter = parthiaAutomationInterruptIterationCounter
   else  -- this is a standard automation task collect from that table instead.
     iterationCounter = parthiaAutomationIterationCounter
   end -- if parthiaAutomationInterruptRunning then

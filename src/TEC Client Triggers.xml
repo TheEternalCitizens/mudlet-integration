@@ -2149,18 +2149,7 @@ end --if getHelpDevs()</script>
   parthiaMap.directionWalked = false --direction the player has walked
   mapDebug("trigger You are in the middle of something., possible failed movement found set parthiaMap.directionWalked to false.")
 end --if parthiaMap.getEnabled()
-
--- If an interrupt is currently running and the interrupt has been set to repeat if it fails.
--- Tell the system the last interrupt command failed.
-if parthiaAutomationInterruptRunning then
-  local groupName = parthiaAutomationInterruptRunning
-  local groupPosition = parthiaAutomationInterruptGroupPosition
-  local repeatInterruptOnFail = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName][groupPosition].repeatOnFail
-  if repeatInterruptOnFail then
-    -- Tell the interrupt system that the last command failed.
-    parthiaInterruptCommandSuccess = false
-  end -- repeatInterruptOnFail
-end  -- if parthiaAutomationInterruptRunning</script>
+</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -2184,16 +2173,7 @@ end  -- if parthiaAutomationInterruptRunning</script>
   parthiaMap.directionWalked = false --direction the player has walked
   mapDebug("trigger You are in the middle of something., possible failed movement found set parthiaMap.directionWalked to false.")
 end --if parthiaMap.getEnabled()
-
--- If an interrupt is currently running and the interrupt has been set to repeat if it fails.
--- Tell the system the last interrupt command failed.
-local groupName = parthiaAutomationInterruptRunning
-local groupPosition = parthiaAutomationInterruptGroupPosition
-local repeatInterruptOnFail = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName][groupPosition].repeatOnFail
-if parthiaAutomationInterruptRunning and repeatInterruptOnFail then
-  -- Tell the interrupt system that the last command failed.
-  parthiaInterruptCommandSuccess = false
-end  -- if parthiaAutomationInterruptRunning</script>
+</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
