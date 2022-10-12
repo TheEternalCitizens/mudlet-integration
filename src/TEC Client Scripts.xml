@@ -17,9 +17,12 @@ Winter 2022 - 2023
   
   Minor bugfix: players running very old accounts that do not have the colored text patterns sent out for all standard room messages could not use the run courses command. This has been fixed.
   
+  Bugfix: parthia automation and interrupt creation commands would not accept | in the input. Preventing the player from creating 'or' logic in their automations.
+  
   Improvement: Made the choice to have the stop command stop all automation types that are currently running.
   
-  Improvement: When clicking the create an interrupt or create an automation command the messages have been made consideraly shorted. So people may actually read them now.
+  Improvement: Dramatically shortened the help message that appears when a player clicks the 'create an automatio' and 'create an interrupt' windows.
+      Previous to this there was too much text, so it was not being read.
   
 Not completed yet:
 
@@ -8363,7 +8366,7 @@ function GitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if GitUpdate.localRespitory not exist
   GitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  GitUpdate.localVersion = "0.1.54" --Must match the tag in your github release
+  GitUpdate.localVersion = "0.1.55" --Must match the tag in your github release
   GitUpdate.aliasName = "parthia update" --Name of alias user runs to process update
   --Name of the alias to check if an update is available.
   GitUpdate.updateCheckAlias = "parthia update check" 
