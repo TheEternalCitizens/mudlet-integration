@@ -7,6 +7,35 @@
 	<ActionPackage />
 	<ScriptPackage>
 		<Script isActive="yes" isFolder="no">
+			<name>ReleaseNotes</name>
+			<packageName></packageName>
+			<script>--[[
+
+Winter 2022 - 2023
+
+  Minor bugfix: characters completing an interrupt would not automatically resume their last running automation.
+  
+  Minor bugfix: players running very old accounts that do not have the colored text patterns sent out for all standard room messages could not use the run courses command. This has been fixed.
+  
+  Bugfix: parthia automation and interrupt creation commands would not accept | in the input. Preventing the player from creating 'or' logic in their automations.
+  
+  Improvement: Made the choice to have the stop command stop all automation types that are currently running.
+  
+  Improvement: Dramatically shortened the help message that appears when a player clicks the 'create an automatio' and 'create an interrupt' windows.
+      Previous to this there was too much text, so it was not being read.
+  
+Not completed yet:
+
+  Major improvement: In hunting grounds that have a single entry and exit point. Add the ability for Parthia Maps to automatically move to the top of its tab. It displays the current hunting ground you are on. Though with an image that looks like an over the top view of the hunting ground. As you move it tracks movement as standard mudlet mapping feature does. Intended for beginer hunting grounds for now. Could add features like fog of war later.
+
+  Improvement: Add automations and interrupts to their data folders. Allowing for prepackaged automations that people can import directly on installation.
+
+  Major improvement: add the ability to collect game data via regex triggers. For example when an attack is dodged, you could record each attack of the desired type ( when it was dodged ) and review what dodge dodged it. You could record stat improvements. Gleams. Really endless options. Just restricted to regex triggers. For text should fit anyones needs.
+
+]]--</script>
+			<eventHandlerList />
+		</Script>
+		<Script isActive="yes" isFolder="no">
 			<name>fuzzyBoolean(bool)</name>
 			<packageName></packageName>
 			<script>-- Provided by demonnic
@@ -527,6 +556,8 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   interruptDataFolder = getMudletHomeDir().."\/Interrupt Data\/"
   
   unfilteredTextConsoleMode = false  -- a snap out console window ( userWindow ) that shows unfiltered text from TEC
+  
+  parthiaCollect = {}  -- Used to hold data functions other misc for the collection system.
 
   if displayToScreen then pecho("Parthia settings set to default.\n") end
 
@@ -7272,7 +7303,7 @@ Handles refreshing the text in the interrupts window.
     
     cechoLink("interruptsWindowConsole",
       "&lt;:"..tecSettings.helpHighlightColor.."&gt;create an interrupt\n\n", 
-      [[parthiaInterruptCreateHelp()]],
+      [[parthiaInterruptCreateHelpBrief()]],
       "parthia automation groups", true)
       
     cechoLink("interruptsWindowConsole",
@@ -7365,7 +7396,7 @@ Handles refreshing the text in the interrupts window.
     
     cechoLink("automationWindowConsole",
       "&lt;:"..tecSettings.helpHighlightColor.."&gt;create an automation\n\n", 
-      [[parthiaAutomationUpdateHelp()]],
+      [[parthiaAutomationUpdateHelpBrief()]],
       "parthia automation groups", true)
       
     cechoLink("automationWindowConsole",
@@ -8335,7 +8366,7 @@ function GitUpdateconfig() --Create variables used for updates
     debugToDisplay("Update: ERROR localRespitory was not present. Has been created.")
   end --if GitUpdate.localRespitory not exist
   GitUpdate.gitReleaseURLJSONFile = "ParthiaLatest.json" --local file name REST API latest JSON
-  GitUpdate.localVersion = "0.1.54" --Must match the tag in your github release
+  GitUpdate.localVersion = "0.1.55" --Must match the tag in your github release
   GitUpdate.aliasName = "parthia update" --Name of alias user runs to process update
   --Name of the alias to check if an update is available.
   GitUpdate.updateCheckAlias = "parthia update check" 
@@ -9398,7 +9429,9 @@ How automation interupts are handled-------------------------------------------
           Than calls the first command in the interrupt group.
           
   Interrupt stop logic:
-    parthiaAutomationCall
+    parthiaInterruptStop, called flags interrupt variables accordingly.
+      If automation was running previous to the interrupt parthiaInterruptStop flags automation variables to resume.
+      If automation should be resumed after the interrupt is stopped parthiaInterruptStop returns True
   
   Interrupt Disable Logic:
     parthiaAutomationInterruptToggleState is called.
@@ -9729,7 +9762,7 @@ function parthiaAutomationUpdateHelp(automationType)
   
   pecho("For a tutorial video on making an Automation Group go to ")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/rCHHD866J3I\n\n", 
-    [[openUrl("https://www.youtube.com/watch?v=rCHHD866J3I&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps&amp;index=2")]], 
+    [[parthiaAutomationUpdateHelp("automation")]], 
     "youtube parthia automation tutorial", true)
   
   pecho("Command Format:\n")
@@ -9761,7 +9794,31 @@ function parthiaAutomationTriggerHelp()
     [[openUrl("https://www.youtube.com/watch?v=JVsgRNT6YLo&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps&amp;index=4")]], 
     "youtube parthia automation tutorial", true)
   
-end -- function parthiaAutomationTriggerHelp()</script>
+end -- function parthiaAutomationTriggerHelp()
+
+
+function parthiaAutomationUpdateHelpBrief()
+
+  automationType = automationType or "automation"
+  -- parthia automation [group name], [position number] = [command], [seconds or 0], [repeat on fail]
+  
+  pecho("\n\nAutomation creation tutorial options:\n\n")
+
+  pecho("\tFor a text tutorial on making an Automation Group click or enter ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation update\n\n", 
+    [[parthiaAutomationUpdateHelp("automation")]], 
+    "text tutorial on creating an automation", true)
+  
+  pecho("For a tutorial video on making an Automation Group go to ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/rCHHD866J3I\n\n", 
+    [[openUrl("https://www.youtube.com/watch?v=rCHHD866J3I&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps&amp;index=2")]], 
+    "youtube parthia automation tutorial", true)
+  
+  pecho("Command Format:\n")
+  pecho("parthia "..automationType.." [group name], [position number] = [command], [repeat on fail], [insert] &amp; [trigger]\n")
+  printCmdLine("parthia "..automationType.." replace_with_your_group, 1 = replace_with_your_command, 0, 0 &amp; 0")
+
+end -- function parthiaAutomationUpdateHelp()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
@@ -9886,7 +9943,28 @@ function parthiaInterruptCreateHelp()
   pecho("parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]\n")
   printCmdLine("parthia interrupt replace_with_your_group, 1, trigger_when_text_is_received~ 0")
   
-end  -- function parthiaInterruptCreateHelp()</script>
+end  -- function parthiaInterruptCreateHelp()
+
+
+function parthiaInterruptCreateHelpBrief()
+
+  pecho("\nInterrupt Creation tutorial options:\n\n")
+
+  pecho("\tFor a text tutorial click or enter ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt create\n\n", 
+    [[parthiaInterruptCreateHelp()]], 
+    "interrupt creation text tutorial", true)
+  
+  pecho("\n\tFor a tutorial video on making an Interrupt and Interrupt Automation Group go to ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/8n9vycwod1U\n\n", 
+    [[openUrl("https://youtu.be/8n9vycwod1U")]], 
+    "youtube parthia automation tutorial", true)
+  
+  pecho("Command Format:\n\n")
+  pecho("\tparthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]\n")
+  printCmdLine("parthia interrupt replace_with_your_group, 1, trigger_when_text_is_received~ 0")
+  
+end  -- parthiaInterruptCreateHelpbrief()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
@@ -10071,12 +10149,27 @@ function parthiaAutomationCall()
     if iterationCounter &gt;= tonumber(groupRepeat) then  -- this has iterated more than group repeat specified
       if automationType == "automationInterrupt" then
         pecho("\nInterrupt "..groupName.." completed.\n")
-        parthiaAutomationInterruptStop()
+        -- Stop the interrupt system
+        local continueAutomation = parthiaAutomationInterruptStop()
+        -- There is no need to continue automation so stop now
+        if not continueAutomation then
+          return true
+        end  -- if not continueAutomation
+        -- Since automation needs to continue after this. Gather data from the running automation
+        -- Get required variables for this function.  
+        groupName = parthiaAutomationRunning["groupName"]  -- the name of this automation group
+        groupRepeat = parthiaAutomationRunning["groupRepeat"]  -- How many times this group automation should repeat
+        automationType = "automation"  -- This is a standard automation task.
+        -- setting this now, incase the previous task should repeat.
+        groupPosition = parthiaAutomationGroupPosition
+        -- How many times this automation group has repeated
+        iterationCounter = parthiaAutomationIterationCounter
+      -- This is a standard automation task.
       else
         pecho("\nAutomation task "..groupName.." complete.\n")
-        parthiaAutomationStop()  -- Stop automation.
+        parthiaAutomationStop()  -- Stop automation loop.
+        return true  -- stop current automation call also.
       end -- if automationType == "automationInterrupt" then
-      return true  -- stop current automation call also.
     end  -- if parthiaAutomationIterationCounter &gt; tonumber(groupRepeat) then
   end -- if parthiaToBoolean(groupRepeat) then
   
@@ -10166,6 +10259,7 @@ function parthiaAutomationStop(displayToScreen)
   parthiaAutomationFirstRun = true
   parthiaLastCommandSuccess = false
   parthiaAutomationRepeatCmdOnFailure = false
+  parthiaAutomationPaused = false
   
   -- Stop any running interrupts
   parthiaAutomationInterruptStop()
@@ -10746,6 +10840,9 @@ end  -- function parthiaCreateAutomationRegexTrigger(pattern)</script>
 						<packageName></packageName>
 						<script>--[[
 Stop the currently running interrupt automation task.
+
+Returns:
+  True if automation should resume after the interrupt is stopped.
 ]]--
 
 function parthiaAutomationInterruptStop()
@@ -10756,13 +10853,24 @@ function parthiaAutomationInterruptStop()
   
   -- if an automation task was paused, unpause it now.
   if parthiaAutomationPaused then
+    
+    --  Set the automation variables back to running state.
     parthiaAutomationRunning = parthiaAutomationPaused
     parthiaAutomationPaused = false
+    
+    -- set arthiaInterruptCommandSuccess to default state of true
+    arthiaInterruptCommandSuccess = true
+  
+    debugToDisplay("parthiaAutomationInterruptStop completed succesfully, automation resume return true sent.")
+    
+    -- Return true, showing that standard automation should be called.
+    return true
+    
   end --if parthiaAutomationPaused then
   
   debugToDisplay("parthiaAutomationInterruptStop completed succesfully.")
   
-  return true
+  return false
   
 end -- function parthiaAutomationInterruptStop()</script>
 						<eventHandlerList />
@@ -10786,6 +10894,9 @@ function parthiaAutomationInterruptStart(groupName)
   
   --Setting automation first run to true, so we can iterate through the automation group properly
   parthiaAutomationFirstRun = true
+  
+  -- Set arthiaInterruptCommandSuccess to default state of true
+  arthiaInterruptCommandSuccess = true
   
   -- Setting the interrupt running variable, to keep track of this interrupt
   parthiaAutomationInterruptRunning = groupName
@@ -11394,6 +11505,68 @@ function parthiaAutomationCleanRegExTriggers()
   end -- for groupName, _ in paris(parthiaAutomation.automationInterruptTriggers) do
 
 end  -- function parthiaAutomationCleanRegExTriggers()</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>collect</name>
+					<packageName></packageName>
+					<script>--[[
+
+Commands to assist with data collection.
+
+Useage:
+  `parthia collect NAME = REGEXSTRING`: To do a standard data collection.
+  `parthia collecttime NAME = REGEXSTRING~0 OR REGEXSTRING`: Collects line with the first REGEXSTRING in it.
+    With `=#` at the end. Where the number is the number of seconds it took for the second regexstring to appear
+    The ~0, means it will time until the `You are no longer busy.` message appears, rather than the second regex string
+  `parthia collect NAME = export`: to export to a directory on the computer.
+  `parthia collect open export`: to open the export directory.
+    
+    
+
+Desired functions:
+  Collect an entire line when a regex string is found in it.
+    The line must collect to a table that matches the same of the collection.
+  Have ability to collect the time. Than time when 'You are no longer busy.' appears.
+  Has to export to a file.
+  Has to have a clickable interface like parthia automation
+    
+    
+Outline
+  parthiaCollect, table to save all the collection functions and data.
+  parthiaCollect.collections, table to save all the data being collected
+    parthiaCollect.collections[parthiaPlayer.CurrentCharacter.name], a table to store collections for a username
+      collections[name].collectPattern, the regex pattern that when found informs mudlet to collect the line.
+      collections[name].endPattern, false if no timer, 0 if timer end is `no longer busy`
+        a string for a regex pattern end
+  parthiaColllect.UpdateCollection, function to create or update collections on a player.
+    
+
+]]--</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaCollect.UpdateCollection()</name>
+						<packageName></packageName>
+						<script>--[[
+
+  Creates the data store for a collection.
+
+]]--
+
+function parthiaCollect.UpdateCollection(name, collectPattern, endPattern)
+
+  --name, is the name of the collection.
+  --collectPattern, the regex pattern that determins the line to collect.
+  --endPattern, when to end timing collection.
+  
+  -- If endPattern is 0 or a string, this is a timed collection and a timer will need to be created.
+  local timed
+
+  --if the collection does not already exist. Create it now.
+  
+
+end  -- function parthiaCollect.UpdateCollection</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
@@ -12107,7 +12280,7 @@ function parthiaStopScripts(displayToScreen)
   if parthiaGetWaitForDrover() then parthiaSetWaitForDrover(false, displayToScreen) end --if running, disable waiting for drover script
   
   -- stop automation scripts
-  if parthiaAutomationRunning then
+  if parthiaAutomationRunning or parthiaAutomationPaused or parthiaAutomationInterruptRunning then
     parthiaAutomationStop(displayToScreen)
   end -- if parthiaAutomationRunning then
 
