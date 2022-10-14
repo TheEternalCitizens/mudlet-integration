@@ -11,18 +11,25 @@
 			<packageName></packageName>
 			<script>--[[
 
-Winter 2022 - 2023
+Automations Bugfix Fall-Winter 2022
 
   Minor bugfix: characters completing an interrupt would not automatically resume their last running automation.
   
   Minor bugfix: players running very old accounts that do not have the colored text patterns sent out for all standard room messages could not use the run courses command. This has been fixed.
+  Thank you Rehlyt for reporting the bug
+  
+  Minor bugfix: players using the non colored "You are no longer busy." message would not have automations properly interate to the next command in the automation.
+  Thank You ottomated for reporting the bug
   
   Bugfix: parthia automation and interrupt creation commands would not accept | in the input. Preventing the player from creating 'or' logic in their automations.
   
   Improvement: Made the choice to have the stop command stop all automation types that are currently running.
   
   Improvement: Dramatically shortened the help message that appears when a player clicks the 'create an automatio' and 'create an interrupt' windows.
-      Previous to this there was too much text, so it was not being read.
+  
+  Improvement: The automation window will now show a green "Stop" for the automation that is running. Allowing the user to stop the automation by clicking it.
+
+Winter 2022 - 2023
   
 Not completed yet:
 
@@ -7338,6 +7345,14 @@ Handles refreshing the text in the interrupts window.
   local automationType = 'automation'
   local automationTypeName = 'automation'
 
+  -- Will use this to match this automation's groupname against a currently running automation
+  local runningAutomationName = false
+  -- Check if an automation is currently running.
+  if parthiaAutomationRunning then
+    -- Collect the name of the running automation
+    runningAutomationName = parthiaAutomationRunning.groupName
+  end -- if parthiaAutomationRunning then
+
   for groupName, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]) do
     
       cecho("automationWindowConsole", groupName..":\n")
@@ -7348,31 +7363,18 @@ Handles refreshing the text in the interrupts window.
       local groupRepeat = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].interruptRepeat
       local callPattern = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].pattern
       
-      -- Make a Start button for automation OR an enable disable button for interrupts
-      if automationType == 'automationInterrupt' then
-        
-        local toggleInterruptButtonColor = "ansi_red"
-        local toggleInterruptButtonState = "Inactive"
-        
-        -- This intterrupt is currently enabled. Set the color to standard blue
-        if groupEnabled then
-          toggleInterruptButtonColor = "ansi_green"
-          toggleInterruptButtonState = "Active"
-        end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled then
-        
-        -- Display the button
-        cechoLink("automationWindowConsole", "  &lt;:"..toggleInterruptButtonColor.."&gt;"..toggleInterruptButtonState,
-                  [[expandAlias("parthia interrupt toggle ]]..groupName..[[")]],
-                  "Click to toggle "..groupName.." on or off", true)
-                  --parthia interrupt toggle [groupName]
-        
-      else  -- This is a standard automation group
-        
+      -- This automation is currently running. Make the first button Stop and turn it green
+      if groupName == runningAutomationName then
+        cechoLink("automationWindowConsole", "  &lt;:ansi_green&gt;Stop", 
+        [[parthiaAutomationStop(true)]],
+        "parthia "..automationTypeName.." "..groupName..", 0", true)
+      
+      -- If this automation is not running, lease it the stanard blue and show the button as start.
+      else
         cechoLink("automationWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Start", 
-          [[expandAlias("parthia ]]..automationTypeName..[[ ]]..groupName..[[, 0")]],
-          "parthia "..automationTypeName.." "..groupName..", 0", true)
-          
-      end  -- if automationType == 'automationInterrupt' then
+        [[expandAlias("parthia ]]..automationTypeName..[[ ]]..groupName..[[, 0")]],
+        "parthia "..automationTypeName.." "..groupName..", 0", true)
+      end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled then
         
       -- Show group button
       cechoLink("automationWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Show", 
@@ -10000,6 +10002,9 @@ function parthiaAutomationStart(groupName, groupRepeat)
   -- inform the user automation has started.
   pecho("Starting automation group: "..groupName.."\n")
 
+  -- Refresh the automations window
+  refreshAutomationWindow()
+
   -- Call the function that runs the automation
   parthiaAutomationCall()
 
@@ -10275,6 +10280,9 @@ function parthiaAutomationStop(displayToScreen)
     killTrigger(parthiaAutomationRegexTriggerID)
     parthiaAutomationRegexTriggerID = false
   end  -- if parthiaAutomationRegexTriggerID then
+  
+  -- Refresh the automations window
+  refreshAutomationWindow()
   
   if displayToScreen then
     pecho("\nAutomation stopped.\n\n")
