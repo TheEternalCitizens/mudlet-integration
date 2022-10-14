@@ -19,7 +19,7 @@ tecRefreshSettingsWindow()</script>
 			<keyCode>82</keyCode>
 			<keyModifier>67108864</keyModifier>
 		</Key>
-		<KeyGroup isActive="yes" isFolder="yes">
+		<KeyGroup isActive="no" isFolder="yes">
 			<name>numpad navigation</name>
 			<packageName></packageName>
 			<script></script>
