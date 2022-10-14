@@ -28,6 +28,10 @@ Automations Bugfix Fall-Winter 2022
   Improvement: Dramatically shortened the help message that appears when a player clicks the 'create an automatio' and 'create an interrupt' windows.
   
   Improvement: The automation window will now show a green "Stop" for the automation that is running. Allowing the user to stop the automation by clicking it.
+  
+  Improvement: automations and interrupts now display ways to stop them when they run.
+  
+  Improvement: added additional commands to stop automations and interrupts
 
 Winter 2022 - 2023
   
@@ -9994,13 +9998,20 @@ function parthiaAutomationStart(groupName, groupRepeat)
     parthiaAutomationStartHelp()
     pecho("\nAutomation group "..groupName.." does not exist. A full help message is above.\n\n")
     return false
-  end -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName] then
+  end -- if not parthiaAutomationSasveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName] then
   
   -- Record that automation has started, record the group name and how many times the group should repeat
   parthiaAutomationRunning = { groupName = groupName, groupRepeat = groupRepeat }
 
   -- inform the user automation has started.
   pecho("Starting automation group: "..groupName.."\n")
+  pecho("\tStop a running automation with:\n")
+  pecho("\t\tthe stop, /auto stop or parthia automation stop commands\n")
+  pecho("\t\tclicking ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;stop", 
+    [[parthiaAutomationStop(true)]],
+    "stop a running automation", true)
+  pecho(" here or under the running automation in the automation window.\n")
 
   -- Refresh the automations window
   refreshAutomationWindow()
@@ -10442,6 +10453,10 @@ function parthiaAutomationHelp()
     [[parthiaAutomationStartHelp()]],
     "parthia automation start", true)
   pecho(", how to start an automation task.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation stop", 
+    [[parthiaAutomationStop(True)]],
+    "stop a running automation", true)
+  pecho(", stop the running automation.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation groups", 
     [[parthiaAutomationShowGroups("automation")]],
     "parthia automation groups", true)
@@ -10465,6 +10480,10 @@ function parthiaAutomationHelp()
     [[parthiaInterruptToggleHelp()]],
     "parthia interrupt toggle", true)
   pecho(", enable or disable an interrupt.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt stop", 
+    [[expandAlias("parthia interrupt stop")]],
+    "stop a running interrupt", true)
+  pecho(", stop a running interrupt.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt update", 
     [[parthiaAutomationUpdateHelp("interrupt")]],
     "parthia interrupt update", true)
@@ -10916,7 +10935,7 @@ function parthiaAutomationInterruptStart(groupName)
   end  -- if parthiaAutomationRunning then
 
   -- message the player that this interrupt occured.
-  pecho("\nInterrupt "..groupName.." triggered.\n")
+  pecho("\nInterrupt "..groupName.." triggered.\n\tRunning interrupts can be stoped with the stop, /interrupt stop or parthia interrupt stop commands.")
   
   -- collect the trigger that will call the first command for this interrupt
   local firstCommandTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].firstCommandTrigger

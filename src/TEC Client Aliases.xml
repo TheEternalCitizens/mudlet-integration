@@ -1316,6 +1316,14 @@ parthiaAutomationStartHelp()</script>
 					<regex>^parthia automation start$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation stop</name>
+					<script>-- Stop a currently running automation
+parthiaAutomationStop(true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia automation stop$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
 					<name>parthia automation</name>
 					<script>-- parthia automation, calls the automation help function
 parthiaAutomationHelp()</script>
@@ -1357,7 +1365,7 @@ if parthiaAutomationInterruptRunning then
   
 else  -- There is no interrupt active.
 
-  pecho("You have no interrupts currently active.")
+  pecho("No interrupts are currently running.")
   
 end  -- if parthiaAutomationInterruptRunning then</script>
 					<command></command>
