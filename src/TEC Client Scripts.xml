@@ -10462,7 +10462,7 @@ function parthiaAutomationHelp()
     "parthia interrupt update", true)
   pecho(", how to create or update interrupt groups.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt groups", 
-    [[parthiaAutomationShowGroups("interrupt")]],
+    [[parthiaAutomationShowGroups("automationInterrupt")]],
     "parthia interrupt groups", true)
   pecho(", view and manage existing interrupt groups.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt import", 
