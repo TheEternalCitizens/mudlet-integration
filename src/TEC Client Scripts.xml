@@ -28,8 +28,10 @@ Automations Bugfix Fall-Winter 2022
   Improvement: Dramatically shortened the help message that appears when a player clicks the 'create an automatio' and 'create an interrupt' windows.
   
   Improvement: The automation window will now show a green "Stop" for the automation that is running. Allowing the user to stop the automation by clicking it.
+  Thank you Wacomd for the suggestion
   
   Improvement: automations and interrupts now display ways to stop them when they run.
+  Thank you Wacomd for asking how to stop automations. For some reason I thought these messages were already displayed.
   
   Improvement: added additional commands to stop automations and interrupts
 
