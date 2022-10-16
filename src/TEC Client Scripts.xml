@@ -35,6 +35,8 @@ Automations Bugfix Fall-Winter 2022
   Thank you Wacomd for asking how to stop automations. For some reason I thought these messages were already displayed.
   
   Improvement: added additional commands to stop automations and interrupts
+  
+  Improvement: When automations or interrupts are updated or created not only do the changes display but the full summary of the automation from the show button is display. Allowing you to 
 
 Winter 2022 - 2023
   
@@ -9823,7 +9825,7 @@ function parthiaAutomationUpdateHelpBrief()
   
   pecho("Command Format:\n")
   pecho("parthia "..automationType.." [group name], [position number] = [command], [repeat on fail], [insert] &amp; [trigger]\n")
-  printCmdLine("parthia "..automationType.." replace_with_your_group, 1 = replace_with_your_command, 0, 0 &amp; 0")
+  printCmdLine("parthia automation replace_with_your_group, 1 = replace_with_your_command, 0, 0 &amp; 0")
 
 end -- function parthiaAutomationUpdateHelp()</script>
 						<eventHandlerList />
