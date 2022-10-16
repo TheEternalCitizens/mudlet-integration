@@ -21,7 +21,8 @@ Automations Bugfix Fall-Winter 2022
   Minor bugfix: players using the non colored "You are no longer busy." message would not have automations properly interate to the next command in the automation.
   Thank You ottomated for reporting the bug
   
-  Bugfix: parthia automation and interrupt creation commands would not accept | in the input. Preventing the player from creating 'or' logic in their automations.
+  Bugfix: parthia automation and interrupt creation commands would not accept | in the input. Now all characters except , are allowed in automation and interrupt creation.
+  Thank you Wacomd for finding the bug
   
   Improvement: Made the choice to have the stop command stop all automation types that are currently running.
   

@@ -1255,6 +1255,7 @@ parthiaAutomationStart(matches[2], matches[3])</script>
 					<script>--[[
 Supports creation an automation group or position while inserting into the automation group.
 Not replacing an existing entry.
+Old pattern: ^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\|\s+]+),\s+(\d+),\s+(\d+)\s+&amp;\s+(.+)$
 ]]--
 
 --Here we are unpacking ALL 6 of the captures from the pattern above.
@@ -1266,13 +1267,14 @@ groupName, parthiaAutomationGroupPosition, command, repeatOnFail, insert, trigge
 parthiaAutomationUpdate("automation", groupName, parthiaAutomationGroupPosition, command, trigger, repeatOnFail, insert)</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\|\s+]+),\s+(\d+),\s+(\d+)\s+&amp;\s+(.+)$</regex>
+					<regex>^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([^,]+),\s+(\d+),\s+(\d+)\s+&amp;\s+(.+)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia interrupt [group name], [position number] = [command], [repeat on fail], [insert] &amp; [trigger]</name>
 					<script>--[[
 Supports creation an automation group or position while inserting into the automation group.
 Not replacing an existing entry.
+Old pattern: ^parthia\s+interrupt\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\|\s+]+),\s+(\d+),\s+(\d+)\s+&amp;\s+(.+)$
 ]]--
 
 --Here we are unpacking ALL 6 of the captures from the pattern above.
@@ -1284,7 +1286,7 @@ groupName, parthiaAutomationGroupPosition, command, repeatOnFail, insert, trigge
 parthiaAutomationUpdate("automationInterrupt", groupName, parthiaAutomationGroupPosition, command, trigger, repeatOnFail, insert)</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^parthia\s+interrupt\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\|\s+]+),\s+(\d+),\s+(\d+)\s+&amp;\s+(.+)$</regex>
+					<regex>^parthia\s+interrupt\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([^,]+),\s+(\d+),\s+(\d+)\s+&amp;\s+(.+)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]</name>
