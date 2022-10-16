@@ -809,6 +809,8 @@ else --all other lines we will want to look for data to collect
     parthiaPlayer.CurrentCharacter.state
     = line:match("^Health Points: (%d+)\/(%d+)%s+Fatigue:%s(%d+)%%%s+State:%s(%a+)")
     if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+    --Adjust the fatigue bar now
+    fatiguebar:setValue(tonumber(parthiaPlayer.CurrentCharacter.fatigue),100)
   elseif line:match("^Load: ") then
     parthiaPlayer.CurrentCharacter.load
     = line:match("Load:%s(%d+)%s%a+%.")
