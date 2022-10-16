@@ -9649,7 +9649,6 @@ function parthiaAutomationUpdate(automationType, groupName, groupPosition,
   -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] does not exist create it
   -- parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] is created automatically when parthia starts.
   if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
-  
     -- this this is an interrupt prompt the user to create the interrupt first, pattern and repeat count is needed
     if automationType == "automationInterrupt" then
       pecho("Automation Interrupts must first be created with the parthia interrupt command first.")
@@ -9659,7 +9658,7 @@ function parthiaAutomationUpdate(automationType, groupName, groupPosition,
       parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] = {}  -- Make the group name an empty dictionary
     end -- if automationType == "automationInterrupt" then
   else -- this group already exists, this is an update.
-    pecho("Automation group "..groupName.." updated.\n")
+    pecho("Automation group "..groupName.." updated, your update is:\n")
   end  -- END if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
   
   -- a temp table to insert into the automations group name
@@ -9683,26 +9682,25 @@ function parthiaAutomationUpdate(automationType, groupName, groupPosition,
   pecho("\tIn position: "..groupPosition)
   pecho("\n\tAutomation Command: "..automationCommand)
   pecho("\n\tRepeat on fail: "..repeatOnFail.."\n")
-  
   -- Show when the first command is done
   if parthiaToBoolean(automationTrigger) then
-  
     --Attempt to convert the trigger to a number
     timedTrigger = tonumber(automationTrigger)  -- If it is not a number automationDelay will be null
-
     --If this custom trigger is a time trigger create a temp timer.
     if timedTrigger then
       pecho("\tSeconds to wait before calling next command: "..automationTrigger.."\n")
     else -- this is a custom trigger
       pecho("\tNext command called when you see: '"..automationTrigger.."'\n")
     end  -- if timedTrigger then
-
   else -- the trigger is not a custom trigger
-  
     pecho("\tNext command called when you see: 'You are no longer busy.'\n")
-    
   end  -- if parthiaToBoolean(automationTrigger) then
-                                        
+
+  -- Display the group screen for this automation so the user can easily add to it now.
+  pecho("\nThe full group now looks like:\n")
+  parthiaAutomationShowGroups(automationType, groupName)
+  pecho("\n\n")                
+                           
   -- Remind the user to save their chages
   dontForgetToSave()
   
@@ -10536,7 +10534,7 @@ end  -- function parthiaAutomationHelp()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
-						<name>parthiaAutomationShowGroups()</name>
+						<name>parthiaAutomationShowGroups(automationType, groupName, removeElement, groupPosition)</name>
 						<packageName></packageName>
 						<script>--[[
 Allows dynamic management of the parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] group tables.
