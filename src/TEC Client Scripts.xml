@@ -11542,62 +11542,43 @@ end  -- function parthiaAutomationCleanRegExTriggers()</script>
 					<packageName></packageName>
 					<script>--[[
 
-Commands to assist with data collection.
+Format:
 
-Useage:
-  `parthia collect NAME = REGEXSTRING`: To do a standard data collection.
-  `parthia collecttime NAME = REGEXSTRING~0 OR REGEXSTRING`: Collects line with the first REGEXSTRING in it.
-    With `=#` at the end. Where the number is the number of seconds it took for the second regexstring to appear
-    The ~0, means it will time until the `You are no longer busy.` message appears, rather than the second regex string
-  `parthia collect NAME = export`: to export to a directory on the computer.
-  `parthia collect open export`: to open the export directory.
-    
-    
+The collection system is two systems.
+  One system to collect data.
+  One system to filter desired results.
 
-Desired functions:
-  Collect an entire line when a regex string is found in it.
-    The line must collect to a table that matches the same of the collection.
-  Have ability to collect the time. Than time when 'You are no longer busy.' appears.
-  Has to export to a file.
-  Has to have a clickable interface like parthia automation
-    
-    
-Outline
-  parthiaCollect, table to save all the collection functions and data.
-  parthiaCollect.collections, table to save all the data being collected
-    parthiaCollect.collections[parthiaPlayer.CurrentCharacter.name], a table to store collections for a username
-      collections[name].collectPattern, the regex pattern that when found informs mudlet to collect the line.
-      collections[name].endPattern, false if no timer, 0 if timer end is `no longer busy`
-        a string for a regex pattern end
-  parthiaColllect.UpdateCollection, function to create or update collections on a player.
+Collection system will need to:
+  
+  IS DISABLED BY DEFAULT
+  
+  records each line on screen
+  preface the collection with date &amp; time
+  preface the collection with the character that was active when the recording was made
+  collections WILL contain the html codes
+  
+  stores data in profiles\PROFILENAME\collections
+  collection files will be clear text, new line separated files. Allowing it to be mostly human readable.
+  
+
+Filter system will need to:
+
+  filter using an infinate number of patterns.
+  filter according to a begining and end date
+  filter according to only a begining date
+  filter according only to an end date
+  filter according to currently logged in character by default
+  allow filtering to other characters found with mudlet
+  allow filtering data found in all characters
+  allow for a method of ignoring html tags while filtering.
+  
+  regex performance has to be taken into consideration
+    mudlet needs to start the regex system up with every request. So doing a line by line regex will probably not be great for performance.
+    May want to use coroutine and yield back every few lines ( Suggestion from demonnic )
     
 
 ]]--</script>
 					<eventHandlerList />
-					<Script isActive="yes" isFolder="no">
-						<name>parthiaCollect.UpdateCollection()</name>
-						<packageName></packageName>
-						<script>--[[
-
-  Creates the data store for a collection.
-
-]]--
-
-function parthiaCollect.UpdateCollection(name, collectPattern, endPattern)
-
-  --name, is the name of the collection.
-  --collectPattern, the regex pattern that determins the line to collect.
-  --endPattern, when to end timing collection.
-  
-  -- If endPattern is 0 or a string, this is a timed collection and a timer will need to be created.
-  local timed
-
-  --if the collection does not already exist. Create it now.
-  
-
-end  -- function parthiaCollect.UpdateCollection</script>
-						<eventHandlerList />
-					</Script>
 				</ScriptGroup>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
