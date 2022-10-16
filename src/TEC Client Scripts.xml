@@ -9870,36 +9870,24 @@ function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern, 
   -- show information about the changes
   pecho("\t"..groupName.." will repeat "..groupRepeat.." times when called.\n")
   pecho("\tCall pattern: "..pattern.."\n")
-  
   -- Show when the first command is done
   if parthiaToBoolean(firstCommandTrigger) then
-  
     --Attempt to convert the trigger to a number
     timedTrigger = tonumber(firstCommandTrigger)  -- If it is not a number automationDelay will be null
-
     --If this custom trigger is a time trigger create a temp timer.
     if timedTrigger then
       pecho("\tSeconds to wait before calling next command: "..firstCommandTrigger.."\n")
     else -- this is a custom trigger
       pecho("\tNext command called when you see: '"..firstCommandTrigger.."'\n")
     end  -- if timedTrigger then
-
   else -- the trigger is not a custom trigger
-  
     pecho("\tNext command called when you see: 'You are no longer busy.'\n")
-    
   end  -- if parthiaToBoolean(firstCommandTrigger) then
   
-  if newInterruptGroup then
-  
-    pecho("\nIf you would like to add commands to this new interupt click or run: ")
-  
-    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt update\n\n", 
-        [[parthiaAutomationUpdateHelp("interrupt");
-        printCmdLine("parthia interrupt ]]..groupName..[[, 1 = replace_with_your_command, 0, 0 &amp; 0")]],
-        "Add commands to "..groupName, true)
-  
-  end  -- if newInterruptGroup then
+  -- Display the group screen for this automation so the user can easily add to it now.
+  pecho("\nIn full this interrupt now looks like:\n")
+  parthiaAutomationShowGroups(automationType, groupName)
+  pecho("\n\n")
   
   -- Remind the user to save their chages
   dontForgetToSave()
