@@ -11215,6 +11215,11 @@ function parthiaAutomationCharacterCheck(displayToScreen)
     debugToDisplay("function parthiaMap.checkCharacter, created table for character \""..character.."\" in the parthiaMap.saveTable table.")
   end --if not parthiaMap.saveTable[character]
   
+  --If a &lt;target&gt; does not already exist initialize it now.
+  if not parthiaAutomationSaveTable[character] then
+    parthiaAutomationSaveTable[character].target = "No target collected, collect with the target command."
+  end  -- if not parthiaAutomationSaveTable[character] then
+  
   -- This is called automatically during chracter changes. Refreshing windows for that reason.
   refreshInterruptsWindow()
   refreshAutomationWindow()
