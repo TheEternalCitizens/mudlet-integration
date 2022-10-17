@@ -2053,10 +2053,19 @@ parthiaStopScripts(true) --stop all automation scripts, display message to scree
 send(matches[1])
 
 -- Collect the target the user input into the target variable in the automations table
-parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target = matches[2]</script>
+parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target = matches[2]
+
+pecho("\n\nmatches 2 "..matches[2].."\n\n")</script>
 			<command></command>
 			<packageName></packageName>
-			<regex>^ta(?:rget|rge|rg|r)\s+(.*)$</regex>
+			<regex>^(?:T|t)(?:a|A)(?:rget|rge|rg|r|RGET|RGE|RG|R)\s+(.*)$</regex>
+		</Alias>
+		<Alias isActive="yes" isFolder="no">
+			<name>*&lt;target&gt;*</name>
+			<script></script>
+			<command></command>
+			<packageName></packageName>
+			<regex></regex>
 		</Alias>
 	</AliasPackage>
 	<ActionPackage />
