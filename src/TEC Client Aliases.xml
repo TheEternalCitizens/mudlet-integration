@@ -2047,6 +2047,17 @@ parthiaStopScripts(true) --stop all automation scripts, display message to scree
 			<packageName></packageName>
 			<regex></regex>
 		</Alias>
+		<Alias isActive="yes" isFolder="no">
+			<name>target collection</name>
+			<script>-- Right away send the intended command
+send(matches[1])
+
+-- Collect the target the user input into the target variable in the automations table
+parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target = matches[2]</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^ta(?:rget|rge|rg|r)\s+(.*)$</regex>
+		</Alias>
 	</AliasPackage>
 	<ActionPackage />
 	<ScriptPackage />

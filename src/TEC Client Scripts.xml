@@ -9388,6 +9388,7 @@ Created save variable on the character target
     Enable an aliase that will trigger on ANY command input.
       Name it something unique.
       When the next command is run, send it off as normal. Enable the aliase that captures &lt;target&gt;
+  If parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target does not exist it is initialized in parthiaAutomationCharacterCheck
 
 How automations are imported and exported--------------------------------------  
   functions
