@@ -2041,13 +2041,6 @@ parthiaStopScripts(true) --stop all automation scripts, display message to scree
 			<regex>^(?i)stop\s*$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
-			<name>All Commands</name>
-			<script>-- This triggers on any command.</script>
-			<command></command>
-			<packageName></packageName>
-			<regex></regex>
-		</Alias>
-		<Alias isActive="yes" isFolder="no">
 			<name>target collection</name>
 			<script>-- Old pattern
 -- Right away send the intended command
@@ -2067,7 +2060,7 @@ debugToDisplay("\tTarget in automations table: "..parthiaAutomationSaveTable[par
 			<regex>^(?i)ta(?:rget|rge|rg|r)(?-i)\s+(.*)$</regex>
 		</Alias>
 		<Alias isActive="yes" isFolder="no">
-			<name>*&lt;target&gt;*</name>
+			<name>&lt;target&gt; filter alias</name>
 			<script>debugToDisplay("Aliase: *&lt;target&gt;*\n")
 debugToDisplay("\n\tmatches[1]: "..matches[1])
 debugToDisplay("\n\tCharacter's Target is: "..parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target.."\n\n")

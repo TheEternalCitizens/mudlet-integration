@@ -9380,14 +9380,13 @@ How the &lt;target&gt; string is managed.
 Created save variable on the character target
   parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target
     This way the target can be saved
-  The target is collected with an aliase. It captures the target any time the target command is used.
+  The target is collected with an aliase name "target collection". It captures the target any time the target command is used.
   Any time the word &lt;target&gt; or &lt;Target&gt; appears in a command line it is replaced with parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target
-    This is done with an aliase
+    This is done with an aliase named "&lt;target&gt; filter alias"
   When "Enter the string you wish this macro to expand to: " is the exact line match.
-    Disable the target collection aliase.
-    Enable an aliase that will trigger on ANY command input.
-      Name it something unique.
-      When the next command is run, send it off as normal. Enable the aliase that captures &lt;target&gt;
+    Disable the &lt;target&gt; filter alias.
+    Create an aynonomous event, have it call the fucntion enableTargetFilterAlias
+      When the next command is sent to the server it will send as normal but will also enable the "&lt;target&gt; filter alias"
   If parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target does not exist it is initialized in parthiaAutomationCharacterCheck
 
 How automations are imported and exported--------------------------------------  
@@ -11544,6 +11543,26 @@ function parthiaAutomationCleanRegExTriggers()
   end -- for groupName, _ in paris(parthiaAutomation.automationInterruptTriggers) do
 
 end  -- function parthiaAutomationCleanRegExTriggers()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>enableTargetFilterAlias(eventName, commandSent)</name>
+						<packageName></packageName>
+						<script>function enableTargetFilterAlias(eventName, commandSent)
+
+  debugToDisplay("\nEvent enableTargetFilterTrigger started.\n")
+
+  --enable the target collection alias
+  enableAlias("&lt;target&gt; filter alias")
+  
+  -- delete the instance of the event that calls this function
+  killAnonymousEventHandler(enableTargetFilterAliasEventID)
+
+  debugToDisplay("\nEvent enableTargetFilterTrigger completed.\n")
+
+end  -- function enableTargetFilterAlias(eventName, commandSent)
+
+-- Register this event with: enableTargetFilterAliasEventID = registerAnonymousEventHandler("sysDataSendRequest", "enableTargetFilterAlias")</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>

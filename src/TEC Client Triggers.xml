@@ -2404,6 +2404,34 @@ end -- if parthiaAutomationRunning then</script>
 					<integer>3</integer>
 				</regexCodePropertyList>
 			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Prompt to enter macro string</name>
+				<script>debugToDisplay("\nTrigger: Prompt to enter macro string started.\n")
+
+-- Disable the aliase that captures commands with &lt;target&gt; in it and converts them to the mtarg target.
+disableAlias("&lt;target&gt; filter alias")
+
+-- Create an event to collect sent commands, it will enable this trigger when the next command is sent.
+enableTargetFilterAliasEventID = registerAnonymousEventHandler("sysDataSendRequest", "enableTargetFilterAlias")
+
+debugToDisplay("\nTrigger: Prompt to enter macro string completed.\n")</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>Enter the string you wish this macro to expand to: </string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
 		</TriggerGroup>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>parthia mapper</name>
