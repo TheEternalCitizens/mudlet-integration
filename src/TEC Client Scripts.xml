@@ -28,6 +28,12 @@ Automations Bugfix Fall-Winter 2022
   
   Minor Improvement: Futher cleaned up the help displayed with the parthia command. There were too many items on it.
   
+  Minor Improvement: added function parthiaSetCharacterTarget so players can set their target for the &lt;target&gt; filter in parthia.
+    Reference: https://github.com/TheEternalCitizens/mudlet-integration/wiki/Parthia-API#parthiasetcharactertargettargetname
+    
+  Minor Improvement: added function parthiaGetCharacterTarget to collect the characters current target.
+    Reference: https://github.com/TheEternalCitizens/mudlet-integration/wiki/Parthia-API#parthiagetcharactertarget
+  
   Improvement: Made the choice to have the stop command stop all automation types that are currently running.
   
   Improvement: Dramatically shortened the help message that appears when a player clicks the 'create an automatio' and 'create an interrupt' windows.
@@ -11576,6 +11582,63 @@ function parthiaAutomationCleanRegExTriggers()
   end -- for groupName, _ in paris(parthiaAutomation.automationInterruptTriggers) do
 
 end  -- function parthiaAutomationCleanRegExTriggers()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaGetCharacterTarget()</name>
+						<packageName></packageName>
+						<script>-- Returns a string that is the target specified with the TEC target command
+-- Reference: https://github.com/TheEternalCitizens/mudlet-integration/wiki/Parthia-API#parthiagetcharactertarget
+
+function parthiaGetCharacterTarget()
+
+  return parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target
+
+end  -- function parthiaGetCharacterTarget()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaSetCharacterTarget(targetName)</name>
+						<packageName></packageName>
+						<script>--Returns a string that is the target specified with the TEC target command
+--Reference: https://github.com/TheEternalCitizens/mudlet-integration/wiki/Parthia-API#parthiasetcharactertarget
+
+function parthiaSetCharacterTarget(targetName)
+
+  -- Set the variable in the global automations table
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target = targetName
+  
+  -- Add the ability to automatically save JUST the target variable in the automations table
+
+  -- Temp table to store automations data
+  local tempAutomationData = {}
+
+  -- If a file exists for automations. Load the automation data to the temp table.
+  if io.exists(parthiaAutomationSavePath) then
+    -- load the automation saved data to a temp table.
+    table.load(parthiaAutomationSavePath, tempAutomationData)
+    -- set the target in the temp table
+    tempAutomationData[parthiaPlayer.CurrentCharacter.name].target = targetName  
+  end  -- if io.exists(parthiaAutomationSavePath)
+  
+  -- Save the temp automation table to file with the single change to the character's target
+  local saveFailed = parthiaTableSave(tempAutomationData, parthiaAutomationSavePath, false)
+  -- If the file save was successful show an image to display, error if the save failed.
+  if saveFailed then
+    -- Throw a warning that this save failed. The user will not see this, but parthia and Mudlet debug will.
+    tecWarningNotification("function parthiaSetCharacterTarget, failed to save to file.")
+  end  -- if saveFailed then
+
+end  -- function parthiaGetCharacterTarget()
+
+-- Test by uncommenting text below and saving.
+--parthiaSetCharacterTarget("A test")
+--pecho("\n"..parthiaGetCharacterTarget())
+--parthiaAutomationLoad(displayToScreen)
+--parthiaSetCharacterTarget("B test")
+--pecho("\n"..parthiaGetCharacterTarget())
+--parthiaAutomationLoad(displayToScreen)
+--pecho("\n"..parthiaGetCharacterTarget().."\n\n")</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
