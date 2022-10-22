@@ -1099,7 +1099,10 @@ if not passwordInputEventID then --if an authenticationInput event does not alre
   debugToDisplay("trigger SECRET Triger, starting sysDataSendRequest event handler to function authenticationInput")
   passwordInputEventID = registerAnonymousEventHandler("sysDataSendRequest", "authenticationInput") --capture user input.
 end --if not passwordInputEventID
+
 tecUsernameEntry = true --tell the event handler authenticationInput that the next command entered is the user's username
+supressTargetFilter = true  --This will allow a user to have &lt;target&gt; in their username without it being filtered.
+
 pecho("Please enter your username.")
 
 --Login control continues in Scripts -&gt; Events -&gt; authenticationInput(_, command)</script>

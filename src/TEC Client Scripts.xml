@@ -42,13 +42,17 @@ Automations Bugfix Fall-Winter 2022
   
   Improvement: When automations or interrupts are updated or created not only do the changes display but the full summary of the automation from the show button is display. Allowing you to Easily add to the automation since the add button is at the end of the message.
   
-  Improvement: 
+  Improvement: Updated the help anything command to now use google to search the wiki.
   
-  Significant Improvement: In all instances but one. If a command is sent to the server that contains &lt;target&gt;.
+  Improvement: Better formating on the parthia or help client command. Easier to read, fewer items on the main call.
+  
+  Significant Improvement: In all instances but three. If a command is sent to the server that contains &lt;target&gt;.
     &lt;target&gt; will be replaced with the target you provided to the target command.
     This is supported with ANY method mudlet uses to send a command.
-    The single instance where this does not happen is when the text to enter the string for a new macro appears on screen.
-      This allows you to enter TEC macros that contains &lt;target&gt;.
+    The instances where this does not happen is when
+      When you are creating a new macro.
+      When you provide your user name during login
+      When you provide your password during login.
 
 Winter 2022 - 2023
   
@@ -9416,6 +9420,7 @@ Created save variable on the character target
   When "Enter the string you wish this macro to expand to: " is the exact line match.
     It sets supressTargetFilter to true, so the target filter is skipped for a single run.
   If parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target does not exist it is initialized in parthiaAutomationCharacterCheck
+  When login prompts for password the target filter is supressed for a single time to allow &lt;target&gt; to be in a password.
 
 How automations are imported and exported--------------------------------------  
   functions
@@ -17002,10 +17007,15 @@ When authenticationInput receives a user name it sets tecUsernameEntry to false,
 function authenticationInput(_, userInput) 
   
   if tecUsernameEntry then --If we need to acept user name from command line
+    
     tecUsernameEntry = false --Make certain we do not liste for username again.
     tecPasswordEntry = true --we know the next command needs to be the password.
+    supressTargetFilter = true  --This will allow a user to have &lt;target&gt; in their password without it being filtered.
+    
     denyCurrentSend() --Deny the origional command, in this case the password.
+    
     tecUsername = userInput --the first item
+    
     pecho("\nPlease enter your password.\n")
     clearCmdLine() --clear the text user entered from command line
   
@@ -17197,6 +17207,8 @@ tecSetScrollBars(tecSettings.showScrollBars, false)</script>
 
 end  -- function commandTargetFilter(eventName, commandSent)
 
+--This kills existing events when you save or leave this script.
+-- Allowing changes to be made to this script without a restart of Mudlet.
 if commandTargetFilterEventID then
   killAnonymousEventHandler(commandTargetFilterEventID)
 end
