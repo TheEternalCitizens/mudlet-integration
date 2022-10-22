@@ -2408,11 +2408,10 @@ end -- if parthiaAutomationRunning then</script>
 				<name>Prompt to enter macro string</name>
 				<script>debugToDisplay("\nTrigger: Prompt to enter macro string started.\n")
 
--- Disable the aliase that captures commands with &lt;target&gt; in it and converts them to the mtarg target.
-disableAlias("&lt;target&gt; filter alias")
+-- Tell the commandTargetFilter not to filter commands for this run.
+supressTargetFilter = true
 
--- Create an event to collect sent commands, it will enable this trigger when the next command is sent.
-enableTargetFilterAliasEventID = registerAnonymousEventHandler("sysDataSendRequest", "enableTargetFilterAlias")
+debugToDisplay("\n\tsupressTargetFilter: "..supressTargetFilter)
 
 debugToDisplay("\nTrigger: Prompt to enter macro string completed.\n")</script>
 				<triggerType>0</triggerType>

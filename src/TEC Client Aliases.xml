@@ -2059,21 +2059,6 @@ debugToDisplay("\tTarget in automations table: "..parthiaAutomationSaveTable[par
 			<packageName></packageName>
 			<regex>^(?i)ta(?:rget|rge|rg|r)(?-i)\s+(.*)$</regex>
 		</Alias>
-		<Alias isActive="yes" isFolder="no">
-			<name>&lt;target&gt; filter alias</name>
-			<script>debugToDisplay("Aliase: *&lt;target&gt;*\n")
-debugToDisplay("\n\tmatches[1]: "..matches[1])
-debugToDisplay("\n\tCharacter's Target is: "..parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target.."\n\n")
-
-local adjustedCommand = rex.gsub(matches[1], "\&lt;(?i)target\&gt;", parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target)
-
-debugToDisplay("\n\tadjustedCommand "..adjustedCommand.."\n\n")
-
-send(adjustedCommand)</script>
-			<command></command>
-			<packageName></packageName>
-			<regex>^.*\&lt;(?i)target(?-i)\&gt;.*$</regex>
-		</Alias>
 	</AliasPackage>
 	<ActionPackage />
 	<ScriptPackage />

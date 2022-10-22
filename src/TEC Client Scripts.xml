@@ -576,6 +576,9 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   unfilteredTextConsoleMode = false  -- a snap out console window ( userWindow ) that shows unfiltered text from TEC
   
   parthiaCollect = {}  -- Used to hold data functions other misc for the collection system.
+  
+  filterTargetFromCommands = true -- Used to set if the string "&lt;target&gt;" should be filtered from commands sent
+  supressTargetFilter = false  -- Supresses filtering &lt;target&gt; from a command for a single command run.
 
   if displayToScreen then pecho("Parthia settings set to default.\n") end
 
@@ -9382,11 +9385,12 @@ Created save variable on the character target
     This way the target can be saved
   The target is collected with an aliase name "target collection". It captures the target any time the target command is used.
   Any time the word &lt;target&gt; or &lt;Target&gt; appears in a command line it is replaced with parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target
-    This is done with an aliase named "&lt;target&gt; filter alias"
+    This is done with an event that calls commandTargetFilter
+    If global variable supressTargetFilter is true do not filter &lt;target&gt; from the command.
+    When commandTargetFilter is run global variable supressTargetFilter is always set to false
+    When the event is created its ID is collected into: commandTargetFilterEventID global variable
   When "Enter the string you wish this macro to expand to: " is the exact line match.
-    Disable the &lt;target&gt; filter alias.
-    Create an aynonomous event, have it call the fucntion enableTargetFilterAlias
-      When the next command is sent to the server it will send as normal but will also enable the "&lt;target&gt; filter alias"
+    It sets supressTargetFilter to true, so the target filter is skipped for a single run.
   If parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target does not exist it is initialized in parthiaAutomationCharacterCheck
 
 How automations are imported and exported--------------------------------------  
@@ -11216,7 +11220,7 @@ function parthiaAutomationCharacterCheck(displayToScreen)
   end --if not parthiaMap.saveTable[character]
   
   --If a &lt;target&gt; does not already exist initialize it now.
-  if not parthiaAutomationSaveTable[character] then
+  if not parthiaAutomationSaveTable[character].target then
     parthiaAutomationSaveTable[character].target = "No target collected, collect with the target command."
   end  -- if not parthiaAutomationSaveTable[character] then
   
@@ -11543,26 +11547,6 @@ function parthiaAutomationCleanRegExTriggers()
   end -- for groupName, _ in paris(parthiaAutomation.automationInterruptTriggers) do
 
 end  -- function parthiaAutomationCleanRegExTriggers()</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>enableTargetFilterAlias(eventName, commandSent)</name>
-						<packageName></packageName>
-						<script>function enableTargetFilterAlias(eventName, commandSent)
-
-  debugToDisplay("\nEvent enableTargetFilterTrigger started.\n")
-
-  --enable the target collection alias
-  enableAlias("&lt;target&gt; filter alias")
-  
-  -- delete the instance of the event that calls this function
-  killAnonymousEventHandler(enableTargetFilterAliasEventID)
-
-  debugToDisplay("\nEvent enableTargetFilterTrigger completed.\n")
-
-end  -- function enableTargetFilterAlias(eventName, commandSent)
-
--- Register this event with: enableTargetFilterAliasEventID = registerAnonymousEventHandler("sysDataSendRequest", "enableTargetFilterAlias")</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
@@ -17141,6 +17125,63 @@ tecResetRoomCharacterWindow() --fill room characters window with text
 tecSetScrollBars(tecSettings.showScrollBars, false)</script>
 					<eventHandlerList />
 				</Script>
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>commandTargetFilter(eventName, commandSent)</name>
+				<packageName></packageName>
+				<script>function commandTargetFilter(eventName, commandSent)
+
+--filterTargetFromCommands = true -- Used to set if the string "&lt;target&gt;" should be filtered from commands sent
+--supressTargetFilter = false  -- Supresses filtering &lt;target&gt; from a command for a single command run.
+
+  debugToDisplay("\nEvent call commandTargetFilter started.\n")
+  debugToDisplay("\n\tcommandSent: "..commandSent)
+  debugToDisplay("\n\tCharacter's Target is: "..parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target.."\n\n")
+  
+  -- if &lt;target&gt; should be filtered from outgoing commands on a permanent basis.
+  if filterTargetFromCommands then
+  
+    -- if supressTargetFilter is true than skip this filter
+    if not supressTargetFilter then
+    
+      debugToDisplay("\n\tFiltering &lt;target&gt; from command.")
+    
+      -- If &lt;target&gt; appears in the command to be sent, filter it out.
+      if rex.match(commandSent, "\&lt;(?i)target\&gt;") then
+  
+        -- Filter all instance of &lt;target&gt; to the target the player specivied with the TEC target command
+        local commandToBeSent = rex.gsub(commandSent, "\&lt;(?i)target\&gt;", parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target)
+        
+        debugToDisplay("\n\tcommandToBeSent: "..commandToBeSent.."\n\n")
+    
+        -- Send the updated command
+        send(commandToBeSent)
+        
+        -- stop the origional command from being sent
+        denyCurrentSend()
+      
+      end -- if rex.match(commandSent, "\&lt;(?i)target\&gt;")
+    
+    end  -- if not supressTargetFilter
+    
+    -- Always reset the target filter back to false if running the target filter.
+    supressTargetFilter = false
+    
+  end  -- if filterTargetFromCommands
+  
+  debugToDisplay("\nEvent call commandTargetFilter completed.\n")
+
+end  -- function commandTargetFilter(eventName, commandSent)
+
+if commandTargetFilterEventID then
+  killAnonymousEventHandler(commandTargetFilterEventID)
+end
+
+-- Register this event on startup
+commandTargetFilterEventID = registerAnonymousEventHandler("sysDataSendRequest", "commandTargetFilter")
+
+-- Kill with killAnonymousEventHandler(commandTargetFilterEventID)</script>
+				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
 	</ScriptPackage>
