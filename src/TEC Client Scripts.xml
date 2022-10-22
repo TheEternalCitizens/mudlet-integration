@@ -26,6 +26,8 @@ Automations Bugfix Fall-Winter 2022
   
   Minor Improvement: When you run the stats command your fatigue bar will refresh with your current fatigue.
   
+  Minor Improvement: Futher cleaned up the help displayed with the parthia command. There were too many items on it.
+  
   Improvement: Made the choice to have the stop command stop all automation types that are currently running.
   
   Improvement: Dramatically shortened the help message that appears when a player clicks the 'create an automatio' and 'create an interrupt' windows.
@@ -39,6 +41,14 @@ Automations Bugfix Fall-Winter 2022
   Improvement: added additional commands to stop automations and interrupts
   
   Improvement: When automations or interrupts are updated or created not only do the changes display but the full summary of the automation from the show button is display. Allowing you to Easily add to the automation since the add button is at the end of the message.
+  
+  Improvement: 
+  
+  Significant Improvement: In all instances but one. If a command is sent to the server that contains &lt;target&gt;.
+    &lt;target&gt; will be replaced with the target you provided to the target command.
+    This is supported with ANY method mudlet uses to send a command.
+    The single instance where this does not happen is when the text to enter the string for a new macro appears on screen.
+      This allows you to enter TEC macros that contains &lt;target&gt;.
 
 Winter 2022 - 2023
   
@@ -6387,10 +6397,6 @@ like the parthia command or parthia talk command
 	tecWindow = tecWindow or "main"
 	tecBrief = tecBrief or false
   local parthiaCmdHelp = " change many client settings."
-  local displayCmdHelp = " Save or load window positions, "
-		.."reset display to defaults, "
-  	.."and clear text off the display."
-  local debugCmdHelp = " Use to get information to report issues."
   
   if not tecBrief then --if we do not want to be brief
     pecho("There are a number of commands to adjust the game client. "
@@ -6409,21 +6415,13 @@ like the parthia command or parthia talk command
   	echo(tecWindow, parthiaCmdHelp.."\n")
 	else echo(tecWindow, "\n")
   end --end if not tecBrief
- 
-  cechoLink(tecWindow, "&lt;:"..tecSettings.helpHighlightColor.."&gt;display", 
-  [[UIManagerHelp()]], 
-  "Change display settings.", true)
-  if not tecBrief then --if we do not want to be brief
-    echo(tecWindow, displayCmdHelp.."\n") 
-	else echo(tecWindow, "\n")
-  end --end if not tecBrief
   
-  cechoLink(tecWindow, "&lt;:"..tecSettings.helpHighlightColor.."&gt;debug", 
-  [[tecDebugHelp()]], 
-  "Create debug messages", true)
+  cechoLink(tecWindow, "&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia report", 
+  [[tecReportIssues()]],
+  "Report Parthia issues", true)
   if not tecBrief then --if we do not want to be brief
-  	echo(tecWindow, debugCmdHelp.."\n")
-	else echo(tecWindow, "\n")
+    echo(tecWindow, ", instructions on reporting issues.\n")
+  else echo(tecWindow, "\n")
   end --end if not tecBrief
   
   echo(tecWindow, "\n")
@@ -6496,131 +6494,92 @@ end --end function tecDebugHelp</script>
 					<name>tecClientHelp()</name>
 					<packageName></packageName>
 					<script>function tecClientHelp()  
-  pecho("\nparthia command:\n")
+  pecho("\nparthia help:\n\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia developer", 
+  cechoLink("  &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia developer", 
   [[parthiaDeveloperHelp()]],
   "developer commands help", true)
   echo(", developer commands help.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map", 
-  [[parthiaMap.help()]],
-  "List parthia map commands", true)
-  pecho(", commands for parthia's mapper.\n")
-
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia tips", 
-  [[parthiaSetTips(true)]],
-  "Toggle displaying game world tips", true)
-  pecho(", toggle displaying game world tips.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk", 
-  [[parthiaTalkHelp()]],
-  "parthia talk help", true)
-  pecho(", list parthia's text to speech commands.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia update check", 
-  [[DownloadGitReleaseJSON()]],
-  "Check for updates", true)
-  pecho(", check if Parthia updates are available.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia version", 
-  [[expandAlias("parthia version")]],
-  "Display version of Parthia", true)
-  pecho(", check installed Parthia version.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia beta test", 
+  pechoLink("  &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia beta test", 
   [[tecSetBetaTester()]],
   "Receive beta updates", true)
   pecho(", Toggle if you received beta updates or not.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers", 
-  [[expandAlias("parthia help developers")]],
-  "Toggle help developers data collection", true)
-  pecho(", Toggle if you are collecting data to help developers.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers save", 
-  [[saveHelpDevs(true)]],
-  "Save Help Developer data", true)
-  pecho(", Save data collected by Help Developers to file.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment", 
+  pechoLink("  &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment", 
   [[parthiaPlayerDevelopmentHelp()]],
   "Tools to help player developers", true)
   pecho(", list commands to assist player developers.\n")
 
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save all", 
-  [[tecClientSaveAll(true)]],
-  "Save all client settings", true)
-  pecho(", Save client and display settings to file.\n")
+  pechoLink("  &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia data", 
+  [[expandAlias("parthia data")]],
+  "Commands to help manage data", true)
+  pecho(", commands to help save and load parthia settings data.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  pecho(", Save basic client settings to file.\n")
+  pecho("\n  Troubleshooting:\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia load", 
-  [[tecFileLoadSettings(true)]],
-  "Load client settings from file", true)
-  pecho(", Loads client settings from file. \n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia reset", 
-  [[tecClientReset(true);dontForgetToSave(true)]],
-  "Reset client to default", true)
-  pecho(", Reset non display client settings to default.\n")
-  	
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia reset all", 
-  [[tecClientResetAll()]],
-  "Reset all client settings to default", true)
-  pecho(", Reset client and display to default settings.\n")
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia update check", 
+  [[DownloadGitReleaseJSON()]],
+  "Check for updates", true)
+  pecho(", check if Parthia updates are available.\n")
     
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia repair", 
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia repair", 
   [[expandAlias("parthia repair")]],
   "Repair Parthia", true)
   pecho(", repairs Parthia. By replacing all developer created code.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia report", 
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia report", 
   [[tecReportIssues()]],
   "Report Parthia issues", true)
-  pecho(", receive instruction on reporting issues.\n")
+  pecho(", instructions on reporting issues.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia numpad navigation", 
-  [[expandAlias("parthia numpad navigation")]],
-  "Toggle numpad navigation", true)
-  echo(", turn navigation using the numberpad on or off.\n")
-
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia tab font size fontsize", 
+  pecho("\n  Display:\n")
+  
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia display", 
+  [[expandAlias("parthia display")]],
+  "List Parthia's display commands", true)
+  pecho(", list commands to customize display layout, images and scrollbars in Parthia.\n")
+  
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia tab font size fontsize", 
   [[printCmdLine("parthia tab font size ");
     pecho("Now enter the font size at the end of the command and press enter.\n")]],
   "Change font size of tabs", true)
   pecho(", Change font size for window tabs.\n") 
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia change colors", 
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia change colors", 
   [[tecClientChangeColors()]],
   "Change client colors", true)
   pecho(", Change color scheme for client.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia font size fontsize", 
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia font size fontsize", 
   [[printCmdLine("parthia font size ");
     pecho("Now enter the font size at the end of the command and press enter.\n")]],
   "Change client font size", true)
   pecho(", Change font size for all text consoles.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia commands", 
+  pecho("\n  accessibility:\n")
+  
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk", 
+  [[parthiaTalkHelp()]],
+  "parthia talk help", true)
+  pecho(", list parthia's text to speech commands.\n")
+  
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia commands", 
   [[parthiaCommandsHelp()]],
   "List custom parthia commands", true)
   pecho(", game commands that exist in parthia only.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia display", 
-  [[expandAlias("parthia display")]],
-  "List Parthia's display commands", true)
-  pecho(", list commands to customize display layout, images and scrollbars in Parthia.\n")
+  cechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia numpad navigation", 
+  [[expandAlias("parthia numpad navigation")]],
+  "Toggle numpad navigation", true)
+  echo(", turn navigation using the numberpad on or off.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation", 
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation", 
   [[parthiaAutomationHelp()]],
   "parthia automation", true)
   pecho(", help for the automation system.\n")
  
-  pecho("Click a command above or type it into the command line.\n")
+  pecho("\nClick a command above or type it into the command line.\n")
 
 end --function tecClientHelp</script>
 					<eventHandlerList />
@@ -6696,6 +6655,38 @@ end --function tecClientHelp</script>
   [[expandAlias("parthia prepare release")]],
   "Prepare code for release", true)
   echo(", prepare mudlet profile for a new github release.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map", 
+  [[parthiaMap.help()]],
+  "List parthia map commands", true)
+  pecho(", commands for parthia's mapper.\n")
+
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia tips", 
+  [[parthiaSetTips(true)]],
+  "Toggle displaying game world tips", true)
+  pecho(", toggle displaying game world tips.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia version", 
+  [[expandAlias("parthia version")]],
+  "Display version of Parthia", true)
+  pecho(", check installed Parthia version.\n")
+
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers", 
+  [[expandAlias("parthia help developers")]],
+  "Toggle help developers data collection", true)
+  pecho(", Toggle if you are collecting data to help developers.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers save", 
+  [[saveHelpDevs(true)]],
+  "Save Help Developer data", true)
+  pecho(", Save data collected by Help Developers to file.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug", 
+  [[tecDebugHelp()]],
+  "Display debug modes", true)
+  pecho(", display debug modes.\n")
+  
+  
 
 end --function parthiaDeveloperHelp()</script>
 					<eventHandlerList />
@@ -6970,6 +6961,39 @@ end --function parthiaTalkHelp()</script>
   "Check for player development updates", true)
   pecho(", check for updates to player development folders. Occurs automatically with client updates.\n")
 end --function parthiaPlayerDevelopmentHelp()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaDataHelp()</name>
+					<packageName></packageName>
+					<script>function parthiaDataHelp()
+
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save all", 
+  [[tecClientSaveAll(true)]],
+  "Save all client settings", true)
+  pecho(", Save client and display settings to file.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  pecho(", Save basic client settings to file.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia load", 
+  [[tecFileLoadSettings(true)]],
+  "Load client settings from file", true)
+  pecho(", Loads client settings from file. \n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia reset", 
+  [[tecClientReset(true);dontForgetToSave(true)]],
+  "Reset client to default", true)
+  pecho(", Reset non display client settings to default.\n")
+  	
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia reset all", 
+  [[tecClientResetAll()]],
+  "Reset all client settings to default", true)
+  pecho(", Reset client and display to default settings.\n")
+
+end  -- function parthiaDataHelp()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>

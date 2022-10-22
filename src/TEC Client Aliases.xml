@@ -6,7 +6,16 @@
 	<AliasPackage>
 		<Alias isActive="yes" isFolder="no">
 			<name>help</name>
-			<script>pecho("\nYour vision blurs as a sudden wealth of information becomes available with a touch you can gain access to:\n")
+			<script>pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;help client", 
+[[tecClientFullHelp(false, "main")]], 
+"wiki site home", true)
+pecho(" Help with this game client\n\n")
+
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Help Anything", 
+[[printCmdLine("help ")]], 
+"wiki search", true)
+pecho(" Type help followed by anything. A google search on the TEC wiki will open.\n\n")
+
 pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Newbie guide", 
 [[openUrl("http://eternal-city.wikidot.com/newbie-guides")]], 
 "Guide explaining this games basic interworkings", true)
@@ -16,12 +25,6 @@ pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Character creation guide
 [[openUrl("http://eternal-city.wikidot.com/character-generator")]], 
 "Character creation tutorial", true)
 echo("\n\n")
-
-pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Help Anything", 
-[[printCmdLine("help ")]], 
-"wiki search", true)
-pecho(" Type help followed by anything. "
-	.."You will be given a clickable link to search for your question on TEC's wiki.\n\n")
 
 pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;World maps", 
 [[openUrl("http://eternal-city.wikidot.com/maps")]], 
@@ -38,12 +41,12 @@ pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Commands",
 "Full list of game commands", true)
 echo("            ")
 
-pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Commune with mortals", 
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;TEC Discord", 
 [[openUrl("https://discord.gg/fevBA8j")]], 
 "TEC Discord", true)
 echo("\n\n")
 
-pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Full respitory of this worlds interworkings", 
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;TEC Wiki site", 
 [[openUrl("http://eternal-city.wikidot.com/")]], 
 "wiki site home", true)
 echo("\n\n")
@@ -51,34 +54,25 @@ echo("\n\n")
 pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;help client", 
 [[tecClientFullHelp(false, "main")]], 
 "wiki site home", true)
-
-pecho("\nWith some effort you are able focus your mind and clear your vision back to reality.\n\n")</script>
+pecho(" Help with this game client\n\n")
+</script>
 			<command></command>
 			<packageName></packageName>
 			<regex>^help$</regex>
 			<Alias isActive="yes" isFolder="no">
-				<name>Help (.w+)</name>
+				<name>help (.w+)</name>
 				<script>if matches[2] == "client" then
+
+  --run the client help command. It is a function so it can be clicked.
+  tecClientFullHelp(false, "main")
 
 else
   --The user tried to get help for something we have not created
   --a help for. So we will search the wiki site for them.
-  echo("\nTry as you may you can not remember. Would you like to search the great beyond for\n")
+  pecho("\nA googl search on the wiki for "..string.sub(command, 6).." will open.\n")
   
-  --Turns just the background of the word(s) blue "&lt;color:color&gt;"
-  --For font than background colors
-  --command is the global for what is in command line.
-  --string.sub pulls text from a string. In this case what starts AT
-  --Line 6 than after.
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;"..string.sub(command, 6), 
+ openUrl([[https://www.google.com/search?q=site%3Ahttp%3A%2F%2Feternal-city.wikidot.com+]]..string.sub(command, 6)..[[&amp;oq=Site%3A&amp;aqs=chrome.0.69i59l2j69i57j69i59l2j69i58j69i65l2.2811j0j15&amp;sourceid=chrome&amp;ie=UTF-8]])
   
-  --if clicked, opens a link to
-  [[openUrl("http://eternal-city.wikidot.com/search:site/q/"..string.sub(command, 6))]], 
-  
-  --Tool tip that appears when moused over.
-  --True if I recall is needed for a bug fix.
-  "Search the wiki for: "..string.sub(command, 6), true)
-  echo("\n\n")
 end --if matches[2] == "client" else</script>
 				<command></command>
 				<packageName></packageName>
@@ -1577,6 +1571,13 @@ pecho("Windows refreshed.\n")</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^parthia refresh$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>parthia data</name>
+				<script>parthiaDataHelp()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^parthia data$</regex>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
