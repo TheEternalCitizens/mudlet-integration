@@ -1579,6 +1579,13 @@ pecho("Windows refreshed.\n")</script>
 				<packageName></packageName>
 				<regex>^parthia data$</regex>
 			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>parthia toggle target filter</name>
+				<script>parthiaToggleTargetFilter(true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^parthia toggle target filter$</regex>
+			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>Debug</name>

@@ -597,7 +597,7 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   
   parthiaCollect = {}  -- Used to hold data functions other misc for the collection system.
   
-  filterTargetFromCommands = true -- Used to set if the string "&lt;target&gt;" should be filtered from commands sent
+  tecSettings.filterTargetFromCommands = true -- Used to set if the string "&lt;target&gt;" should be filtered from commands sent
   supressTargetFilter = false  -- Supresses filtering &lt;target&gt; from a command for a single command run.
 
   if displayToScreen then pecho("Parthia settings set to default.\n") end
@@ -11600,8 +11600,8 @@ end  -- function parthiaGetCharacterTarget()</script>
 					<Script isActive="yes" isFolder="no">
 						<name>parthiaSetCharacterTarget(targetName)</name>
 						<packageName></packageName>
-						<script>--Returns a string that is the target specified with the TEC target command
---Reference: https://github.com/TheEternalCitizens/mudlet-integration/wiki/Parthia-API#parthiasetcharactertarget
+						<script>-- Returns a string that is the target specified with the TEC target command
+-- Reference: https://github.com/TheEternalCitizens/mudlet-integration/wiki/Parthia-API#parthiasetcharactertarget
 
 function parthiaSetCharacterTarget(targetName)
 
@@ -11639,6 +11639,40 @@ end  -- function parthiaGetCharacterTarget()
 --pecho("\n"..parthiaGetCharacterTarget())
 --parthiaAutomationLoad(displayToScreen)
 --pecho("\n"..parthiaGetCharacterTarget().."\n\n")</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaToggleTargetFilter()</name>
+						<packageName></packageName>
+						<script>-- Function toggles the filterTargetFromCommands gobal variable used to turn the &lt;target&gt; command filter on and off.
+
+function parthiaToggleTargetFilter(displayToScreen)
+
+  -- if the filter is enabled.
+  if tecSettings.filterTargetFromCommands then
+    
+    -- Disable the filter
+    tecSettings.filterTargetFromCommands = false
+    
+    if displayToScreen then
+      pecho("parthia &lt;target&gt; filter disabled.\n")
+      dontForgetToSave()
+    end  -- if displayToScreen
+    
+  -- The filter is disabled and should be enabled
+  else
+    
+    -- enable the filter
+    tecSettings.filterTargetFromCommands = true
+    
+    if displayToScreen then
+      pecho("parthia &lt;target&gt; filter enabled.\n")
+      dontForgetToSave()
+    end  -- if displayToScreen
+    
+  end  -- if tecSettings.filterTargetFromCommands else
+
+end  -- function parthiaToggleTargetFilter</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
@@ -17236,7 +17270,7 @@ tecSetScrollBars(tecSettings.showScrollBars, false)</script>
   debugToDisplay("\n\tCharacter's Target is: "..parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target.."\n\n")
   
   -- if &lt;target&gt; should be filtered from outgoing commands on a permanent basis.
-  if filterTargetFromCommands then
+  if tecSettings.filterTargetFromCommands then
   
     -- if supressTargetFilter is true than skip this filter
     if not supressTargetFilter then
@@ -17264,7 +17298,7 @@ tecSetScrollBars(tecSettings.showScrollBars, false)</script>
     -- Always reset the target filter back to false if running the target filter.
     supressTargetFilter = false
     
-  end  -- if filterTargetFromCommands
+  end  -- if tecSettings.filterTargetFromCommands
   
   debugToDisplay("\nEvent call commandTargetFilter completed.\n")
 
