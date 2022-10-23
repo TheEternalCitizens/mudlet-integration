@@ -6574,6 +6574,11 @@ end --end function tecDebugHelp</script>
   "parthia talk help", true)
   pecho(", list parthia's text to speech commands.\n")
   
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia toggle target filter", 
+  [[parthiaToggleTargetFilter(true)]],
+  "Toggle parthia target filter state", true)
+  pecho(", enable and disable parthia's &lt;target&gt; filter.\n")
+  
   pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia commands", 
   [[parthiaCommandsHelp()]],
   "List custom parthia commands", true)
@@ -11674,7 +11679,8 @@ function parthiaToggleTargetFilter(displayToScreen)
     tecSettings.filterTargetFromCommands = false
     
     if displayToScreen then
-      pecho("parthia &lt;target&gt; filter disabled.\n")
+      pecho("\nparthia &lt;target&gt; filter disabled.\n")
+      pecho("\tWhen you send commands with the text &lt;target&gt; it will send just &lt;target&gt; it will not filter it with your current target from the target command.\n")
       dontForgetToSave()
     end  -- if displayToScreen
     
@@ -11687,7 +11693,8 @@ function parthiaToggleTargetFilter(displayToScreen)
     tecSettings.filterTargetFromCommands = true
     
     if displayToScreen then
-      pecho("parthia &lt;target&gt; filter enabled.\n")
+      pecho("\nparthia &lt;target&gt; filter enabled.\n")
+      pecho("\tIf &lt;target&gt; appears in a command sent to the server it will be replaced with your target from the TEC target command.\n")
       dontForgetToSave()
     end  -- if displayToScreen
     
