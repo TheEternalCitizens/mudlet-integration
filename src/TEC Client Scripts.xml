@@ -11594,8 +11594,18 @@ end  -- function parthiaAutomationCleanRegExTriggers()</script>
 
 function parthiaGetCharacterTarget()
 
-  return parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target
+  -- Verify the character exists before attempting to return the target
+  if parthiaPlayer.CurrentCharacter.name then
+    
+    return parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target
+  
+  -- The character name has not been collected yet.
+  else
 
+    return "Character needs to be collected for target filtering to work."
+  
+  end  -- if parthiaPlayer.CurrentCharacter.name
+  
 end  -- function parthiaGetCharacterTarget()</script>
 						<eventHandlerList />
 					</Script>
@@ -11607,6 +11617,8 @@ end  -- function parthiaGetCharacterTarget()</script>
 
 function parthiaSetCharacterTarget(targetName)
 
+  debugToDisplay("function parthiaSetCharacterTarget called")
+  
   -- Set the variable in the global automations table
   parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target = targetName
   
@@ -11621,6 +11633,7 @@ function parthiaSetCharacterTarget(targetName)
     table.load(parthiaAutomationSavePath, tempAutomationData)
     -- set the target in the temp table
     tempAutomationData[parthiaPlayer.CurrentCharacter.name].target = targetName  
+    debugToDisplay("\ttarget variable in the auotmations table set to "..tempAutomationData[parthiaPlayer.CurrentCharacter.name].target)
   end  -- if io.exists(parthiaAutomationSavePath)
   
   -- Save the temp automation table to file with the single change to the character's target
@@ -11630,6 +11643,8 @@ function parthiaSetCharacterTarget(targetName)
     -- Throw a warning that this save failed. The user will not see this, but parthia and Mudlet debug will.
     tecWarningNotification("function parthiaSetCharacterTarget, failed to save to file.")
   end  -- if saveFailed then
+
+  debugToDisplay("function parthiaGetCharacterTarget completed.")
 
 end  -- function parthiaGetCharacterTarget()
 
@@ -11650,6 +11665,8 @@ end  -- function parthiaGetCharacterTarget()
 
 function parthiaToggleTargetFilter(displayToScreen)
 
+  debugToDisplay("function parthiaToggleTargetFilter called")
+
   -- if the filter is enabled.
   if tecSettings.filterTargetFromCommands then
     
@@ -11661,6 +11678,8 @@ function parthiaToggleTargetFilter(displayToScreen)
       dontForgetToSave()
     end  -- if displayToScreen
     
+    debugToDisplay("\tSet tecsettings.filterTargetFromCommands to false.")
+    
   -- The filter is disabled and should be enabled
   else
     
@@ -11671,6 +11690,8 @@ function parthiaToggleTargetFilter(displayToScreen)
       pecho("parthia &lt;target&gt; filter enabled.\n")
       dontForgetToSave()
     end  -- if displayToScreen
+    
+    debugToDisplay("\tSet tecsettings.filterTargetFromCommands to true.")
     
   end  -- if tecSettings.filterTargetFromCommands else
 
