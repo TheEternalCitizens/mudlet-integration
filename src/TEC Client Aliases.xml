@@ -2060,9 +2060,9 @@ debugToDisplay("\tmathces[2]: "..matches[2])
 debugToDisplay("\tCharacter: "..parthiaPlayer.CurrentCharacter.name)
 
 -- Collect the target the user input into the target variable in the automations table
-parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target = matches[2]
+parthiaSetCharacterTarget(matches[2])
 
-debugToDisplay("\tTarget in automations table: "..parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target)</script>
+debugToDisplay("\tTarget in automations table: "..parthiaGetCharacterTarget())</script>
 			<command></command>
 			<packageName></packageName>
 			<regex>^(?i)ta(?:rget|rge|rg|r)(?-i)\s+(.*)$</regex>
