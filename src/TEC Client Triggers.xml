@@ -2321,71 +2321,60 @@ end --if parthiaMap.getEnabled()
 Patter example: &lt;/font&gt;&lt;font color="#ff9b00"&gt;You are no longer busy.&lt;/font&gt;&lt;/font&gt;
 ]]--
 
--- Handle automation tasks.
--- Check if automation is running
-if parthiaAutomationRunning or parthiaAutomationInterruptRunning then
-  debugToDisplay("pathiaAutomation trigger You are no longer busy called.")
+-- An interrupt automation is running
+--elseif parthiaAutomationInterruptRunning then
+if parthiaAutomationInterruptRunning then
   
-  -- Set local variables this function will use.
-  local groupName = false
-  local groupRepeat = 1
-  local groupPosition = false
+  --collect group name and repeat from parthiaAutomationInterruptRunning
+  local groupName = parthiaAutomationInterruptRunning
+  local groupRepeat = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].interruptRepeat
+  --collecct group position from the global interrupt variable
+  local groupPosition = parthiaAutomationInterruptGroupPosition
   
-  -- An interrupt automation is running, it is the mmmain priority
-  if parthiaAutomationInterruptRunning then
+  -- if groupPosition is not yet set, collect it now.
+  if not groupPosition then
+  
+    --used to collect all keys in this automation group.
+    local automationGroupKeySet = {}
     
-    --collect group name and repeat from parthiaAutomationInterruptRunning
-    groupName = parthiaAutomationInterruptRunning
-    groupRepeat = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].interruptRepeat
-    --collecct group position from the global interrupt variable
-    groupPosition = parthiaAutomationInterruptGroupPosition
+    -- Gather all the keys for the group and sort them.
+    for key, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName]) do
+      -- Do not insert pattern or interruptRepeat used on interrupt groups, only numrical keys
+      if tonumber(key) then
+        table.insert(automationGroupKeySet, key)
+      end  -- if tonumber(key) then
+    end -- for key, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]) do
     
-    -- if groupPosition is not yet set, collect it now.
-    if not groupPosition then
+    -- Sort the table 
+    table.sort(automationGroupKeySet)
     
-      --used to collect all keys in this automation group.
-      local automationGroupKeySet = {}
-      
-      -- Gather all the keys for the group and sort them.
-      for key, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName]) do
-        -- Do not insert pattern or interruptRepeat used on interrupt groups, only numrical keys
-        if tonumber(key) then
-          table.insert(automationGroupKeySet, key)
-        end  -- if tonumber(key) then
-      end -- for key, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]) do
-      
-      -- Sort the table 
-      table.sort(automationGroupKeySet)
-      
-      -- Returning the lowest element in the  automation group
-      groupPosition = automationGroupKeySet[1]
-      
-      debugToDisplay("'You are no longer busy.' trigger groupPosition false, collected position: "..groupPosition)
+    -- Returning the lowest element in the  automation group
+    groupPosition = automationGroupKeySet[1]
     
-    end  -- if not groupPosition then
-    
-    -- Check if this interrupt is called off of a timer or this trigger
-    -- If automation trigger for this automation group is 0, automation is called by this trigger.
-    if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName][groupPosition].automationTrigger) then
-      parthiaAutomationCall()  -- Call the automation handler
-    end  -- if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName][groupPosition].automationTrigger) then
-    
-  -- a standard automation task is running
-  elseif parthiaAutomationRunning then
-    
-    -- collect group name and repeat from standard automation task
-    groupName = parthiaAutomationRunning["groupName"]
-    groupRepeat = parthiaAutomationRunning["groupRepeat"]
-    -- collect group position from the global variable
-    groupPosition = parthiaAutomationGroupPosition
-    
-    -- Check if this automation is called off of a timer or this trigger
-    -- If automation trigger for this automation group is 0, automation is called by this trigger.
-    if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].automationTrigger) then
-      parthiaAutomationCall()  -- Call the automation handler
-    end  -- if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].automationTrigger) then
-    
-  end -- if parthiaAutomationInterruptRunning then
+    debugToDisplay("'You are no longer busy.' trigger groupPosition false, collected position: "..groupPosition)
+  
+  end  -- if not groupPosition then
+  
+  -- Check if this interrupt is called off of a timer or this trigger
+  -- If automation trigger for this automation group is 0, automation is called by this trigger.
+  if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName][groupPosition].automationTrigger) then
+    parthiaAutomationCall()  -- Call the automation handler
+  end  -- if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName][groupPosition].automationTrigger) then
+  
+-- a standard automation task is running
+elseif parthiaAutomationRunning then
+  
+  -- collect group name and repeat from standard automation task
+  local groupName = parthiaAutomationRunning["groupName"]
+  local groupRepeat = parthiaAutomationRunning["groupRepeat"]
+  -- collect group position from the global variable
+  local groupPosition = parthiaAutomationGroupPosition
+  
+  -- Check if this automation is called off of a timer or this trigger
+  -- If automation trigger for this automation group is 0, automation is called by this trigger.
+  if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].automationTrigger) then
+    parthiaAutomationCall()  -- Call the automation handler
+  end  -- if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].automationTrigger) then
   
 end -- if parthiaAutomationRunning then</script>
 				<triggerType>0</triggerType>

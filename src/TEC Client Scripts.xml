@@ -590,6 +590,7 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   parthiaAutomationSaveTable = {}  -- table that stores all character specific saved automation data
   parthiaAutomationSavePath = tecSettingsFolder.."AutomationData.lua"
   parthiaAutomationIterationCounter = 0  -- counts the current standard automation task iteration
+  parthiaAutomationInsertCommand = false  -- table to contain commands that need to be inserted into a currently running automation
   automationDataFolder = getMudletHomeDir().."\/Automation Data\/"
   interruptDataFolder = getMudletHomeDir().."\/Interrupt Data\/"
   
@@ -9418,6 +9419,19 @@ end --parthiaTalkSetvolume(volume, displayToScreen)
 					<script>--[[
 Codeless scripting.
 
+How inserting a command into automations works.
+Global vairables
+  parthiaAutomationInsertCommand, a table with command and the trigger type or false if no insert is active
+Aliase to capture insert.
+  Format example: /ins slash &lt;target&gt; or /ins tap &lt;target&gt;, 1 to wait 1 second before calling the next command.
+If parthiaAutomationInsertCommand is truthy.
+  When parthiaAutomationCall is run, skip all the inner logic dealing with automations and interrupts.
+  Get the command and trigger type from the parthiaAutomationInsertCommand variable
+  Allow the standard call command logic at the bottom handle the rest.
+parthiaAutomationStop sets parthiaAutomationInsertCommand to false
+trigger you are no longer busy
+  will call parthiaAutomationCall is an insert is active BEFORE it checks if other automations are active
+
 How the &lt;target&gt; string is managed.
 Created save variable on the character target
   parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target
@@ -9453,7 +9467,7 @@ How automations are imported and exported--------------------------------------
     automationDataFolder, the folder where automations are saved.
     interruptDataFolder, the folder where interrupts are saved.
 
-How automations an interrupts are saved----------------------------------------
+How automations and interrupts are saved----------------------------------------
 
   parthiaAutomationSaveTable, is the dictionary that is saved to and loaded from.
     parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation, is where automations are saved
@@ -10040,6 +10054,10 @@ Scripts\Game Commands\auto\parthiaAutomationStart(groupName, groupRepeat)
 ]]--
 function parthiaAutomationStart(groupName, groupRepeat)
 
+  debugToDisplay("function parthiaAutomationStart called")
+  debugToDisplay("\tgroupName: "..groupName)
+  debugToDisplay("\tgroupRepeat: "..groupRepeat)
+
   -- Stop already running automation, display message to user
   if parthiaAutomationRunning then
     parthiaAutomationStop(true)
@@ -10133,7 +10151,7 @@ Scripts\Game Commands\auto\parthiaAutomationCall()
 ]]--
 
 function parthiaAutomationCall()
-  
+
   -- Set local variables
   local groupName = false  -- the name of this automation group
   local groupRepeat = false  -- How many times this group automation should repeat
@@ -10143,127 +10161,155 @@ function parthiaAutomationCall()
   local groupPosition = false
   -- How many times this automation group has repeated
   local iterationCounter = 0
-  -- Set parthiaAutomationInterruptIterationCounter to 0 if it has been initialized yet
-  if parthiaAutomationInterruptIterationCounter == nil then
-    parthiaAutomationInterruptIterationCounter = 0
-  end  -- if parthiaAutomationInterruptIterationCounter == nil then
-  
-  -- Now create the local variables collecting from global variables of the automation type being run.
-  if parthiaAutomationInterruptRunning then
-    --collect group name and repeat from parthiaAutomationInterruptRunning
-    groupName = parthiaAutomationInterruptRunning
-    groupRepeat = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].interruptRepeat
-    -- this is an interrupt task
-    automationType = "automationInterrupt"
-    -- setting this now, incase the previous task should repeat.
-    groupPosition = parthiaAutomationInterruptGroupPosition
-    -- How many times this interrupt group has repeated
-    iterationCounter = parthiaAutomationInterruptIterationCounter
-  else  -- this is a standard automation task collect from that table instead.
-    -- Get required variables for this function.  
-    groupName = parthiaAutomationRunning["groupName"]  -- the name of this automation group
-    groupRepeat = parthiaAutomationRunning["groupRepeat"]  -- How many times this group automation should repeat
-    automationType = "automation"  -- This is a standard automation task.
-    -- setting this now, incase the previous task should repeat.
-    groupPosition = parthiaAutomationGroupPosition
-    -- How many times this automation group has repeated
-    iterationCounter = parthiaAutomationIterationCounter
-  end -- if parthiaAutomationInterruptRunning then
-  
-  -- display debugging messages
-  debugToDisplay("parthiaAutomationCall post set local variables:")
-  debugToDisplay("\tgroupName: "..groupName.." groupRepeat: "..groupRepeat)
-  debugToDisplay("\tautomationType: "..automationType.." groupPosition: "..
-                 tostring(groupPosition).." iterationCounter: "..tostring(iterationCounter))
-  
+  local automationTrigger = 0
+  local automationCommand = "None"
   -- Blank out the timer ID it is no longer needed
   parthiaAutomationTimerID = false
-  
   -- if a custom automation trigger exists, kill it.
   if parthiaAutomationRegexTriggerID then
     killTrigger(parthiaAutomationRegexTriggerID)
     parthiaAutomationRegexTriggerID = false
   end  -- if parthiaAutomationRegexTriggerID then
-  
-  -- Iterate to the next command if it is required.
-  --if this is the fist run of this automation task, initialize variables.
-  if parthiaAutomationFirstRun then
-    debugToDisplay("\tAutomation first run, calling iteration.")
-    groupPosition = parthiaAutomationIncreaseGroupIteration()  -- set the iterator
-    parthiaLastCommandSuccess = false  -- There was no last command so set this to false
-  -- Always iterate to the next command if repeatOnFail is false, and this is NOT the first run out this automation group
-  elseif not parthiaAutomationRepeatCmdOnFailure then
-    debugToDisplay("\trepeatOnFailure is false, calling iteration")
-    groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
-  -- It repeatOnFail is true and the last command was successfull iterate
-  elseif parthiaAutomationRepeatCmdOnFailure and parthiaLastCommandSuccess then
-    debugToDisplay("\trepeatOnFailure is true, last command was successful.")
-    groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
-  end  -- if parthiaAutomationFirstRun
-  
-  -- Update the iteration counter
-  if parthiaAutomationInterruptRunning then
-    iterationCounter = parthiaAutomationInterruptIterationCounter
-  else  -- this is a standard automation task collect from that table instead.
-    iterationCounter = parthiaAutomationIterationCounter
-  end -- if parthiaAutomationInterruptRunning then
-  
-  --send debugging messages
-  debugToDisplay("parthiaAutomationCall post Iteration variables post iteration:")
-  debugToDisplay("\tgroupPosition: "..tostring(groupPosition).." iterationCounter: "..tostring(iterationCounter))
-  
-  -- stop this automation loop if user specified a group repeat and it has been reached.
-  if parthiaToBoolean(groupRepeat) then  -- Only check if a group repeat was specified.
-    if iterationCounter &gt;= tonumber(groupRepeat) then  -- this has iterated more than group repeat specified
-      if automationType == "automationInterrupt" then
-        pecho("\nInterrupt "..groupName.." completed.\n")
-        -- Stop the interrupt system
-        local continueAutomation = parthiaAutomationInterruptStop()
-        -- There is no need to continue automation so stop now
-        if not continueAutomation then
-          return true
-        end  -- if not continueAutomation
-        -- Since automation needs to continue after this. Gather data from the running automation
-        -- Get required variables for this function.  
-        groupName = parthiaAutomationRunning["groupName"]  -- the name of this automation group
-        groupRepeat = parthiaAutomationRunning["groupRepeat"]  -- How many times this group automation should repeat
-        automationType = "automation"  -- This is a standard automation task.
-        -- setting this now, incase the previous task should repeat.
-        groupPosition = parthiaAutomationGroupPosition
-        -- How many times this automation group has repeated
-        iterationCounter = parthiaAutomationIterationCounter
-      -- This is a standard automation task.
-      else
-        pecho("\nAutomation task "..groupName.." complete.\n")
-        parthiaAutomationStop()  -- Stop automation loop.
-        return true  -- stop current automation call also.
-      end -- if automationType == "automationInterrupt" then
-    end  -- if parthiaAutomationIterationCounter &gt; tonumber(groupRepeat) then
-  end -- if parthiaToBoolean(groupRepeat) then
-  
-  -- collect additional data this function will need
-  
-  --convert old secondsToWait to custom triggers, they only would exist in a standard automation group.
-  if automationType == "automation" and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait then
-    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].automationTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait
-    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait = nil
-  end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait then
 
-  -- The command to run
-  local automationCommand = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].automationCommand
-  -- The delay before calling the next command
-  local automationTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].automationTrigger
-  -- If this command should repeat on failure
-  local repeatOnFail = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].repeatOnFail
-
-  -- This will be used in the if statement above that determins if automation should continue to the next command
-  parthiaAutomationRepeatCmdOnFailure = parthiaToBoolean(repeatOnFail)
+  -- If this is an insert run
+  if parthiaAutomationInsertCommand then
+  
+    automationTrigger = parthiaAutomationInsertCommand.trigger
+    automationCommand = parthiaAutomationInsertCommand.command
+    
+    -- Now clear out the insert table so it will not run again.
+    parthiaAutomationInsertCommand = false
+  
+  -- If this is a standard automation or interrupt run
+  else
+  
+    -- Set local variables
+    groupName = false  -- the name of this automation group
+    groupRepeat = false  -- How many times this group automation should repeat
+    -- This is a standard automation task.
+    automationType = "automation"
+    -- setting this now, incase the previous task should repeat.
+    groupPosition = false
+    -- How many times this automation group has repeated
+    iterationCounter = 0
+    -- Set parthiaAutomationInterruptIterationCounter to 0 if it has been initialized yet
+    if parthiaAutomationInterruptIterationCounter == nil then
+      parthiaAutomationInterruptIterationCounter = 0
+    end  -- if parthiaAutomationInterruptIterationCounter == nil then
+    
+    -- Now create the local variables collecting from global variables of the automation type being run.
+    if parthiaAutomationInterruptRunning then
+      --collect group name and repeat from parthiaAutomationInterruptRunning
+      groupName = parthiaAutomationInterruptRunning
+      groupRepeat = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].interruptRepeat
+      -- this is an interrupt task
+      automationType = "automationInterrupt"
+      -- setting this now, incase the previous task should repeat.
+      groupPosition = parthiaAutomationInterruptGroupPosition
+      -- How many times this interrupt group has repeated
+      iterationCounter = parthiaAutomationInterruptIterationCounter
+    else  -- this is a standard automation task collect from that table instead.
+      -- Get required variables for this function.  
+      groupName = parthiaAutomationRunning["groupName"]  -- the name of this automation group
+      groupRepeat = parthiaAutomationRunning["groupRepeat"]  -- How many times this group automation should repeat
+      automationType = "automation"  -- This is a standard automation task.
+      -- setting this now, incase the previous task should repeat.
+      groupPosition = parthiaAutomationGroupPosition
+      -- How many times this automation group has repeated
+      iterationCounter = parthiaAutomationIterationCounter
+    end -- if parthiaAutomationInterruptRunning then
+    
+    -- display debugging messages
+    debugToDisplay("parthiaAutomationCall post set local variables:")
+    debugToDisplay("\tgroupName: "..groupName.." groupRepeat: "..groupRepeat)
+    debugToDisplay("\tautomationType: "..automationType.." groupPosition: "..
+                   tostring(groupPosition).." iterationCounter: "..tostring(iterationCounter))
+    
+    -- Iterate to the next command if it is required.
+    --if this is the fist run of this automation task, initialize variables.
+    if parthiaAutomationFirstRun then
+      debugToDisplay("\tAutomation first run, calling iteration.")
+      groupPosition = parthiaAutomationIncreaseGroupIteration()  -- set the iterator
+      parthiaLastCommandSuccess = false  -- There was no last command so set this to false
+    -- Always iterate to the next command if repeatOnFail is false, and this is NOT the first run out this automation group
+    elseif not parthiaAutomationRepeatCmdOnFailure then
+      debugToDisplay("\trepeatOnFailure is false, calling iteration")
+      groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
+    -- It repeatOnFail is true and the last command was successfull iterate
+    elseif parthiaAutomationRepeatCmdOnFailure and parthiaLastCommandSuccess then
+      debugToDisplay("\trepeatOnFailure is true, last command was successful.")
+      groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
+    end  -- if parthiaAutomationFirstRun
+    
+    -- Update the iteration counter
+    if parthiaAutomationInterruptRunning then
+      iterationCounter = parthiaAutomationInterruptIterationCounter
+    else  -- this is a standard automation task collect from that table instead.
+      iterationCounter = parthiaAutomationIterationCounter
+    end -- if parthiaAutomationInterruptRunning then
+    
+    --send debugging messages
+    debugToDisplay("parthiaAutomationCall post Iteration variables post iteration:")
+    debugToDisplay("\tgroupPosition: "..tostring(groupPosition).." iterationCounter: "..tostring(iterationCounter))
+    
+    -- stop this automation loop if user specified a group repeat and it has been reached.
+    if parthiaToBoolean(groupRepeat) then  -- Only check if a group repeat was specified.
+      if iterationCounter &gt;= tonumber(groupRepeat) then  -- this has iterated more than group repeat specified
+        if automationType == "automationInterrupt" then
+          pecho("\nInterrupt "..groupName.." completed.\n")
+          -- Stop the interrupt system
+          local continueAutomation = parthiaAutomationInterruptStop()
+          -- There is no need to continue automation so stop now
+          if not continueAutomation then
+            return true
+          end  -- if not continueAutomation
+          -- Since automation needs to continue after this. Gather data from the running automation
+          -- Get required variables for this function.  
+          groupName = parthiaAutomationRunning["groupName"]  -- the name of this automation group
+          groupRepeat = parthiaAutomationRunning["groupRepeat"]  -- How many times this group automation should repeat
+          automationType = "automation"  -- This is a standard automation task.
+          -- setting this now, incase the previous task should repeat.
+          groupPosition = parthiaAutomationGroupPosition
+          -- How many times this automation group has repeated
+          iterationCounter = parthiaAutomationIterationCounter
+        -- This is a standard automation task.
+        else
+          pecho("\nAutomation task "..groupName.." complete.\n")
+          parthiaAutomationStop()  -- Stop automation loop.
+          return true  -- stop current automation call also.
+        end -- if automationType == "automationInterrupt" then
+      end  -- if parthiaAutomationIterationCounter &gt; tonumber(groupRepeat) then
+    end -- if parthiaToBoolean(groupRepeat) then
+    
+    -- collect additional data this function will need
+    
+    --convert old secondsToWait to custom triggers, they only would exist in a standard automation group.
+    if automationType == "automation" and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait then
+      parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].automationTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait
+      parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait = nil
+    end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait then
+  
+    -- The command to run
+    automationCommand = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].automationCommand
+    -- The delay before calling the next command
+    automationTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].automationTrigger
+    -- If this command should repeat on failure
+    repeatOnFail = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].repeatOnFail
+  
+    -- This will be used in the if statement above that determins if automation should continue to the next command
+    parthiaAutomationRepeatCmdOnFailure = parthiaToBoolean(repeatOnFail)
+  
+  end  -- if parthiaAutomationInsertCommand
   
   -- In case user is sending command that has no success chance reset parthiaLastCommandSuccess
   parthiaLastCommandSuccess = false
   
   --Determine how the next command should be called
   --Determine when the current command should be called ( To avoid the 1 command a second limit )
+  
+  debugToDisplay("parthiaAutomationCall automation type logic complete.")
+  debugToDisplay("\tautomationCommand: "..automationCommand)
+  debugToDisplay("\tautomationTrigger: "..automationTrigger)
   
   -- If the user specified a custom trigger
   if parthiaToBoolean(automationTrigger) then
@@ -10279,6 +10325,10 @@ function parthiaAutomationCall()
       
       -- create timer to call this function again
       parthiaAutomationTimerID = tempTimer(timedTrigger, [[parthiaAutomationCall()]])
+      
+      debugToDisplay("\tTimed trigger called.")
+      debugToDisplay("\t\tautomationCommand: "..automationCommand)
+      debugToDisplay("\t\ttimedTrigger: "..timedTrigger)
       
     else  -- This trigger is a message based trigger. Create a regex trigger.
       
@@ -10328,6 +10378,7 @@ function parthiaAutomationStop(displayToScreen)
   parthiaLastCommandSuccess = false
   parthiaAutomationRepeatCmdOnFailure = false
   parthiaAutomationPaused = false
+  parthiaAutomationInsertCommand = false
   
   -- Stop any running interrupts
   parthiaAutomationInterruptStop()
@@ -10552,6 +10603,12 @@ function parthiaAutomationHelp()
     [[parthiaAutomationExport("automationInterrupt", "", true)]],
     "parthia interrupt export", true)
   pecho(", how to export interrupts to file.\n")
+
+  pecho("\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia insert", 
+    [[parthiaAutomationInsertHelpBreif()]],
+    "insert a command into a running automation", true)
+  pecho(", insert a command into a running automation or interrupt.\n")
   
   pecho("\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation triggers&lt;reset&gt;", 
@@ -11703,6 +11760,98 @@ function parthiaToggleTargetFilter(displayToScreen)
   end  -- if tecSettings.filterTargetFromCommands else
 
 end  -- function parthiaToggleTargetFilter</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationSetInsert(command, trigger)</name>
+						<packageName></packageName>
+						<script>function parthiaAutomationSetInsert(command, trigger)
+
+  debugToDisplay("function parthiaAutomationSetInsert called")
+  debugToDisplay("\tcommand: "..command)
+  
+  -- if the trigger was not passed, set it to 0
+  if not trigger then trigger = 0 end
+  debugToDisplay("\ttrigger: "..trigger)
+
+  -- Turn the false variable for this into a table.
+  parthiaAutomationInsertCommand = {}
+
+  parthiaAutomationInsertCommand.command = command
+  parthiaAutomationInsertCommand.trigger = trigger
+  
+  if parthiaAutomationRunning then
+    pecho("Inserting "..command.." into the running automation.\n")
+  elseif parthiaAutomationInterruptRunning then
+    pecho("Inserting "..command.." into the running interrupt.\n")
+  else  -- No automation is currently running
+    pecho("Starting the next automation or interrupt with "..command..".\n")
+  end -- if parthiaAutomationInterruptRunning or parthiaAutomationRunning
+  
+  
+  debugToDisplay("function parthiaAutomationSetInsert end")
+
+end  -- function parthiaAutomationSetInsert(command, trigger)
+
+function parthiaAutomationInsertHelpBreif()
+
+  pecho("\nParthia Insert Help Start\n")
+  
+  pecho("\n\tFor a text tutorial on inserting a command click, ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;here\n", 
+    [[parthiaAutomationInsertHelpFull()]], 
+    "text tutorial on inserting into automations", true)
+  
+  pecho("\n\tFor a tutorial video inserting commands into running automation or interrupts go to: ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/6xr5gHjjH5A\n", 
+    [[parthiaAutomationUpdateHelp("automation")]], 
+    "youtube video on inerting into automations", true)
+  
+  pecho("\n\tCommand Format:\n")
+  pecho("\t\t/insert YourCommandHere\n")
+  pecho("\t\tOR\n")
+  pecho("\t\t/insert YourCommandHere, NumberOfSeconds\n")
+  
+  pecho("\nParthia Insert Help End\n")
+
+end -- function parthiaAutomationInsertHelpBreif()
+
+function parthiaAutomationInsertHelpFull()
+
+  pecho("\nParthia Insert Help Start\n")
+  
+  pecho("\n\tParthia's insert command allows you to insert a single command into a running automation or interrupt.\n\n")
+  
+  pecho("\tTo insert a command that calls the following automation or interrupt command when a (You are no longer busy.) message appears, Use format:\n")
+  pechoLink("\t\t&lt;:"..tecSettings.helpHighlightColor.."&gt;/insert YourCommandHere\n", 
+    [[printCmdLine("/insert ReplaceMeWithYourCommand")]],
+    "click for insert example", true)
+  pecho("\t\tOr\n")
+  pechoLink("\t\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia insert YourCommandHere\n", 
+  [[printCmdLine("parthia insert ReplaceMeWithYourCommand")]],
+  "click for insert example", true)
+  pecho("\tWith the example commands above. When your inserted command runs the next command called by the automation system will be called when the (You are no longer busy.) message appears. ")
+  pecho("Typically you would want to use this method when your inserted command displays a (You are no longer busy.) message after it has fully run.\n\n")
+  
+  pecho("\tTo insert a command that calls the following automation or interrupt command after a duration of time, use format:\n")
+  pechoLink("\t\t&lt;:"..tecSettings.helpHighlightColor.."&gt;/insert YourCommandHere, #\n", 
+    [[printCmdLine("/insert ReplaceMeWithYourCommand, ReplaceMeWithANumber")]],
+    "click for insert example", true)
+  pecho("\t\tOr\n")  
+  pechoLink("\t\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia insert YourCommandHere, #\n", 
+    [[printCmdLine("parthia insert ReplaceMeWithYourCommand, ReplaceMeWithANumber")]],
+    "click for insert example", true)
+  pecho("\tWith the example command above, the next command called by the automation system will be called after # seconds. Where # is a number. ")
+  pecho("Typically you will want to use this with commands that do NOT have a (You are no longer busy.) message.\n")
+  pecho("\tPlease note that TEC has a limit of receiving 1 command a second from a player. Setting the # number above to 0 will tell the automation system that instead of waiting 0 seconds you want to wait for the (You are no longer busy.) message to appear.\n\n")
+  
+  pecho("\n\tInserting a command when no automation or interrupt is running will cause the inserted command to be the first command called when the next automation or interrupt starts.\n")
+  
+  pecho("\n\tYourCommandHere, in the examples above represents the command you would like to run.\n")
+  
+  pecho("\nParthia Insert Help End\n")
+
+end -- function parthiaAutomationInsertHelpFull()</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>

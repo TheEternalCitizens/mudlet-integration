@@ -1237,6 +1237,10 @@ matches[2], First item captured in a capture group ()
 matches[3], second item captured in a capture group ()
 ]]--
 
+debugToDisplay("Alias parthia automation [group name], [repeat]")
+debugToDisplay("\tmatches[2]: "..matches[2])
+debugToDisplay("\tmatches[3]: "..matches[3])
+
 -- matches[2] is the first item captured in the pattern, or the automation group name
 -- matches [3] is the second item captured in the pattern, or how many times this automation group should repeat.
 parthiaAutomationStart(matches[2], matches[3])</script>
@@ -1537,6 +1541,54 @@ expandAlias("parthia interrupt "..tostring(matches[2]))
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia interrupt open$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>/insert  command, trigger</name>
+					<script>debugToDisplay("Alias /insert  command, trigger called")
+
+
+-- Only send the trigger type if it is provided.
+if #matches == 3 then 
+  debugToDisplay("\tmatches[2] "..matches[2].." | matches[3] "..matches[3])
+  parthiaAutomationSetInsert(matches[2], matches[3])
+else
+  debugToDisplay("\nmatches[2] "..matches[2])
+  parthiaAutomationSetInsert(matches[2])
+end  -- if #matches == 3</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^\/(?:insert|ins)\s+([^,]+)(?:,\s+(\d+)|)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia insert command, trigger</name>
+					<script>debugToDisplay("Alias parthia insert command, trigger called")
+
+
+-- Only send the trigger type if it is provided.
+if #matches == 3 then 
+  debugToDisplay("\tmatches[2] "..matches[2].." | matches[3] "..matches[3])
+  parthiaAutomationSetInsert(matches[2], matches[3])
+else
+  debugToDisplay("\nmatches[2] "..matches[2])
+  parthiaAutomationSetInsert(matches[2])
+end  -- if #matches == 3</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia\s+insert\s+([^,]+)(?:,\s+(\d+)|)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia insert</name>
+					<script>parthiaAutomationInsertHelpBreif()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia insert$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>/insert</name>
+					<script>parthiaAutomationInsertHelpBreif()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^/insert$</regex>
 				</Alias>
 			</AliasGroup>
 			<Alias isActive="yes" isFolder="no">
