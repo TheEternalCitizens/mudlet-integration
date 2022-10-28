@@ -57,7 +57,7 @@ Automations Bugfix Fall-Winter 2022
   Feature: Added command `parthia developer toggle filtered line`. Adds the ability to or not to show the filtered text normally shown on screen.
   
   Moderate Improvement: Added /insert command to insert commands into running automations and interrupts.
-    Run `parthia automation insert` for help. There is already a tutorial video.
+    Run `parthia insert` for help. There is already a tutorial video.
   
   Significant Improvement: In all instances but three. If a command is sent to the server that contains &lt;target&gt;.
     &lt;target&gt; will be replaced with the target you provided to the target command.
