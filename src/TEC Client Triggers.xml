@@ -1631,18 +1631,34 @@ if "&lt;center&gt;" == string.match(filteredLine, "&lt;center&gt;") then
     width = (getColumnCount() - 1), --width of main console -1 is so autowrap no trigger
     textColor = "&lt;gray&gt;"
   })
-	selectCurrentLine() --select current line in main.
-	replace("") --Erase text from main. Otherwise variable line will apear on console.
-	deselect() --Don't forget your deselects!
-  cecho(myFormatter:format(filteredLine)) --echo out out ftext
+	
+  --Only remove the glogal line if there are settings in place to do so.
+  if tecSettings.parthiaRemoveGlobalLine then
+  	selectCurrentLine() --select current line in main.
+  	replace("") --Erase text from main. Otherwise variable line will apear on console.
+  	--hreplace(filteredLine) --insert text into console. Replacing hex color codes with colored text.
+  	deselect() --Don't forget your deselects!
+  end  -- if tecSettings.parthiaRemoveGlobalLine
+  
+  -- Only show the filtered line if specified to do so.
+  if tecSettings.parthiaDisplayFilteredLine then
+    cecho(myFormatter:format(filteredLine)) --echo out out ftext
+  end -- if tecSettings.parthiaDisplayFilteredLine
   
 else --text that does not need to be centered.
  
-	selectCurrentLine() --select current line in main.
-	replace("") --Erase text from main. Otherwise variable line will apear on console.
-	--hreplace(filteredLine) --insert text into console. Replacing hex color codes with colored text.
-	deselect() --Don't forget your deselects!
-  hecho(filteredLine)
+  --Only remove the glogal line if there are settings in place to do so.
+  if tecSettings.parthiaRemoveGlobalLine then
+  	selectCurrentLine() --select current line in main.
+  	replace("") --Erase text from main. Otherwise variable line will apear on console.
+  	--hreplace(filteredLine) --insert text into console. Replacing hex color codes with colored text.
+  	deselect() --Don't forget your deselects!
+  end  -- if tecSettings.parthiaRemoveGlobalLine
+  
+  -- Only show the filtered line if specified to do so.
+  if tecSettings.parthiaDisplayFilteredLine then
+    hecho(filteredLine)
+  end --if tecSettings.parthiaDisplayFilteredLine
   
 end --if &lt;center&gt; in line else hreplace.
 

@@ -947,6 +947,51 @@ end --HelpDevsData.ObjectTypes</script>
 						<regex>^parthia object data clear$</regex>
 					</Alias>
 				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia developer toggle global line</name>
+					<script>-- This will toggle if the raw text received from TEC will display to the main screen.
+
+if tecSettings.parthiaRemoveGlobalLine then
+
+  tecSettings.parthiaRemoveGlobalLine = false
+  pecho("The global mudlet line will now show to screen.")
+
+else
+
+  tecSettings.parthiaRemoveGlobalLine = true
+  pecho("The global mudlet line will no longer show to screen.")
+  
+end  -- if parthiaRemoveGlobalLine
+
+dontForgetToSave()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia developer toggle global line$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia developer toggle filtered line</name>
+					<script>-- Parthia filters raw text received from TEC to a format usable by Mudlet.
+-- This filter rusults in global variable filteredLine.
+-- Normally that line is shown to screen.
+-- This script offers the ability to stop showing that line to screen.
+
+if tecSettings.parthiaDisplayFilteredLine then
+
+  tecSettings.parthiaDisplayFilteredLine = false
+  pecho("The global mudlet line will no longer show to screen.\n")
+
+else
+
+  tecSettings.parthiaDisplayFilteredLine = true
+  pecho("The global mudlet line will now show to screen.\n")
+  
+end  -- if parthiaRemoveGlobalLine
+
+dontForgetToSave()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia developer toggle filtered line$</regex>
+				</Alias>
 			</AliasGroup>
 			<Alias isActive="yes" isFolder="no">
 				<name>parthia help developers</name>
