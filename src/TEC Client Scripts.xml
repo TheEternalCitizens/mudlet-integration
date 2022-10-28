@@ -12,14 +12,14 @@
 			<script>--[[
 
 Automations Bugfix Fall-Winter 2022
-
-  Minor bugfix: characters completing an interrupt would not automatically resume their last running automation.
   
   Minor bugfix: players running very old accounts that do not have the colored text patterns sent out for all standard room messages could not use the run courses command. This has been fixed.
   Thank you Rehlyt for reporting the bug
   
   Minor bugfix: players using the non colored "You are no longer busy." message would not have automations properly interate to the next command in the automation.
   Thank You ottomated for reporting the bug
+  
+  Bugfix: characters completing an interrupt would not automatically resume their last running automation.
   
   Bugfix: parthia automation and interrupt creation commands would not accept | in the input. Now all characters except , are allowed in automation and interrupt creation.
   Thank you Wacomd for finding the bug
@@ -55,6 +55,9 @@ Automations Bugfix Fall-Winter 2022
   Feature: Added command `parthia developer toggle global line`. Adds the ability to show or hide the raw text received from the TEC server.
   
   Feature: Added command `parthia developer toggle filtered line`. Adds the ability to or not to show the filtered text normally shown on screen.
+  
+  Moderate Improvement: Added /insert command to insert commands into running automations and interrupts.
+    Run `parthia automation insert` for help. There is already a tutorial video.
   
   Significant Improvement: In all instances but three. If a command is sent to the server that contains &lt;target&gt;.
     &lt;target&gt; will be replaced with the target you provided to the target command.
