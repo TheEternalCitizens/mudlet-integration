@@ -11827,7 +11827,7 @@ function parthiaAutomationInsertHelpBreif()
   
   pecho("\n\tFor a tutorial video inserting commands into running automation or interrupts go to: ")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/6xr5gHjjH5A\n", 
-    [[parthiaAutomationUpdateHelp("automation")]], 
+    [[openUrl("https://youtu.be/6xr5gHjjH5A")]], 
     "youtube video on inerting into automations", true)
   
   pecho("\n\tCommand Format:\n")
