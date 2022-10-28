@@ -1842,7 +1842,7 @@ hecho("Communication", filteredLine.."\n")
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>&lt;/font&gt;&lt;font color="#e119e1"&gt;</string>
+					<string>&lt;/font&gt;&lt;font color="#e119e1"&gt;A rumor is circulating around:</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>2</integer>
