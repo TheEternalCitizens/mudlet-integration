@@ -1833,7 +1833,7 @@ hecho("Communication", filteredLine.."\n")
 --hecho("Rumors", filteredLine.."\n")</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
-				<mStayOpen>0</mStayOpen>
+				<mStayOpen>1</mStayOpen>
 				<mCommand></mCommand>
 				<packageName></packageName>
 				<mFgColor>#ff0000</mFgColor>

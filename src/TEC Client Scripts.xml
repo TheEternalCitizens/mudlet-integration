@@ -24,6 +24,8 @@ Automations Bugfix Fall-Winter 2022
   Bugfix: parthia automation and interrupt creation commands would not accept | in the input. Now all characters except , are allowed in automation and interrupt creation.
   Thank you Wacomd for finding the bug
   
+  Bugfix: The rumors text trigger was causing combat text of color #e119e1 to go to the communications window. 
+  
   Minor Improvement: When you run the stats command your fatigue bar will refresh with your current fatigue.
   
   Minor Improvement: Futher cleaned up the help displayed with the parthia command. There were too many items on it.
