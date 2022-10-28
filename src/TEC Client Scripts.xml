@@ -52,6 +52,10 @@ Automations Bugfix Fall-Winter 2022
   
   Improvement: Better formating on the parthia or help client command. Easier to read, fewer items on the main call.
   
+  Feature: Added command `parthia developer toggle global line`. Adds the ability to show or hide the raw text received from the TEC server.
+  
+  Feature: Added command `parthia developer toggle filtered line`. Adds the ability to or not to show the filtered text normally shown on screen.
+  
   Significant Improvement: In all instances but three. If a command is sent to the server that contains &lt;target&gt;.
     &lt;target&gt; will be replaced with the target you provided to the target command.
     This is supported with ANY method mudlet uses to send a command.
@@ -6699,6 +6703,18 @@ end --function tecClientHelp</script>
   [[saveHelpDevs(true)]],
   "Save Help Developer data", true)
   pecho(", Save data collected by Help Developers to file.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia developer toggle global line", 
+  [[expandAlias("parthia developer toggle global line")]],
+  "Toggle raw text display", true)
+  pecho(", toggle if raw text from server is displayed.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia developer toggle filtered line", 
+  [[expandAlias("parthia developer toggle filtered line")]],
+  "Toggle filtered text display", true)
+  pecho(", toggle if filtered text parthia prepared for Mudlet is displayed.\n")
+  
+  pecho("\n")
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug", 
   [[tecDebugHelp()]],

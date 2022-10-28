@@ -954,12 +954,12 @@ end --HelpDevsData.ObjectTypes</script>
 if tecSettings.parthiaRemoveGlobalLine then
 
   tecSettings.parthiaRemoveGlobalLine = false
-  pecho("The global mudlet line will now show to screen.")
+  pecho("Raw text from server will now show to screen.\n")
 
 else
 
   tecSettings.parthiaRemoveGlobalLine = true
-  pecho("The global mudlet line will no longer show to screen.")
+  pecho("Raw text from server will no longer show to screen.\n")
   
 end  -- if parthiaRemoveGlobalLine
 
@@ -978,12 +978,12 @@ dontForgetToSave()</script>
 if tecSettings.parthiaDisplayFilteredLine then
 
   tecSettings.parthiaDisplayFilteredLine = false
-  pecho("The global mudlet line will no longer show to screen.\n")
+  pecho("Text prepared for Mudlet by parthia will no longer show to screen.\n")
 
 else
 
   tecSettings.parthiaDisplayFilteredLine = true
-  pecho("The global mudlet line will now show to screen.\n")
+  pecho("Text prepared for Mudlet by parthia will now show to screen.\n")
   
 end  -- if parthiaRemoveGlobalLine
 
