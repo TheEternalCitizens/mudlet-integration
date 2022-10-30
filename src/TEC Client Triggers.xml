@@ -2337,6 +2337,8 @@ end --if parthiaMap.getEnabled()
 Patter example: &lt;/font&gt;&lt;font color="#ff9b00"&gt;You are no longer busy.&lt;/font&gt;&lt;/font&gt;
 ]]--
 
+debugToDisplay("'You are no longer busy.' trigger triggered")
+
 -- An interrupt automation is running
 --elseif parthiaAutomationInterruptRunning then
 if parthiaAutomationInterruptRunning then
@@ -2346,6 +2348,12 @@ if parthiaAutomationInterruptRunning then
   local groupRepeat = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].interruptRepeat
   --collecct group position from the global interrupt variable
   local groupPosition = parthiaAutomationInterruptGroupPosition
+  
+  debugToDisplay("\tInterrupt running.")
+  debugToDisplay("\tgroupName: "..groupName)
+  debugToDisplay("\tgroupRepeat: "..groupRepeat)
+  debugToDisplay("\tgroupPosition: "..tostring(groupPosition))
+  debugToDisplay("\tparthiaAutomationFirstRun: "..tostring(parthiaAutomationFirstRun))
   
   -- if groupPosition is not yet set, collect it now.
   if not groupPosition then
@@ -2367,13 +2375,21 @@ if parthiaAutomationInterruptRunning then
     -- Returning the lowest element in the  automation group
     groupPosition = automationGroupKeySet[1]
     
-    debugToDisplay("'You are no longer busy.' trigger groupPosition false, collected position: "..groupPosition)
+    debugToDisplay("\tgroupPosition false, collected position: "..groupPosition)
   
   end  -- if not groupPosition then
   
   -- Check if this interrupt is called off of a timer or this trigger
   -- If automation trigger for this automation group is 0, automation is called by this trigger.
-  if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName][groupPosition].automationTrigger) then
+  -- If this is the first run of this automation use the firstCommandTrigger variable instead of the automationTrigger for the interrupt that will be called.
+  if parthiaAutomationFirstRun then  -- If this is the first run of this automation.
+    debugToDisplay("\tIn, if parthiaAutomationFirstRun ")
+    if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].firstCommandTrigger) then  -- If this is the first time this interrupt is being called.
+      debugToDisplay("\tIn if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].firstCommandTrigger")
+      parthiaAutomationCall()
+    end  -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].firstCommandTrigger
+  -- If this is NOT the first time this interrupt has been called, used the standard automation trigger
+  elseif not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName][groupPosition].automationTrigger) then
     parthiaAutomationCall()  -- Call the automation handler
   end  -- if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName][groupPosition].automationTrigger) then
   
@@ -2392,7 +2408,9 @@ elseif parthiaAutomationRunning then
     parthiaAutomationCall()  -- Call the automation handler
   end  -- if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].automationTrigger) then
   
-end -- if parthiaAutomationRunning then</script>
+end -- if parthiaAutomationRunning then
+
+debugToDisplay("Trigger You are no longer busy. completed.")</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
