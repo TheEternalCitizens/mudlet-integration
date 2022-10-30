@@ -10309,10 +10309,12 @@ function parthiaAutomationCall()
     -- collect additional data this function will need
     
     --convert old secondsToWait to custom triggers, they only would exist in a standard automation group.
-    if automationType == "automation" and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait then
-      parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].automationTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait
-      parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait = nil
-    end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait then
+    if automationType == "automation" then
+      if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait then
+        parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].automationTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait
+        parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait = nil
+      end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait
+    end  -- if automationType == "automation"
   
     -- The command to run
     automationCommand = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].automationCommand
