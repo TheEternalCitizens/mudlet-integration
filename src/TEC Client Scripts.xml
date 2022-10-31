@@ -10187,6 +10187,8 @@ Scripts\Game Commands\auto\parthiaAutomationCall()
 
 function parthiaAutomationCall()
 
+pecho("\nparthiaAutomationGroupPosition: "..tostring(parthiaAutomationGroupPosition).."\n")
+
   -- Set local variables
   local groupName = false  -- the name of this automation group
   local groupRepeat = false  -- How many times this group automation should repeat
@@ -10298,6 +10300,7 @@ function parthiaAutomationCall()
           if not continueAutomation then
             return true
           end  -- if not continueAutomation
+
           -- Since automation needs to continue after this. Gather data from the running automation
           -- Get required variables for this function.  
           groupName = parthiaAutomationRunning["groupName"]  -- the name of this automation group
@@ -10307,6 +10310,9 @@ function parthiaAutomationCall()
           groupPosition = parthiaAutomationGroupPosition
           -- How many times this automation group has repeated
           iterationCounter = parthiaAutomationIterationCounter
+--EXPERIMENT HERE
+          parthiaAutomationCall()
+          return true
         -- This is a standard automation task.
         else
           pecho("\nAutomation task "..groupName.." complete.\n")
