@@ -11035,9 +11035,6 @@ function parthiaAutomationInterruptStop()
     --  Set the automation variables back to running state.
     parthiaAutomationRunning = parthiaAutomationPaused
     parthiaAutomationPaused = false
-    
-    -- set arthiaInterruptCommandSuccess to default state of true
-    arthiaInterruptCommandSuccess = true
   
     debugToDisplay("parthiaAutomationInterruptStop completed succesfully, automation resume return true sent.")
     
@@ -11072,9 +11069,6 @@ function parthiaAutomationInterruptStart(groupName)
   
   --Setting automation first run to true, so we can iterate through the automation group properly
   parthiaAutomationFirstRun = true
-  
-  -- Set arthiaInterruptCommandSuccess to default state of true
-  arthiaInterruptCommandSuccess = true
   
   -- Setting the interrupt running variable, to keep track of this interrupt
   parthiaAutomationInterruptRunning = groupName
