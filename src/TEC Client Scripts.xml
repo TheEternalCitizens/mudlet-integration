@@ -12,6 +12,10 @@
 			<script>--[[
 
 Automations Bugfix Fall-Winter 2022
+
+  Very Minor bugfix: function parthiaMap.checkCharacter was throwing debug warnings when the `stats` command was run while mapping was disabled.
+
+  Minor bugfix: An interrupt previously could not have a `first command trigger` that was different than the `trigger` for that first command.
   
   Minor bugfix: players running very old accounts that do not have the colored text patterns sent out for all standard room messages could not use the run courses command. This has been fixed.
   Thank you Rehlyt for reporting the bug
@@ -72,6 +76,12 @@ Automations Bugfix Fall-Winter 2022
 Winter 2022 - 2023
   
 Not completed yet:
+
+  Past due: Create an automated installer for Windows users using OneDrive.
+  
+  Past due: Create a tutorial video for manual installations. Place it directly front center of that tutorial page.
+  
+  Past due: Create more tutorial videos. Link them to the help commands throughout the game.
 
   Major improvement: In hunting grounds that have a single entry and exit point. Add the ability for Parthia Maps to automatically move to the top of its tab. It displays the current hunting ground you are on. Though with an image that looks like an over the top view of the hunting ground. As you move it tracks movement as standard mudlet mapping feature does. Intended for beginer hunting grounds for now. Could add features like fog of war later.
 
@@ -11342,7 +11352,7 @@ function parthiaAutomationCharacterCheck(displayToScreen)
     parthiaAutomationSaveTable[character].automationInterrupt = {}
     parthiaAutomationSaveTable[character].automationInterruptTriggers = {}
     if displayToScreen then pecho("A character name of \""..character.."\", was not found in automations save file. Created defaults.") end
-    debugToDisplay("function parthiaMap.checkCharacter, created table for character \""..character.."\" in the parthiaMap.saveTable table.")
+    debugToDisplay("function parthiaAutomationCharacterCheck, created table for character \""..character.."\" in the parthiaMap.saveTable table.")
   end --if not parthiaMap.saveTable[character]
   
   --If a &lt;target&gt; does not already exist initialize it now.
@@ -13392,6 +13402,12 @@ It is called in trigger: `stats` within function setStatsCheckActive(false), onl
 This function needs the character name to run. the stats filter is what collects the playername
 ]]--
 function parthiaMap.checkCharacter(displayToScreen)
+  
+  -- If not not using the map system stop right away
+  if not tecSettings.parthiaMapEnabled then
+    return false
+  end  -- if not tecSettings.parthiaMapEnabled
+  
   local character = ""
   if parthiaPlayer.CurrentCharacter.name then --if logged into a character account
     character = parthiaPlayer.CurrentCharacter.name
