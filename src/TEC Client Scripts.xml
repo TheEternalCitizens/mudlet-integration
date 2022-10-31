@@ -10347,6 +10347,11 @@ function parthiaAutomationCall()
   debugToDisplay("parthiaAutomationCall automation type logic complete.")
   debugToDisplay("\tautomationCommand: "..automationCommand)
   debugToDisplay("\tautomationTrigger: "..automationTrigger)
+  debugToDisplay("\tgroupName: "..groupName)
+  debugToDisplay("\tgroupRepeat: "..groupRepeat)
+  debugToDisplay("\tautomationType: "..automationType)
+  debugToDisplay("\tgroupPosition: "..groupPosition)
+  debugToDisplay("\titerationCounter: "..iterationCounter)
   
   -- If the user specified a custom trigger
   if parthiaToBoolean(automationTrigger) then

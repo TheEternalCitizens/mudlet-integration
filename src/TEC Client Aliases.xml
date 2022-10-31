@@ -1304,10 +1304,10 @@ Old pattern: ^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-
 --Here we are unpacking ALL 6 of the captures from the pattern above.
 --Unpack format is unpack(array, element start, element end)
 --Since we are not specifing an element end it unpacks until the end of the array.
---This is just like sending it {groupName, parthiaAutomationGroupPosition, command, seconds, repeatOnFail, insert}
+--This is just like sending it {groupName, groupPosition, command, seconds, repeatOnFail, insert}
 
-groupName, parthiaAutomationGroupPosition, command, repeatOnFail, insert, trigger  = unpack(matches, 2)
-parthiaAutomationUpdate("automation", groupName, parthiaAutomationGroupPosition, command, trigger, repeatOnFail, insert)</script>
+local groupName, groupPosition, command, repeatOnFail, insert, trigger  = unpack(matches, 2)
+parthiaAutomationUpdate("automation", groupName, groupPosition, command, trigger, repeatOnFail, insert)</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([^,]+),\s+(\d+),\s+(\d+)\s+&amp;\s+(.+)$</regex>
@@ -1323,10 +1323,10 @@ Old pattern: ^parthia\s+interrupt\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9
 --Here we are unpacking ALL 6 of the captures from the pattern above.
 --Unpack format is unpack(array, element start, element end)
 --Since we are not specifing an element end it unpacks until the end of the array.
---This is just like sending it {groupName, parthiaAutomationGroupPosition, command, seconds, repeatOnFail, insert}
+--This is just like sending it {groupName, groupPosition, command, seconds, repeatOnFail, insert}
 
-groupName, parthiaAutomationGroupPosition, command, repeatOnFail, insert, trigger  = unpack(matches, 2)
-parthiaAutomationUpdate("automationInterrupt", groupName, parthiaAutomationGroupPosition, command, trigger, repeatOnFail, insert)</script>
+local groupName, groupPosition, command, repeatOnFail, insert, trigger  = unpack(matches, 2)
+parthiaAutomationUpdate("automationInterrupt", groupName, groupPosition, command, trigger, repeatOnFail, insert)</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia\s+interrupt\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([^,]+),\s+(\d+),\s+(\d+)\s+&amp;\s+(.+)$</regex>
