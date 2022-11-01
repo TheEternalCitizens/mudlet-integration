@@ -88,6 +88,8 @@ Not completed yet:
   Improvement: Add automations and interrupts to their data folders. Allowing for prepackaged automations that people can import directly on installation.
 
   Major improvement: add the ability to collect game data via regex triggers. For example when an attack is dodged, you could record each attack of the desired type ( when it was dodged ) and review what dodge dodged it. You could record stat improvements. Gleams. Really endless options. Just restricted to regex triggers. For text should fit anyones needs.
+  
+  Feature Request, requestor letty: RV and the steps garden are laggy.
 
 ]]--</script>
 			<eventHandlerList />
@@ -10186,8 +10188,6 @@ Scripts\Game Commands\auto\parthiaAutomationCall()
 ]]--
 
 function parthiaAutomationCall()
-
-pecho("\nparthiaAutomationGroupPosition: "..tostring(parthiaAutomationGroupPosition).."\n")
 
   -- Set local variables
   local groupName = false  -- the name of this automation group
