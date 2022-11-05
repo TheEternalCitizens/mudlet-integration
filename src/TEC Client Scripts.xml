@@ -10299,20 +10299,12 @@ function parthiaAutomationCall()
           -- There is no need to continue automation so stop now
           if not continueAutomation then
             return true
+          -- automation was previously running and it needs to be resumed.
+          else
+            -- Resume the previously running automation
+            parthiaAutomationCall()
+            return true
           end  -- if not continueAutomation
-
-          -- Since automation needs to continue after this. Gather data from the running automation
-          -- Get required variables for this function.  
-          groupName = parthiaAutomationRunning["groupName"]  -- the name of this automation group
-          groupRepeat = parthiaAutomationRunning["groupRepeat"]  -- How many times this group automation should repeat
-          automationType = "automation"  -- This is a standard automation task.
-          -- setting this now, incase the previous task should repeat.
-          groupPosition = parthiaAutomationGroupPosition
-          -- How many times this automation group has repeated
-          iterationCounter = parthiaAutomationIterationCounter
---EXPERIMENT HERE
-          parthiaAutomationCall()
-          return true
         -- This is a standard automation task.
         else
           pecho("\nAutomation task "..groupName.." complete.\n")
