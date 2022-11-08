@@ -2431,15 +2431,25 @@ debugToDisplay("Trigger You are no longer busy. completed.")</script>
 				</regexCodePropertyList>
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-				<name>Prompt to enter macro string</name>
-				<script>debugToDisplay("\nTrigger: Prompt to enter macro string started.\n")
+				<name>target collection</name>
+				<script>debugToDisplay("Trigger: target collection")
 
--- Tell the commandTargetFilter not to filter commands for this run.
-supressTargetFilter = true
+-- Attempt to collect the target from a new target set.
+local macroTarget = string.match( line, "Your macro new target is (.*)%.$")
 
-debugToDisplay("\n\tsupressTargetFilter: "..supressTargetFilter)
+-- If the macro was a call rather than a set. Collect the macro target.
+if not macroTarget then
+  macroTarget = string.match( line, "Your new macro target is (.*)%.$")
+end  -- if not macroTarget 
 
-debugToDisplay("\nTrigger: Prompt to enter macro string completed.\n")</script>
+debugToDisplay("\tmacroTarget: "..tostring(macroTarget))
+debugToDisplay("\tCharacter: "..parthiaPlayer.CurrentCharacter.name)
+
+-- Collect the target the user input into the target variable in the automations table
+parthiaSetCharacterTarget(macroTarget)
+
+debugToDisplay("\tTarget in automations table: "..parthiaGetCharacterTarget())
+debugToDisplay("Trigger: target collection completed")</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -2451,9 +2461,11 @@ debugToDisplay("\nTrigger: Prompt to enter macro string completed.\n")</script>
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>Enter the string you wish this macro to expand to: </string>
+					<string>Your macro target is</string>
+					<string>Your new macro target is</string>
 				</regexCodeList>
 				<regexCodePropertyList>
+					<integer>2</integer>
 					<integer>2</integer>
 				</regexCodePropertyList>
 			</Trigger>

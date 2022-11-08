@@ -2145,25 +2145,6 @@ parthiaStopScripts(true) --stop all automation scripts, display message to scree
 			<packageName></packageName>
 			<regex>^(?i)stop\s*$</regex>
 		</Alias>
-		<Alias isActive="yes" isFolder="no">
-			<name>target collection</name>
-			<script>-- Old pattern
--- Right away send the intended command
-send(matches[1])
-
-debugToDisplay("Aliase: target collection")
-debugToDisplay("\tmathces[1]: "..matches[1])
-debugToDisplay("\tmathces[2]: "..matches[2])
-debugToDisplay("\tCharacter: "..parthiaPlayer.CurrentCharacter.name)
-
--- Collect the target the user input into the target variable in the automations table
-parthiaSetCharacterTarget(matches[2])
-
-debugToDisplay("\tTarget in automations table: "..parthiaGetCharacterTarget())</script>
-			<command></command>
-			<packageName></packageName>
-			<regex>^(?i)ta(?:rget|rge|rg|r)(?-i)\s+(.*)$</regex>
-		</Alias>
 	</AliasPackage>
 	<ActionPackage />
 	<ScriptPackage />
