@@ -1636,11 +1636,25 @@ end  -- if #matches == 3</script>
 					<regex>^/insert$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
-					<name>parthia auotmations update prep</name>
+					<name>parthia automation update prep</name>
 					<script>prepAutomationUpdate(matches[2])</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^parthia auotmations update prep\s*(.*)$</regex>
+					<regex>^parthia automation update prep\s*(.*)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation get updates</name>
+					<script>-- If an update is already running, do not start another update download
+--if automationUpdateRunning then
+--  pecho("An automations update is already running. Please wait for it to complete.\n")
+-- if no update is running, start an automations update
+--else
+--  getAutomationUpdates()
+--end  -- if automationUpdateRunning
+getAutomationUpdates()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia automation get updates$</regex>
 				</Alias>
 			</AliasGroup>
 			<Alias isActive="yes" isFolder="no">

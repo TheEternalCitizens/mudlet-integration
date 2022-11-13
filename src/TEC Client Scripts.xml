@@ -614,6 +614,7 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   parthiaAutomationInsertCommand = false  -- table to contain commands that need to be inserted into a currently running automation
   automationDataFolder = getMudletHomeDir().."\/Automation Data\/"
   interruptDataFolder = getMudletHomeDir().."\/Interrupt Data\/"
+  automationUpdateRunning = false  -- Tells parthia if an automations update is currently running
   
   unfilteredTextConsoleMode = false  -- a snap out console window ( userWindow ) that shows unfiltered text from TEC
   
@@ -11891,7 +11892,7 @@ end -- function parthiaAutomationInsertHelpFull()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
-						<name>getAutomationUpdates(automationType)</name>
+						<name>getAutomationUpdates()</name>
 						<packageName></packageName>
 						<script>--[[
 Downloads automation and interrupt files from the development folder on github.
@@ -11903,15 +11904,80 @@ Process download a file that lists the static automation files that will exist o
 Loop through that file list and download those files.
 ]]--
 
--- automationType is the type of automation, IE: interrupt or automation
-function getAutomationUpdates(automationType)
+function getAutomationUpdates()
+
+  -- Where the files are in mudlet
+  local automationsGITRepository = [[https://github.com/TheEternalCitizens/mudlet-integration/tree/AutoamtionBugFixWinter2022/data]]
   
-  -- Where should the automation files be stored locally?
-  local automationRepository = getMudletHomeDir()..[[/Interrupt Data]]
+  -- Defaulting the tracked downloads table. The function used later trackDownloads() needs this table.
+  -- This is used to make certain all files have downloaded
+  trackedDownloads = {} --leave blank, needed for events. Is initialized in function trackDownloads
+  trackedDownloads.fileList = "" --leave blank, needed for events. Initialized in function trackDownloads
+  trackedDownloads.urlList = "" --leave blank, used to check for download errors.
   
-  --table.load(autoImportFilePath, autoTable)
+  -- This will track if automation updates are currently running
+  automationUpdateRunning = true
   
-end  -- getAutomationUpdates(automationType)</script>
+  -- This will track if a file failed to download
+  automationsUpdateDownloadError = false
+  
+  -- The list file for automations
+  local automationsURL = automationsGITRepository.."/Automations/list.config"
+  -- the list file for interrupts
+  local interrupsURL = automationsGITRepository.."/Interrupts/list.config"
+  
+  -- Track the list files download
+  local downloadURLs = {automationsURL , interrupsURL}
+  trackDownloads(downloadURLs)
+  
+  -- create the event to watch for automations update downloads
+  automationsDownloadDoneID = registerAnonymousEventHandler("sysDownloadDone", "automationListDownloadEventHandler")
+  automationsDownloadErrorID = registerAnonymousEventHandler("sysDownloadError", "automationListDownloadEventHandler")
+  
+  -- Download the automation update lists
+  downloadFile(automationDataFolder.."list.config", automationsURL)
+  downloadFile(interruptDataFolder.."list.config", interrupsURL)
+  
+end  -- getAutomationUpdates(automationType)
+
+function automationListDownloadEventHandler(event, ...)
+  if event == "sysDownloadDone" then --if it is a downloadDone event.
+    --arg[1] is full file including directory
+    --ReplaceStringMagicChar puts ecscape % before lua magic characters
+    local file = ReplaceStringMagicChar(arg[1]) 
+    debugToDisplay("function automationListDownloadEventHandler, file downloaded post magic "
+      .."character replacement it is:\n\t"..file)
+    
+    if trackedDownloads.fileList:match(file:match(".*%/(.*%..*)$")) then
+      local boolOrErrorMessage = trackDownloads(file:match(GitUpdate.filePattern))
+          if boolOrErrorMessage then --if true, all files have downloaded.
+            debugToDisplay("function automationListDownloadEventHandler, all downloads completed. "
+              .."Running function InstallGitUpdates()")
+            pecho("List files download complete.\n")
+            automationUpdateRunning = false
+          elseif type(boolOrErrorMessage) == "string" then --if error found
+            tecErrorNotification(boolOrErrorMessage) --notify player of error
+          else --all downloads are not completed.
+            debugToDisplay("function automationListDownloadEventHandler, "..file.." completed downloading. Not all tracked files downloaded yet.")
+          end --if boolOrErrorMessage
+    else
+      debugToDisplay("function automationListDownloadEventHandler, Downloaded file: "..file
+        .."\n\tWas NOT caught by event handler. If this SHOULD be a tracked download, system "
+        .."attempted to track: "..file:match(GitUpdate.filePattern))
+    end --elseif file downloaded is new script
+  elseif event == "sysDownloadError" then --if there is a download error.
+    local errorFound = arg[1] --sysDownloadError only argument is error message.
+    local erroredURL = arg[1]:match(".*(https:%/%/%S+)") --retreive URL in error message
+    --debugc("Errored URL: "..erroredURL)
+    --if  then error download's URL matches downloads for this update engine
+    if trackedDownloads.urlList:match(erroredURL) or GitUpdate.gitReleaseURL == erroredURL then
+      tecErrorNotification("fuction automationListDownloadEventHandler, "..errorFound)
+      automationsUpdateDownloadError = true --notify InstallGitUpdates not to proceed.
+    else --for any other download errors.
+      debugToDisplay("fuction automationListDownloadEventHandler, "..errorFound)
+    end --if trackedDownloads.urlList:match(erroredURL)
+  end --if event name
+end --function tecUpdate.eventHandler()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
@@ -11969,9 +12035,9 @@ function prepAutomationUpdate(directory)
     
     echo("\n")
     
-    pecho("Don't forget to commit your these updates to github.")
-    
   end  -- for folder in folderList
+  
+  pecho("Don't forget to commit these updates to github.")
   
 end -- prepAutomationUpdate(directory)</script>
 						<eventHandlerList />
