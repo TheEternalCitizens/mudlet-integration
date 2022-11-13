@@ -9455,6 +9455,8 @@ end --parthiaTalkSetvolume(volume, displayToScreen)
 					<script>--[[
 Codeless scripting.
 
+Script Updater
+
 How inserting a command into automations works.
 Global vairables
   parthiaAutomationInsertCommand, a table with command and the trigger type or false if no insert is active
@@ -11886,6 +11888,25 @@ function parthiaAutomationInsertHelpFull()
   pecho("\nParthia Insert Help End\n")
 
 end -- function parthiaAutomationInsertHelpFull()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>getAutomationUpdates(automationType)</name>
+						<packageName></packageName>
+						<script>--[[
+Downloads automation and interrupt files from the development folder on github.
+This allows for adding automations without pushing a release.
+
+Note that creating a package that does this would result in the automations folder getting deleted.
+
+Process download a file that lists the static automation files that will exist on the server.
+Loop through that file list and download those files.
+]]--
+
+-- automationType is the type of automation, IE: interrupt or automation
+function getAutomationUpdates(automationType)
+  local automationRepository = getMudletHomeDir()
+end  -- getAutomationUpdates(automationType)</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>

@@ -2487,7 +2487,7 @@ supressTargetFilter = true</script>
 					<string>Enter the string you wish this macro to expand to: </string>
 				</regexCodeList>
 				<regexCodePropertyList>
-					<integer>2</integer>
+					<integer>3</integer>
 				</regexCodePropertyList>
 			</Trigger>
 		</TriggerGroup>
