@@ -1635,6 +1635,13 @@ end  -- if #matches == 3</script>
 					<packageName></packageName>
 					<regex>^/insert$</regex>
 				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia auotmations update prep</name>
+					<script>prepAutomationUpdate(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia auotmations update prep\s*(.*)$</regex>
+				</Alias>
 			</AliasGroup>
 			<Alias isActive="yes" isFolder="no">
 				<name>parthia unfiltered text console</name>

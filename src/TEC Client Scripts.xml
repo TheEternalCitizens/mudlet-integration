@@ -11905,8 +11905,75 @@ Loop through that file list and download those files.
 
 -- automationType is the type of automation, IE: interrupt or automation
 function getAutomationUpdates(automationType)
-  local automationRepository = getMudletHomeDir()
+  
+  -- Where should the automation files be stored locally?
+  local automationRepository = getMudletHomeDir()..[[/Interrupt Data]]
+  
+  --table.load(autoImportFilePath, autoTable)
+  
 end  -- getAutomationUpdates(automationType)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>prepAutomationUpdate(directory)</name>
+						<packageName></packageName>
+						<script>--[[
+Create the file that lists all the automations that need to be downloaded with the getAutomationUpdates function.
+
+This is used with the parthia auotmations update prep alias
+]]--
+
+-- directory is the directory to save the files to.
+function prepAutomationUpdate(directory)
+
+  directory = directory:gsub("\\","/")
+
+  -- create a list of the automation and interrupt folders
+  local folderList = {automationDataFolder, interruptDataFolder}
+
+  -- loop through the two automation and interrupt folders
+  for _, autoFolder in pairs(folderList) do
+  
+    -- Collect what type of automation we are looping through
+    local automationName = "Automations"
+    -- if this is the interrupt loop change the automation type to interrupt
+    if autoFolder:find("Interrupt") then automationName = "Interrupts" end
+    
+    local exportPath = directory.."/"..automationName
+
+    -- create a list of all the files in the automations folder
+    -- Import a list of importable automation files.
+    local autoFiles = parthiaFileList(autoFolder)
+    
+    -- create a temp table that will hold the automation files that will be imported than exported
+    local automationTable = {}
+    
+    -- Loop through the automation files.
+    -- Import them from the logged in mudlet profile they were made in.
+    -- Export them to the github local repository directory provided to the function's directory argument
+    pecho("Files in "..autoFolder..": \n")
+    -- loop through all the automation files.
+    for _, file in ipairs(autoFiles) do
+      pecho("\tExporting: "..file.."\n\t")
+      -- Load the file to the temp automation table
+      table.load(autoFolder..file, automationTable)
+      -- Now export to the local github repository folder to be commited back to github.
+      parthiaTableSave(automationTable, exportPath.."/"..file, false, true)
+    end  -- for _, file in ipairs(autoImportableFiles) do
+    
+    -- Save the file list to file
+    -- Where the list file should be saved to
+    local listFilePath = exportPath.."/list.config"
+    pecho("Attempting to create file list at: "..listFilePath.."\n")
+    parthiaTableSave(autoFiles, listFilePath, false, true)
+    
+    echo("\n")
+    
+    pecho("Don't forget to commit your these updates to github.")
+    
+  end  -- for folder in folderList
+  
+end -- prepAutomationUpdate(directory)</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
