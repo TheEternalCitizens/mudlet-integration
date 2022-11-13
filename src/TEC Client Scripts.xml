@@ -12029,7 +12029,7 @@ function prepAutomationUpdate(directory)
     
     -- Save the file list to file
     -- Where the list file should be saved to
-    local listFilePath = exportPath.."/list.config"
+    local listFilePath = exportPath.."/"..automationName.."List.config"
     pecho("Attempting to create file list at: "..listFilePath.."\n")
     parthiaTableSave(autoFiles, listFilePath, false, true)
     
