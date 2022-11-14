@@ -11907,7 +11907,7 @@ Loop through that file list and download those files.
 function getAutomationUpdates()
 
   -- Where the files are in mudlet
-  local automationsGITRepository = [[https://github.com/TheEternalCitizens/mudlet-integration/tree/AutoamtionBugFixWinter2022/data]]
+  automationsGITRepository = [[https://github.com/TheEternalCitizens/mudlet-integration/raw/AutoamtionBugFixWinter2022/data]]
   
   -- Defaulting the tracked downloads table. The function used later trackDownloads() needs this table.
   -- This is used to make certain all files have downloaded
@@ -11921,63 +11921,212 @@ function getAutomationUpdates()
   -- This will track if a file failed to download
   automationsUpdateDownloadError = false
   
+  -- The name of the local file download for the automation
+  automationListFilePath = automationDataFolder.."AutomationsList.config"
+  -- Name of the local file download for the interrupts list
+  interruptsListFilePath = interruptDataFolder.."InterruptsList.config"
+  
   -- The list file for automations
-  local automationsURL = automationsGITRepository.."/Automations/list.config"
+  local automationsURL = automationsGITRepository.."/Automations/AutomationsList.config"
   -- the list file for interrupts
-  local interrupsURL = automationsGITRepository.."/Interrupts/list.config"
+  local interrupsURL = automationsGITRepository.."/Interrupts/InterruptsList.config"
   
   -- Track the list files download
-  local downloadURLs = {automationsURL , interrupsURL}
-  trackDownloads(downloadURLs)
+  automationListDownloadTracking = {}
+  automationListDownloadTracking["AutomationsList.config"] = false
+  automationListDownloadTracking["InterruptsList.config"] = false
   
   -- create the event to watch for automations update downloads
   automationsDownloadDoneID = registerAnonymousEventHandler("sysDownloadDone", "automationListDownloadEventHandler")
   automationsDownloadErrorID = registerAnonymousEventHandler("sysDownloadError", "automationListDownloadEventHandler")
   
   -- Download the automation update lists
-  downloadFile(automationDataFolder.."list.config", automationsURL)
-  downloadFile(interruptDataFolder.."list.config", interrupsURL)
+  downloadFile(automationListFilePath, automationsURL)
+  downloadFile(interruptsListFilePath, interrupsURL)
   
 end  -- getAutomationUpdates(automationType)
 
+
+
+-- Event handler for the files that list the automations to be downloaded
 function automationListDownloadEventHandler(event, ...)
-  if event == "sysDownloadDone" then --if it is a downloadDone event.
-    --arg[1] is full file including directory
-    --ReplaceStringMagicChar puts ecscape % before lua magic characters
-    local file = ReplaceStringMagicChar(arg[1]) 
-    debugToDisplay("function automationListDownloadEventHandler, file downloaded post magic "
-      .."character replacement it is:\n\t"..file)
+
+  --arg[1] is full file including directory
+  --ReplaceStringMagicChar puts ecscape % before lua magic characters
+  local file = ReplaceStringMagicChar(arg[1]) 
+  debugToDisplay("function automationListDownloadEventHandler, file downloaded post magic "
+    .."character replacement it is:\n\t"..file)
     
-    if trackedDownloads.fileList:match(file:match(".*%/(.*%..*)$")) then
-      local boolOrErrorMessage = trackDownloads(file:match(GitUpdate.filePattern))
-          if boolOrErrorMessage then --if true, all files have downloaded.
-            debugToDisplay("function automationListDownloadEventHandler, all downloads completed. "
-              .."Running function InstallGitUpdates()")
-            pecho("List files download complete.\n")
-            automationUpdateRunning = false
-          elseif type(boolOrErrorMessage) == "string" then --if error found
-            tecErrorNotification(boolOrErrorMessage) --notify player of error
-          else --all downloads are not completed.
-            debugToDisplay("function automationListDownloadEventHandler, "..file.." completed downloading. Not all tracked files downloaded yet.")
-          end --if boolOrErrorMessage
+  local fileName = arg[1]:match(".*/(.*%..*)$")
+  debugToDisplay("function automationListDownloadEventHandler, fileName is: "..fileName)
+
+  if event == "sysDownloadDone" then --if it is a downloadDone event.
+    
+    -- If the file name is a tracked list download
+    if automationListDownloadTracking[fileName] ~= nil then
+      
+      pecho("Downloaded: "..fileName.."\n")
+      
+      -- Track that this download completed
+      automationListDownloadTracking[fileName] = true
+      -- Create a variable to check if all downloads have completed
+      local downloadsComplete = true
+      
+      -- Check if all the downloads have completed.
+      for _, value in pairs(automationListDownloadTracking) do
+        -- If there is a file that has not completed.
+        if not value then downloadsComplete = false end
+      end  -- for _, key pairs(automationListDownloadTracking)
+      
+      -- If all the required files have downloaded
+      if downloadsComplete then
+      
+        -- Kill the download events they are no longer required.
+        killAnonymousEventHandler(automationsDownloadDoneID)
+        killAnonymousEventHandler(automationsDownloadErrorID)
+        
+        pecho("Lists files have downloaded.\n\n")
+        pecho("Collecting automations to download.\n")
+        
+        -- Load the list of automations from file
+        local automationsListTable = {}
+        local interruptsListTable = {}
+        table.load(automationListFilePath, automationsListTable)
+        table.load(interruptsListFilePath, interruptsListTable)
+        
+        -- Remove the list files
+        -- Loop through both the files
+        for _, automationFile in ipairs({automationListFilePath, interruptsListFilePath}) do
+          -- If the files exists
+          if io.exists(automationFile) then
+            debugToDisplay("\tRemoving: "..automationFile)
+            -- Remove the file
+            local success, errorstring = os.remove(automationFile)
+            -- If the removal failed, throw and error
+            if not success then
+              tecWarningNotification("automationListDownloadEventHandler, list file remove failed. Error: "..errorstring)
+            end  -- if not success
+          end  -- if io.exists(automationListFilePath)
+        end -- for _, automationFile in ipairs({automationListFilePath, interruptsListFilePath})
+        
+        -- This will help track all the automation files that need to downloaded
+        automationFilesTracking = {}
+        -- This will be used to store the URLs for files that need to be downloaded
+        local automationFilesURL = {}
+        
+        -- Add automation files to the tracking table
+        for _, automationFileName in ipairs(automationsListTable) do
+          -- add this file to the download tracking table
+          automationFilesTracking[automationDataFolder..automationFileName] = false
+          -- Add to download list  URL to download from                                       Name of the local files to download to
+          automationFilesURL[automationsGITRepository.."/Automations/"..automationFileName] = automationDataFolder..automationFileName
+          debugToDisplay("\tFile: "..automationDataFolder..automationFileName.."\n")
+          debugToDisplay("\tURL: "..automationsGITRepository.."/Automations/"..automationFileName.."\n")
+        end  -- for _, automationFileName in ipairs(automationsListTable)
+        
+        -- Add intterupts to the tracking table
+        for _, automationFileName in ipairs(interruptsListTable) do
+          -- add this file to the download tracking table
+          automationFilesTracking[interruptDataFolder..automationFileName] = false
+          -- Add to download list  URL to download from                                       Name of the local files to download to
+          automationFilesURL[automationsGITRepository.."/Interrupts/"..automationFileName] = interruptDataFolder..automationFileName
+          debugToDisplay("\tFile: "..interruptDataFolder..automationFileName.."\n")
+          debugToDisplay("\tURL: "..automationsGITRepository.."/Interrupts/"..automationFileName.."\n")
+        end  -- for _, automationFileName in ipairs(interruptsListTable)
+        
+        -- Loop through all of the files and download them.
+        for downloadURL, automationFilePath in pairs(automationFilesURL) do
+        
+          -- create the event to watch for automations update downloads
+          automationsDownloadDoneID = registerAnonymousEventHandler("sysDownloadDone", "automationFilesDownloadEventHandler")
+          automationsDownloadErrorID = registerAnonymousEventHandler("sysDownloadError", "automationFilesDownloadEventHandler")
+        
+          -- download the files
+          debugToDisplay("\tDownloading: "..downloadURL.." TO "..automationFilePath.."\n")
+          downloadFile(automationFilePath, downloadURL)
+        
+        end  -- for _, downloadURL in ipairs(automatioFilesURL) do
+      
+      end  -- downloadsComplete then
+      
     else
       debugToDisplay("function automationListDownloadEventHandler, Downloaded file: "..file
         .."\n\tWas NOT caught by event handler. If this SHOULD be a tracked download, system "
         .."attempted to track: "..file:match(GitUpdate.filePattern))
     end --elseif file downloaded is new script
+    
+  -- A download errored
   elseif event == "sysDownloadError" then --if there is a download error.
     local errorFound = arg[1] --sysDownloadError only argument is error message.
     local erroredURL = arg[1]:match(".*(https:%/%/%S+)") --retreive URL in error message
     --debugc("Errored URL: "..erroredURL)
     --if  then error download's URL matches downloads for this update engine
-    if trackedDownloads.urlList:match(erroredURL) or GitUpdate.gitReleaseURL == erroredURL then
+    if automationListDownloadTracking[fileName] ~= nil then
       tecErrorNotification("fuction automationListDownloadEventHandler, "..errorFound)
       automationsUpdateDownloadError = true --notify InstallGitUpdates not to proceed.
     else --for any other download errors.
       debugToDisplay("fuction automationListDownloadEventHandler, "..errorFound)
     end --if trackedDownloads.urlList:match(erroredURL)
   end --if event name
-end --function tecUpdate.eventHandler()</script>
+end --function tecUpdate.eventHandler()
+
+
+function automationFilesDownloadEventHandler(event, ...)
+
+  --arg[1] is full file including directory
+  local file = arg[1]
+
+  if event == "sysDownloadDone" then --if it is a downloadDone event.
+    
+    -- If the file name is a tracked list download
+    if automationFilesTracking[file] ~= nil then
+      
+      pecho("Downloaded: "..file.."\n")
+      
+      -- Track that this download completed
+      automationFilesTracking[file] = true
+      -- Create a variable to check if all downloads have completed
+      local downloadsComplete = true
+      
+      -- Check if all the downloads have completed.
+      for _, value in pairs(automationFilesTracking) do
+        -- If there is a file that has not completed.
+        if not value then downloadsComplete = false end
+      end  -- for _, key pairs(automationListDownloadTracking)
+      
+      -- If all the required files have downloaded
+      if downloadsComplete then
+        pecho("All downloads have completed")
+        -- Kill the download events they are no longer required.
+        killAnonymousEventHandler(automationsDownloadDoneID)
+        killAnonymousEventHandler(automationsDownloadErrorID)
+      end  -- if downloadsComplete
+      
+      -- Tell parthia the automation updates are done
+      automationUpdateRunning = false
+   
+    -- The file was NOT a automations file download
+    else
+      debugToDisplay("function automationFilesDownloadEventHandler, Downloaded file: "..file
+        .."\n\tWas NOT caught by event handler. If this SHOULD be a tracked download, system "
+        .."attempted to track: "..file)
+    end --elseif file downloaded is new script
+    
+  -- Something went wrong with the download
+  elseif event == "sysDownloadError" then --if there is a download error.
+    local errorFound = arg[1] --sysDownloadError only argument is error message.
+    local erroredURL = arg[1]:match(".*(https:%/%/%S+)") --retreive URL in error message
+    --debugc("Errored URL: "..erroredURL)
+    --if  then error download's URL matches downloads for this update engine
+    if automationFilesTracking[file] ~= nil then
+      tecErrorNotification("fuction automationFilesDownloadEventHandler, "..errorFound)
+      automationsUpdateDownloadError = true --notify InstallGitUpdates not to proceed.
+    else --for any other download errors.
+      debugToDisplay("fuction automationFilesDownloadEventHandler, "..errorFound)
+    end --if trackedDownloads.urlList:match(erroredURL)
+  end --if event name
+      
+end  -- function automationFilesDownloadEventHandler(event, ...)</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
