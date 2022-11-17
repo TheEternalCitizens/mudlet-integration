@@ -10003,7 +10003,7 @@ function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern, 
   
   -- Display the group screen for this automation so the user can easily add to it now.
   pecho("\nIn full this interrupt now looks like:\n")
-  parthiaAutomationShowGroups(automationType, groupName)
+  parthiaAutomationShowGroups("automationInterrupt", groupName)
   pecho("\n\n")
   
   -- Remind the user to save their chages
@@ -11944,6 +11944,8 @@ function getAutomationUpdates()
   downloadFile(automationListFilePath, automationsURL)
   downloadFile(interruptsListFilePath, interrupsURL)
   
+  pecho("Downloading automation lists.\n")
+  
 end  -- getAutomationUpdates(automationType)
 
 
@@ -11985,7 +11987,7 @@ function automationListDownloadEventHandler(event, ...)
         killAnonymousEventHandler(automationsDownloadDoneID)
         killAnonymousEventHandler(automationsDownloadErrorID)
         
-        pecho("Lists files have downloaded.\n\n")
+        pecho("All automations lists have downloaded.\n\n")
         pecho("Collecting automations to download.\n")
         
         -- Load the list of automations from file
@@ -12096,7 +12098,7 @@ function automationFilesDownloadEventHandler(event, ...)
       
       -- If all the required files have downloaded
       if downloadsComplete then
-        pecho("All downloads have completed")
+        pecho("\nAutomation updates complete.\n")
         -- Kill the download events they are no longer required.
         killAnonymousEventHandler(automationsDownloadDoneID)
         killAnonymousEventHandler(automationsDownloadErrorID)
