@@ -23,6 +23,9 @@ Automations Bugfix Fall-Winter 2022
   Minor bugfix: players using the non colored "You are no longer busy." message would not have automations properly interate to the next command in the automation.
   Thank You ottomated for reporting the bug
   
+  Minor bugfix: numpad navigation setting was not getting restored on startup by parthia.
+  Thank You Papikins (laurentinous, not Laun) for reporting the bug
+  
   Bugfix: characters completing an interrupt would not automatically resume their last running automation.
   
   Bugfix: parthia automation and interrupt creation commands would not accept | in the input. Now all characters except , are allowed in automation and interrupt creation.
@@ -12982,12 +12985,12 @@ end --function setNumNaviation(mode)</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>getNumpadNaviation()</name>
+					<name>getNumpadNavigation()</name>
 					<packageName></packageName>
 					<script>--returns the enabled or disabled state of numpad navigation
-function getNumpadNaviation()
+function getNumpadNavigation()
   return tecSettings.numpadNavigationEnabled
-end --function getNumpadNaviation()</script>
+end --function getNumpadNavigation()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -17733,7 +17736,7 @@ functions that need to be called for setup after all scripts have initialized.
 ]]--
 
 --set proper state for numpad navigation
-setNumpadNavigation(getNumpadNavigation)
+setNumpadNavigation(getNumpadNavigation())
 
 --set tts to players preferences
 if getParthiaTalk() then

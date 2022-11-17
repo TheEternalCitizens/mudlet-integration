@@ -561,13 +561,13 @@ PlayerDev.SetPackages(false)</script>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>parthia numpad navigation</name>
-				<script>if getNumpadNaviation() then --numpad is enabled so disable it
+				<script>if getNumpadNavigation() then --numpad is enabled so disable it
   setNumpadNavigation(false) --tell parthia to disable num navigation
   cecho("Number pad navigation disabled.\n")
  else --numpad navigation is disabled, so enable it
   setNumpadNavigation(true) --tell parthia to enable numpad navigation
   cecho("Number pad navigation enabled.\n")
-end --if getNumpadNaviation() then
+end --if getNumpadNavigation() then
 
 dontForgetToSave() --remind the player to save their changes.</script>
 				<command></command>
@@ -1008,7 +1008,7 @@ dontForgetToSave()</script>
     "Save Help Developers data", true)
     pecho("\n")
   sendHelpDevs() --display message to help players submit Help Developers data
-end --if getNumpadNaviation() then
+end --if getNumpadNavigation() then
 
 dontForgetToSave() --remind the player to save their changes.</script>
 				<command></command>
