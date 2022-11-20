@@ -11584,7 +11584,9 @@ function parthiaAutomationImport(automationType, groupName, displayToScreen)
     debugToDisplay("\tgroupName after trimming: "..groupName)
     
     -- Prepared the automation table for import
-    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] = {}
+    if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
+      parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] = {}
+    end  -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
     
     -- Get a reference of the automation table to be updated
     local autoTable = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
