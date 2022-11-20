@@ -10592,32 +10592,21 @@ function parthiaAutomationHelp()
   pecho("As a result automation in parthia is intended to remove the frustration of tasks with repatative commands. ")
   pecho("This automation can be dramatically helpful for someone who is not able to type rapidly.\n")
   
-  pecho("\nAutomation in parthia is done by creating groups of commands. Than starting those groups. ")
-  pecho("You can click or type in the commands below to learn more about creating, managing and starting automation groups.\n")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation update", 
-    [[parthiaAutomationUpdateHelp()]],
-    "parthia automation update", true)
-  pecho(", how to create or update automation groups.\n")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation start", 
-    [[parthiaAutomationStartHelp()]],
-    "parthia automation start", true)
-  pecho(", how to start an automation task.\n")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation stop", 
-    [[parthiaAutomationStop(True)]],
-    "stop a running automation", true)
-  pecho(", stop the running automation.\n")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation groups", 
-    [[parthiaAutomationShowGroups("automation")]],
-    "parthia automation groups", true)
-  pecho(", view and manage existing automation groups.\n")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation import", 
-    [[parthiaAutomationImport("automation", "", true)]],
+  pecho("\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation get updates", 
+    [[getAutomationUpdates()]],
     "parthia automation import", true)
-  pecho(", how to import automations from file.\n")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation export", 
-    [[parthiaAutomationExport("automation", "", true)]],
-    "parthia automation export", true)
-  pecho(", how to export automations to file.\n")
+  pecho(", get new and update old premade automations in the automation and interrupt import folders.\n")
+  
+  pecho("\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation triggers&lt;reset&gt;", 
+    [[parthiaAutomationTriggerHelp()]], 
+    "automations trigger help", true)
+  pecho(", how to create patterns for automation triggers.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia unfiltered text console", 
+    [[expandAlias("parthia unfiltered text console")]],
+    "parthia automation groups", true)
+  pecho(", opens a window showing text as the pattern system views it.\n")
   
   pecho("\nInterrupts allow you to automatically interrupt your current action when a text pattern is view on screen.\n")
   pecho("When an interrupt interrupts an automated task, the automated task will resume when the interrupt completes.\n")
@@ -10649,34 +10638,41 @@ function parthiaAutomationHelp()
     [[parthiaAutomationExport("automationInterrupt", "", true)]],
     "parthia interrupt export", true)
   pecho(", how to export interrupts to file.\n")
-
+  
   pecho("\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia insert", 
     [[parthiaAutomationInsertHelpBreif()]],
     "insert a command into a running automation", true)
   pecho(", insert a command into a running automation or interrupt.\n")
   
-  pecho("\n")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation triggers&lt;reset&gt;", 
-    [[parthiaAutomationTriggerHelp()]], 
-    "automations trigger help", true)
-  pecho(", how to create patterns for automation triggers.\n")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia unfiltered text console", 
-    [[expandAlias("parthia unfiltered text console")]],
+  pecho("\nAutomation in parthia is done by creating groups of commands. Than starting those groups. ")
+  pecho("You can click or type in the commands below to learn more about creating, managing and starting automation groups.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation update", 
+    [[parthiaAutomationUpdateHelp()]],
+    "parthia automation update", true)
+  pecho(", how to create or update automation groups.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation start", 
+    [[parthiaAutomationStartHelp()]],
+    "parthia automation start", true)
+  pecho(", how to start an automation task.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation stop", 
+    [[parthiaAutomationStop(True)]],
+    "stop a running automation", true)
+  pecho(", stop the running automation.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation groups", 
+    [[parthiaAutomationShowGroups("automation")]],
     "parthia automation groups", true)
-  pecho(", opens a window showing text as the pattern system views it.\n")
-  local cmdToSend = [[UIManagerEnableWindow("Automation",true,true)]]
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable Automation", 
-    cmdToSend, --runs on click.
-    "Enable Automation window", true)
-  pecho(", opens a docked window with clickable links for your automation tasks.\n")
-  local cmdToSend = [[UIManagerEnableWindow("Interrupts",true,true)]]
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable Interrupts", 
-    cmdToSend, --runs on click.
-    "Enable Interrupts window", true)
-  pecho(", opens a docked window with clickable links for your interrupt tasks.\n")
-  pecho("\n")
+  pecho(", view and manage existing automation groups.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation import", 
+    [[parthiaAutomationImport("automation", "", true)]],
+    "parthia automation import", true)
+  pecho(", how to import automations from file.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation export", 
+    [[parthiaAutomationExport("automation", "", true)]],
+    "parthia automation export", true)
+  pecho(", how to export automations to file.\n")
   
+  pecho("\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Parthia automation tutorial video", 
     [[openUrl("https://www.youtube.com/watch?v=DXDuhQGlPwI&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps")]], 
     "youtube parthia automation tutorial", true)
@@ -11509,8 +11505,14 @@ local function listAutomationFiles(autoFolder, automationTypeName)
   end  -- for _, file in ipairs(autoImportableFiles) do
   
   -- Display a command to save files to the automation directory
-  pecho("If you would like to copy files to the "..automationTypeName.." data folder, ")
+  pecho("\nIf you would like to copy files to the "..automationTypeName.." data folder, ")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open\n", 
+    [[tecOpenDirectory("]]..autoFolder..[[")]], 
+    "Open "..automationTypeName.." folder", true)
+    
+  -- Tell users how to get new imports
+  pecho("Get new and update old premade "..automationTypeName.."s by running, ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation get updates\n", 
     [[tecOpenDirectory("]]..autoFolder..[[")]], 
     "Open "..automationTypeName.." folder", true)
 
@@ -11909,6 +11911,11 @@ Loop through that file list and download those files.
 
 function getAutomationUpdates()
 
+  if automationUpdateRunning then
+    pecho("An automations update is already running. Please wait for it to complete.\n")
+    return false
+  end  -- if automationUpdateRunning
+
   -- Where the files are in mudlet
   automationsGITRepository = [[https://github.com/TheEternalCitizens/mudlet-integration/raw/AutoamtionBugFixWinter2022/data]]
   
@@ -12078,7 +12085,7 @@ end --function tecUpdate.eventHandler()
 
 function automationFilesDownloadEventHandler(event, ...)
 
-  --arg[1] is full file including directory
+  --arg[1] is full file path including directory
   local file = arg[1]
 
   if event == "sysDownloadDone" then --if it is a downloadDone event.
@@ -12191,7 +12198,7 @@ function prepAutomationUpdate(directory)
     
   end  -- for folder in folderList
   
-  pecho("Don't forget to commit these updates to github.")
+  pecho("Don't forget to commit these updates to the Developer branch in github.\n")
   
 end -- prepAutomationUpdate(directory)</script>
 						<eventHandlerList />
