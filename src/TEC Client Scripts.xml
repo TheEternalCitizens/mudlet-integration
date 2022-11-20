@@ -11513,7 +11513,7 @@ local function listAutomationFiles(autoFolder, automationTypeName)
   -- Tell users how to get new imports
   pecho("Get new and update old premade "..automationTypeName.."s by running, ")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation get updates\n", 
-    [[tecOpenDirectory("]]..autoFolder..[[")]], 
+    [[getAutomationUpdates()]], 
     "Open "..automationTypeName.." folder", true)
 
 end  -- local function listAutomationFiles(autoFolder, automationTypeName)
@@ -11578,6 +11578,10 @@ function parthiaAutomationImport(automationType, groupName, displayToScreen)
   if io.exists(autoImportFilePath) then --if the file exists, load it.
     
     debugToDisplay("\tautoImportFilePath exists.")
+    
+    -- Remove ParthiaDefault from automations imported
+    groupName = groupName:gsub("ParthiaDefault", "")
+    debugToDisplay("\tgroupName after trimming: "..groupName)
     
     -- Prepared the automation table for import
     parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] = {}
