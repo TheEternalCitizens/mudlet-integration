@@ -7361,7 +7361,7 @@ Handles refreshing the text in the interrupts window.
       -- Make a Start button for automation OR an enable disable button for interrupts
       if automationType == 'automationInterrupt' then
         
-        local toggleInterruptButtonColor = "ansi_red"
+        local toggleInterruptButtonColor = tecSettings.helpHighlightColor
         local toggleInterruptButtonState = "Inactive"
         
         -- This intterrupt is currently enabled. Set the color to standard blue
@@ -7385,20 +7385,9 @@ Handles refreshing the text in the interrupts window.
       end  -- if automationType == 'automationInterrupt' then
         
       -- Show group button
-      cechoLink("interruptsWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Show", 
+      cechoLink("interruptsWindowConsole", "  &lt;:ansi_red&gt;Manage", 
         [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[")]],
-        "parthia "..automationTypeName.." groups "..groupName, true)
-      
-      --Make a customized edit button for interrupts
-      cechoLink("interruptsWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
-        --parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]
-        [[parthiaInterruptCreateHelp();printCmdLine("parthia interrupt ]]..groupName..[[, ]]..groupRepeat..[[, ]]..callPattern..[[~ ]]..firstCommandTrigger..[[")]],
-        "fill command line with edit command for "..groupName, true)
-              
-      -- Remove group button
-      cechoLink("interruptsWindowConsole", "  &lt;:ansi_red&gt;Remove", 
-        [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[, delete")]],
-        "parthia "..automationTypeName.." groups "..groupName..", delete", true)
+        "View &amp; change "..groupName, true)
       
       cecho("interruptsWindowConsole", "\n\n")
       
@@ -7471,22 +7460,11 @@ Handles refreshing the text in the interrupts window.
         [[expandAlias("parthia ]]..automationTypeName..[[ ]]..groupName..[[, 0")]],
         "parthia "..automationTypeName.." "..groupName..", 0", true)
       end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled then
-        
+    
       -- Show group button
-      cechoLink("automationWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Show", 
+      cechoLink("automationWindowConsole", "  &lt;:ansi_red&gt;Manage", 
         [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[")]],
-        "parthia "..automationTypeName.." groups "..groupName, true)
-      
-      -- Edit group button
-      cechoLink("automationWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
-        [[parthiaAutomationUpdateHelp();
-        printCmdLine("parthia automation ]]..groupName..[[, 1 = replace_with_your_command, 0, 0 &amp; 0")]],
-        "fill command line with edit command for "..groupName, true)
-              
-      -- Remove group button
-      cechoLink("automationWindowConsole", "  &lt;:ansi_red&gt;Remove", 
-        [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[, delete")]],
-        "parthia "..automationTypeName.." groups "..groupName..", delete", true)
+        "View &amp; change "..groupName, true)
       
       cecho("automationWindowConsole", "\n\n")
       
@@ -10867,7 +10845,7 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
   end  -- if sortedGroupNameTable then
   
   -- Show an Add a command help message if none has been shown
-  pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Add a command", 
+  pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Add a command\n", 
       [[parthiaAutomationUpdateHelp("]]..automationTypeName..[[");
         printCmdLine("parthia ]]..automationTypeName..[[ ]]..groupName..[[, ]]..nextGroupPosition..[[ = replace_with_your_command, 0, 0 &amp; 0")]],
       "Add a command to this "..automationTypeName, true)
@@ -10953,6 +10931,11 @@ function showAutomationGroupTableData(groupName, automationTypeName, automationT
           "fill command line with edit command for "..groupName, true)
       
       end  -- if automationType == 'automationInterrupt' then
+      
+      pechoLink("  &lt;:ansi_red&gt;Rename", 
+        [[printCmdLine("parthia rename ]]..automationTypeName..[[ ]]..groupName..[[ = new_name");
+        pecho("new_name needs to be replaced with what you would like the ]]..automationTypeName..[[ to be renamed to.\n")]],
+        "parthia "..automationTypeName.." rename", true)
               
       -- Remove group button
       pechoLink("  &lt;:ansi_red&gt;Remove\n", 
