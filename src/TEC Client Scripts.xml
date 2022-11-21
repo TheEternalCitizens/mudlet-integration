@@ -10628,6 +10628,11 @@ function parthiaAutomationHelp()
     [[parthiaAutomationUpdateHelp("interrupt")]],
     "parthia interrupt update", true)
   pecho(", how to create or update interrupt groups.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt rename", 
+    [[printCmdLine("parthia interrupt old_name = new_name");
+      pecho("old_name is the name of the current group to rename. new_name is the new name it will be renamed to.\n")]],
+    "parthia interrupt rename", true)
+  pecho(", rename an interrupt.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt groups", 
     [[parthiaAutomationShowGroups("automationInterrupt")]],
     "parthia interrupt groups", true)
@@ -10653,6 +10658,11 @@ function parthiaAutomationHelp()
     [[parthiaAutomationUpdateHelp()]],
     "parthia automation update", true)
   pecho(", how to create or update automation groups.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation rename", 
+    [[printCmdLine("parthia automation old_name = new_name");
+      pecho("old_name is the name of the current group to rename. new_name is the new name it will be renamed to.\n")]],
+    "parthia automation rename", true)
+  pecho(", rename an automation.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation start", 
     [[parthiaAutomationStartHelp()]],
     "parthia automation start", true)
