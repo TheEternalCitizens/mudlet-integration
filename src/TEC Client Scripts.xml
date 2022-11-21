@@ -42,6 +42,8 @@ Automations Bugfix Fall-Winter 2022
     
   Minor Improvement: added function parthiaGetCharacterTarget to collect the characters current target.
     Reference: https://github.com/TheEternalCitizens/mudlet-integration/wiki/Parthia-API#parthiagetcharactertarget
+    
+  Minor Improvement: added ability to rename interrupts and automations
   
   Improvement: Made the choice to have the stop command stop all automation types that are currently running.
   
@@ -12207,6 +12209,49 @@ function prepAutomationUpdate(directory)
   pecho("Don't forget to commit these updates to the Developer branch in github.\n")
   
 end -- prepAutomationUpdate(directory)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationRename(automationType, groupName, newGroupName)</name>
+						<packageName></packageName>
+						<script>function parthiaAutomationRename(automationType, groupName, newGroupName)
+
+  -- Collect the name of this automation for echoing.
+  local automationName = "automation"
+  -- if this is the interrupt loop change the automation type to interrupt
+  if automationType:find("Interrupt") then automationName = "Interrupts" end
+
+  -- If the automation does not exist, let the player know.
+  if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
+    pecho("No "..automationName.." with the group name "..groupName.." found.\n")
+    return false
+  end  -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
+  
+  -- If an automation with the new group name exists, echo and stop
+  if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][newGroupName] then
+    pecho("A group name "..groupName.." already exists in "..automationName.."s.\n")
+    return false
+  end  -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
+
+  -- pop the group name from the automation array. ( copy and remove at the same time, with low procces usage )
+  local automationInstance = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] = nil
+  
+  -- Create the table with the new group name
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][newGroupName] = automationInstance
+  
+  pecho("The "..automationName.." "..groupName.." was renamed "..newGroupName..".\n")
+  
+  -- Remind the user to save their chages
+  dontForgetToSave()
+  
+  --refresh the text on the interrupts window
+  refreshInterruptsWindow()
+  
+  -- Refresh the text in the automation window
+  refreshAutomationWindow()
+
+end  -- parthiaAutomationRename(automationType, groupName)</script>
 						<eventHandlerList />
 					</Script>
 				</ScriptGroup>
