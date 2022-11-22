@@ -35,7 +35,7 @@ Automations Bugfix Fall-Winter 2022
   
   Minor Improvement: When you run the stats command your fatigue bar will refresh with your current fatigue.
   
-  Minor Improvement: Futher cleaned up the help displayed with the parthia command. There were too many items on it.
+  Minor Improvement: Further cleaned up the help displayed with the parthia command. There were too many items on it.
   
   Minor Improvement: added function parthiaSetCharacterTarget so players can set their target for the &lt;target&gt; filter in parthia.
     Reference: https://github.com/TheEternalCitizens/mudlet-integration/wiki/Parthia-API#parthiasetcharactertargettargetname
@@ -44,6 +44,10 @@ Automations Bugfix Fall-Winter 2022
     Reference: https://github.com/TheEternalCitizens/mudlet-integration/wiki/Parthia-API#parthiagetcharactertarget
     
   Minor Improvement: added ability to rename interrupts and automations
+  
+  Minor Improvement: Automation, interrupts and group lising commands show automations in alphabetical order.
+  
+  Minor Improvement: Replaced edit, show and remove buttons on the interrupts and automation window with the word Manage. Allowing for better formatting on lower resolutions screens.
   
   Improvement: Made the choice to have the stop command stop all automation types that are currently running.
   
@@ -59,16 +63,18 @@ Automations Bugfix Fall-Winter 2022
   
   Improvement: When automations or interrupts are updated or created not only do the changes display but the full summary of the automation from the show button is display. Allowing you to Easily add to the automation since the add button is at the end of the message.
   
-  Improvement: Updated the help anything command to now use google to search the wiki.
-  
   Improvement: Better formating on the parthia or help client command. Easier to read, fewer items on the main call.
   
-  Feature: Added command `parthia developer toggle global line`. Adds the ability to show or hide the raw text received from the TEC server.
+  Feature Request: Added command `parthia developer toggle global line`. Adds the ability to show or hide the raw text received from the TEC server.
   
-  Feature: Added command `parthia developer toggle filtered line`. Adds the ability to or not to show the filtered text normally shown on screen.
+  Feature Request: Added command `parthia developer toggle filtered line`. Adds the ability to or not to show the filtered text normally shown on screen.
+  
+  Moderate Improvement: Updated the help anything command to now use google to search the wiki.
   
   Moderate Improvement: Added /insert command to insert commands into running automations and interrupts.
     Run `parthia insert` for help. There is already a tutorial video.
+    
+  Moderate Improvement: Added the ability for users to request automations from a parthia developer and receive that automation by a single button click in parthia.
   
   Significant Improvement: In all instances but three. If a command is sent to the server that contains &lt;target&gt;.
     &lt;target&gt; will be replaced with the target you provided to the target command.
@@ -89,8 +95,6 @@ Not completed yet:
   Past due: Create more tutorial videos. Link them to the help commands throughout the game.
 
   Major improvement: In hunting grounds that have a single entry and exit point. Add the ability for Parthia Maps to automatically move to the top of its tab. It displays the current hunting ground you are on. Though with an image that looks like an over the top view of the hunting ground. As you move it tracks movement as standard mudlet mapping feature does. Intended for beginer hunting grounds for now. Could add features like fog of war later.
-
-  Improvement: Add automations and interrupts to their data folders. Allowing for prepackaged automations that people can import directly on installation.
 
   Major improvement: add the ability to collect game data via regex triggers. For example when an attack is dodged, you could record each attack of the desired type ( when it was dodged ) and review what dodge dodged it. You could record stat improvements. Gleams. Really endless options. Just restricted to regex triggers. For text should fit anyones needs.
   
@@ -4205,6 +4209,36 @@ function parthiaToBoolean(variableToConvert)
 end --function parthiaToBoolean(variableToConvert)</script>
 					<eventHandlerList />
 				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>pairsByKeys(t, f)</name>
+					<packageName></packageName>
+					<script>-- Credit, collected this function from: https://www.lua.org/pil/19.3.html
+
+function pairsByKeys(t, f)
+  local a = {}
+  for n in pairs(t) do table.insert(a, n) end
+  table.sort(a, f)
+  local i = 0      -- iterator variable
+  local iter = function ()   -- iterator function
+    i = i + 1
+    if a[i] == nil then return nil
+    else return a[i], t[a[i]]
+    end
+  end
+  return iter
+end
+
+function alphabeticalCheck(str, str2)
+
+  if str:lower() &lt; str2:lower() then
+    return true
+  end
+  
+  return false
+
+end</script>
+					<eventHandlerList />
+				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>GUI</name>
@@ -7348,7 +7382,8 @@ Handles refreshing the text in the interrupts window.
   local automationType = 'automationInterrupt'
   local automationTypeName = 'interrupt'
 
-  for groupName, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]) do
+  -- Loop through all the automations in alphabetical order
+  for groupName, _ in pairsByKeys(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType], alphabeticalCheck) do
     
       cecho("interruptsWindowConsole", groupName..":\n")
       
@@ -7438,7 +7473,8 @@ Handles refreshing the text in the interrupts window.
     runningAutomationName = parthiaAutomationRunning.groupName
   end -- if parthiaAutomationRunning then
 
-  for groupName, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]) do
+  -- Loop through all the automations in alphabetical order
+  for groupName, _ in pairsByKeys(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType], alphabeticalCheck) do
     
       cecho("automationWindowConsole", groupName..":\n")
       
@@ -10860,7 +10896,8 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
     
     pecho("You can click a blue link below to start or show that group's information. You can click a red link to remove that group.\n\n")
     
-    for groupName, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]) do
+    -- Loop through all the automations in alphabetical order
+    for groupName, _ in pairsByKeys(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType], alphabeticalCheck) do
     
       pecho(groupName.."\n")
       
