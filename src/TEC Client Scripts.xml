@@ -10970,7 +10970,7 @@ function showAutomationGroupTableData(groupName, automationTypeName, automationT
       end  -- if automationType == 'automationInterrupt' then
       
       pechoLink("  &lt;:ansi_red&gt;Rename", 
-        [[printCmdLine("parthia rename ]]..automationTypeName..[[ ]]..groupName..[[ = new_name");
+        [[printCmdLine("parthia ]]..automationTypeName..[[ rename ]]..groupName..[[ = new_name");
         pecho("new_name needs to be replaced with what you would like the ]]..automationTypeName..[[ to be renamed to.\n")]],
         "parthia "..automationTypeName.." rename", true)
               
