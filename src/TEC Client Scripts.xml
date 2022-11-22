@@ -47,7 +47,7 @@ Automations Bugfix Fall-Winter 2022
   
   Improvement: Made the choice to have the stop command stop all automation types that are currently running.
   
-  Improvement: Dramatically shortened the help message that appears when a player clicks the 'create an automatio' and 'create an interrupt' windows.
+  Improvement: Dramatically shortened the help message that appears when a player clicks the 'create an automation' and 'create an interrupt' windows.
   
   Improvement: The automation window will now show a green "Stop" for the automation that is running. Allowing the user to stop the automation by clicking it.
   Thank you Wacomd for the suggestion
@@ -9916,7 +9916,7 @@ function parthiaAutomationUpdateHelpBrief()
     [[parthiaAutomationUpdateHelp("automation")]], 
     "text tutorial on creating an automation", true)
   
-  pecho("For a tutorial video on making an Automation Group go to ")
+  pecho("\tFor a tutorial video on making an Automation Group go to ")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/rCHHD866J3I\n\n", 
     [[openUrl("https://www.youtube.com/watch?v=rCHHD866J3I&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps&amp;index=2")]], 
     "youtube parthia automation tutorial", true)
