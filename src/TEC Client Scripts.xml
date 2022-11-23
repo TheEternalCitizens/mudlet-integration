@@ -17900,11 +17900,8 @@ tecSetScrollBars(tecSettings.showScrollBars, false)</script>
         
         debugToDisplay("\n\tcommandToBeSent: "..commandToBeSent.."\n\n")
     
-        -- Remove the echo from screen
-        deleteLine()
-    
         -- Send the updated command
-        send(commandToBeSent)
+        send(commandToBeSent, false)
         
         -- stop the origional command from being sent
         denyCurrentSend()
