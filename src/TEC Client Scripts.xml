@@ -10971,7 +10971,7 @@ function showAutomationGroupTableData(groupName, automationTypeName, automationT
       
       pechoLink("  &lt;:ansi_red&gt;Rename", 
         [[printCmdLine("parthia ]]..automationTypeName..[[ rename ]]..groupName..[[ = new_name");
-        pecho("new_name needs to be replaced with what you would like the ]]..automationTypeName..[[ to be renamed to.\n")]],
+        pecho("new_naplayme needs to be replaced with what you would like the ]]..automationTypeName..[[ to be renamed to.\n")]],
         "parthia "..automationTypeName.." rename", true)
               
       -- Remove group button
@@ -17899,6 +17899,10 @@ tecSetScrollBars(tecSettings.showScrollBars, false)</script>
         local commandToBeSent = rex.gsub(commandSent, "\&lt;(?i)target\&gt;", parthiaGetCharacterTarget())
         
         debugToDisplay("\n\tcommandToBeSent: "..commandToBeSent.."\n\n")
+    
+        selectCurrentLine() --select current line in main.
+      	replace("") --Erase text from main. Otherwise variable line will apear on console.
+      	deselect() --Don't forget your deselects!
     
         -- Send the updated command
         send(commandToBeSent)
