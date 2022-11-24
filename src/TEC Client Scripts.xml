@@ -8405,6 +8405,20 @@ end --function PlayerDev.set(mode)</script>
 					</Script>
 				</ScriptGroup>
 				<Script isActive="yes" isFolder="no">
+					<name>postUpdateFunction()</name>
+					<packageName></packageName>
+					<script>function postUpdateFunction(displayToScreen)
+
+  -- get updates to the player developer folders
+  PlayerDev.Update(displayToScreen)
+  
+  -- download updates to automations
+  getAutomationUpdates()
+
+end  -- function postUpdateFunction()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
 					<name>Git Updates</name>
 					<packageName></packageName>
 					<script>--Installs updates from github.
@@ -8500,7 +8514,7 @@ function GitUpdateconfig() --Create variables used for updates
   GitUpdate.cmdHighlight = "blue"
   --Copy a function you would like to have run when an update is completed.
   --Make false if you do not want it to run after the update has completed.
-  GitUpdate.postUpdateFunction = PlayerDev.Update
+  GitUpdate.postUpdateFunction = postUpdateFunction
 
   --No need to change variables below
   GitUpdate.filePattern = ".*%/(.*%..*)$" --string pattern to detect file name at end of url or file path string
