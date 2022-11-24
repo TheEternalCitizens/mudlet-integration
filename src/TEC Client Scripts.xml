@@ -11522,19 +11522,24 @@ local function listAutomationFiles(autoFolder, automationTypeName)
   -- Import a list of importable automation files.
   local autoImportableFiles = parthiaFileList(autoFolder)
   
-  -- loop through all the automation files.
-  for _, file in ipairs(autoImportableFiles) do
+  -- Only iterate if there are files found
+  if autoImportableFiles then
   
-    -- Remove the lua file extensions from the name.
-    local fileName = string.gsub(file, "%.lua", "")
+    -- loop through all the automation files.
+    for _, file in ipairs(autoImportableFiles) do
     
-    -- Display a clickable command to import this automation file
-    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." import "..fileName, 
-      [[expandAlias("]].."parthia "..automationTypeName.." import "..fileName..[[")]],
-      "Import "..fileName, true)
-    pecho(", to import "..automationTypeName.." "..fileName..".\n")
-    
-  end  -- for _, file in ipairs(autoImportableFiles) do
+      -- Remove the lua file extensions from the name.
+      local fileName = string.gsub(file, "%.lua", "")
+      
+      -- Display a clickable command to import this automation file
+      pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." import "..fileName, 
+        [[expandAlias("]].."parthia "..automationTypeName.." import "..fileName..[[")]],
+        "Import "..fileName, true)
+      pecho(", to import "..automationTypeName.." "..fileName..".\n")
+      
+    end  -- for _, file in ipairs(autoImportableFiles) do
+  
+  end -- if autoImportableFiles then
   
   -- Display a command to save files to the automation directory
   pecho("\nIf you would like to copy files to the "..automationTypeName.." data folder, ")
@@ -11955,7 +11960,7 @@ function getAutomationUpdates()
   end  -- if automationUpdateRunning
 
   -- Where the files are in mudlet
-  automationsGITRepository = [[https://github.com/TheEternalCitizens/mudlet-integration/raw/AutoamtionBugFixWinter2022/data]]
+  automationsGITRepository = [[https://github.com/TheEternalCitizens/mudlet-integration/raw/develop/data]]
   
   -- Defaulting the tracked downloads table. The function used later trackDownloads() needs this table.
   -- This is used to make certain all files have downloaded
