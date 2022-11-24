@@ -11,26 +11,94 @@
 			<packageName></packageName>
 			<script>--[[
 
-Winter 2022 - 2023
+Automations Bugfix Fall-Winter 2022
 
-  Minor bugfix: characters completing an interrupt would not automatically resume their last running automation.
+  Very Minor bugfix: function parthiaMap.checkCharacter was throwing debug warnings when the `stats` command was run while mapping was disabled.
+
+  Minor bugfix: An interrupt previously could not have a `first command trigger` that was different than the `trigger` for that first command.
   
   Minor bugfix: players running very old accounts that do not have the colored text patterns sent out for all standard room messages could not use the run courses command. This has been fixed.
+  Thank you Rehlyt for reporting the bug
   
-  Bugfix: parthia automation and interrupt creation commands would not accept | in the input. Preventing the player from creating 'or' logic in their automations.
+  Minor bugfix: players using the non colored "You are no longer busy." message would not have automations properly interate to the next command in the automation.
+  Thank You ottomated for reporting the bug
+  
+  Minor bugfix: numpad navigation setting was not getting restored on startup by parthia.
+  Thank You Papikins (laurentinous, not Laun) for reporting the bug
+  
+  Bugfix: characters completing an interrupt would not automatically resume their last running automation.
+  
+  Bugfix: parthia automation and interrupt creation commands would not accept | in the input. Now all characters except , are allowed in automation and interrupt creation.
+  Thank you Wacomd for finding the bug
+  
+  Bugfix: The rumors text trigger was causing combat text of color #e119e1 to go to the communications window. 
+  
+  Minor Improvement: When you run the stats command your fatigue bar will refresh with your current fatigue.
+  
+  Minor Improvement: Further cleaned up the help displayed with the parthia command. There were too many items on it.
+  
+  Minor Improvement: added function parthiaSetCharacterTarget so players can set their target for the &lt;target&gt; filter in parthia.
+    Reference: https://github.com/TheEternalCitizens/mudlet-integration/wiki/Parthia-API#parthiasetcharactertargettargetname
+    
+  Minor Improvement: added function parthiaGetCharacterTarget to collect the characters current target.
+    Reference: https://github.com/TheEternalCitizens/mudlet-integration/wiki/Parthia-API#parthiagetcharactertarget
+    
+  Minor Improvement: added ability to rename interrupts and automations
+  
+  Minor Improvement: Automation, interrupts and group lising commands show automations in alphabetical order.
+  
+  Minor Improvement: Replaced edit, show and remove buttons on the interrupts and automation window with the word Manage. Allowing for better formatting on lower resolutions screens.
   
   Improvement: Made the choice to have the stop command stop all automation types that are currently running.
   
-  Improvement: Dramatically shortened the help message that appears when a player clicks the 'create an automatio' and 'create an interrupt' windows.
-      Previous to this there was too much text, so it was not being read.
+  Improvement: Dramatically shortened the help message that appears when a player clicks the 'create an automation' and 'create an interrupt' windows.
+  
+  Improvement: The automation window will now show a green "Stop" for the automation that is running. Allowing the user to stop the automation by clicking it.
+  Thank you Wacomd for the suggestion
+  
+  Improvement: automations and interrupts now display ways to stop them when they run.
+  Thank you Wacomd for asking how to stop automations. For some reason I thought these messages were already displayed.
+  
+  Improvement: added additional commands to stop automations and interrupts
+  
+  Improvement: When automations or interrupts are updated or created not only do the changes display but the full summary of the automation from the show button is display. Allowing you to Easily add to the automation since the add button is at the end of the message.
+  
+  Improvement: Better formating on the parthia or help client command. Easier to read, fewer items on the main call.
+  
+  Feature Request: Added command `parthia developer toggle global line`. Adds the ability to show or hide the raw text received from the TEC server.
+  
+  Feature Request: Added command `parthia developer toggle filtered line`. Adds the ability to or not to show the filtered text normally shown on screen.
+  
+  Moderate Improvement: Updated the help anything command to now use google to search the wiki.
+  
+  Moderate Improvement: Added /insert command to insert commands into running automations and interrupts.
+    Run `parthia insert` for help. There is already a tutorial video.
+    
+  Moderate Improvement: Added the ability for users to request automations from a parthia developer and receive that automation by a single button click in parthia.
+  
+  Significant Improvement: In all instances but three. If a command is sent to the server that contains &lt;target&gt;.
+    &lt;target&gt; will be replaced with the target you provided to the target command.
+    This is supported with ANY method mudlet uses to send a command.
+    The instances where this does not happen is when
+      When you are creating a new macro.
+      When you provide your user name during login
+      When you provide your password during login.
+
+Winter 2022 - 2023
   
 Not completed yet:
 
+  Past due: Create an automated installer for Windows users using OneDrive.
+  
+  Past due: Create a tutorial video for manual installations. Place it directly front center of that tutorial page.
+  
+  Past due: Create more tutorial videos. Link them to the help commands throughout the game.
+
   Major improvement: In hunting grounds that have a single entry and exit point. Add the ability for Parthia Maps to automatically move to the top of its tab. It displays the current hunting ground you are on. Though with an image that looks like an over the top view of the hunting ground. As you move it tracks movement as standard mudlet mapping feature does. Intended for beginer hunting grounds for now. Could add features like fog of war later.
 
-  Improvement: Add automations and interrupts to their data folders. Allowing for prepackaged automations that people can import directly on installation.
-
   Major improvement: add the ability to collect game data via regex triggers. For example when an attack is dodged, you could record each attack of the desired type ( when it was dodged ) and review what dodge dodged it. You could record stat improvements. Gleams. Really endless options. Just restricted to regex triggers. For text should fit anyones needs.
+  
+  Feature Request, requestor letty: RV and the steps garden are laggy.
 
 ]]--</script>
 			<eventHandlerList />
@@ -552,12 +620,20 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   parthiaAutomationSaveTable = {}  -- table that stores all character specific saved automation data
   parthiaAutomationSavePath = tecSettingsFolder.."AutomationData.lua"
   parthiaAutomationIterationCounter = 0  -- counts the current standard automation task iteration
+  parthiaAutomationInsertCommand = false  -- table to contain commands that need to be inserted into a currently running automation
   automationDataFolder = getMudletHomeDir().."\/Automation Data\/"
   interruptDataFolder = getMudletHomeDir().."\/Interrupt Data\/"
+  automationUpdateRunning = false  -- Tells parthia if an automations update is currently running
   
   unfilteredTextConsoleMode = false  -- a snap out console window ( userWindow ) that shows unfiltered text from TEC
   
   parthiaCollect = {}  -- Used to hold data functions other misc for the collection system.
+  
+  tecSettings.filterTargetFromCommands = true -- Used to set if the string "&lt;target&gt;" should be filtered from commands sent
+  supressTargetFilter = false  -- Supresses filtering &lt;target&gt; from a command for a single command run.
+  
+  tecSettings.parthiaDisplayFilteredLine = true  -- if true, shows the filtered line to screen
+  tecSettings.parthiaRemoveGlobalLine = true  -- If true removes the global line from mudlet so it does not show to screen.
 
   if displayToScreen then pecho("Parthia settings set to default.\n") end
 
@@ -3576,7 +3652,7 @@ end --function parthiaTableSave(tbl, path, jsonFormat, displayToScreen)</script>
 					<name>dontForgetToSave()</name>
 					<packageName></packageName>
 					<script>function dontForgetToSave()
-  pecho("Don't forget to save your changes:\n")
+  pecho("\nDon't forget to save your changes:\n")
   pecho("Save all settings with: ")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save all\n", 
   [[tecClientSaveAll(true)]],
@@ -4131,6 +4207,36 @@ function parthiaToBoolean(variableToConvert)
   return variableToConvert
 
 end --function parthiaToBoolean(variableToConvert)</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>pairsByKeys(t, f)</name>
+					<packageName></packageName>
+					<script>-- Credit, collected this function from: https://www.lua.org/pil/19.3.html
+
+function pairsByKeys(t, f)
+  local a = {}
+  for n in pairs(t) do table.insert(a, n) end
+  table.sort(a, f)
+  local i = 0      -- iterator variable
+  local iter = function ()   -- iterator function
+    i = i + 1
+    if a[i] == nil then return nil
+    else return a[i], t[a[i]]
+    end
+  end
+  return iter
+end
+
+function alphabeticalCheck(str, str2)
+
+  if str:lower() &lt; str2:lower() then
+    return true
+  end
+  
+  return false
+
+end</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -6366,10 +6472,6 @@ like the parthia command or parthia talk command
 	tecWindow = tecWindow or "main"
 	tecBrief = tecBrief or false
   local parthiaCmdHelp = " change many client settings."
-  local displayCmdHelp = " Save or load window positions, "
-		.."reset display to defaults, "
-  	.."and clear text off the display."
-  local debugCmdHelp = " Use to get information to report issues."
   
   if not tecBrief then --if we do not want to be brief
     pecho("There are a number of commands to adjust the game client. "
@@ -6388,21 +6490,13 @@ like the parthia command or parthia talk command
   	echo(tecWindow, parthiaCmdHelp.."\n")
 	else echo(tecWindow, "\n")
   end --end if not tecBrief
- 
-  cechoLink(tecWindow, "&lt;:"..tecSettings.helpHighlightColor.."&gt;display", 
-  [[UIManagerHelp()]], 
-  "Change display settings.", true)
-  if not tecBrief then --if we do not want to be brief
-    echo(tecWindow, displayCmdHelp.."\n") 
-	else echo(tecWindow, "\n")
-  end --end if not tecBrief
   
-  cechoLink(tecWindow, "&lt;:"..tecSettings.helpHighlightColor.."&gt;debug", 
-  [[tecDebugHelp()]], 
-  "Create debug messages", true)
+  cechoLink(tecWindow, "&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia report", 
+  [[tecReportIssues()]],
+  "Report Parthia issues", true)
   if not tecBrief then --if we do not want to be brief
-  	echo(tecWindow, debugCmdHelp.."\n")
-	else echo(tecWindow, "\n")
+    echo(tecWindow, ", instructions on reporting issues.\n")
+  else echo(tecWindow, "\n")
   end --end if not tecBrief
   
   echo(tecWindow, "\n")
@@ -6475,131 +6569,97 @@ end --end function tecDebugHelp</script>
 					<name>tecClientHelp()</name>
 					<packageName></packageName>
 					<script>function tecClientHelp()  
-  pecho("\nparthia command:\n")
+  pecho("\nparthia help:\n\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia developer", 
+  cechoLink("  &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia developer", 
   [[parthiaDeveloperHelp()]],
   "developer commands help", true)
   echo(", developer commands help.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map", 
-  [[parthiaMap.help()]],
-  "List parthia map commands", true)
-  pecho(", commands for parthia's mapper.\n")
-
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia tips", 
-  [[parthiaSetTips(true)]],
-  "Toggle displaying game world tips", true)
-  pecho(", toggle displaying game world tips.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk", 
-  [[parthiaTalkHelp()]],
-  "parthia talk help", true)
-  pecho(", list parthia's text to speech commands.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia update check", 
-  [[DownloadGitReleaseJSON()]],
-  "Check for updates", true)
-  pecho(", check if Parthia updates are available.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia version", 
-  [[expandAlias("parthia version")]],
-  "Display version of Parthia", true)
-  pecho(", check installed Parthia version.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia beta test", 
+  pechoLink("  &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia beta test", 
   [[tecSetBetaTester()]],
   "Receive beta updates", true)
   pecho(", Toggle if you received beta updates or not.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers", 
-  [[expandAlias("parthia help developers")]],
-  "Toggle help developers data collection", true)
-  pecho(", Toggle if you are collecting data to help developers.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers save", 
-  [[saveHelpDevs(true)]],
-  "Save Help Developer data", true)
-  pecho(", Save data collected by Help Developers to file.\n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment", 
+  pechoLink("  &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia playerdevelopment", 
   [[parthiaPlayerDevelopmentHelp()]],
   "Tools to help player developers", true)
   pecho(", list commands to assist player developers.\n")
 
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save all", 
-  [[tecClientSaveAll(true)]],
-  "Save all client settings", true)
-  pecho(", Save client and display settings to file.\n")
+  pechoLink("  &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia data", 
+  [[expandAlias("parthia data")]],
+  "Commands to help manage data", true)
+  pecho(", commands to help save and load parthia settings data.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save", 
-  [[tecFileSaveSettings(true)]],
-  "Save client settings", true)
-  pecho(", Save basic client settings to file.\n")
+  pecho("\n  Troubleshooting:\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia load", 
-  [[tecFileLoadSettings(true)]],
-  "Load client settings from file", true)
-  pecho(", Loads client settings from file. \n")
-  
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia reset", 
-  [[tecClientReset(true);dontForgetToSave(true)]],
-  "Reset client to default", true)
-  pecho(", Reset non display client settings to default.\n")
-  	
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia reset all", 
-  [[tecClientResetAll()]],
-  "Reset all client settings to default", true)
-  pecho(", Reset client and display to default settings.\n")
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia update check", 
+  [[DownloadGitReleaseJSON()]],
+  "Check for updates", true)
+  pecho(", check if Parthia updates are available.\n")
     
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia repair", 
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia repair", 
   [[expandAlias("parthia repair")]],
   "Repair Parthia", true)
   pecho(", repairs Parthia. By replacing all developer created code.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia report", 
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia report", 
   [[tecReportIssues()]],
   "Report Parthia issues", true)
-  pecho(", receive instruction on reporting issues.\n")
+  pecho(", instructions on reporting issues.\n")
   
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia numpad navigation", 
-  [[expandAlias("parthia numpad navigation")]],
-  "Toggle numpad navigation", true)
-  echo(", turn navigation using the numberpad on or off.\n")
-
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia tab font size fontsize", 
+  pecho("\n  Display:\n")
+  
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia display", 
+  [[expandAlias("parthia display")]],
+  "List Parthia's display commands", true)
+  pecho(", list commands to customize display layout, images and scrollbars in Parthia.\n")
+  
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia tab font size fontsize", 
   [[printCmdLine("parthia tab font size ");
     pecho("Now enter the font size at the end of the command and press enter.\n")]],
   "Change font size of tabs", true)
   pecho(", Change font size for window tabs.\n") 
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia change colors", 
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia change colors", 
   [[tecClientChangeColors()]],
   "Change client colors", true)
   pecho(", Change color scheme for client.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia font size fontsize", 
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia font size fontsize", 
   [[printCmdLine("parthia font size ");
     pecho("Now enter the font size at the end of the command and press enter.\n")]],
   "Change client font size", true)
   pecho(", Change font size for all text consoles.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia commands", 
+  pecho("\n  accessibility:\n")
+  
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia talk", 
+  [[parthiaTalkHelp()]],
+  "parthia talk help", true)
+  pecho(", list parthia's text to speech commands.\n")
+  
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia toggle target filter", 
+  [[parthiaToggleTargetFilter(true)]],
+  "Toggle parthia target filter state", true)
+  pecho(", enable and disable parthia's &lt;target&gt; filter.\n")
+  
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia commands", 
   [[parthiaCommandsHelp()]],
   "List custom parthia commands", true)
   pecho(", game commands that exist in parthia only.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia display", 
-  [[expandAlias("parthia display")]],
-  "List Parthia's display commands", true)
-  pecho(", list commands to customize display layout, images and scrollbars in Parthia.\n")
+  cechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia numpad navigation", 
+  [[expandAlias("parthia numpad navigation")]],
+  "Toggle numpad navigation", true)
+  echo(", turn navigation using the numberpad on or off.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation", 
+  pechoLink("    &lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation", 
   [[parthiaAutomationHelp()]],
   "parthia automation", true)
   pecho(", help for the automation system.\n")
  
-  pecho("Click a command above or type it into the command line.\n")
+  pecho("\nClick a command above or type it into the command line.\n")
 
 end --function tecClientHelp</script>
 					<eventHandlerList />
@@ -6675,6 +6735,50 @@ end --function tecClientHelp</script>
   [[expandAlias("parthia prepare release")]],
   "Prepare code for release", true)
   echo(", prepare mudlet profile for a new github release.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia map", 
+  [[parthiaMap.help()]],
+  "List parthia map commands", true)
+  pecho(", commands for parthia's mapper.\n")
+
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia tips", 
+  [[parthiaSetTips(true)]],
+  "Toggle displaying game world tips", true)
+  pecho(", toggle displaying game world tips.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia version", 
+  [[expandAlias("parthia version")]],
+  "Display version of Parthia", true)
+  pecho(", check installed Parthia version.\n")
+
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers", 
+  [[expandAlias("parthia help developers")]],
+  "Toggle help developers data collection", true)
+  pecho(", Toggle if you are collecting data to help developers.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia help developers save", 
+  [[saveHelpDevs(true)]],
+  "Save Help Developer data", true)
+  pecho(", Save data collected by Help Developers to file.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia developer toggle global line", 
+  [[expandAlias("parthia developer toggle global line")]],
+  "Toggle raw text display", true)
+  pecho(", toggle if raw text from server is displayed.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia developer toggle filtered line", 
+  [[expandAlias("parthia developer toggle filtered line")]],
+  "Toggle filtered text display", true)
+  pecho(", toggle if filtered text parthia prepared for Mudlet is displayed.\n")
+  
+  pecho("\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug", 
+  [[tecDebugHelp()]],
+  "Display debug modes", true)
+  pecho(", display debug modes.\n")
+  
+  
 
 end --function parthiaDeveloperHelp()</script>
 					<eventHandlerList />
@@ -6949,6 +7053,39 @@ end --function parthiaTalkHelp()</script>
   "Check for player development updates", true)
   pecho(", check for updates to player development folders. Occurs automatically with client updates.\n")
 end --function parthiaPlayerDevelopmentHelp()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>parthiaDataHelp()</name>
+					<packageName></packageName>
+					<script>function parthiaDataHelp()
+
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save all", 
+  [[tecClientSaveAll(true)]],
+  "Save all client settings", true)
+  pecho(", Save client and display settings to file.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia save", 
+  [[tecFileSaveSettings(true)]],
+  "Save client settings", true)
+  pecho(", Save basic client settings to file.\n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia load", 
+  [[tecFileLoadSettings(true)]],
+  "Load client settings from file", true)
+  pecho(", Loads client settings from file. \n")
+  
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia reset", 
+  [[tecClientReset(true);dontForgetToSave(true)]],
+  "Reset client to default", true)
+  pecho(", Reset non display client settings to default.\n")
+  	
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia reset all", 
+  [[tecClientResetAll()]],
+  "Reset all client settings to default", true)
+  pecho(", Reset client and display to default settings.\n")
+
+end  -- function parthiaDataHelp()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -7245,7 +7382,8 @@ Handles refreshing the text in the interrupts window.
   local automationType = 'automationInterrupt'
   local automationTypeName = 'interrupt'
 
-  for groupName, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]) do
+  -- Loop through all the automations in alphabetical order
+  for groupName, _ in pairsByKeys(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType], alphabeticalCheck) do
     
       cecho("interruptsWindowConsole", groupName..":\n")
       
@@ -7258,7 +7396,7 @@ Handles refreshing the text in the interrupts window.
       -- Make a Start button for automation OR an enable disable button for interrupts
       if automationType == 'automationInterrupt' then
         
-        local toggleInterruptButtonColor = "ansi_red"
+        local toggleInterruptButtonColor = tecSettings.helpHighlightColor
         local toggleInterruptButtonState = "Inactive"
         
         -- This intterrupt is currently enabled. Set the color to standard blue
@@ -7282,20 +7420,9 @@ Handles refreshing the text in the interrupts window.
       end  -- if automationType == 'automationInterrupt' then
         
       -- Show group button
-      cechoLink("interruptsWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Show", 
+      cechoLink("interruptsWindowConsole", "  &lt;:ansi_red&gt;Manage", 
         [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[")]],
-        "parthia "..automationTypeName.." groups "..groupName, true)
-      
-      --Make a customized edit button for interrupts
-      cechoLink("interruptsWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
-        --parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]
-        [[parthiaInterruptCreateHelp();printCmdLine("parthia interrupt ]]..groupName..[[, ]]..groupRepeat..[[, ]]..callPattern..[[~ ]]..firstCommandTrigger..[[")]],
-        "fill command line with edit command for "..groupName, true)
-              
-      -- Remove group button
-      cechoLink("interruptsWindowConsole", "  &lt;:ansi_red&gt;Remove", 
-        [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[, delete")]],
-        "parthia "..automationTypeName.." groups "..groupName..", delete", true)
+        "View &amp; change "..groupName, true)
       
       cecho("interruptsWindowConsole", "\n\n")
       
@@ -7338,7 +7465,16 @@ Handles refreshing the text in the interrupts window.
   local automationType = 'automation'
   local automationTypeName = 'automation'
 
-  for groupName, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]) do
+  -- Will use this to match this automation's groupname against a currently running automation
+  local runningAutomationName = false
+  -- Check if an automation is currently running.
+  if parthiaAutomationRunning then
+    -- Collect the name of the running automation
+    runningAutomationName = parthiaAutomationRunning.groupName
+  end -- if parthiaAutomationRunning then
+
+  -- Loop through all the automations in alphabetical order
+  for groupName, _ in pairsByKeys(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType], alphabeticalCheck) do
     
       cecho("automationWindowConsole", groupName..":\n")
       
@@ -7348,47 +7484,23 @@ Handles refreshing the text in the interrupts window.
       local groupRepeat = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].interruptRepeat
       local callPattern = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].pattern
       
-      -- Make a Start button for automation OR an enable disable button for interrupts
-      if automationType == 'automationInterrupt' then
-        
-        local toggleInterruptButtonColor = "ansi_red"
-        local toggleInterruptButtonState = "Inactive"
-        
-        -- This intterrupt is currently enabled. Set the color to standard blue
-        if groupEnabled then
-          toggleInterruptButtonColor = "ansi_green"
-          toggleInterruptButtonState = "Active"
-        end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled then
-        
-        -- Display the button
-        cechoLink("automationWindowConsole", "  &lt;:"..toggleInterruptButtonColor.."&gt;"..toggleInterruptButtonState,
-                  [[expandAlias("parthia interrupt toggle ]]..groupName..[[")]],
-                  "Click to toggle "..groupName.." on or off", true)
-                  --parthia interrupt toggle [groupName]
-        
-      else  -- This is a standard automation group
-        
-        cechoLink("automationWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Start", 
-          [[expandAlias("parthia ]]..automationTypeName..[[ ]]..groupName..[[, 0")]],
-          "parthia "..automationTypeName.." "..groupName..", 0", true)
-          
-      end  -- if automationType == 'automationInterrupt' then
-        
-      -- Show group button
-      cechoLink("automationWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Show", 
-        [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[")]],
-        "parthia "..automationTypeName.." groups "..groupName, true)
+      -- This automation is currently running. Make the first button Stop and turn it green
+      if groupName == runningAutomationName then
+        cechoLink("automationWindowConsole", "  &lt;:ansi_green&gt;Stop", 
+        [[parthiaAutomationStop(true)]],
+        "parthia "..automationTypeName.." "..groupName..", 0", true)
       
-      -- Edit group button
-      cechoLink("automationWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
-        [[parthiaAutomationUpdateHelp();
-        printCmdLine("parthia automation ]]..groupName..[[, 1 = replace_with_your_command, 0, 0 &amp; 0")]],
-        "fill command line with edit command for "..groupName, true)
-              
-      -- Remove group button
-      cechoLink("automationWindowConsole", "  &lt;:ansi_red&gt;Remove", 
-        [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[, delete")]],
-        "parthia "..automationTypeName.." groups "..groupName..", delete", true)
+      -- If this automation is not running, lease it the stanard blue and show the button as start.
+      else
+        cechoLink("automationWindowConsole", "  &lt;:"..tecSettings.helpHighlightColor.."&gt;Start", 
+        [[expandAlias("parthia ]]..automationTypeName..[[ ]]..groupName..[[, 0")]],
+        "parthia "..automationTypeName.." "..groupName..", 0", true)
+      end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled then
+    
+      -- Show group button
+      cechoLink("automationWindowConsole", "  &lt;:ansi_red&gt;Manage", 
+        [[expandAlias("parthia ]]..automationTypeName..[[ groups ]]..groupName..[[")]],
+        "View &amp; change "..groupName, true)
       
       cecho("automationWindowConsole", "\n\n")
       
@@ -9363,6 +9475,39 @@ end --parthiaTalkSetvolume(volume, displayToScreen)
 					<script>--[[
 Codeless scripting.
 
+Script Updater
+
+How inserting a command into automations works.
+Global vairables
+  parthiaAutomationInsertCommand, a table with command and the trigger type or false if no insert is active
+Aliase to capture insert.
+  Format example: /ins slash &lt;target&gt; or /ins tap &lt;target&gt;, 1 to wait 1 second before calling the next command.
+If parthiaAutomationInsertCommand is truthy.
+  When parthiaAutomationCall is run, skip all the inner logic dealing with automations and interrupts.
+  Get the command and trigger type from the parthiaAutomationInsertCommand variable
+  Allow the standard call command logic at the bottom handle the rest.
+parthiaAutomationStop sets parthiaAutomationInsertCommand to false
+trigger you are no longer busy
+  will call parthiaAutomationCall is an insert is active BEFORE it checks if other automations are active
+
+How the &lt;target&gt; string is managed.
+Created save variable on the character target
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target
+    This way the target can be saved
+  parthiaGetCharacterTarget(), is used to get the target
+  parthiaSetCharacterTarget(), is used to set the target
+  The target is collected with an TRIGGER name "target collection". It captures the target from the on screen message stating the new target.
+    This will work with all target collection commands.
+  Any time the word &lt;target&gt; or &lt;Target&gt; appears in a command line it is replaced with parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target
+    This is done with an event that calls commandTargetFilter
+    If global variable supressTargetFilter is true do not filter &lt;target&gt; from the command.
+    When commandTargetFilter is run global variable supressTargetFilter is always set to false
+    When the event is created its ID is collected into: commandTargetFilterEventID global variable
+  When "Enter the string you wish this macro to expand to: " is the exact line match.
+    It sets supressTargetFilter to true, so the target filter is skipped for a single run.
+  If parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target does not exist it is initialized in parthiaAutomationCharacterCheck
+  When login prompts for password the target filter is supressed for a single time to allow &lt;target&gt; to be in a password.
+
 How automations are imported and exported--------------------------------------  
   functions
     parthiaAutomationExport
@@ -9381,7 +9526,7 @@ How automations are imported and exported--------------------------------------
     automationDataFolder, the folder where automations are saved.
     interruptDataFolder, the folder where interrupts are saved.
 
-How automations an interrupts are saved----------------------------------------
+How automations and interrupts are saved----------------------------------------
 
   parthiaAutomationSaveTable, is the dictionary that is saved to and loaded from.
     parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation, is where automations are saved
@@ -9640,7 +9785,6 @@ function parthiaAutomationUpdate(automationType, groupName, groupPosition,
   -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] does not exist create it
   -- parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] is created automatically when parthia starts.
   if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
-  
     -- this this is an interrupt prompt the user to create the interrupt first, pattern and repeat count is needed
     if automationType == "automationInterrupt" then
       pecho("Automation Interrupts must first be created with the parthia interrupt command first.")
@@ -9650,7 +9794,7 @@ function parthiaAutomationUpdate(automationType, groupName, groupPosition,
       parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] = {}  -- Make the group name an empty dictionary
     end -- if automationType == "automationInterrupt" then
   else -- this group already exists, this is an update.
-    pecho("Automation group "..groupName.." updated.\n")
+    pecho("Automation group "..groupName.." updated, your update is:\n")
   end  -- END if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
   
   -- a temp table to insert into the automations group name
@@ -9674,26 +9818,25 @@ function parthiaAutomationUpdate(automationType, groupName, groupPosition,
   pecho("\tIn position: "..groupPosition)
   pecho("\n\tAutomation Command: "..automationCommand)
   pecho("\n\tRepeat on fail: "..repeatOnFail.."\n")
-  
   -- Show when the first command is done
   if parthiaToBoolean(automationTrigger) then
-  
     --Attempt to convert the trigger to a number
     timedTrigger = tonumber(automationTrigger)  -- If it is not a number automationDelay will be null
-
     --If this custom trigger is a time trigger create a temp timer.
     if timedTrigger then
       pecho("\tSeconds to wait before calling next command: "..automationTrigger.."\n")
     else -- this is a custom trigger
       pecho("\tNext command called when you see: '"..automationTrigger.."'\n")
     end  -- if timedTrigger then
-
   else -- the trigger is not a custom trigger
-  
     pecho("\tNext command called when you see: 'You are no longer busy.'\n")
-    
   end  -- if parthiaToBoolean(automationTrigger) then
-                                        
+
+  -- Display the group screen for this automation so the user can easily add to it now.
+  pecho("\nThe full group now looks like:\n")
+  parthiaAutomationShowGroups(automationType, groupName)
+  pecho("\n\n")                
+                           
   -- Remind the user to save their chages
   dontForgetToSave()
   
@@ -9809,14 +9952,14 @@ function parthiaAutomationUpdateHelpBrief()
     [[parthiaAutomationUpdateHelp("automation")]], 
     "text tutorial on creating an automation", true)
   
-  pecho("For a tutorial video on making an Automation Group go to ")
+  pecho("\tFor a tutorial video on making an Automation Group go to ")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/rCHHD866J3I\n\n", 
     [[openUrl("https://www.youtube.com/watch?v=rCHHD866J3I&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps&amp;index=2")]], 
     "youtube parthia automation tutorial", true)
   
   pecho("Command Format:\n")
   pecho("parthia "..automationType.." [group name], [position number] = [command], [repeat on fail], [insert] &amp; [trigger]\n")
-  printCmdLine("parthia "..automationType.." replace_with_your_group, 1 = replace_with_your_command, 0, 0 &amp; 0")
+  printCmdLine("parthia automation replace_with_your_group, 1 = replace_with_your_command, 0, 0 &amp; 0")
 
 end -- function parthiaAutomationUpdateHelp()</script>
 						<eventHandlerList />
@@ -9863,36 +10006,24 @@ function parthiaAutomationCreateInterruptGroup(groupName, groupRepeat, pattern, 
   -- show information about the changes
   pecho("\t"..groupName.." will repeat "..groupRepeat.." times when called.\n")
   pecho("\tCall pattern: "..pattern.."\n")
-  
   -- Show when the first command is done
   if parthiaToBoolean(firstCommandTrigger) then
-  
     --Attempt to convert the trigger to a number
     timedTrigger = tonumber(firstCommandTrigger)  -- If it is not a number automationDelay will be null
-
     --If this custom trigger is a time trigger create a temp timer.
     if timedTrigger then
       pecho("\tSeconds to wait before calling next command: "..firstCommandTrigger.."\n")
     else -- this is a custom trigger
       pecho("\tNext command called when you see: '"..firstCommandTrigger.."'\n")
     end  -- if timedTrigger then
-
   else -- the trigger is not a custom trigger
-  
     pecho("\tNext command called when you see: 'You are no longer busy.'\n")
-    
   end  -- if parthiaToBoolean(firstCommandTrigger) then
   
-  if newInterruptGroup then
-  
-    pecho("\nIf you would like to add commands to this new interupt click or run: ")
-  
-    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt update\n\n", 
-        [[parthiaAutomationUpdateHelp("interrupt");
-        printCmdLine("parthia interrupt ]]..groupName..[[, 1 = replace_with_your_command, 0, 0 &amp; 0")]],
-        "Add commands to "..groupName, true)
-  
-  end  -- if newInterruptGroup then
+  -- Display the group screen for this automation so the user can easily add to it now.
+  pecho("\nIn full this interrupt now looks like:\n")
+  parthiaAutomationShowGroups("automationInterrupt", groupName)
+  pecho("\n\n")
   
   -- Remind the user to save their chages
   dontForgetToSave()
@@ -9982,6 +10113,10 @@ Scripts\Game Commands\auto\parthiaAutomationStart(groupName, groupRepeat)
 ]]--
 function parthiaAutomationStart(groupName, groupRepeat)
 
+  debugToDisplay("function parthiaAutomationStart called")
+  debugToDisplay("\tgroupName: "..groupName)
+  debugToDisplay("\tgroupRepeat: "..groupRepeat)
+
   -- Stop already running automation, display message to user
   if parthiaAutomationRunning then
     parthiaAutomationStop(true)
@@ -9992,13 +10127,23 @@ function parthiaAutomationStart(groupName, groupRepeat)
     parthiaAutomationStartHelp()
     pecho("\nAutomation group "..groupName.." does not exist. A full help message is above.\n\n")
     return false
-  end -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName] then
+  end -- if not parthiaAutomationSasveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName] then
   
   -- Record that automation has started, record the group name and how many times the group should repeat
   parthiaAutomationRunning = { groupName = groupName, groupRepeat = groupRepeat }
 
   -- inform the user automation has started.
   pecho("Starting automation group: "..groupName.."\n")
+  pecho("\tStop a running automation with:\n")
+  pecho("\t\tthe stop, /auto stop or parthia automation stop commands\n")
+  pecho("\t\tclicking ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;stop", 
+    [[parthiaAutomationStop(true)]],
+    "stop a running automation", true)
+  pecho(" here or under the running automation in the automation window.\n")
+
+  -- Refresh the automations window
+  refreshAutomationWindow()
 
   -- Call the function that runs the automation
   parthiaAutomationCall()
@@ -10065,7 +10210,7 @@ Scripts\Game Commands\auto\parthiaAutomationCall()
 ]]--
 
 function parthiaAutomationCall()
-  
+
   -- Set local variables
   local groupName = false  -- the name of this automation group
   local groupRepeat = false  -- How many times this group automation should repeat
@@ -10075,127 +10220,158 @@ function parthiaAutomationCall()
   local groupPosition = false
   -- How many times this automation group has repeated
   local iterationCounter = 0
-  -- Set parthiaAutomationInterruptIterationCounter to 0 if it has been initialized yet
-  if parthiaAutomationInterruptIterationCounter == nil then
-    parthiaAutomationInterruptIterationCounter = 0
-  end  -- if parthiaAutomationInterruptIterationCounter == nil then
-  
-  -- Now create the local variables collecting from global variables of the automation type being run.
-  if parthiaAutomationInterruptRunning then
-    --collect group name and repeat from parthiaAutomationInterruptRunning
-    groupName = parthiaAutomationInterruptRunning
-    groupRepeat = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].interruptRepeat
-    -- this is an interrupt task
-    automationType = "automationInterrupt"
-    -- setting this now, incase the previous task should repeat.
-    groupPosition = parthiaAutomationInterruptGroupPosition
-    -- How many times this interrupt group has repeated
-    iterationCounter = parthiaAutomationInterruptIterationCounter
-  else  -- this is a standard automation task collect from that table instead.
-    -- Get required variables for this function.  
-    groupName = parthiaAutomationRunning["groupName"]  -- the name of this automation group
-    groupRepeat = parthiaAutomationRunning["groupRepeat"]  -- How many times this group automation should repeat
-    automationType = "automation"  -- This is a standard automation task.
-    -- setting this now, incase the previous task should repeat.
-    groupPosition = parthiaAutomationGroupPosition
-    -- How many times this automation group has repeated
-    iterationCounter = parthiaAutomationIterationCounter
-  end -- if parthiaAutomationInterruptRunning then
-  
-  -- display debugging messages
-  debugToDisplay("parthiaAutomationCall post set local variables:")
-  debugToDisplay("\tgroupName: "..groupName.." groupRepeat: "..groupRepeat)
-  debugToDisplay("\tautomationType: "..automationType.." groupPosition: "..
-                 tostring(groupPosition).." iterationCounter: "..tostring(iterationCounter))
-  
+  local automationTrigger = 0
+  local automationCommand = "None"
   -- Blank out the timer ID it is no longer needed
   parthiaAutomationTimerID = false
-  
   -- if a custom automation trigger exists, kill it.
   if parthiaAutomationRegexTriggerID then
     killTrigger(parthiaAutomationRegexTriggerID)
     parthiaAutomationRegexTriggerID = false
   end  -- if parthiaAutomationRegexTriggerID then
-  
-  -- Iterate to the next command if it is required.
-  --if this is the fist run of this automation task, initialize variables.
-  if parthiaAutomationFirstRun then
-    debugToDisplay("\tAutomation first run, calling iteration.")
-    groupPosition = parthiaAutomationIncreaseGroupIteration()  -- set the iterator
-    parthiaLastCommandSuccess = false  -- There was no last command so set this to false
-  -- Always iterate to the next command if repeatOnFail is false, and this is NOT the first run out this automation group
-  elseif not parthiaAutomationRepeatCmdOnFailure then
-    debugToDisplay("\trepeatOnFailure is false, calling iteration")
-    groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
-  -- It repeatOnFail is true and the last command was successfull iterate
-  elseif parthiaAutomationRepeatCmdOnFailure and parthiaLastCommandSuccess then
-    debugToDisplay("\trepeatOnFailure is true, last command was successful.")
-    groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
-  end  -- if parthiaAutomationFirstRun
-  
-  -- Update the iteration counter
-  if parthiaAutomationInterruptRunning then
-    iterationCounter = parthiaAutomationInterruptIterationCounter
-  else  -- this is a standard automation task collect from that table instead.
-    iterationCounter = parthiaAutomationIterationCounter
-  end -- if parthiaAutomationInterruptRunning then
-  
-  --send debugging messages
-  debugToDisplay("parthiaAutomationCall post Iteration variables post iteration:")
-  debugToDisplay("\tgroupPosition: "..tostring(groupPosition).." iterationCounter: "..tostring(iterationCounter))
-  
-  -- stop this automation loop if user specified a group repeat and it has been reached.
-  if parthiaToBoolean(groupRepeat) then  -- Only check if a group repeat was specified.
-    if iterationCounter &gt;= tonumber(groupRepeat) then  -- this has iterated more than group repeat specified
-      if automationType == "automationInterrupt" then
-        pecho("\nInterrupt "..groupName.." completed.\n")
-        -- Stop the interrupt system
-        local continueAutomation = parthiaAutomationInterruptStop()
-        -- There is no need to continue automation so stop now
-        if not continueAutomation then
-          return true
-        end  -- if not continueAutomation
-        -- Since automation needs to continue after this. Gather data from the running automation
-        -- Get required variables for this function.  
-        groupName = parthiaAutomationRunning["groupName"]  -- the name of this automation group
-        groupRepeat = parthiaAutomationRunning["groupRepeat"]  -- How many times this group automation should repeat
-        automationType = "automation"  -- This is a standard automation task.
-        -- setting this now, incase the previous task should repeat.
-        groupPosition = parthiaAutomationGroupPosition
-        -- How many times this automation group has repeated
-        iterationCounter = parthiaAutomationIterationCounter
-      -- This is a standard automation task.
-      else
-        pecho("\nAutomation task "..groupName.." complete.\n")
-        parthiaAutomationStop()  -- Stop automation loop.
-        return true  -- stop current automation call also.
-      end -- if automationType == "automationInterrupt" then
-    end  -- if parthiaAutomationIterationCounter &gt; tonumber(groupRepeat) then
-  end -- if parthiaToBoolean(groupRepeat) then
-  
-  -- collect additional data this function will need
-  
-  --convert old secondsToWait to custom triggers, they only would exist in a standard automation group.
-  if automationType == "automation" and parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait then
-    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].automationTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait
-    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait = nil
-  end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait then
 
-  -- The command to run
-  local automationCommand = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].automationCommand
-  -- The delay before calling the next command
-  local automationTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].automationTrigger
-  -- If this command should repeat on failure
-  local repeatOnFail = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].repeatOnFail
-
-  -- This will be used in the if statement above that determins if automation should continue to the next command
-  parthiaAutomationRepeatCmdOnFailure = parthiaToBoolean(repeatOnFail)
+  -- If this is an insert run
+  if parthiaAutomationInsertCommand then
+  
+    automationTrigger = parthiaAutomationInsertCommand.trigger
+    automationCommand = parthiaAutomationInsertCommand.command
+    
+    -- Now clear out the insert table so it will not run again.
+    parthiaAutomationInsertCommand = false
+  
+  -- If this is a standard automation or interrupt run
+  else
+  
+    -- Set local variables
+    groupName = false  -- the name of this automation group
+    groupRepeat = false  -- How many times this group automation should repeat
+    -- This is a standard automation task.
+    automationType = "automation"
+    -- setting this now, incase the previous task should repeat.
+    groupPosition = false
+    -- How many times this automation group has repeated
+    iterationCounter = 0
+    -- Set parthiaAutomationInterruptIterationCounter to 0 if it has been initialized yet
+    if parthiaAutomationInterruptIterationCounter == nil then
+      parthiaAutomationInterruptIterationCounter = 0
+    end  -- if parthiaAutomationInterruptIterationCounter == nil then
+    
+    -- Now create the local variables collecting from global variables of the automation type being run.
+    if parthiaAutomationInterruptRunning then
+      --collect group name and repeat from parthiaAutomationInterruptRunning
+      groupName = parthiaAutomationInterruptRunning
+      groupRepeat = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].interruptRepeat
+      -- this is an interrupt task
+      automationType = "automationInterrupt"
+      -- setting this now, incase the previous task should repeat.
+      groupPosition = parthiaAutomationInterruptGroupPosition
+      -- How many times this interrupt group has repeated
+      iterationCounter = parthiaAutomationInterruptIterationCounter
+    else  -- this is a standard automation task collect from that table instead.
+      -- Get required variables for this function.  
+      groupName = parthiaAutomationRunning["groupName"]  -- the name of this automation group
+      groupRepeat = parthiaAutomationRunning["groupRepeat"]  -- How many times this group automation should repeat
+      automationType = "automation"  -- This is a standard automation task.
+      -- setting this now, incase the previous task should repeat.
+      groupPosition = parthiaAutomationGroupPosition
+      -- How many times this automation group has repeated
+      iterationCounter = parthiaAutomationIterationCounter
+    end -- if parthiaAutomationInterruptRunning then
+    
+    -- display debugging messages
+    debugToDisplay("parthiaAutomationCall post set local variables:")
+    debugToDisplay("\tgroupName: "..groupName.." groupRepeat: "..groupRepeat)
+    debugToDisplay("\tautomationType: "..automationType.." groupPosition: "..
+                   tostring(groupPosition).." iterationCounter: "..tostring(iterationCounter))
+    
+    -- Iterate to the next command if it is required.
+    --if this is the fist run of this automation task, initialize variables.
+    if parthiaAutomationFirstRun then
+      debugToDisplay("\tAutomation first run, calling iteration.")
+      groupPosition = parthiaAutomationIncreaseGroupIteration()  -- set the iterator
+      parthiaLastCommandSuccess = false  -- There was no last command so set this to false
+    -- Always iterate to the next command if repeatOnFail is false, and this is NOT the first run out this automation group
+    elseif not parthiaAutomationRepeatCmdOnFailure then
+      debugToDisplay("\trepeatOnFailure is false, calling iteration")
+      groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
+    -- It repeatOnFail is true and the last command was successfull iterate
+    elseif parthiaAutomationRepeatCmdOnFailure and parthiaLastCommandSuccess then
+      debugToDisplay("\trepeatOnFailure is true, last command was successful.")
+      groupPosition = parthiaAutomationIncreaseGroupIteration()  -- continue to the next command iteration
+    end  -- if parthiaAutomationFirstRun
+    
+    -- Update the iteration counter
+    if parthiaAutomationInterruptRunning then
+      iterationCounter = parthiaAutomationInterruptIterationCounter
+    else  -- this is a standard automation task collect from that table instead.
+      iterationCounter = parthiaAutomationIterationCounter
+    end -- if parthiaAutomationInterruptRunning then
+    
+    --send debugging messages
+    debugToDisplay("parthiaAutomationCall post Iteration variables post iteration:")
+    debugToDisplay("\tgroupPosition: "..tostring(groupPosition).." iterationCounter: "..tostring(iterationCounter))
+    
+    -- stop this automation loop if user specified a group repeat and it has been reached.
+    if parthiaToBoolean(groupRepeat) then  -- Only check if a group repeat was specified.
+      if iterationCounter &gt;= tonumber(groupRepeat) then  -- this has iterated more than group repeat specified
+        if automationType == "automationInterrupt" then
+          pecho("\nInterrupt "..groupName.." completed.\n")
+          -- Stop the interrupt system
+          local continueAutomation = parthiaAutomationInterruptStop()
+          -- There is no need to continue automation so stop now
+          if not continueAutomation then
+            return true
+          -- automation was previously running and it needs to be resumed.
+          else
+            -- Resume the previously running automation
+            parthiaAutomationCall()
+            return true
+          end  -- if not continueAutomation
+        -- This is a standard automation task.
+        else
+          pecho("\nAutomation task "..groupName.." complete.\n")
+          parthiaAutomationStop()  -- Stop automation loop.
+          return true  -- stop current automation call also.
+        end -- if automationType == "automationInterrupt" then
+      end  -- if parthiaAutomationIterationCounter &gt; tonumber(groupRepeat) then
+    end -- if parthiaToBoolean(groupRepeat) then
+    
+    -- collect additional data this function will need
+    
+    --convert old secondsToWait to custom triggers, they only would exist in a standard automation group.
+    if automationType == "automation" then
+      if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait then
+        parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].automationTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait
+        parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait = nil
+      end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].secondsToWait
+    end  -- if automationType == "automation"
+  
+    -- The command to run
+    automationCommand = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].automationCommand
+    -- The delay before calling the next command
+    automationTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].automationTrigger
+    -- If this command should repeat on failure
+    repeatOnFail = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName][groupPosition].repeatOnFail
+  
+    -- This will be used in the if statement above that determins if automation should continue to the next command
+    parthiaAutomationRepeatCmdOnFailure = parthiaToBoolean(repeatOnFail)
+  
+  end  -- if parthiaAutomationInsertCommand
   
   -- In case user is sending command that has no success chance reset parthiaLastCommandSuccess
   parthiaLastCommandSuccess = false
   
   --Determine how the next command should be called
   --Determine when the current command should be called ( To avoid the 1 command a second limit )
+  
+  debugToDisplay("parthiaAutomationCall automation type logic complete.")
+  debugToDisplay("\tautomationCommand: "..automationCommand)
+  debugToDisplay("\tautomationTrigger: "..automationTrigger)
+  debugToDisplay("\tgroupName: "..tostring(groupName))
+  debugToDisplay("\tgroupRepeat: "..tostring(groupRepeat))
+  debugToDisplay("\tautomationType: "..automationType)
+  debugToDisplay("\tgroupPosition: "..tostring(groupPosition))
+  debugToDisplay("\titerationCounter: "..tostring(iterationCounter))
   
   -- If the user specified a custom trigger
   if parthiaToBoolean(automationTrigger) then
@@ -10211,6 +10387,10 @@ function parthiaAutomationCall()
       
       -- create timer to call this function again
       parthiaAutomationTimerID = tempTimer(timedTrigger, [[parthiaAutomationCall()]])
+      
+      debugToDisplay("\tTimed trigger called.")
+      debugToDisplay("\t\tautomationCommand: "..automationCommand)
+      debugToDisplay("\t\ttimedTrigger: "..timedTrigger)
       
     else  -- This trigger is a message based trigger. Create a regex trigger.
       
@@ -10260,6 +10440,7 @@ function parthiaAutomationStop(displayToScreen)
   parthiaLastCommandSuccess = false
   parthiaAutomationRepeatCmdOnFailure = false
   parthiaAutomationPaused = false
+  parthiaAutomationInsertCommand = false
   
   -- Stop any running interrupts
   parthiaAutomationInterruptStop()
@@ -10275,6 +10456,9 @@ function parthiaAutomationStop(displayToScreen)
     killTrigger(parthiaAutomationRegexTriggerID)
     parthiaAutomationRegexTriggerID = false
   end  -- if parthiaAutomationRegexTriggerID then
+  
+  -- Refresh the automations window
+  refreshAutomationWindow()
   
   if displayToScreen then
     pecho("\nAutomation stopped.\n\n")
@@ -10424,16 +10608,83 @@ function parthiaAutomationHelp()
   pecho("As a result automation in parthia is intended to remove the frustration of tasks with repatative commands. ")
   pecho("This automation can be dramatically helpful for someone who is not able to type rapidly.\n")
   
+  pecho("\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation get updates", 
+    [[getAutomationUpdates()]],
+    "parthia automation import", true)
+  pecho(", get new and update old premade automations in the automation and interrupt import folders.\n")
+  
+  pecho("\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation triggers&lt;reset&gt;", 
+    [[parthiaAutomationTriggerHelp()]], 
+    "automations trigger help", true)
+  pecho(", how to create patterns for automation triggers.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia unfiltered text console", 
+    [[expandAlias("parthia unfiltered text console")]],
+    "parthia automation groups", true)
+  pecho(", opens a window showing text as the pattern system views it.\n")
+  
+  pecho("\nInterrupts allow you to automatically interrupt your current action when a text pattern is view on screen.\n")
+  pecho("When an interrupt interrupts an automated task, the automated task will resume when the interrupt completes.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt create", 
+    [[parthiaInterruptCreateHelp()]],
+    "parthia automation update", true)
+  pecho(", how to create or update an interrupt start trigger.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt toggle", 
+    [[parthiaInterruptToggleHelp()]],
+    "parthia interrupt toggle", true)
+  pecho(", enable or disable an interrupt.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt stop", 
+    [[expandAlias("parthia interrupt stop")]],
+    "stop a running interrupt", true)
+  pecho(", stop a running interrupt.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt update", 
+    [[parthiaAutomationUpdateHelp("interrupt")]],
+    "parthia interrupt update", true)
+  pecho(", how to create or update interrupt groups.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt rename", 
+    [[printCmdLine("parthia interrupt old_name = new_name");
+      pecho("old_name is the name of the current group to rename. new_name is the new name it will be renamed to.\n")]],
+    "parthia interrupt rename", true)
+  pecho(", rename an interrupt.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt groups", 
+    [[parthiaAutomationShowGroups("automationInterrupt")]],
+    "parthia interrupt groups", true)
+  pecho(", view and manage existing interrupt groups.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt import", 
+    [[parthiaAutomationImport("automationInterrupt", "", true)]],
+    "parthia interrupt import", true)
+  pecho(", how to import interrupts from file.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt export", 
+    [[parthiaAutomationExport("automationInterrupt", "", true)]],
+    "parthia interrupt export", true)
+  pecho(", how to export interrupts to file.\n")
+  
+  pecho("\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia insert", 
+    [[parthiaAutomationInsertHelpBreif()]],
+    "insert a command into a running automation", true)
+  pecho(", insert a command into a running automation or interrupt.\n")
+  
   pecho("\nAutomation in parthia is done by creating groups of commands. Than starting those groups. ")
   pecho("You can click or type in the commands below to learn more about creating, managing and starting automation groups.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation update", 
     [[parthiaAutomationUpdateHelp()]],
     "parthia automation update", true)
   pecho(", how to create or update automation groups.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation rename", 
+    [[printCmdLine("parthia automation old_name = new_name");
+      pecho("old_name is the name of the current group to rename. new_name is the new name it will be renamed to.\n")]],
+    "parthia automation rename", true)
+  pecho(", rename an automation.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation start", 
     [[parthiaAutomationStartHelp()]],
     "parthia automation start", true)
   pecho(", how to start an automation task.\n")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation stop", 
+    [[parthiaAutomationStop(True)]],
+    "stop a running automation", true)
+  pecho(", stop the running automation.\n")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation groups", 
     [[parthiaAutomationShowGroups("automation")]],
     "parthia automation groups", true)
@@ -10447,54 +10698,7 @@ function parthiaAutomationHelp()
     "parthia automation export", true)
   pecho(", how to export automations to file.\n")
   
-  pecho("\nInterrupts allow you to automatically interrupt your current action when a text pattern is view on screen.\n")
-  pecho("When an interrupt interrupts an automated task, the automated task will resume when the interrupt completes.\n")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt create", 
-    [[parthiaInterruptCreateHelp()]],
-    "parthia automation update", true)
-  pecho(", how to create or update an interrupt start trigger.\n")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt toggle", 
-    [[parthiaInterruptToggleHelp()]],
-    "parthia interrupt toggle", true)
-  pecho(", enable or disable an interrupt.\n")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt update", 
-    [[parthiaAutomationUpdateHelp("interrupt")]],
-    "parthia interrupt update", true)
-  pecho(", how to create or update interrupt groups.\n")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt groups", 
-    [[parthiaAutomationShowGroups("interrupt")]],
-    "parthia interrupt groups", true)
-  pecho(", view and manage existing interrupt groups.\n")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt import", 
-    [[parthiaAutomationImport("automationInterrupt", "", true)]],
-    "parthia interrupt import", true)
-  pecho(", how to import interrupts from file.\n")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia interrupt export", 
-    [[parthiaAutomationExport("automationInterrupt", "", true)]],
-    "parthia interrupt export", true)
-  pecho(", how to export interrupts to file.\n")
-  
   pecho("\n")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation triggers&lt;reset&gt;", 
-    [[parthiaAutomationTriggerHelp()]], 
-    "automations trigger help", true)
-  pecho(", how to create patterns for automation triggers.\n")
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia unfiltered text console", 
-    [[expandAlias("parthia unfiltered text console")]],
-    "parthia automation groups", true)
-  pecho(", opens a window showing text as the pattern system views it.\n")
-  local cmdToSend = [[UIManagerEnableWindow("Automation",true,true)]]
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable Automation", 
-    cmdToSend, --runs on click.
-    "Enable Automation window", true)
-  pecho(", opens a docked window with clickable links for your automation tasks.\n")
-  local cmdToSend = [[UIManagerEnableWindow("Interrupts",true,true)]]
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;display window enable Interrupts", 
-    cmdToSend, --runs on click.
-    "Enable Interrupts window", true)
-  pecho(", opens a docked window with clickable links for your interrupt tasks.\n")
-  pecho("\n")
-  
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Parthia automation tutorial video", 
     [[openUrl("https://www.youtube.com/watch?v=DXDuhQGlPwI&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps")]], 
     "youtube parthia automation tutorial", true)
@@ -10506,7 +10710,7 @@ end  -- function parthiaAutomationHelp()</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
-						<name>parthiaAutomationShowGroups()</name>
+						<name>parthiaAutomationShowGroups(automationType, groupName, removeElement, groupPosition)</name>
 						<packageName></packageName>
 						<script>--[[
 Allows dynamic management of the parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType] group tables.
@@ -10677,7 +10881,7 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
   end  -- if sortedGroupNameTable then
   
   -- Show an Add a command help message if none has been shown
-  pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Add a command", 
+  pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Add a command\n", 
       [[parthiaAutomationUpdateHelp("]]..automationTypeName..[[");
         printCmdLine("parthia ]]..automationTypeName..[[ ]]..groupName..[[, ]]..nextGroupPosition..[[ = replace_with_your_command, 0, 0 &amp; 0")]],
       "Add a command to this "..automationTypeName, true)
@@ -10692,7 +10896,8 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
     
     pecho("You can click a blue link below to start or show that group's information. You can click a red link to remove that group.\n\n")
     
-    for groupName, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]) do
+    -- Loop through all the automations in alphabetical order
+    for groupName, _ in pairsByKeys(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType], alphabeticalCheck) do
     
       pecho(groupName.."\n")
       
@@ -10763,6 +10968,11 @@ function showAutomationGroupTableData(groupName, automationTypeName, automationT
           "fill command line with edit command for "..groupName, true)
       
       end  -- if automationType == 'automationInterrupt' then
+      
+      pechoLink("  &lt;:ansi_red&gt;Rename", 
+        [[printCmdLine("parthia ]]..automationTypeName..[[ rename ]]..groupName..[[ = new_name");
+        pecho("new_naplayme needs to be replaced with what you would like the ]]..automationTypeName..[[ to be renamed to.\n")]],
+        "parthia "..automationTypeName.." rename", true)
               
       -- Remove group button
       pechoLink("  &lt;:ansi_red&gt;Remove\n", 
@@ -10857,9 +11067,6 @@ function parthiaAutomationInterruptStop()
     --  Set the automation variables back to running state.
     parthiaAutomationRunning = parthiaAutomationPaused
     parthiaAutomationPaused = false
-    
-    -- set arthiaInterruptCommandSuccess to default state of true
-    arthiaInterruptCommandSuccess = true
   
     debugToDisplay("parthiaAutomationInterruptStop completed succesfully, automation resume return true sent.")
     
@@ -10895,9 +11102,6 @@ function parthiaAutomationInterruptStart(groupName)
   --Setting automation first run to true, so we can iterate through the automation group properly
   parthiaAutomationFirstRun = true
   
-  -- Set arthiaInterruptCommandSuccess to default state of true
-  arthiaInterruptCommandSuccess = true
-  
   -- Setting the interrupt running variable, to keep track of this interrupt
   parthiaAutomationInterruptRunning = groupName
   
@@ -10908,7 +11112,7 @@ function parthiaAutomationInterruptStart(groupName)
   end  -- if parthiaAutomationRunning then
 
   -- message the player that this interrupt occured.
-  pecho("\nInterrupt "..groupName.." triggered.\n")
+  pecho("\nInterrupt "..groupName.." triggered.\n\tRunning interrupts can be stoped with the stop, /interrupt stop or parthia interrupt stop commands.")
   
   -- collect the trigger that will call the first command for this interrupt
   local firstCommandTrigger = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].firstCommandTrigger
@@ -11179,8 +11383,13 @@ function parthiaAutomationCharacterCheck(displayToScreen)
     parthiaAutomationSaveTable[character].automationInterrupt = {}
     parthiaAutomationSaveTable[character].automationInterruptTriggers = {}
     if displayToScreen then pecho("A character name of \""..character.."\", was not found in automations save file. Created defaults.") end
-    debugToDisplay("function parthiaMap.checkCharacter, created table for character \""..character.."\" in the parthiaMap.saveTable table.")
+    debugToDisplay("function parthiaAutomationCharacterCheck, created table for character \""..character.."\" in the parthiaMap.saveTable table.")
   end --if not parthiaMap.saveTable[character]
+  
+  --If a &lt;target&gt; does not already exist initialize it now.
+  if not parthiaAutomationSaveTable[character].target then
+    parthiaAutomationSaveTable[character].target = "No target collected, collect with the target command."
+  end  -- if not parthiaAutomationSaveTable[character] then
   
   -- This is called automatically during chracter changes. Refreshing windows for that reason.
   refreshInterruptsWindow()
@@ -11328,9 +11537,15 @@ local function listAutomationFiles(autoFolder, automationTypeName)
   end  -- for _, file in ipairs(autoImportableFiles) do
   
   -- Display a command to save files to the automation directory
-  pecho("If you would like to copy files to the "..automationTypeName.." data folder, ")
+  pecho("\nIf you would like to copy files to the "..automationTypeName.." data folder, ")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open\n", 
     [[tecOpenDirectory("]]..autoFolder..[[")]], 
+    "Open "..automationTypeName.." folder", true)
+    
+  -- Tell users how to get new imports
+  pecho("Get new and update old premade "..automationTypeName.."s by running, ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation get updates\n", 
+    [[getAutomationUpdates()]], 
     "Open "..automationTypeName.." folder", true)
 
 end  -- local function listAutomationFiles(autoFolder, automationTypeName)
@@ -11396,8 +11611,14 @@ function parthiaAutomationImport(automationType, groupName, displayToScreen)
     
     debugToDisplay("\tautoImportFilePath exists.")
     
+    -- Remove ParthiaDefault from automations imported
+    groupName = groupName:gsub("ParthiaDefault", "")
+    debugToDisplay("\tgroupName after trimming: "..groupName)
+    
     -- Prepared the automation table for import
-    parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] = {}
+    if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
+      parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] = {}
+    end  -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
     
     -- Get a reference of the automation table to be updated
     local autoTable = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
@@ -11507,68 +11728,605 @@ function parthiaAutomationCleanRegExTriggers()
 end  -- function parthiaAutomationCleanRegExTriggers()</script>
 						<eventHandlerList />
 					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaGetCharacterTarget()</name>
+						<packageName></packageName>
+						<script>-- Returns a string that is the target specified with the TEC target command
+-- Reference: https://github.com/TheEternalCitizens/mudlet-integration/wiki/Parthia-API#parthiagetcharactertarget
+
+function parthiaGetCharacterTarget()
+
+  -- Verify the character exists before attempting to return the target
+  if parthiaPlayer.CurrentCharacter.name then
+    
+    return parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target
+  
+  -- The character name has not been collected yet.
+  else
+
+    return "Character needs to be collected for target filtering to work."
+  
+  end  -- if parthiaPlayer.CurrentCharacter.name
+  
+end  -- function parthiaGetCharacterTarget()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaSetCharacterTarget(targetName)</name>
+						<packageName></packageName>
+						<script>-- Returns a string that is the target specified with the TEC target command
+-- Reference: https://github.com/TheEternalCitizens/mudlet-integration/wiki/Parthia-API#parthiasetcharactertarget
+
+function parthiaSetCharacterTarget(targetName)
+
+  debugToDisplay("function parthiaSetCharacterTarget called")
+  
+  -- Set the variable in the global automations table
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target = targetName
+  
+  -- Add the ability to automatically save JUST the target variable in the automations table
+
+  -- Temp table to store automations data
+  local tempAutomationData = {}
+
+  -- If a file exists for automations. Load the automation data to the temp table.
+  if io.exists(parthiaAutomationSavePath) then
+    -- load the automation saved data to a temp table.
+    table.load(parthiaAutomationSavePath, tempAutomationData)
+    -- set the target in the temp table
+    tempAutomationData[parthiaPlayer.CurrentCharacter.name].target = targetName  
+    debugToDisplay("\ttarget variable in the auotmations table set to "..tempAutomationData[parthiaPlayer.CurrentCharacter.name].target)
+  end  -- if io.exists(parthiaAutomationSavePath)
+  
+  -- Save the temp automation table to file with the single change to the character's target
+  local saveFailed = parthiaTableSave(tempAutomationData, parthiaAutomationSavePath, false)
+  -- If the file save was successful show an image to display, error if the save failed.
+  if saveFailed then
+    -- Throw a warning that this save failed. The user will not see this, but parthia and Mudlet debug will.
+    tecWarningNotification("function parthiaSetCharacterTarget, failed to save to file.")
+  end  -- if saveFailed then
+
+  debugToDisplay("function parthiaGetCharacterTarget completed.")
+
+end  -- function parthiaGetCharacterTarget()
+
+-- Test by uncommenting text below and saving.
+--parthiaSetCharacterTarget("A test")
+--pecho("\n"..parthiaGetCharacterTarget())
+--parthiaAutomationLoad(displayToScreen)
+--parthiaSetCharacterTarget("B test")
+--pecho("\n"..parthiaGetCharacterTarget())
+--parthiaAutomationLoad(displayToScreen)
+--pecho("\n"..parthiaGetCharacterTarget().."\n\n")</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaToggleTargetFilter()</name>
+						<packageName></packageName>
+						<script>-- Function toggles the filterTargetFromCommands gobal variable used to turn the &lt;target&gt; command filter on and off.
+
+function parthiaToggleTargetFilter(displayToScreen)
+
+  debugToDisplay("function parthiaToggleTargetFilter called")
+
+  -- if the filter is enabled.
+  if tecSettings.filterTargetFromCommands then
+    
+    -- Disable the filter
+    tecSettings.filterTargetFromCommands = false
+    
+    if displayToScreen then
+      pecho("\nparthia &lt;target&gt; filter disabled.\n")
+      pecho("\tWhen you send commands with the text &lt;target&gt; it will send just &lt;target&gt; it will not filter it with your current target from the target command.\n")
+      dontForgetToSave()
+    end  -- if displayToScreen
+    
+    debugToDisplay("\tSet tecsettings.filterTargetFromCommands to false.")
+    
+  -- The filter is disabled and should be enabled
+  else
+    
+    -- enable the filter
+    tecSettings.filterTargetFromCommands = true
+    
+    if displayToScreen then
+      pecho("\nparthia &lt;target&gt; filter enabled.\n")
+      pecho("\tIf &lt;target&gt; appears in a command sent to the server it will be replaced with your target from the TEC target command.\n")
+      dontForgetToSave()
+    end  -- if displayToScreen
+    
+    debugToDisplay("\tSet tecsettings.filterTargetFromCommands to true.")
+    
+  end  -- if tecSettings.filterTargetFromCommands else
+
+end  -- function parthiaToggleTargetFilter</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationSetInsert(command, trigger)</name>
+						<packageName></packageName>
+						<script>function parthiaAutomationSetInsert(command, trigger)
+
+  debugToDisplay("function parthiaAutomationSetInsert called")
+  debugToDisplay("\tcommand: "..command)
+  
+  -- if the trigger was not passed, set it to 0
+  if not trigger then trigger = 0 end
+  debugToDisplay("\ttrigger: "..trigger)
+
+  -- Turn the false variable for this into a table.
+  parthiaAutomationInsertCommand = {}
+
+  parthiaAutomationInsertCommand.command = command
+  parthiaAutomationInsertCommand.trigger = trigger
+  
+  if parthiaAutomationRunning then
+    pecho("Inserting "..command.." into the running automation.\n")
+  elseif parthiaAutomationInterruptRunning then
+    pecho("Inserting "..command.." into the running interrupt.\n")
+  else  -- No automation is currently running
+    pecho("Starting the next automation or interrupt with "..command..".\n")
+  end -- if parthiaAutomationInterruptRunning or parthiaAutomationRunning
+  
+  
+  debugToDisplay("function parthiaAutomationSetInsert end")
+
+end  -- function parthiaAutomationSetInsert(command, trigger)
+
+function parthiaAutomationInsertHelpBreif()
+
+  pecho("\nParthia Insert Help Start\n")
+  
+  pecho("\n\tFor a text tutorial on inserting a command click, ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;here\n", 
+    [[parthiaAutomationInsertHelpFull()]], 
+    "text tutorial on inserting into automations", true)
+  
+  pecho("\n\tFor a tutorial video inserting commands into running automation or interrupts go to: ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/6xr5gHjjH5A\n", 
+    [[openUrl("https://youtu.be/6xr5gHjjH5A")]], 
+    "youtube video on inerting into automations", true)
+  
+  pecho("\n\tCommand Format:\n")
+  pecho("\t\t/insert YourCommandHere\n")
+  pecho("\t\tOR\n")
+  pecho("\t\t/insert YourCommandHere, NumberOfSeconds\n")
+  
+  pecho("\nParthia Insert Help End\n")
+
+end -- function parthiaAutomationInsertHelpBreif()
+
+function parthiaAutomationInsertHelpFull()
+
+  pecho("\nParthia Insert Help Start\n")
+  
+  pecho("\n\tParthia's insert command allows you to insert a single command into a running automation or interrupt.\n\n")
+  
+  pecho("\tTo insert a command that calls the following automation or interrupt command when a (You are no longer busy.) message appears, Use format:\n")
+  pechoLink("\t\t&lt;:"..tecSettings.helpHighlightColor.."&gt;/insert YourCommandHere\n", 
+    [[printCmdLine("/insert ReplaceMeWithYourCommand")]],
+    "click for insert example", true)
+  pecho("\t\tOr\n")
+  pechoLink("\t\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia insert YourCommandHere\n", 
+  [[printCmdLine("parthia insert ReplaceMeWithYourCommand")]],
+  "click for insert example", true)
+  pecho("\tWith the example commands above. When your inserted command runs the next command called by the automation system will be called when the (You are no longer busy.) message appears. ")
+  pecho("Typically you would want to use this method when your inserted command displays a (You are no longer busy.) message after it has fully run.\n\n")
+  
+  pecho("\tTo insert a command that calls the following automation or interrupt command after a duration of time, use format:\n")
+  pechoLink("\t\t&lt;:"..tecSettings.helpHighlightColor.."&gt;/insert YourCommandHere, #\n", 
+    [[printCmdLine("/insert ReplaceMeWithYourCommand, ReplaceMeWithANumber")]],
+    "click for insert example", true)
+  pecho("\t\tOr\n")  
+  pechoLink("\t\t&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia insert YourCommandHere, #\n", 
+    [[printCmdLine("parthia insert ReplaceMeWithYourCommand, ReplaceMeWithANumber")]],
+    "click for insert example", true)
+  pecho("\tWith the example command above, the next command called by the automation system will be called after # seconds. Where # is a number. ")
+  pecho("Typically you will want to use this with commands that do NOT have a (You are no longer busy.) message.\n")
+  pecho("\tPlease note that TEC has a limit of receiving 1 command a second from a player. Setting the # number above to 0 will tell the automation system that instead of waiting 0 seconds you want to wait for the (You are no longer busy.) message to appear.\n\n")
+  
+  pecho("\n\tInserting a command when no automation or interrupt is running will cause the inserted command to be the first command called when the next automation or interrupt starts.\n")
+  
+  pecho("\n\tYourCommandHere, in the examples above represents the command you would like to run.\n")
+  
+  pecho("\nParthia Insert Help End\n")
+
+end -- function parthiaAutomationInsertHelpFull()</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>getAutomationUpdates()</name>
+						<packageName></packageName>
+						<script>--[[
+Downloads automation and interrupt files from the development folder on github.
+This allows for adding automations without pushing a release.
+
+Note that creating a package that does this would result in the automations folder getting deleted.
+
+Process download a file that lists the static automation files that will exist on the server.
+Loop through that file list and download those files.
+]]--
+
+function getAutomationUpdates()
+
+  if automationUpdateRunning then
+    pecho("An automations update is already running. Please wait for it to complete.\n")
+    return false
+  end  -- if automationUpdateRunning
+
+  -- Where the files are in mudlet
+  automationsGITRepository = [[https://github.com/TheEternalCitizens/mudlet-integration/raw/AutoamtionBugFixWinter2022/data]]
+  
+  -- Defaulting the tracked downloads table. The function used later trackDownloads() needs this table.
+  -- This is used to make certain all files have downloaded
+  trackedDownloads = {} --leave blank, needed for events. Is initialized in function trackDownloads
+  trackedDownloads.fileList = "" --leave blank, needed for events. Initialized in function trackDownloads
+  trackedDownloads.urlList = "" --leave blank, used to check for download errors.
+  
+  -- This will track if automation updates are currently running
+  automationUpdateRunning = true
+  
+  -- This will track if a file failed to download
+  automationsUpdateDownloadError = false
+  
+  -- The name of the local file download for the automation
+  automationListFilePath = automationDataFolder.."AutomationsList.config"
+  -- Name of the local file download for the interrupts list
+  interruptsListFilePath = interruptDataFolder.."InterruptsList.config"
+  
+  -- The list file for automations
+  local automationsURL = automationsGITRepository.."/Automations/AutomationsList.config"
+  -- the list file for interrupts
+  local interrupsURL = automationsGITRepository.."/Interrupts/InterruptsList.config"
+  
+  -- Track the list files download
+  automationListDownloadTracking = {}
+  automationListDownloadTracking["AutomationsList.config"] = false
+  automationListDownloadTracking["InterruptsList.config"] = false
+  
+  -- create the event to watch for automations update downloads
+  automationsDownloadDoneID = registerAnonymousEventHandler("sysDownloadDone", "automationListDownloadEventHandler")
+  automationsDownloadErrorID = registerAnonymousEventHandler("sysDownloadError", "automationListDownloadEventHandler")
+  
+  -- Download the automation update lists
+  downloadFile(automationListFilePath, automationsURL)
+  downloadFile(interruptsListFilePath, interrupsURL)
+  
+  pecho("Downloading automation lists.\n")
+  
+end  -- getAutomationUpdates(automationType)
+
+
+
+-- Event handler for the files that list the automations to be downloaded
+function automationListDownloadEventHandler(event, ...)
+
+  --arg[1] is full file including directory
+  --ReplaceStringMagicChar puts ecscape % before lua magic characters
+  local file = ReplaceStringMagicChar(arg[1]) 
+  debugToDisplay("function automationListDownloadEventHandler, file downloaded post magic "
+    .."character replacement it is:\n\t"..file)
+    
+  local fileName = arg[1]:match(".*/(.*%..*)$")
+  debugToDisplay("function automationListDownloadEventHandler, fileName is: "..fileName)
+
+  if event == "sysDownloadDone" then --if it is a downloadDone event.
+    
+    -- If the file name is a tracked list download
+    if automationListDownloadTracking[fileName] ~= nil then
+      
+      pecho("Downloaded: "..fileName.."\n")
+      
+      -- Track that this download completed
+      automationListDownloadTracking[fileName] = true
+      -- Create a variable to check if all downloads have completed
+      local downloadsComplete = true
+      
+      -- Check if all the downloads have completed.
+      for _, value in pairs(automationListDownloadTracking) do
+        -- If there is a file that has not completed.
+        if not value then downloadsComplete = false end
+      end  -- for _, key pairs(automationListDownloadTracking)
+      
+      -- If all the required files have downloaded
+      if downloadsComplete then
+      
+        -- Kill the download events they are no longer required.
+        killAnonymousEventHandler(automationsDownloadDoneID)
+        killAnonymousEventHandler(automationsDownloadErrorID)
+        
+        pecho("All automations lists have downloaded.\n\n")
+        pecho("Collecting automations to download.\n")
+        
+        -- Load the list of automations from file
+        local automationsListTable = {}
+        local interruptsListTable = {}
+        table.load(automationListFilePath, automationsListTable)
+        table.load(interruptsListFilePath, interruptsListTable)
+        
+        -- Remove the list files
+        -- Loop through both the files
+        for _, automationFile in ipairs({automationListFilePath, interruptsListFilePath}) do
+          -- If the files exists
+          if io.exists(automationFile) then
+            debugToDisplay("\tRemoving: "..automationFile)
+            -- Remove the file
+            local success, errorstring = os.remove(automationFile)
+            -- If the removal failed, throw and error
+            if not success then
+              tecWarningNotification("automationListDownloadEventHandler, list file remove failed. Error: "..errorstring)
+            end  -- if not success
+          end  -- if io.exists(automationListFilePath)
+        end -- for _, automationFile in ipairs({automationListFilePath, interruptsListFilePath})
+        
+        -- This will help track all the automation files that need to downloaded
+        automationFilesTracking = {}
+        -- This will be used to store the URLs for files that need to be downloaded
+        local automationFilesURL = {}
+        
+        -- Add automation files to the tracking table
+        for _, automationFileName in ipairs(automationsListTable) do
+          -- add this file to the download tracking table
+          automationFilesTracking[automationDataFolder..automationFileName] = false
+          -- Add to download list  URL to download from                                       Name of the local files to download to
+          automationFilesURL[automationsGITRepository.."/Automations/"..automationFileName] = automationDataFolder..automationFileName
+          debugToDisplay("\tFile: "..automationDataFolder..automationFileName.."\n")
+          debugToDisplay("\tURL: "..automationsGITRepository.."/Automations/"..automationFileName.."\n")
+        end  -- for _, automationFileName in ipairs(automationsListTable)
+        
+        -- Add intterupts to the tracking table
+        for _, automationFileName in ipairs(interruptsListTable) do
+          -- add this file to the download tracking table
+          automationFilesTracking[interruptDataFolder..automationFileName] = false
+          -- Add to download list  URL to download from                                       Name of the local files to download to
+          automationFilesURL[automationsGITRepository.."/Interrupts/"..automationFileName] = interruptDataFolder..automationFileName
+          debugToDisplay("\tFile: "..interruptDataFolder..automationFileName.."\n")
+          debugToDisplay("\tURL: "..automationsGITRepository.."/Interrupts/"..automationFileName.."\n")
+        end  -- for _, automationFileName in ipairs(interruptsListTable)
+        
+        -- Loop through all of the files and download them.
+        for downloadURL, automationFilePath in pairs(automationFilesURL) do
+        
+          -- create the event to watch for automations update downloads
+          automationsDownloadDoneID = registerAnonymousEventHandler("sysDownloadDone", "automationFilesDownloadEventHandler")
+          automationsDownloadErrorID = registerAnonymousEventHandler("sysDownloadError", "automationFilesDownloadEventHandler")
+        
+          -- download the files
+          debugToDisplay("\tDownloading: "..downloadURL.." TO "..automationFilePath.."\n")
+          downloadFile(automationFilePath, downloadURL)
+        
+        end  -- for _, downloadURL in ipairs(automatioFilesURL) do
+      
+      end  -- downloadsComplete then
+      
+    else
+      debugToDisplay("function automationListDownloadEventHandler, Downloaded file: "..file
+        .."\n\tWas NOT caught by event handler. If this SHOULD be a tracked download, system "
+        .."attempted to track: "..file:match(GitUpdate.filePattern))
+    end --elseif file downloaded is new script
+    
+  -- A download errored
+  elseif event == "sysDownloadError" then --if there is a download error.
+    local errorFound = arg[1] --sysDownloadError only argument is error message.
+    local erroredURL = arg[1]:match(".*(https:%/%/%S+)") --retreive URL in error message
+    --debugc("Errored URL: "..erroredURL)
+    --if  then error download's URL matches downloads for this update engine
+    if automationListDownloadTracking[fileName] ~= nil then
+      tecErrorNotification("fuction automationListDownloadEventHandler, "..errorFound)
+      automationsUpdateDownloadError = true --notify InstallGitUpdates not to proceed.
+    else --for any other download errors.
+      debugToDisplay("fuction automationListDownloadEventHandler, "..errorFound)
+    end --if trackedDownloads.urlList:match(erroredURL)
+  end --if event name
+end --function tecUpdate.eventHandler()
+
+
+function automationFilesDownloadEventHandler(event, ...)
+
+  --arg[1] is full file path including directory
+  local file = arg[1]
+
+  if event == "sysDownloadDone" then --if it is a downloadDone event.
+    
+    -- If the file name is a tracked list download
+    if automationFilesTracking[file] ~= nil then
+      
+      pecho("Downloaded: "..file.."\n")
+      
+      -- Track that this download completed
+      automationFilesTracking[file] = true
+      -- Create a variable to check if all downloads have completed
+      local downloadsComplete = true
+      
+      -- Check if all the downloads have completed.
+      for _, value in pairs(automationFilesTracking) do
+        -- If there is a file that has not completed.
+        if not value then downloadsComplete = false end
+      end  -- for _, key pairs(automationListDownloadTracking)
+      
+      -- If all the required files have downloaded
+      if downloadsComplete then
+        pecho("\nAutomation updates complete.\n")
+        -- Kill the download events they are no longer required.
+        killAnonymousEventHandler(automationsDownloadDoneID)
+        killAnonymousEventHandler(automationsDownloadErrorID)
+      end  -- if downloadsComplete
+      
+      -- Tell parthia the automation updates are done
+      automationUpdateRunning = false
+   
+    -- The file was NOT a automations file download
+    else
+      debugToDisplay("function automationFilesDownloadEventHandler, Downloaded file: "..file
+        .."\n\tWas NOT caught by event handler. If this SHOULD be a tracked download, system "
+        .."attempted to track: "..file)
+    end --elseif file downloaded is new script
+    
+  -- Something went wrong with the download
+  elseif event == "sysDownloadError" then --if there is a download error.
+    local errorFound = arg[1] --sysDownloadError only argument is error message.
+    local erroredURL = arg[1]:match(".*(https:%/%/%S+)") --retreive URL in error message
+    --debugc("Errored URL: "..erroredURL)
+    --if  then error download's URL matches downloads for this update engine
+    if automationFilesTracking[file] ~= nil then
+      tecErrorNotification("fuction automationFilesDownloadEventHandler, "..errorFound)
+      automationsUpdateDownloadError = true --notify InstallGitUpdates not to proceed.
+    else --for any other download errors.
+      debugToDisplay("fuction automationFilesDownloadEventHandler, "..errorFound)
+    end --if trackedDownloads.urlList:match(erroredURL)
+  end --if event name
+      
+end  -- function automationFilesDownloadEventHandler(event, ...)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>prepAutomationUpdate(directory)</name>
+						<packageName></packageName>
+						<script>--[[
+Create the file that lists all the automations that need to be downloaded with the getAutomationUpdates function.
+
+This is used with the parthia auotmations update prep alias
+]]--
+
+-- directory is the directory to save the files to.
+function prepAutomationUpdate(directory)
+
+  directory = directory:gsub("\\","/")
+
+  -- create a list of the automation and interrupt folders
+  local folderList = {automationDataFolder, interruptDataFolder}
+
+  -- loop through the two automation and interrupt folders
+  for _, autoFolder in pairs(folderList) do
+  
+    -- Collect what type of automation we are looping through
+    local automationName = "Automations"
+    -- if this is the interrupt loop change the automation type to interrupt
+    if autoFolder:find("Interrupt") then automationName = "Interrupts" end
+    
+    local exportPath = directory.."/"..automationName
+
+    -- create a list of all the files in the automations folder
+    -- Import a list of importable automation files.
+    local autoFiles = parthiaFileList(autoFolder)
+    
+    -- create a temp table that will hold the automation files that will be imported than exported
+    local automationTable = {}
+    
+    -- Loop through the automation files.
+    -- Import them from the logged in mudlet profile they were made in.
+    -- Export them to the github local repository directory provided to the function's directory argument
+    pecho("Files in "..autoFolder..": \n")
+    -- loop through all the automation files.
+    for _, file in ipairs(autoFiles) do
+      pecho("\tExporting: "..file.."\n\t")
+      -- Load the file to the temp automation table
+      table.load(autoFolder..file, automationTable)
+      -- Now export to the local github repository folder to be commited back to github.
+      parthiaTableSave(automationTable, exportPath.."/"..file, false, true)
+    end  -- for _, file in ipairs(autoImportableFiles) do
+    
+    -- Save the file list to file
+    -- Where the list file should be saved to
+    local listFilePath = exportPath.."/"..automationName.."List.config"
+    pecho("Attempting to create file list at: "..listFilePath.."\n")
+    parthiaTableSave(autoFiles, listFilePath, false, true)
+    
+    echo("\n")
+    
+  end  -- for folder in folderList
+  
+  pecho("Don't forget to commit these updates to the Developer branch in github.\n")
+  
+end -- prepAutomationUpdate(directory)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>parthiaAutomationRename(automationType, groupName, newGroupName)</name>
+						<packageName></packageName>
+						<script>function parthiaAutomationRename(automationType, groupName, newGroupName)
+
+  -- Collect the name of this automation for echoing.
+  local automationName = "automation"
+  -- if this is the interrupt loop change the automation type to interrupt
+  if automationType:find("Interrupt") then automationName = "Interrupts" end
+
+  -- If the automation does not exist, let the player know.
+  if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] then
+    pecho("No "..automationName.." with the group name "..groupName.." found.\n")
+    return false
+  end  -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
+  
+  -- If an automation with the new group name exists, echo and stop
+  if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][newGroupName] then
+    pecho("A group name "..groupName.." already exists in "..automationName.."s.\n")
+    return false
+  end  -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
+
+  -- pop the group name from the automation array. ( copy and remove at the same time, with low procces usage )
+  local automationInstance = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName] = nil
+  
+  -- Create the table with the new group name
+  parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][newGroupName] = automationInstance
+  
+  pecho("The "..automationName.." "..groupName.." was renamed "..newGroupName..".\n")
+  
+  -- Remind the user to save their chages
+  dontForgetToSave()
+  
+  --refresh the text on the interrupts window
+  refreshInterruptsWindow()
+  
+  -- Refresh the text in the automation window
+  refreshAutomationWindow()
+
+end  -- parthiaAutomationRename(automationType, groupName)</script>
+						<eventHandlerList />
+					</Script>
 				</ScriptGroup>
 				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>collect</name>
 					<packageName></packageName>
 					<script>--[[
 
-Commands to assist with data collection.
+Format:
 
-Useage:
-  `parthia collect NAME = REGEXSTRING`: To do a standard data collection.
-  `parthia collecttime NAME = REGEXSTRING~0 OR REGEXSTRING`: Collects line with the first REGEXSTRING in it.
-    With `=#` at the end. Where the number is the number of seconds it took for the second regexstring to appear
-    The ~0, means it will time until the `You are no longer busy.` message appears, rather than the second regex string
-  `parthia collect NAME = export`: to export to a directory on the computer.
-  `parthia collect open export`: to open the export directory.
-    
-    
+The collection system is two systems.
+  One system to collect data.
+  One system to filter desired results.
 
-Desired functions:
-  Collect an entire line when a regex string is found in it.
-    The line must collect to a table that matches the same of the collection.
-  Have ability to collect the time. Than time when 'You are no longer busy.' appears.
-  Has to export to a file.
-  Has to have a clickable interface like parthia automation
-    
-    
-Outline
-  parthiaCollect, table to save all the collection functions and data.
-  parthiaCollect.collections, table to save all the data being collected
-    parthiaCollect.collections[parthiaPlayer.CurrentCharacter.name], a table to store collections for a username
-      collections[name].collectPattern, the regex pattern that when found informs mudlet to collect the line.
-      collections[name].endPattern, false if no timer, 0 if timer end is `no longer busy`
-        a string for a regex pattern end
-  parthiaColllect.UpdateCollection, function to create or update collections on a player.
+Collection system will need to:
+  
+  IS DISABLED BY DEFAULT
+  
+  records each line on screen
+  preface the collection with date &amp; time
+  preface the collection with the character that was active when the recording was made
+  collections WILL contain the html codes
+  
+  stores data in profiles\PROFILENAME\collections
+  collection files will be clear text, new line separated files. Allowing it to be mostly human readable.
+  
+
+Filter system will need to:
+
+  filter using an infinate number of patterns.
+  filter according to a begining and end date
+  filter according to only a begining date
+  filter according only to an end date
+  filter according to currently logged in character by default
+  allow filtering to other characters found with mudlet
+  allow filtering data found in all characters
+  allow for a method of ignoring html tags while filtering.
+  
+  regex performance has to be taken into consideration
+    mudlet needs to start the regex system up with every request. So doing a line by line regex will probably not be great for performance.
+    May want to use coroutine and yield back every few lines ( Suggestion from demonnic )
     
 
 ]]--</script>
 					<eventHandlerList />
-					<Script isActive="yes" isFolder="no">
-						<name>parthiaCollect.UpdateCollection()</name>
-						<packageName></packageName>
-						<script>--[[
-
-  Creates the data store for a collection.
-
-]]--
-
-function parthiaCollect.UpdateCollection(name, collectPattern, endPattern)
-
-  --name, is the name of the collection.
-  --collectPattern, the regex pattern that determins the line to collect.
-  --endPattern, when to end timing collection.
-  
-  -- If endPattern is 0 or a string, this is a timed collection and a timer will need to be created.
-  local timed
-
-  --if the collection does not already exist. Create it now.
-  
-
-end  -- function parthiaCollect.UpdateCollection</script>
-						<eventHandlerList />
-					</Script>
 				</ScriptGroup>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
@@ -12315,12 +13073,12 @@ end --function setNumNaviation(mode)</script>
 					<eventHandlerList />
 				</Script>
 				<Script isActive="yes" isFolder="no">
-					<name>getNumpadNaviation()</name>
+					<name>getNumpadNavigation()</name>
 					<packageName></packageName>
 					<script>--returns the enabled or disabled state of numpad navigation
-function getNumpadNaviation()
+function getNumpadNavigation()
   return tecSettings.numpadNavigationEnabled
-end --function getNumpadNaviation()</script>
+end --function getNumpadNavigation()</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -13037,6 +13795,12 @@ It is called in trigger: `stats` within function setStatsCheckActive(false), onl
 This function needs the character name to run. the stats filter is what collects the playername
 ]]--
 function parthiaMap.checkCharacter(displayToScreen)
+  
+  -- If not not using the map system stop right away
+  if not tecSettings.parthiaMapEnabled then
+    return false
+  end  -- if not tecSettings.parthiaMapEnabled
+  
   local character = ""
   if parthiaPlayer.CurrentCharacter.name then --if logged into a character account
     character = parthiaPlayer.CurrentCharacter.name
@@ -16955,10 +17719,15 @@ When authenticationInput receives a user name it sets tecUsernameEntry to false,
 function authenticationInput(_, userInput) 
   
   if tecUsernameEntry then --If we need to acept user name from command line
+    
     tecUsernameEntry = false --Make certain we do not liste for username again.
     tecPasswordEntry = true --we know the next command needs to be the password.
+    supressTargetFilter = true  --This will allow a user to have &lt;target&gt; in their password without it being filtered.
+    
     denyCurrentSend() --Deny the origional command, in this case the password.
+    
     tecUsername = userInput --the first item
+    
     pecho("\nPlease enter your password.\n")
     clearCmdLine() --clear the text user entered from command line
   
@@ -17055,7 +17824,7 @@ functions that need to be called for setup after all scripts have initialized.
 ]]--
 
 --set proper state for numpad navigation
-setNumpadNavigation(getNumpadNavigation)
+setNumpadNavigation(getNumpadNavigation())
 
 --set tts to players preferences
 if getParthiaTalk() then
@@ -17102,6 +17871,65 @@ tecResetRoomCharacterWindow() --fill room characters window with text
 tecSetScrollBars(tecSettings.showScrollBars, false)</script>
 					<eventHandlerList />
 				</Script>
+			</Script>
+			<Script isActive="yes" isFolder="no">
+				<name>commandTargetFilter(eventName, commandSent)</name>
+				<packageName></packageName>
+				<script>function commandTargetFilter(eventName, commandSent)
+
+--filterTargetFromCommands = true -- Used to set if the string "&lt;target&gt;" should be filtered from commands sent
+--supressTargetFilter = false  -- Supresses filtering &lt;target&gt; from a command for a single command run.
+
+  debugToDisplay("\nEvent call commandTargetFilter started.\n")
+  debugToDisplay("\n\tcommandSent: "..commandSent)
+  debugToDisplay("\n\tCharacter's Target is: "..parthiaGetCharacterTarget().."\n\n")
+  
+  -- if &lt;target&gt; should be filtered from outgoing commands on a permanent basis.
+  if tecSettings.filterTargetFromCommands then
+  
+    -- if supressTargetFilter is true than skip this filter
+    if not supressTargetFilter then
+    
+      debugToDisplay("\n\tFiltering &lt;target&gt; from command.")
+    
+      -- If &lt;target&gt; appears in the command to be sent, filter it out.
+      if rex.match(commandSent, "\&lt;(?i)target\&gt;") then
+  
+        -- Filter all instance of &lt;target&gt; to the target the player specivied with the TEC target command
+        local commandToBeSent = rex.gsub(commandSent, "\&lt;(?i)target\&gt;", parthiaGetCharacterTarget())
+        
+        debugToDisplay("\n\tcommandToBeSent: "..commandToBeSent.."\n\n")
+    
+        -- Send the updated command
+        send(commandToBeSent, false)
+        
+        -- stop the origional command from being sent
+        denyCurrentSend()
+      
+      end -- if rex.match(commandSent, "\&lt;(?i)target\&gt;")
+    
+    end  -- if not supressTargetFilter
+    
+    -- Always reset the target filter back to false if running the target filter.
+    supressTargetFilter = false
+    
+  end  -- if tecSettings.filterTargetFromCommands
+  
+  debugToDisplay("\nEvent call commandTargetFilter completed.\n")
+
+end  -- function commandTargetFilter(eventName, commandSent)
+
+--This kills existing events when you save or leave this script.
+-- Allowing changes to be made to this script without a restart of Mudlet.
+if commandTargetFilterEventID then
+  killAnonymousEventHandler(commandTargetFilterEventID)
+end
+
+-- Register this event on startup
+commandTargetFilterEventID = registerAnonymousEventHandler("sysDataSendRequest", "commandTargetFilter")
+
+-- Kill with killAnonymousEventHandler(commandTargetFilterEventID)</script>
+				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
 	</ScriptPackage>

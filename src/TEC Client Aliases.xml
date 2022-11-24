@@ -6,7 +6,16 @@
 	<AliasPackage>
 		<Alias isActive="yes" isFolder="no">
 			<name>help</name>
-			<script>pecho("\nYour vision blurs as a sudden wealth of information becomes available with a touch you can gain access to:\n")
+			<script>pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;help client", 
+[[tecClientFullHelp(false, "main")]], 
+"wiki site home", true)
+pecho(" Help with this game client\n\n")
+
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Help Anything", 
+[[printCmdLine("help ")]], 
+"wiki search", true)
+pecho(" Type help followed by anything. A google search on the TEC wiki will open.\n\n")
+
 pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Newbie guide", 
 [[openUrl("http://eternal-city.wikidot.com/newbie-guides")]], 
 "Guide explaining this games basic interworkings", true)
@@ -16,12 +25,6 @@ pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Character creation guide
 [[openUrl("http://eternal-city.wikidot.com/character-generator")]], 
 "Character creation tutorial", true)
 echo("\n\n")
-
-pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Help Anything", 
-[[printCmdLine("help ")]], 
-"wiki search", true)
-pecho(" Type help followed by anything. "
-	.."You will be given a clickable link to search for your question on TEC's wiki.\n\n")
 
 pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;World maps", 
 [[openUrl("http://eternal-city.wikidot.com/maps")]], 
@@ -38,12 +41,12 @@ pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Commands",
 "Full list of game commands", true)
 echo("            ")
 
-pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Commune with mortals", 
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;TEC Discord", 
 [[openUrl("https://discord.gg/fevBA8j")]], 
 "TEC Discord", true)
 echo("\n\n")
 
-pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;Full respitory of this worlds interworkings", 
+pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;TEC Wiki site", 
 [[openUrl("http://eternal-city.wikidot.com/")]], 
 "wiki site home", true)
 echo("\n\n")
@@ -51,34 +54,25 @@ echo("\n\n")
 pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;help client", 
 [[tecClientFullHelp(false, "main")]], 
 "wiki site home", true)
-
-pecho("\nWith some effort you are able focus your mind and clear your vision back to reality.\n\n")</script>
+pecho(" Help with this game client\n\n")
+</script>
 			<command></command>
 			<packageName></packageName>
 			<regex>^help$</regex>
 			<Alias isActive="yes" isFolder="no">
-				<name>Help (.w+)</name>
+				<name>help (.w+)</name>
 				<script>if matches[2] == "client" then
+
+  --run the client help command. It is a function so it can be clicked.
+  tecClientFullHelp(false, "main")
 
 else
   --The user tried to get help for something we have not created
   --a help for. So we will search the wiki site for them.
-  echo("\nTry as you may you can not remember. Would you like to search the great beyond for\n")
+  pecho("\nA googl search on the wiki for "..string.sub(command, 6).." will open.\n")
   
-  --Turns just the background of the word(s) blue "&lt;color:color&gt;"
-  --For font than background colors
-  --command is the global for what is in command line.
-  --string.sub pulls text from a string. In this case what starts AT
-  --Line 6 than after.
-  cechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;"..string.sub(command, 6), 
+ openUrl([[https://www.google.com/search?q=site%3Ahttp%3A%2F%2Feternal-city.wikidot.com+]]..string.sub(command, 6)..[[&amp;oq=Site%3A&amp;aqs=chrome.0.69i59l2j69i57j69i59l2j69i58j69i65l2.2811j0j15&amp;sourceid=chrome&amp;ie=UTF-8]])
   
-  --if clicked, opens a link to
-  [[openUrl("http://eternal-city.wikidot.com/search:site/q/"..string.sub(command, 6))]], 
-  
-  --Tool tip that appears when moused over.
-  --True if I recall is needed for a bug fix.
-  "Search the wiki for: "..string.sub(command, 6), true)
-  echo("\n\n")
 end --if matches[2] == "client" else</script>
 				<command></command>
 				<packageName></packageName>
@@ -364,7 +358,7 @@ tecClientReset(true)</script>
 				<packageName></packageName>
 				<regex>^parthia tab font size (.*)$</regex>
 			</Alias>
-			<Alias isActive="no" isFolder="no">
+			<Alias isActive="yes" isFolder="no">
 				<name>parthia update</name>
 				<script>DownloadGitScripts() --Begin downloading updates</script>
 				<command></command>
@@ -567,13 +561,13 @@ PlayerDev.SetPackages(false)</script>
 			</Alias>
 			<Alias isActive="yes" isFolder="no">
 				<name>parthia numpad navigation</name>
-				<script>if getNumpadNaviation() then --numpad is enabled so disable it
+				<script>if getNumpadNavigation() then --numpad is enabled so disable it
   setNumpadNavigation(false) --tell parthia to disable num navigation
   cecho("Number pad navigation disabled.\n")
  else --numpad navigation is disabled, so enable it
   setNumpadNavigation(true) --tell parthia to enable numpad navigation
   cecho("Number pad navigation enabled.\n")
-end --if getNumpadNaviation() then
+end --if getNumpadNavigation() then
 
 dontForgetToSave() --remind the player to save their changes.</script>
 				<command></command>
@@ -953,6 +947,51 @@ end --HelpDevsData.ObjectTypes</script>
 						<regex>^parthia object data clear$</regex>
 					</Alias>
 				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia developer toggle global line</name>
+					<script>-- This will toggle if the raw text received from TEC will display to the main screen.
+
+if tecSettings.parthiaRemoveGlobalLine then
+
+  tecSettings.parthiaRemoveGlobalLine = false
+  pecho("Raw text from server will now show to screen.\n")
+
+else
+
+  tecSettings.parthiaRemoveGlobalLine = true
+  pecho("Raw text from server will no longer show to screen.\n")
+  
+end  -- if parthiaRemoveGlobalLine
+
+dontForgetToSave()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia developer toggle global line$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia developer toggle filtered line</name>
+					<script>-- Parthia filters raw text received from TEC to a format usable by Mudlet.
+-- This filter rusults in global variable filteredLine.
+-- Normally that line is shown to screen.
+-- This script offers the ability to stop showing that line to screen.
+
+if tecSettings.parthiaDisplayFilteredLine then
+
+  tecSettings.parthiaDisplayFilteredLine = false
+  pecho("Text prepared for Mudlet by parthia will no longer show to screen.\n")
+
+else
+
+  tecSettings.parthiaDisplayFilteredLine = true
+  pecho("Text prepared for Mudlet by parthia will now show to screen.\n")
+  
+end  -- if parthiaRemoveGlobalLine
+
+dontForgetToSave()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia developer toggle filtered line$</regex>
+				</Alias>
 			</AliasGroup>
 			<Alias isActive="yes" isFolder="no">
 				<name>parthia help developers</name>
@@ -969,7 +1008,7 @@ end --HelpDevsData.ObjectTypes</script>
     "Save Help Developers data", true)
     pecho("\n")
   sendHelpDevs() --display message to help players submit Help Developers data
-end --if getNumpadNaviation() then
+end --if getNumpadNavigation() then
 
 dontForgetToSave() --remind the player to save their changes.</script>
 				<command></command>
@@ -1243,6 +1282,10 @@ matches[2], First item captured in a capture group ()
 matches[3], second item captured in a capture group ()
 ]]--
 
+debugToDisplay("Alias parthia automation [group name], [repeat]")
+debugToDisplay("\tmatches[2]: "..matches[2])
+debugToDisplay("\tmatches[3]: "..matches[3])
+
 -- matches[2] is the first item captured in the pattern, or the automation group name
 -- matches [3] is the second item captured in the pattern, or how many times this automation group should repeat.
 parthiaAutomationStart(matches[2], matches[3])</script>
@@ -1255,36 +1298,38 @@ parthiaAutomationStart(matches[2], matches[3])</script>
 					<script>--[[
 Supports creation an automation group or position while inserting into the automation group.
 Not replacing an existing entry.
+Old pattern: ^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\|\s+]+),\s+(\d+),\s+(\d+)\s+&amp;\s+(.+)$
 ]]--
 
 --Here we are unpacking ALL 6 of the captures from the pattern above.
 --Unpack format is unpack(array, element start, element end)
 --Since we are not specifing an element end it unpacks until the end of the array.
---This is just like sending it {groupName, parthiaAutomationGroupPosition, command, seconds, repeatOnFail, insert}
+--This is just like sending it {groupName, groupPosition, command, seconds, repeatOnFail, insert}
 
-groupName, parthiaAutomationGroupPosition, command, repeatOnFail, insert, trigger  = unpack(matches, 2)
-parthiaAutomationUpdate("automation", groupName, parthiaAutomationGroupPosition, command, trigger, repeatOnFail, insert)</script>
+local groupName, groupPosition, command, repeatOnFail, insert, trigger  = unpack(matches, 2)
+parthiaAutomationUpdate("automation", groupName, groupPosition, command, trigger, repeatOnFail, insert)</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\|\s+]+),\s+(\d+),\s+(\d+)\s+&amp;\s+(.+)$</regex>
+					<regex>^parthia\s+automation\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([^,]+),\s+(\d+),\s+(\d+)\s+&amp;\s+(.+)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia interrupt [group name], [position number] = [command], [repeat on fail], [insert] &amp; [trigger]</name>
 					<script>--[[
 Supports creation an automation group or position while inserting into the automation group.
 Not replacing an existing entry.
+Old pattern: ^parthia\s+interrupt\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\|\s+]+),\s+(\d+),\s+(\d+)\s+&amp;\s+(.+)$
 ]]--
 
 --Here we are unpacking ALL 6 of the captures from the pattern above.
 --Unpack format is unpack(array, element start, element end)
 --Since we are not specifing an element end it unpacks until the end of the array.
---This is just like sending it {groupName, parthiaAutomationGroupPosition, command, seconds, repeatOnFail, insert}
+--This is just like sending it {groupName, groupPosition, command, seconds, repeatOnFail, insert}
 
-groupName, parthiaAutomationGroupPosition, command, repeatOnFail, insert, trigger  = unpack(matches, 2)
-parthiaAutomationUpdate("automationInterrupt", groupName, parthiaAutomationGroupPosition, command, trigger, repeatOnFail, insert)</script>
+local groupName, groupPosition, command, repeatOnFail, insert, trigger  = unpack(matches, 2)
+parthiaAutomationUpdate("automationInterrupt", groupName, groupPosition, command, trigger, repeatOnFail, insert)</script>
 					<command></command>
 					<packageName></packageName>
-					<regex>^parthia\s+interrupt\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([a-zA-Z0-9\|\s+]+),\s+(\d+),\s+(\d+)\s+&amp;\s+(.+)$</regex>
+					<regex>^parthia\s+interrupt\s+([a-zA-Z0-9\s+]+),\s+(\d+)\s+=\s+([^,]+),\s+(\d+),\s+(\d+)\s+&amp;\s+(.+)$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]</name>
@@ -1314,6 +1359,14 @@ parthiaAutomationStartHelp()</script>
 					<command></command>
 					<packageName></packageName>
 					<regex>^parthia automation start$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation stop</name>
+					<script>-- Stop a currently running automation
+parthiaAutomationStop(true)</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia automation stop$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>parthia automation</name>
@@ -1357,7 +1410,7 @@ if parthiaAutomationInterruptRunning then
   
 else  -- There is no interrupt active.
 
-  pecho("You have no interrupts currently active.")
+  pecho("No interrupts are currently running.")
   
 end  -- if parthiaAutomationInterruptRunning then</script>
 					<command></command>
@@ -1534,6 +1587,84 @@ expandAlias("parthia interrupt "..tostring(matches[2]))
 					<packageName></packageName>
 					<regex>^parthia interrupt open$</regex>
 				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>/insert  command, trigger</name>
+					<script>debugToDisplay("Alias /insert  command, trigger called")
+
+
+-- Only send the trigger type if it is provided.
+if #matches == 3 then 
+  debugToDisplay("\tmatches[2] "..matches[2].." | matches[3] "..matches[3])
+  parthiaAutomationSetInsert(matches[2], matches[3])
+else
+  debugToDisplay("\nmatches[2] "..matches[2])
+  parthiaAutomationSetInsert(matches[2])
+end  -- if #matches == 3</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^\/(?:insert|ins)\s+([^,]+)(?:,\s+(\d+)|)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia insert command, trigger</name>
+					<script>debugToDisplay("Alias parthia insert command, trigger called")
+
+
+-- Only send the trigger type if it is provided.
+if #matches == 3 then 
+  debugToDisplay("\tmatches[2] "..matches[2].." | matches[3] "..matches[3])
+  parthiaAutomationSetInsert(matches[2], matches[3])
+else
+  debugToDisplay("\nmatches[2] "..matches[2])
+  parthiaAutomationSetInsert(matches[2])
+end  -- if #matches == 3</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia\s+insert\s+([^,]+)(?:,\s+(\d+)|)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia insert</name>
+					<script>parthiaAutomationInsertHelpBreif()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia insert$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>/insert</name>
+					<script>parthiaAutomationInsertHelpBreif()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^/insert$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation update prep</name>
+					<script>prepAutomationUpdate(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia automation update prep\s*(.*)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation get updates</name>
+					<script>getAutomationUpdates()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia automation get updates$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia automation rename</name>
+					<script>--parthiaAutomationRename(automationType, groupName, newGroupName)
+parthiaAutomationRename("automation", matches[2], matches[3])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia\s+automation\s+rename\s+([a-zA-Z0-9\s+]+)\s+=\s+([a-zA-Z0-9\s+]+)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>parthia interrupt rename</name>
+					<script>--parthiaAutomationRename(automationType, groupName, newGroupName)
+parthiaAutomationRename("automationInterrupt", matches[2], matches[3])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^parthia\s+interrupt\s+rename\s+([a-zA-Z0-9\s+]+)\s+=\s+([a-zA-Z0-9\s+]+)$</regex>
+				</Alias>
 			</AliasGroup>
 			<Alias isActive="yes" isFolder="no">
 				<name>parthia unfiltered text console</name>
@@ -1567,6 +1698,20 @@ pecho("Windows refreshed.\n")</script>
 				<command></command>
 				<packageName></packageName>
 				<regex>^parthia refresh$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>parthia data</name>
+				<script>parthiaDataHelp()</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^parthia data$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>parthia toggle target filter</name>
+				<script>parthiaToggleTargetFilter(true)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^parthia toggle target filter$</regex>
 			</Alias>
 		</AliasGroup>
 		<AliasGroup isActive="yes" isFolder="yes">
@@ -2029,13 +2174,6 @@ parthiaStopScripts(true) --stop all automation scripts, display message to scree
 			<command></command>
 			<packageName></packageName>
 			<regex>^(?i)stop\s*$</regex>
-		</Alias>
-		<Alias isActive="yes" isFolder="no">
-			<name>All Commands</name>
-			<script>-- This triggers on any command.</script>
-			<command></command>
-			<packageName></packageName>
-			<regex></regex>
 		</Alias>
 	</AliasPackage>
 	<ActionPackage />

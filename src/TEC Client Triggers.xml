@@ -809,6 +809,8 @@ else --all other lines we will want to look for data to collect
     parthiaPlayer.CurrentCharacter.state
     = line:match("^Health Points: (%d+)\/(%d+)%s+Fatigue:%s(%d+)%%%s+State:%s(%a+)")
     if not statsFilter.displayToScreen then deleteLine() end --if not displaying to screen, remove line from main
+    --Adjust the fatigue bar now
+    fatiguebar:setValue(tonumber(parthiaPlayer.CurrentCharacter.fatigue),100)
   elseif line:match("^Load: ") then
     parthiaPlayer.CurrentCharacter.load
     = line:match("Load:%s(%d+)%s%a+%.")
@@ -1097,7 +1099,10 @@ if not passwordInputEventID then --if an authenticationInput event does not alre
   debugToDisplay("trigger SECRET Triger, starting sysDataSendRequest event handler to function authenticationInput")
   passwordInputEventID = registerAnonymousEventHandler("sysDataSendRequest", "authenticationInput") --capture user input.
 end --if not passwordInputEventID
+
 tecUsernameEntry = true --tell the event handler authenticationInput that the next command entered is the user's username
+supressTargetFilter = true  --This will allow a user to have &lt;target&gt; in their username without it being filtered.
+
 pecho("Please enter your username.")
 
 --Login control continues in Scripts -&gt; Events -&gt; authenticationInput(_, command)</script>
@@ -1626,18 +1631,34 @@ if "&lt;center&gt;" == string.match(filteredLine, "&lt;center&gt;") then
     width = (getColumnCount() - 1), --width of main console -1 is so autowrap no trigger
     textColor = "&lt;gray&gt;"
   })
-	selectCurrentLine() --select current line in main.
-	replace("") --Erase text from main. Otherwise variable line will apear on console.
-	deselect() --Don't forget your deselects!
-  cecho(myFormatter:format(filteredLine)) --echo out out ftext
+	
+  --Only remove the glogal line if there are settings in place to do so.
+  if tecSettings.parthiaRemoveGlobalLine then
+  	selectCurrentLine() --select current line in main.
+  	replace("") --Erase text from main. Otherwise variable line will apear on console.
+  	--hreplace(filteredLine) --insert text into console. Replacing hex color codes with colored text.
+  	deselect() --Don't forget your deselects!
+  end  -- if tecSettings.parthiaRemoveGlobalLine
+  
+  -- Only show the filtered line if specified to do so.
+  if tecSettings.parthiaDisplayFilteredLine then
+    cecho(myFormatter:format(filteredLine)) --echo out out ftext
+  end -- if tecSettings.parthiaDisplayFilteredLine
   
 else --text that does not need to be centered.
  
-	selectCurrentLine() --select current line in main.
-	replace("") --Erase text from main. Otherwise variable line will apear on console.
-	--hreplace(filteredLine) --insert text into console. Replacing hex color codes with colored text.
-	deselect() --Don't forget your deselects!
-  hecho(filteredLine)
+  --Only remove the glogal line if there are settings in place to do so.
+  if tecSettings.parthiaRemoveGlobalLine then
+  	selectCurrentLine() --select current line in main.
+  	replace("") --Erase text from main. Otherwise variable line will apear on console.
+  	--hreplace(filteredLine) --insert text into console. Replacing hex color codes with colored text.
+  	deselect() --Don't forget your deselects!
+  end  -- if tecSettings.parthiaRemoveGlobalLine
+  
+  -- Only show the filtered line if specified to do so.
+  if tecSettings.parthiaDisplayFilteredLine then
+    hecho(filteredLine)
+  end --if tecSettings.parthiaDisplayFilteredLine
   
 end --if &lt;center&gt; in line else hreplace.
 
@@ -1812,7 +1833,7 @@ hecho("Communication", filteredLine.."\n")
 --hecho("Rumors", filteredLine.."\n")</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
-				<mStayOpen>0</mStayOpen>
+				<mStayOpen>1</mStayOpen>
 				<mCommand></mCommand>
 				<packageName></packageName>
 				<mFgColor>#ff0000</mFgColor>
@@ -1821,7 +1842,7 @@ hecho("Communication", filteredLine.."\n")
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>&lt;/font&gt;&lt;font color="#e119e1"&gt;</string>
+					<string>&lt;/font&gt;&lt;font color="#e119e1"&gt;A rumor is circulating around:</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>2</integer>
@@ -2316,73 +2337,80 @@ end --if parthiaMap.getEnabled()
 Patter example: &lt;/font&gt;&lt;font color="#ff9b00"&gt;You are no longer busy.&lt;/font&gt;&lt;/font&gt;
 ]]--
 
--- Handle automation tasks.
--- Check if automation is running
-if parthiaAutomationRunning or parthiaAutomationInterruptRunning then
-  debugToDisplay("pathiaAutomation trigger You are no longer busy called.")
+debugToDisplay("'You are no longer busy.' trigger triggered")
+
+-- An interrupt automation is running
+--elseif parthiaAutomationInterruptRunning then
+if parthiaAutomationInterruptRunning then
   
-  -- Set local variables this function will use.
-  local groupName = false
-  local groupRepeat = 1
-  local groupPosition = false
+  --collect group name and repeat from parthiaAutomationInterruptRunning
+  local groupName = parthiaAutomationInterruptRunning
+  local groupRepeat = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].interruptRepeat
+  --collecct group position from the global interrupt variable
+  local groupPosition = parthiaAutomationInterruptGroupPosition
   
-  -- An interrupt automation is running, it is the mmmain priority
-  if parthiaAutomationInterruptRunning then
-    
-    --collect group name and repeat from parthiaAutomationInterruptRunning
-    groupName = parthiaAutomationInterruptRunning
-    groupRepeat = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].interruptRepeat
-    --collecct group position from the global interrupt variable
-    groupPosition = parthiaAutomationInterruptGroupPosition
-    
-    -- if groupPosition is not yet set, collect it now.
-    if not groupPosition then
-    
-      --used to collect all keys in this automation group.
-      local automationGroupKeySet = {}
-      
-      -- Gather all the keys for the group and sort them.
-      for key, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName]) do
-        -- Do not insert pattern or interruptRepeat used on interrupt groups, only numrical keys
-        if tonumber(key) then
-          table.insert(automationGroupKeySet, key)
-        end  -- if tonumber(key) then
-      end -- for key, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]) do
-      
-      -- Sort the table 
-      table.sort(automationGroupKeySet)
-      
-      -- Returning the lowest element in the  automation group
-      groupPosition = automationGroupKeySet[1]
-      
-      debugToDisplay("'You are no longer busy.' trigger groupPosition false, collected position: "..groupPosition)
-    
-    end  -- if not groupPosition then
-    
-    -- Check if this interrupt is called off of a timer or this trigger
-    -- If automation trigger for this automation group is 0, automation is called by this trigger.
-    if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName][groupPosition].automationTrigger) then
-      parthiaAutomationCall()  -- Call the automation handler
-    end  -- if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName][groupPosition].automationTrigger) then
-    
-  -- a standard automation task is running
-  elseif parthiaAutomationRunning then
-    
-    -- collect group name and repeat from standard automation task
-    groupName = parthiaAutomationRunning["groupName"]
-    groupRepeat = parthiaAutomationRunning["groupRepeat"]
-    -- collect group position from the global variable
-    groupPosition = parthiaAutomationGroupPosition
-    
-    -- Check if this automation is called off of a timer or this trigger
-    -- If automation trigger for this automation group is 0, automation is called by this trigger.
-    if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].automationTrigger) then
-      parthiaAutomationCall()  -- Call the automation handler
-    end  -- if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].automationTrigger) then
-    
-  end -- if parthiaAutomationInterruptRunning then
+  debugToDisplay("\tInterrupt running.")
+  debugToDisplay("\tgroupName: "..groupName)
+  debugToDisplay("\tgroupRepeat: "..groupRepeat)
+  debugToDisplay("\tgroupPosition: "..tostring(groupPosition))
+  debugToDisplay("\tparthiaAutomationFirstRun: "..tostring(parthiaAutomationFirstRun))
   
-end -- if parthiaAutomationRunning then</script>
+  -- if groupPosition is not yet set, collect it now.
+  if not groupPosition then
+  
+    --used to collect all keys in this automation group.
+    local automationGroupKeySet = {}
+    
+    -- Gather all the keys for the group and sort them.
+    for key, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName]) do
+      -- Do not insert pattern or interruptRepeat used on interrupt groups, only numrical keys
+      if tonumber(key) then
+        table.insert(automationGroupKeySet, key)
+      end  -- if tonumber(key) then
+    end -- for key, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]) do
+    
+    -- Sort the table 
+    table.sort(automationGroupKeySet)
+    
+    -- Returning the lowest element in the  automation group
+    groupPosition = automationGroupKeySet[1]
+    
+    debugToDisplay("\tgroupPosition false, collected position: "..groupPosition)
+  
+  end  -- if not groupPosition then
+  
+  -- Check if this interrupt is called off of a timer or this trigger
+  -- If automation trigger for this automation group is 0, automation is called by this trigger.
+  -- If this is the first run of this automation use the firstCommandTrigger variable instead of the automationTrigger for the interrupt that will be called.
+  if parthiaAutomationFirstRun then  -- If this is the first run of this automation.
+    debugToDisplay("\tIn, if parthiaAutomationFirstRun ")
+    if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].firstCommandTrigger) then  -- If this is the first time this interrupt is being called.
+      debugToDisplay("\tIn if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].firstCommandTrigger")
+      parthiaAutomationCall()
+    end  -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName].firstCommandTrigger
+  -- If this is NOT the first time this interrupt has been called, used the standard automation trigger
+  elseif not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName][groupPosition].automationTrigger) then
+    parthiaAutomationCall()  -- Call the automation handler
+  end  -- if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automationInterrupt[groupName][groupPosition].automationTrigger) then
+  
+-- a standard automation task is running
+elseif parthiaAutomationRunning then
+  
+  -- collect group name and repeat from standard automation task
+  local groupName = parthiaAutomationRunning["groupName"]
+  local groupRepeat = parthiaAutomationRunning["groupRepeat"]
+  -- collect group position from the global variable
+  local groupPosition = parthiaAutomationGroupPosition
+  
+  -- Check if this automation is called off of a timer or this trigger
+  -- If automation trigger for this automation group is 0, automation is called by this trigger.
+  if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].automationTrigger) then
+    parthiaAutomationCall()  -- Call the automation handler
+  end  -- if not parthiaToBoolean(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].automation[groupName][groupPosition].automationTrigger) then
+  
+end -- if parthiaAutomationRunning then
+
+debugToDisplay("Trigger You are no longer busy. completed.")</script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
 				<mStayOpen>0</mStayOpen>
@@ -2399,6 +2427,66 @@ end -- if parthiaAutomationRunning then</script>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>1</integer>
+					<integer>3</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>target collection</name>
+				<script>debugToDisplay("Trigger: target collection")
+
+-- Attempt to collect the target from a new target set.
+local macroTarget = string.match( line, "Your macro new target is (.*)%.$")
+
+-- If the macro was a call rather than a set. Collect the macro target.
+if not macroTarget then
+  macroTarget = string.match( line, "Your new macro target is (.*)%.$")
+end  -- if not macroTarget 
+
+debugToDisplay("\tmacroTarget: "..tostring(macroTarget))
+debugToDisplay("\tCharacter: "..parthiaPlayer.CurrentCharacter.name)
+
+-- Collect the target the user input into the target variable in the automations table
+parthiaSetCharacterTarget(macroTarget)
+
+debugToDisplay("\tTarget in automations table: "..parthiaGetCharacterTarget())
+debugToDisplay("Trigger: target collection completed")</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>Your macro target is</string>
+					<string>Your new macro target is</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>2</integer>
+					<integer>2</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>Macro Set</name>
+				<script>-- Suppress the &lt;target&gt; filter for this single macro entry
+supressTargetFilter = true</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>Enter the string you wish this macro to expand to: </string>
+				</regexCodeList>
+				<regexCodePropertyList>
 					<integer>3</integer>
 				</regexCodePropertyList>
 			</Trigger>
