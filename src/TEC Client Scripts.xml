@@ -6771,6 +6771,12 @@ end --function tecClientHelp</script>
   "Toggle filtered text display", true)
   pecho(", toggle if filtered text parthia prepared for Mudlet is displayed.\n")
   
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia developer toggle filtered line", 
+  [[printCmdLine("parthia automation update prep PathToGithubDataFolder");
+    pecho("\nPathToGithubDataFolder needs to be replaced with the full path you github branch you work working with IE: C:\Users\David\Documents\GitHub\mudlet-integration\data")]],
+  "Toggle filtered text display", true)
+  pecho(", toggle if filtered text parthia prepared for Mudlet is displayed.\n")
+  
   pecho("\n")
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug", 
