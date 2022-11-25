@@ -11631,7 +11631,7 @@ function parthiaAutomationImport(automationType, groupName, displayToScreen)
     debugToDisplay("\tautoImportFilePath exists.")
     
     -- Remove ParthiaDefault from automations imported
-    groupName = groupName:gsub("ParthiaDefault", "")
+    groupName = groupName:gsub("%s*ParthiaDefault", "")
     debugToDisplay("\tgroupName after trimming: "..groupName)
     
     -- Prepared the automation table for import
