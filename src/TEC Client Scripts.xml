@@ -12283,12 +12283,22 @@ end -- prepAutomationUpdate(directory)</script>
   end  -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
   
   -- If this is an enabled interrupt, disable it first to remove the trigger.
+  -- This will also stop any running interrupts
   -- Track that if this was an interrupt that was previously running.
-  local previouslyRunningInterrupt = false
+  local previouslyEnabledInterrupt = false
   if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled then
     parthiaAutomationInterruptToggleState(groupName)
-    previouslyRunningInterrupt = true
+    previouslyEnabledInterrupt = true
   end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled then
+
+  -- If an automation is running
+  if parthiaAutomationRunning then
+    -- Check if we are renaming the running automation
+    if parthiaAutomationRunning.groupName == groupName then
+      pecho("Stopping running automation ["..groupName.."] so it can be renamed.\n")
+      parthiaAutomationStop(true)
+    end  -- if parthiaAutomationRunning.groupName == groupName
+  end  --if parthiaAutomationRunning
 
   -- pop the group name from the automation array. ( copy and remove at the same time, with low procces usage )
   local automationInstance = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
@@ -12300,9 +12310,9 @@ end -- prepAutomationUpdate(directory)</script>
   pecho("The "..automationName.." "..groupName.." was renamed "..newGroupName..".\n")
   
   -- If this was an interrupt that was previously enabled. Enable it again.
-  if previouslyRunningInterrupt then
+  if previouslyEnabledInterrupt then
     parthiaAutomationInterruptToggleState(newGroupName)
-  end  -- if previouslyRunningInterrupt
+  end  -- if previouslyEnabledInterrupt
   
   -- Remind the user to save their chages
   dontForgetToSave()
