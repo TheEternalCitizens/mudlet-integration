@@ -6771,6 +6771,12 @@ end --function tecClientHelp</script>
   "Toggle filtered text display", true)
   pecho(", toggle if filtered text parthia prepared for Mudlet is displayed.\n")
   
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation update prep", 
+  [[printCmdLine("parthia automation update prep PATH");
+    pecho("\nPATH needs to be replaced with the full local file path to the data folder in the github branch you work working with IE: C:\\Users\\David\\Documents\\GitHub\\mudlet-integration\\data")]],
+  "Toggle filtered text display", true)
+  pecho(", prepare to commit exported automations to github.\n")
+  
   pecho("\n")
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug", 
@@ -11555,6 +11561,12 @@ local function listAutomationFiles(autoFolder, automationTypeName)
   
   end -- if autoImportableFiles then
   
+  -- Display the import tutorial
+  pecho("\nFor a video tutorial on importing premade "..automationTypeName.."s go to: ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/PvVO7PftgBc", 
+    [[openUrl("https://youtu.be/PvVO7PftgBc")]], 
+    "Import "..automationTypeName.."s tutorial", true)
+  
   -- Display a command to save files to the automation directory
   pecho("\nIf you would like to copy files to the "..automationTypeName.." data folder, ")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open\n", 
@@ -11631,7 +11643,7 @@ function parthiaAutomationImport(automationType, groupName, displayToScreen)
     debugToDisplay("\tautoImportFilePath exists.")
     
     -- Remove ParthiaDefault from automations imported
-    groupName = groupName:gsub("ParthiaDefault", "")
+    groupName = groupName:gsub("%s*ParthiaDefault", "")
     debugToDisplay("\tgroupName after trimming: "..groupName)
     
     -- Prepared the automation table for import
@@ -12281,6 +12293,24 @@ end -- prepAutomationUpdate(directory)</script>
     pecho("A group name "..groupName.." already exists in "..automationName.."s.\n")
     return false
   end  -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
+  
+  -- If this is an enabled interrupt, disable it first to remove the trigger.
+  -- This will also stop any running interrupts
+  -- Track that if this was an interrupt that was previously running.
+  local previouslyEnabledInterrupt = false
+  if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled then
+    parthiaAutomationInterruptToggleState(groupName)
+    previouslyEnabledInterrupt = true
+  end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled then
+
+  -- If an automation is running
+  if parthiaAutomationRunning then
+    -- Check if we are renaming the running automation
+    if parthiaAutomationRunning.groupName == groupName then
+      pecho("Stopping running automation ["..groupName.."] so it can be renamed.\n")
+      parthiaAutomationStop(true)
+    end  -- if parthiaAutomationRunning.groupName == groupName
+  end  --if parthiaAutomationRunning
 
   -- pop the group name from the automation array. ( copy and remove at the same time, with low procces usage )
   local automationInstance = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
@@ -12290,6 +12320,11 @@ end -- prepAutomationUpdate(directory)</script>
   parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][newGroupName] = automationInstance
   
   pecho("The "..automationName.." "..groupName.." was renamed "..newGroupName..".\n")
+  
+  -- If this was an interrupt that was previously enabled. Enable it again.
+  if previouslyEnabledInterrupt then
+    parthiaAutomationInterruptToggleState(newGroupName)
+  end  -- if previouslyEnabledInterrupt
   
   -- Remind the user to save their chages
   dontForgetToSave()
