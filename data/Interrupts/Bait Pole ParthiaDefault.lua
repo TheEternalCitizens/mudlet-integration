@@ -1,0 +1,3 @@
+return {{[1] = {2},[ [[enabled]] ] = false,[ [[interruptRepeat]] ] = [[1]],[ [[pattern]] ] = [[(?:^\[Success: \d+, Roll: \d+\] You cast a [\w+\s+]+ without any bait\.|^\[Success: \d+, Roll: \d+\] You cast a [\w+\s+]+\. .*A [\w+\s+]+ no longer has any bait on it\.$)]],[ [[firstCommandTrigger]] ] = [[0]],},
+{[ [[automationTrigger]] ] = [[0]],[ [[automationCommand]] ] = [[bait pole with chirper|minnow|tadpole|grasshopper|cricket|long black worm|long thick grayish worm|maggot]],[ [[repeatOnFail]] ] = 0,},
+}

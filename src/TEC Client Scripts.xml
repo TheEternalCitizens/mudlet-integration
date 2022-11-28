@@ -6771,6 +6771,12 @@ end --function tecClientHelp</script>
   "Toggle filtered text display", true)
   pecho(", toggle if filtered text parthia prepared for Mudlet is displayed.\n")
   
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia developer toggle filtered line", 
+  [[printCmdLine("parthia automation update prep PathToGithubDataFolder");
+    pecho("\nPathToGithubDataFolder needs to be replaced with the full path you github branch you work working with IE: C:\Users\David\Documents\GitHub\mudlet-integration\data")]],
+  "Toggle filtered text display", true)
+  pecho(", toggle if filtered text parthia prepared for Mudlet is displayed.\n")
+  
   pecho("\n")
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug", 
@@ -8405,6 +8411,20 @@ end --function PlayerDev.set(mode)</script>
 					</Script>
 				</ScriptGroup>
 				<Script isActive="yes" isFolder="no">
+					<name>postUpdateFunction()</name>
+					<packageName></packageName>
+					<script>function postUpdateFunction(displayToScreen)
+
+  -- get updates to the player developer folders
+  PlayerDev.Update(displayToScreen)
+  
+  -- download updates to automations
+  getAutomationUpdates()
+
+end  -- function postUpdateFunction()</script>
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
 					<name>Git Updates</name>
 					<packageName></packageName>
 					<script>--Installs updates from github.
@@ -8500,7 +8520,7 @@ function GitUpdateconfig() --Create variables used for updates
   GitUpdate.cmdHighlight = "blue"
   --Copy a function you would like to have run when an update is completed.
   --Make false if you do not want it to run after the update has completed.
-  GitUpdate.postUpdateFunction = PlayerDev.Update
+  GitUpdate.postUpdateFunction = postUpdateFunction
 
   --No need to change variables below
   GitUpdate.filePattern = ".*%/(.*%..*)$" --string pattern to detect file name at end of url or file path string
@@ -11522,19 +11542,24 @@ local function listAutomationFiles(autoFolder, automationTypeName)
   -- Import a list of importable automation files.
   local autoImportableFiles = parthiaFileList(autoFolder)
   
-  -- loop through all the automation files.
-  for _, file in ipairs(autoImportableFiles) do
+  -- Only iterate if there are files found
+  if autoImportableFiles then
   
-    -- Remove the lua file extensions from the name.
-    local fileName = string.gsub(file, "%.lua", "")
+    -- loop through all the automation files.
+    for _, file in ipairs(autoImportableFiles) do
     
-    -- Display a clickable command to import this automation file
-    pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." import "..fileName, 
-      [[expandAlias("]].."parthia "..automationTypeName.." import "..fileName..[[")]],
-      "Import "..fileName, true)
-    pecho(", to import "..automationTypeName.." "..fileName..".\n")
-    
-  end  -- for _, file in ipairs(autoImportableFiles) do
+      -- Remove the lua file extensions from the name.
+      local fileName = string.gsub(file, "%.lua", "")
+      
+      -- Display a clickable command to import this automation file
+      pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." import "..fileName, 
+        [[expandAlias("]].."parthia "..automationTypeName.." import "..fileName..[[")]],
+        "Import "..fileName, true)
+      pecho(", to import "..automationTypeName.." "..fileName..".\n")
+      
+    end  -- for _, file in ipairs(autoImportableFiles) do
+  
+  end -- if autoImportableFiles then
   
   -- Display a command to save files to the automation directory
   pecho("\nIf you would like to copy files to the "..automationTypeName.." data folder, ")
@@ -11612,7 +11637,7 @@ function parthiaAutomationImport(automationType, groupName, displayToScreen)
     debugToDisplay("\tautoImportFilePath exists.")
     
     -- Remove ParthiaDefault from automations imported
-    groupName = groupName:gsub("ParthiaDefault", "")
+    groupName = groupName:gsub("%s*ParthiaDefault", "")
     debugToDisplay("\tgroupName after trimming: "..groupName)
     
     -- Prepared the automation table for import
@@ -11955,7 +11980,7 @@ function getAutomationUpdates()
   end  -- if automationUpdateRunning
 
   -- Where the files are in mudlet
-  automationsGITRepository = [[https://github.com/TheEternalCitizens/mudlet-integration/raw/AutoamtionBugFixWinter2022/data]]
+  automationsGITRepository = [[https://github.com/TheEternalCitizens/mudlet-integration/raw/develop/data]]
   
   -- Defaulting the tracked downloads table. The function used later trackDownloads() needs this table.
   -- This is used to make certain all files have downloaded
@@ -12262,6 +12287,24 @@ end -- prepAutomationUpdate(directory)</script>
     pecho("A group name "..groupName.." already exists in "..automationName.."s.\n")
     return false
   end  -- if not parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
+  
+  -- If this is an enabled interrupt, disable it first to remove the trigger.
+  -- This will also stop any running interrupts
+  -- Track that if this was an interrupt that was previously running.
+  local previouslyEnabledInterrupt = false
+  if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled then
+    parthiaAutomationInterruptToggleState(groupName)
+    previouslyEnabledInterrupt = true
+  end  -- if parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName].enabled then
+
+  -- If an automation is running
+  if parthiaAutomationRunning then
+    -- Check if we are renaming the running automation
+    if parthiaAutomationRunning.groupName == groupName then
+      pecho("Stopping running automation ["..groupName.."] so it can be renamed.\n")
+      parthiaAutomationStop(true)
+    end  -- if parthiaAutomationRunning.groupName == groupName
+  end  --if parthiaAutomationRunning
 
   -- pop the group name from the automation array. ( copy and remove at the same time, with low procces usage )
   local automationInstance = parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][groupName]
@@ -12271,6 +12314,11 @@ end -- prepAutomationUpdate(directory)</script>
   parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType][newGroupName] = automationInstance
   
   pecho("The "..automationName.." "..groupName.." was renamed "..newGroupName..".\n")
+  
+  -- If this was an interrupt that was previously enabled. Enable it again.
+  if previouslyEnabledInterrupt then
+    parthiaAutomationInterruptToggleState(newGroupName)
+  end  -- if previouslyEnabledInterrupt
   
   -- Remind the user to save their chages
   dontForgetToSave()
