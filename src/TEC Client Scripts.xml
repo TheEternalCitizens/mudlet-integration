@@ -7371,7 +7371,8 @@ end --function tecRefreshSettingsWindow
 				<Script isActive="yes" isFolder="no">
 					<name>refreshInterruptsWindow()</name>
 					<packageName></packageName>
-					<script>function refreshInterruptsWindow()
+					<script>
+function refreshInterruptsWindow()
 --[[
 Handles refreshing the text in the interrupts window.
 ]]--
@@ -10858,10 +10859,13 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
         -- Show the group position
         pecho("\tGroup Position: "..groupPosition..", ")
         
+        -- Escape any / in the automation trigger pattern. So it will show up in the command prompt when the user clicks edit.
+        local adjustedAutomationTrigger = automationTrigger:gsub([[\]], [[\\]])
+        
         -- provide an easy method to edit this group position
         pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Edit", 
         [[parthiaAutomationUpdateHelp("]]..automationTypeName..[[");
-        printCmdLine("parthia ]]..automationTypeName..[[ ]]..groupName..[[, ]]..groupPosition..[[ = ]]..automationCommand..[[, ]]..repeatOnFail..[[, 0 &amp; ]]..automationTrigger..[[")]],
+        printCmdLine("parthia ]]..automationTypeName..[[ ]]..groupName..[[, ]]..groupPosition..[[ = ]]..automationCommand..[[, ]]..repeatOnFail..[[, 0 &amp; ]]..adjustedAutomationTrigger..[[")]],
         "change group position "..groupPosition.." for group "..groupName, true)
         
         -- Provide an easy method to remove this group.
@@ -10974,9 +10978,12 @@ function showAutomationGroupTableData(groupName, automationTypeName, automationT
       --Make a customized edit button for interrupts vs automations
       if automationType == 'automationInterrupt' then
       
+        -- Escape / show they will show up in the command prompt when a user clicks edit.
+        local adjustedCallPattern = callPattern:gsub([[\]], [[\\]])
+      
         pechoLink("  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
         --parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]
-        [[parthiaInterruptCreateHelp();printCmdLine("parthia interrupt ]]..groupName..[[, ]]..groupRepeat..[[, ]]..callPattern..[[~ ]]..firstCommandTrigger..[[")]],
+        [[parthiaInterruptCreateHelp();printCmdLine("parthia interrupt ]]..groupName..[[, ]]..groupRepeat..[[, ]]..adjustedCallPattern..[[~ ]]..firstCommandTrigger..[[")]],
         "fill command line with edit command for "..groupName, true)
         
       else  -- This is a standard automation
