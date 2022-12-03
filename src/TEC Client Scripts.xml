@@ -11991,10 +11991,34 @@ Loop through that file list and download those files.
 
 function getAutomationUpdates()
 
+  debugToDisplay("function getAutomationUpdates called")
+
   if automationUpdateRunning then
     pecho("An automations update is already running. Please wait for it to complete.\n")
     return false
   end  -- if automationUpdateRunning
+  
+  -- If the automation and interrupt folders do not exist create them now.
+  for _, autoFolder in ipairs({interruptDataFolder, automationDataFolder}) do
+    -- If it does not exist, make the automation folder
+    local autoFolderExist = lfs.chdir(autoFolder) -- Attempt to change to the automation directory
+    if not autoFolderExist then -- if the automation folder does not exist
+      debugToDisplay("\t"..autoFolder.." does not exist.")
+      local profileFolderExists = lfs.chdir(getMudletHomeDir()) -- Attempt to change to the user's profile directory.
+      if profileFolderExists then --The mudlet folder exists
+        lfs.mkdir(autoFolder)  -- make the automation folder
+      end --if profileFolderExists
+    end  -- if not autoFolderExist then
+  end  -- for _, autoFolder in ipairs({interruptDataFolder, automationDataFolder})
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
   -- Where the files are in mudlet
   automationsGITRepository = [[https://github.com/TheEternalCitizens/mudlet-integration/raw/develop/data]]
