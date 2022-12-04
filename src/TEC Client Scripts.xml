@@ -26,6 +26,8 @@ Automations Bugfix Fall-Winter 2022
   Minor bugfix: numpad navigation setting was not getting restored on startup by parthia.
   Thank You Papikins (laurentinous, not Laun) for reporting the bug
   
+  Mior bugfix: when clicking edit on an automation the \ regex character would not appear in the automatically filled command prompt.
+  
   Bugfix: characters completing an interrupt would not automatically resume their last running automation.
   
   Bugfix: parthia automation and interrupt creation commands would not accept | in the input. Now all characters except , are allowed in automation and interrupt creation.
