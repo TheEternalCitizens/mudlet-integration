@@ -3758,7 +3758,7 @@ function parthiaFileList(path)
               table.insert(localFileTable, file)
             end --if attr.mode == "file"
           else --attribute collection filed
-            tecWarningMessage("function parthiaFileList, failed to collect attributes on "..f)
+            tecWarningNotification("function parthiaFileList, failed to collect attributes on "..f)
           end --if type(attr) == "table"
       end --if file ~= "." and file ~= ".."
   end --for lfs.dir(path)
