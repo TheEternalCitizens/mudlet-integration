@@ -2435,7 +2435,7 @@ debugToDisplay("Trigger You are no longer busy. completed.")</script>
 				<script>debugToDisplay("Trigger: target collection")
 
 -- Attempt to collect the target from a new target set.
-local macroTarget = string.match( line, "Your macro new target is (.*)%.$")
+local macroTarget = string.match( line, "Your new macro target is (.*)%.$")
 
 -- If the macro was a call rather than a set. Collect the macro target.
 if not macroTarget then
