@@ -2439,7 +2439,7 @@ local macroTarget = string.match( line, "Your macro new target is (.*)%.$")
 
 -- If the macro was a call rather than a set. Collect the macro target.
 if not macroTarget then
-  macroTarget = string.match( line, "Your new macro target is (.*)%.$")
+  macroTarget = string.match( line, "^Your macro target is (.*)%.$")
 end  -- if not macroTarget 
 
 debugToDisplay("\tmacroTarget: "..tostring(macroTarget))

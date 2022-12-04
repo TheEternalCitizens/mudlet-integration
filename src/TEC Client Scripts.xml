@@ -11802,6 +11802,7 @@ end  -- function parthiaGetCharacterTarget()</script>
 function parthiaSetCharacterTarget(targetName)
 
   debugToDisplay("function parthiaSetCharacterTarget called")
+  debugToDisplay("\ttargetName: "..targetName)
   
   -- Set the variable in the global automations table
   parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target = targetName
@@ -12010,15 +12011,6 @@ function getAutomationUpdates()
       end --if profileFolderExists
     end  -- if not autoFolderExist then
   end  -- for _, autoFolder in ipairs({interruptDataFolder, automationDataFolder})
-  
-  
-  
-  
-  
-  
-  
-  
-  
 
   -- Where the files are in mudlet
   automationsGITRepository = [[https://github.com/TheEternalCitizens/mudlet-integration/raw/develop/data]]
