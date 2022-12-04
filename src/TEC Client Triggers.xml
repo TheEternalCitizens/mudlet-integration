@@ -2445,6 +2445,12 @@ end  -- if not macroTarget
 debugToDisplay("\tmacroTarget: "..tostring(macroTarget))
 debugToDisplay("\tCharacter: "..parthiaPlayer.CurrentCharacter.name)
 
+-- if the macro target was not collected than stop the function
+if not macroTarget then
+  tecWarningNotification("Trigger target collection: failed to collect macroTarget")
+  return false
+end  -- if not macroTarget
+
 -- Collect the target the user input into the target variable in the automations table
 parthiaSetCharacterTarget(macroTarget)
 
