@@ -51,6 +51,8 @@ Automations Bugfix Fall-Winter 2022
   
   Minor Improvement: Replaced edit, show and remove buttons on the interrupts and automation window with the word Manage. Allowing for better formatting on lower resolutions screens.
   
+  Minor Improvement: The parthia updater will now pull down new automations and interrupts to the import folders when the update process completes. Not that when updating to 0.1.55 it will not pull down new automations because it will be using the 0.1.54 updater to do these updates.
+  
   Improvement: Made the choice to have the stop command stop all automation types that are currently running.
   
   Improvement: Dramatically shortened the help message that appears when a player clicks the 'create an automation' and 'create an interrupt' windows.
