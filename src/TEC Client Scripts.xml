@@ -6780,7 +6780,6 @@ end --function tecClientHelp</script>
     pecho("\nPATH needs to be replaced with the full local file path to the data folder in the github branch you work working with IE: C:\\Users\\David\\Documents\\GitHub\\mudlet-integration\\data")]],
   "Toggle filtered text display", true)
   pecho(", prepare to commit exported automations to github.\n")
-  
   pecho("\n")
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug", 
@@ -11659,6 +11658,7 @@ function parthiaAutomationImport(automationType, groupName, displayToScreen)
     
     -- Remove ParthiaDefault from automations imported
     groupName = groupName:gsub("%s+ParthiaDefault", "")
+
     debugToDisplay("\tgroupName after trimming: "..groupName)
     
     -- Prepared the automation table for import
