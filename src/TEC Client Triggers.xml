@@ -2435,15 +2435,21 @@ debugToDisplay("Trigger You are no longer busy. completed.")</script>
 				<script>debugToDisplay("Trigger: target collection")
 
 -- Attempt to collect the target from a new target set.
-local macroTarget = string.match( line, "Your macro new target is (.*)%.$")
+local macroTarget = string.match( line, "Your new macro target is (.*)%.$")
 
 -- If the macro was a call rather than a set. Collect the macro target.
 if not macroTarget then
-  macroTarget = string.match( line, "Your new macro target is (.*)%.$")
+  macroTarget = string.match( line, "^Your macro target is (.*)%.$")
 end  -- if not macroTarget 
 
 debugToDisplay("\tmacroTarget: "..tostring(macroTarget))
 debugToDisplay("\tCharacter: "..parthiaPlayer.CurrentCharacter.name)
+
+-- if the macro target was not collected than stop the function
+if not macroTarget then
+  tecWarningNotification("Trigger target collection: failed to collect macroTarget")
+  return false
+end  -- if not macroTarget
 
 -- Collect the target the user input into the target variable in the automations table
 parthiaSetCharacterTarget(macroTarget)

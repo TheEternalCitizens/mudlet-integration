@@ -26,6 +26,8 @@ Automations Bugfix Fall-Winter 2022
   Minor bugfix: numpad navigation setting was not getting restored on startup by parthia.
   Thank You Papikins (laurentinous, not Laun) for reporting the bug
   
+  Mior bugfix: when clicking edit on an automation the \ regex character would not appear in the automatically filled command prompt.
+  
   Bugfix: characters completing an interrupt would not automatically resume their last running automation.
   
   Bugfix: parthia automation and interrupt creation commands would not accept | in the input. Now all characters except , are allowed in automation and interrupt creation.
@@ -48,6 +50,8 @@ Automations Bugfix Fall-Winter 2022
   Minor Improvement: Automation, interrupts and group lising commands show automations in alphabetical order.
   
   Minor Improvement: Replaced edit, show and remove buttons on the interrupts and automation window with the word Manage. Allowing for better formatting on lower resolutions screens.
+  
+  Minor Improvement: The parthia updater will now pull down new automations and interrupts to the import folders when the update process completes. Not that when updating to 0.1.55 it will not pull down new automations because it will be using the 0.1.54 updater to do these updates.
   
   Improvement: Made the choice to have the stop command stop all automation types that are currently running.
   
@@ -3758,7 +3762,7 @@ function parthiaFileList(path)
               table.insert(localFileTable, file)
             end --if attr.mode == "file"
           else --attribute collection filed
-            tecWarningMessage("function parthiaFileList, failed to collect attributes on "..f)
+            tecWarningNotification("function parthiaFileList, failed to collect attributes on "..f)
           end --if type(attr) == "table"
       end --if file ~= "." and file ~= ".."
   end --for lfs.dir(path)
@@ -6771,12 +6775,11 @@ end --function tecClientHelp</script>
   "Toggle filtered text display", true)
   pecho(", toggle if filtered text parthia prepared for Mudlet is displayed.\n")
   
-  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia developer toggle filtered line", 
-  [[printCmdLine("parthia automation update prep PathToGithubDataFolder");
-    pecho("\nPathToGithubDataFolder needs to be replaced with the full path you github branch you work working with IE: C:\Users\David\Documents\GitHub\mudlet-integration\data")]],
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia automation update prep", 
+  [[printCmdLine("parthia automation update prep PATH");
+    pecho("\nPATH needs to be replaced with the full local file path to the data folder in the github branch you work working with IE: C:\\Users\\David\\Documents\\GitHub\\mudlet-integration\\data")]],
   "Toggle filtered text display", true)
-  pecho(", toggle if filtered text parthia prepared for Mudlet is displayed.\n")
-  
+  pecho(", prepare to commit exported automations to github.\n")
   pecho("\n")
   
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;debug", 
@@ -7371,7 +7374,8 @@ end --function tecRefreshSettingsWindow
 				<Script isActive="yes" isFolder="no">
 					<name>refreshInterruptsWindow()</name>
 					<packageName></packageName>
-					<script>function refreshInterruptsWindow()
+					<script>
+function refreshInterruptsWindow()
 --[[
 Handles refreshing the text in the interrupts window.
 ]]--
@@ -9925,7 +9929,7 @@ function parthiaAutomationUpdateHelp(automationType)
   
   pecho("For a tutorial video on making an Automation Group go to ")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/rCHHD866J3I\n\n", 
-    [[parthiaAutomationUpdateHelp("automation")]], 
+    [[openUrl("https://www.youtube.com/watch?v=rCHHD866J3I&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps&amp;index=2")]], 
     "youtube parthia automation tutorial", true)
   
   pecho("Command Format:\n")
@@ -10087,7 +10091,7 @@ function parthiaInterruptCreateHelp()
   
   pecho("\nFor a tutorial video on making an Interrupt and Interrupt Automation Group go to ")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/8n9vycwod1U\n\n", 
-    [[openUrl("https://youtu.be/8n9vycwod1U")]], 
+    [[openUrl("https://www.youtube.com/watch?v=8n9vycwod1U&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps&amp;index=3")]], 
     "youtube parthia automation tutorial", true)
   
   pecho("Command Format:\n")
@@ -10108,7 +10112,7 @@ function parthiaInterruptCreateHelpBrief()
   
   pecho("\n\tFor a tutorial video on making an Interrupt and Interrupt Automation Group go to ")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/8n9vycwod1U\n\n", 
-    [[openUrl("https://youtu.be/8n9vycwod1U")]], 
+    [[openUrl("https://www.youtube.com/watch?v=8n9vycwod1U&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps&amp;index=4")]], 
     "youtube parthia automation tutorial", true)
   
   pecho("Command Format:\n\n")
@@ -10858,10 +10862,13 @@ function parthiaAutomationShowGroups(automationType, groupName, removeElement, g
         -- Show the group position
         pecho("\tGroup Position: "..groupPosition..", ")
         
+        -- Escape any / in the automation trigger pattern. So it will show up in the command prompt when the user clicks edit.
+        local adjustedAutomationTrigger = automationTrigger:gsub([[\]], [[\\]])
+        
         -- provide an easy method to edit this group position
         pechoLink("\t&lt;:"..tecSettings.helpHighlightColor.."&gt;Edit", 
         [[parthiaAutomationUpdateHelp("]]..automationTypeName..[[");
-        printCmdLine("parthia ]]..automationTypeName..[[ ]]..groupName..[[, ]]..groupPosition..[[ = ]]..automationCommand..[[, ]]..repeatOnFail..[[, 0 &amp; ]]..automationTrigger..[[")]],
+        printCmdLine("parthia ]]..automationTypeName..[[ ]]..groupName..[[, ]]..groupPosition..[[ = ]]..automationCommand..[[, ]]..repeatOnFail..[[, 0 &amp; ]]..adjustedAutomationTrigger..[[")]],
         "change group position "..groupPosition.." for group "..groupName, true)
         
         -- Provide an easy method to remove this group.
@@ -10974,9 +10981,12 @@ function showAutomationGroupTableData(groupName, automationTypeName, automationT
       --Make a customized edit button for interrupts vs automations
       if automationType == 'automationInterrupt' then
       
+        -- Escape / show they will show up in the command prompt when a user clicks edit.
+        local adjustedCallPattern = callPattern:gsub([[\]], [[\\]])
+      
         pechoLink("  &lt;:"..tecSettings.helpHighlightColor.."&gt;Edit",
         --parthia interrupt [group name], [repeat], [call pattern]~ [first command trigger]
-        [[parthiaInterruptCreateHelp();printCmdLine("parthia interrupt ]]..groupName..[[, ]]..groupRepeat..[[, ]]..callPattern..[[~ ]]..firstCommandTrigger..[[")]],
+        [[parthiaInterruptCreateHelp();printCmdLine("parthia interrupt ]]..groupName..[[, ]]..groupRepeat..[[, ]]..adjustedCallPattern..[[~ ]]..firstCommandTrigger..[[")]],
         "fill command line with edit command for "..groupName, true)
         
       else  -- This is a standard automation
@@ -11441,10 +11451,14 @@ local function listAutomationGroups(automationType, automationTypeName, autoFold
   end  -- for groupName, _ in pairs(parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name][automationType]) do
 
   -- Display a command to save files to the automation directory
-  pecho("If you would get files from the "..automationTypeName.." data folder run, ")
+  pecho("\nTo open the folder "..automationTypeName.."s are stored in click or run, ")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open\n", 
     [[tecOpenDirectory("]]..autoFolder..[[")]], 
     "Open "..automationTypeName.." folder", true)
+  pecho("For a tutorial video on exporting &amp; importing custom automations click or go to: ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://www.youtube.com/watch?v=dXRNkVfa4AY\n", 
+    [[openUrl("https://www.youtube.com/watch?v=dXRNkVfa4AY&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps&amp;index=8")]], 
+    "Open tutorial video", true)
 
 end  -- local function listAutomationGroups()
 
@@ -11561,6 +11575,12 @@ local function listAutomationFiles(autoFolder, automationTypeName)
   
   end -- if autoImportableFiles then
   
+  -- Display the import tutorial
+  pecho("\nFor a video tutorial on importing premade "..automationTypeName.."s go to: ")
+  pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/PvVO7PftgBc", 
+    [[openUrl("https://www.youtube.com/watch?v=PvVO7PftgBc&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps&amp;index=8")]], 
+    "Import "..automationTypeName.."s tutorial", true)
+  
   -- Display a command to save files to the automation directory
   pecho("\nIf you would like to copy files to the "..automationTypeName.." data folder, ")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;parthia "..automationTypeName.." open\n", 
@@ -11637,7 +11657,8 @@ function parthiaAutomationImport(automationType, groupName, displayToScreen)
     debugToDisplay("\tautoImportFilePath exists.")
     
     -- Remove ParthiaDefault from automations imported
-    groupName = groupName:gsub("%s*ParthiaDefault", "")
+    groupName = groupName:gsub("%s+ParthiaDefault", "")
+
     debugToDisplay("\tgroupName after trimming: "..groupName)
     
     -- Prepared the automation table for import
@@ -11785,6 +11806,7 @@ end  -- function parthiaGetCharacterTarget()</script>
 function parthiaSetCharacterTarget(targetName)
 
   debugToDisplay("function parthiaSetCharacterTarget called")
+  debugToDisplay("\ttargetName: "..targetName)
   
   -- Set the variable in the global automations table
   parthiaAutomationSaveTable[parthiaPlayer.CurrentCharacter.name].target = targetName
@@ -11909,7 +11931,7 @@ function parthiaAutomationInsertHelpBreif()
   
   pecho("\n\tFor a tutorial video inserting commands into running automation or interrupts go to: ")
   pechoLink("&lt;:"..tecSettings.helpHighlightColor.."&gt;https://youtu.be/6xr5gHjjH5A\n", 
-    [[openUrl("https://youtu.be/6xr5gHjjH5A")]], 
+    [[openUrl("https://www.youtube.com/watch?v=6xr5gHjjH5A&amp;list=PLKL4xCxZxZqL7G_i4v0pdPL4Sdn36nhps&amp;index=6")]], 
     "youtube video on inerting into automations", true)
   
   pecho("\n\tCommand Format:\n")
@@ -11974,10 +11996,25 @@ Loop through that file list and download those files.
 
 function getAutomationUpdates()
 
+  debugToDisplay("function getAutomationUpdates called")
+
   if automationUpdateRunning then
     pecho("An automations update is already running. Please wait for it to complete.\n")
     return false
   end  -- if automationUpdateRunning
+  
+  -- If the automation and interrupt folders do not exist create them now.
+  for _, autoFolder in ipairs({interruptDataFolder, automationDataFolder}) do
+    -- If it does not exist, make the automation folder
+    local autoFolderExist = lfs.chdir(autoFolder) -- Attempt to change to the automation directory
+    if not autoFolderExist then -- if the automation folder does not exist
+      debugToDisplay("\t"..autoFolder.." does not exist.")
+      local profileFolderExists = lfs.chdir(getMudletHomeDir()) -- Attempt to change to the user's profile directory.
+      if profileFolderExists then --The mudlet folder exists
+        lfs.mkdir(autoFolder)  -- make the automation folder
+      end --if profileFolderExists
+    end  -- if not autoFolderExist then
+  end  -- for _, autoFolder in ipairs({interruptDataFolder, automationDataFolder})
 
   -- Where the files are in mudlet
   automationsGITRepository = [[https://github.com/TheEternalCitizens/mudlet-integration/raw/develop/data]]
