@@ -533,7 +533,7 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   --use for functions that need to loop through all text windows 
   tecTextWindowNames = {"main", "tecSettingsConsole"
     ,"roomCharacters.console" , "Communication"
-    ,"Thoughts", "Speech"}
+    ,"Thoughts", "Speech", "Automation", "Interrupts"}
     
   --Holds list of labels that use default lable stylesheet 
   tecWindowLabels = {} --normally configured with tecGetWindowLabelList
