@@ -525,7 +525,7 @@ function tecClientReset(displayToScreen) --reset all client settings to defaults
   tecSettings.tecTimerDebugMode = false
   
   --controls if scroll bars are of are now viewd.
-  tecSettings.showScrollBars = true
+  tecSettings.showScrollBars = false
   
   --Spaces inventory list 
   tecInventorySpacer = ""
