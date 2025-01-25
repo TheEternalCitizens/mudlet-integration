@@ -4476,8 +4476,8 @@ function tecSetScrollBars(mode, displayToScreen)
   debugToDisplay("Setting Scrollbars: ")
   
   if mode then
-    --if enabling, com windows only. Settings &amp; Room Character use tecScrollBarCheck
-    for index, windowName in ipairs(tecComWindows.tabs) do
+    --enable scrollbars for all windows.
+    for index, windowName in ipairs(tecTextWindowNames) do
       enableScrollBar(windowName)
       debugToDisplay("\tEnabling scroll bar for: "..windowName)
       --debugc("Enabling scroll bar for: "..windowName)
@@ -4485,7 +4485,7 @@ function tecSetScrollBars(mode, displayToScreen)
     tecSettings.showScrollBars = true --tell further gui changes to show scrollbars
     --if using GUIframe manager and it is initialized
     if GetUIManager() == "GUIframe" and GUIframe.initialized then
-      setBorderRight(GUIframe.topRightContainer:get_width())
+      setBorderRight(GUIframe.topRightContainer:get_width())  -- Unhide the scroll bar for the main screen
       setMainWindowAutoWrap() --Adjust mains autowrap now that main has changed.
     else --no UI manager specified.
       tecWarningNotification("function tecSetScrollBars, UI manager no specified. "
