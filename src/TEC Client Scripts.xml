@@ -4486,6 +4486,7 @@ function tecSetScrollBars(mode, displayToScreen)
     --if using GUIframe manager and it is initialized
     if GetUIManager() == "GUIframe" and GUIframe.initialized then
       setBorderRight(GUIframe.topRightContainer:get_width())
+      setMainWindowAutoWrap() --Adjust mains autowrap now that main has changed.
     else --no UI manager specified.
       tecWarningNotification("function tecSetScrollBars, UI manager no specified. "
         .."Right border set set.")
